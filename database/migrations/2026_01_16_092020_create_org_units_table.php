@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->enum("type", ["commissariat", "department", "branch", "position"]);
             $table->boolean("is_independent")->default(false);
             $table->integer("level")->nullable()->default(null);
+            $table->timestamps();
         });
     }
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('person_id')->unique()->constrained('persons')->onDelete('cascade');
             $table->enum('role', ['admin', 'user'])->default('user');
             $table->enum('work_status', ['vacant', 'fired', 'active'])->default('active');
+            $table->timestamps();
         });
     }
 

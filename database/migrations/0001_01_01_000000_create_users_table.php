@@ -15,11 +15,13 @@ return new class extends Migration {
             $table->string('login', 255);
             $table->string('password_hash', 255);
             $table->rememberToken();
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
+            $table->timestamps();
         });
 
         Schema::create('sessions', function (Blueprint $table) {

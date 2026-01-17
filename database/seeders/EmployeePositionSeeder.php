@@ -28,16 +28,22 @@ class EmployeePositionSeeder extends Seeder
                 'employee_id' => $employeeIds[0],
                 'org_unit_id' => $orgUnitIds[0],
                 'rate' => 1.00,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'employee_id' => $employeeIds[1] ?? $employeeIds[0],
                 'org_unit_id' => $orgUnitIds[1] ?? $orgUnitIds[0],
                 'rate' => 0.75,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'employee_id' => $employeeIds[2] ?? $employeeIds[0],
                 'org_unit_id' => $orgUnitIds[0],
                 'rate' => 0.50,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 

@@ -19,6 +19,8 @@ class OrgUnitSeeder extends Seeder
             'type' => 'commissariat',
             'is_independent' => true,
             'level' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Создаем отделы
@@ -28,6 +30,8 @@ class OrgUnitSeeder extends Seeder
             'type' => 'department',
             'is_independent' => false,
             'level' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $department2Id = DB::table('org_units')->insertGetId([
@@ -36,6 +40,8 @@ class OrgUnitSeeder extends Seeder
             'type' => 'department',
             'is_independent' => false,
             'level' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Создаем филиалы
@@ -45,6 +51,8 @@ class OrgUnitSeeder extends Seeder
             'type' => 'branch',
             'is_independent' => false,
             'level' => 3,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $branch2Id = DB::table('org_units')->insertGetId([
@@ -53,6 +61,8 @@ class OrgUnitSeeder extends Seeder
             'type' => 'branch',
             'is_independent' => false,
             'level' => 3,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Создаем должности
@@ -63,6 +73,8 @@ class OrgUnitSeeder extends Seeder
                 'type' => 'position',
                 'is_independent' => false,
                 'level' => 3,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'title' => 'Специалист',
@@ -70,6 +82,8 @@ class OrgUnitSeeder extends Seeder
                 'type' => 'position',
                 'is_independent' => false,
                 'level' => 4,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }

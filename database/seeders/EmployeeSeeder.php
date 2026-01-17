@@ -29,18 +29,24 @@ class EmployeeSeeder extends Seeder
                 'person_id' => $personIds[0],
                 'role' => 'admin',
                 'work_status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[1],
                 'person_id' => $personIds[1],
                 'role' => 'user',
                 'work_status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[2],
                 'person_id' => $personIds[2],
                 'role' => 'user',
                 'work_status' => 'active',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
