@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->boolean("is_independent")->default(false);
             $table->integer("level")->nullable()->default(null);
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 

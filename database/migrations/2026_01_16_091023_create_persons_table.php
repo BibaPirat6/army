@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->string("phone", 20)->nullable()->unique();
             $table->string("email", 255)->nullable()->unique();
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 

@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->foreignId('org_unit_id')->constrained('org_units')->onDelete('cascade');
             $table->decimal('rate', 3, 2)->default(1.00);
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 

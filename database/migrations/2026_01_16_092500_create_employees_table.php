@@ -18,6 +18,8 @@ return new class extends Migration
             $table->enum('role', ['admin', 'user'])->default('user');
             $table->enum('work_status', ['vacant', 'fired', 'active'])->default('active');
             $table->timestamps();
+
+            $table->softDeletes();
         });
     }
 
