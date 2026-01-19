@@ -16,6 +16,10 @@
         </ul>
     @endif
 
+    @if (session('success'))
+        {{ session('success') }}
+    @endif
+
     <div>
         <h2>Создать пользователя</h2>
         <form action="{{ route('users.post') }}" method="post">
@@ -37,15 +41,15 @@
             @foreach ($users as $user)
                 <li style="background-color: antiquewhite; display: flex; width: 20%;">
                     <div>
-                        <p>ID {{ $user['id'] }}</p>
-                        <p>Логин {{ $user['login'] }}</p>
-                        <p> Создан {{ $user['created_at'] }}</p>
-                        <p>Обновлен {{ $user['updated_at'] ?? '---' }} </p>
+                        <p>ID {{ $user->id }}</p>
+                        <p>Логин {{ $user->login }}</p>
+                        <p> Создан {{ $user->created_at }}</p>
+                        <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
                     </div>
                     <div>
-                        <form action="{{ route('login') }}" method="post">@csrf <button type="submit">Изменить</button>
-                        </form>
-                        <form action="{{ route('login') }}" method="post">@csrf <button type="submit">Удалить</button>
+                        <p><a href="{{ route('users.update.index', $user->id) }}">Изменить</a></p>
+                        <form action="{{ route('users.delete', $user->id) }}" method="post">@csrf <button
+                                type="submit">Удалить</button>
                         </form>
                     </div>
                 </li>
