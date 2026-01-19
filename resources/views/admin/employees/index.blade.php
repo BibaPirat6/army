@@ -5,29 +5,47 @@
 @endsection
 
 @section('content')
+    @if ($errors->any())
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li> {{ $error }}</li>
+            @endforeach
+        </ul>
+    @endif
+
+    @if (session('success'))
+        {{ session('success') }}
+    @endif
+
     <h1>Сотрудники</h1>
 
     {{-- создать сотрудника --}}
     <div>
         <h3>Создать сотрудника</h3>
-        <form action="{{ route("employees.post") }}" method="post">
+        <form action="{{ route('employees.post') }}" method="post">
             @csrf
 
-            <label for="user">Выберите пользователя</label><br>
-            <select name="user" id="user">
-                @if ($users)
+            <label for="user_id">Выберите пользователя</label><br>
+            <select name="user_id" id="user_id">
+                @if ($users && count($persons) > 0)
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->login }}</option>
                     @endforeach
+                @else
+                    <option selected disabled>Нет свободных персональных данных</option>
                 @endif
             </select><br>
 
-            <label for="person">Выберите персональные данные сотрудника</label><br>
-            <select name="person" id="person">
-                @if ($persons)
+            <label for="person_id">Выберите персональные данные сотрудника</label><br>
+            <select name="person_id" id="person_id">
+                @if ($persons && count($persons) > 0)
                     @foreach ($persons as $person)
-                        <option value="{{ $person->id }}">{{ $person->first_name }} {{ $person->phone }}</option>
+                        <option value="{{ $person->id }}">
+                            {{ $person->last_name }} {{ $person->first_name }} {{ $person->phone }}
+                        </option>
                     @endforeach
+                @else
+                    <option selected disabled>Нет свободных персональных данных</option>
                 @endif
             </select> <br>
 
@@ -37,8 +55,8 @@
                 <option value="user">Обычный пользователь</option>
             </select> <br>
 
-            <label for="status">Рабочий статус*</label><br>
-            <select name="status" id="status">
+            <label for="work_status">Рабочий статус*</label><br>
+            <select name="work_status" id="work_status">
                 <option value="vacant">ВАКАНТ</option>
                 <option value="fired">УВОЛЕН</option>
                 <option value="active">РАБОТАЕТ</option>
@@ -98,8 +116,8 @@
                         {{ $employee->updated_at ? $employee->updated_at->format('d.m.Y H:i') : '—' }}</p>
                 </div>
                 <div>
-                    <p><a href="{{ route('users.update.index', $employee->id) }}">Изменить</a></p>
-                    <form action="{{ route('users.delete', $employee->id) }}" method="post">@csrf <button
+                    <p><a href="{{ route('employees.update.index', $employee->id) }}">Изменить</a></p>
+                    <form action="{{ route('employees.delete', $employee->id) }}" method="post">@csrf <button
                             type="submit">Удалить</button>
                     </form>
                 </div>

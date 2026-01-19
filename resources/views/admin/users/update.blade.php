@@ -20,7 +20,7 @@
     <div>
         <p>ID {{ $user->id }}</p>
         <p>Логин {{ $user->login }}</p>
-        <p> Создан {{ $user->created_at }}</p>
+        <p>Создан {{ $user->created_at }}</p>
         <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
     </div>
 
@@ -30,10 +30,11 @@
             @csrf
 
             <label for="login">Логин*</label> <br>
-            <input type="text" id="login" name="login" placeholder="Введите логин" value="{{ old('login') }}"> <br>
+            <input type="text" id="login" name="login" placeholder="Введите логин" value="{{ old('password') }}"> <br>
 
             <label for="password">Пароль*</label> <br>
-            <input type="text" id="password" name="password" placeholder="Введите пароль" value="{{ old('password') }}">
+            <input type="text" id="password" name="password" placeholder="Введите пароль"
+                value="{{ old('password') }}">
             <br>
 
             <button type="submit">Изменить</button>
