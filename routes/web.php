@@ -11,9 +11,13 @@ Route::post("/login", [UserController::class, "login"])->name("login.post");
 
 Route::middleware(['auth'])->group(function () {
     Route::get("/", [BasicController::class, "index"])->name("home.index");
+
+    Route::post("/logout", [UserController::class, "logout"])->name("logout");
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("/users", [UsersController::class, "index"])->name("users.index");
+    Route::post("/users", [UsersController::class, "create"])->name("users.post");
+
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
 });

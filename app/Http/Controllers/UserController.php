@@ -36,6 +36,17 @@ class UserController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route("home.index")
-            ->with("success", "Welcome " . $user->login . "!");
+            ->with("success", "Привет " . $user->login . "!");
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect()->route("login")->with("success", "Вы вышли из аккаунта!");
     }
 }

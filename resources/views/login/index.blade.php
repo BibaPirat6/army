@@ -17,6 +17,11 @@
         </ul>
     @endif
 
+    @if (session('success'))
+        {{ session('success') }}
+    @endif
+
+
 
     <h1>Войдите в систему</h1>
 
