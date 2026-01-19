@@ -13,6 +13,7 @@
         <ul>
             {{-- admin --}}
             @if (auth()->check() && auth()->user()->employee?->role === 'admin')
+                <li><a href="{{ route('home.index') }}">Главная</a></li>
                 <li><a href="{{ route('users.index') }}">Пользователи</a></li>
                 <li><a href="{{ route('employees.index') }}">Сотрудники</a></li>
             @endif

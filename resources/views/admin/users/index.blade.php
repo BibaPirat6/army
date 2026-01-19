@@ -43,7 +43,7 @@
                     <div>
                         <p>ID {{ $user->id }}</p>
                         <p>Логин {{ $user->login }}</p>
-                        <p> Создан {{ $user->created_at }}</p>
+                        <p>Создан {{ $user->created_at }}</p>
                         <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
                     </div>
                     <div>
