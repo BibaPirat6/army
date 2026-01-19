@@ -12,17 +12,10 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Получаем ID пользователей и персон
+
         $userIds = DB::table('users')->pluck('id')->toArray();
         $personIds = DB::table('persons')->pluck('id')->toArray();
 
-        // Проверяем, что есть достаточно записей
-        if (count($userIds) < 3 || count($personIds) < 3) {
-            $this->command->warn('Недостаточно пользователей или персон для создания сотрудников');
-            return;
-        }
-
-        // Создаем сотрудников, проверяя существование
         $employees = [
             [
                 'user_id' => $userIds[0],
@@ -30,7 +23,6 @@ class EmployeeSeeder extends Seeder
                 'role' => 'admin',
                 'work_status' => 'active',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[1],
@@ -38,7 +30,6 @@ class EmployeeSeeder extends Seeder
                 'role' => 'user',
                 'work_status' => 'active',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[2],
@@ -46,7 +37,6 @@ class EmployeeSeeder extends Seeder
                 'role' => 'user',
                 'work_status' => 'active',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
         ];
 

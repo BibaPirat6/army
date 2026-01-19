@@ -2,51 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
     public function index()
     {
-        return view("login");
+        return view("auth.index");
     }
 
-    public function login(Request $request)
+    public function auth(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'login' => 'required|string',
-            'pwd' => 'required|string',
+        $data = $request->validate([
+            "login" => "required",
+            "password" => "required",
         ], [
-            'login.required' => 'Поле логин обязательно для заполнения.',
-            'pwd.required' => 'Поле пароль обязательно для заполнения.',
+            "login.required" => "Заполните поле логина",
+            "password.required" => "Заполните поле пароля"
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->route('user.index')
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $credentials = [
-            'login' => $request->input('login'),
-            'password_hash' => $request->input('pwd'),
-        ];
-
-        $user = User::where('login', $credentials['login'])->first();
-
-        if ($user && Hash::check($credentials['password_hash'], $user->password_hash)) {
-            Auth::login($user, $request->has('remember'));
+        if (Auth::attempt($data)) {
             $request->session()->regenerate();
-
-            return redirect()->route('home.index');
+            
+            return "123";
         }
-
-        return redirect()->route('user.index')
-            ->withErrors(['login' => 'Неверный логин или пароль.'])
-            ->withInput();
+        return back()->withErrors([
+            "error" => "Неправильно введены данные"
+        ]);
     }
 }

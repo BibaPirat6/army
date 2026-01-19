@@ -20,7 +20,6 @@ class PersonSeeder extends Seeder
                 'phone' => '+7 (999) 123-45-67',
                 'email' => 'ivanov@example.com',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'first_name' => 'Петр',
@@ -29,7 +28,6 @@ class PersonSeeder extends Seeder
                 'phone' => '+7 (999) 234-56-78',
                 'email' => 'petrov@example.com',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'first_name' => 'Мария',
@@ -38,7 +36,6 @@ class PersonSeeder extends Seeder
                 'phone' => '+7 (999) 345-67-89',
                 'email' => 'sidorova@example.com',
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
         ]);
     }

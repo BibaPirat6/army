@@ -18,19 +18,16 @@ class UserSeeder extends Seeder
                 'login' => 'admin',
                 'password_hash' => Hash::make('admin123'),
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'login' => 'user1',
                 'password_hash' => Hash::make('user123'),
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'login' => 'user2',
                 'password_hash' => Hash::make('user123'),
                 'created_at' => now(),
-                'updated_at' => now(),
             ],
         ]);
     }

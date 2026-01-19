@@ -22,6 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'login',
         'password_hash',
+        'api_token',
     ];
 
     /**
@@ -32,6 +33,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password_hash',
         'remember_token',
+        'api_token',
     ];
 
     /**
