@@ -20,7 +20,7 @@
 
     <h1>Войдите в систему</h1>
 
-    <form action="{{ route('auth.post') }}" method="POST">
+    <form action="{{ route('login.post') }}" method="POST">
         @csrf
 
         <label for="login">Логин*</label> <br>

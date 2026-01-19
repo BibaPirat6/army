@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Auth;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function index()
     {
-        return view("auth.index");
+        return view("login.index");
     }
 
-    public function auth(Request $request)
+    public function login(Request $request)
     {
         $data = $request->validate([
             "login" => "required",
@@ -22,13 +24,18 @@ class UserController extends Controller
             "password.required" => "Заполните поле пароля"
         ]);
 
-        if (Auth::attempt($data)) {
-            $request->session()->regenerate();
-            
-            return "123";
+        $user = User::where("login", $data["login"])->first();
+
+        if (!$user || !Hash::check($data["password"], $user->password_hash)) {
+            return back()->withErrors([
+                "error" => "Неправильно введены данные"
+            ]);
         }
-        return back()->withErrors([
-            "error" => "Неправильно введены данные"
-        ]);
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route("home.index")
+            ->with("success", "Welcome " . $user->login . "!");
     }
 }
