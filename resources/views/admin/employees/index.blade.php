@@ -10,7 +10,8 @@
     {{-- создать сотрудника --}}
     <div>
         <h3>Создать сотрудника</h3>
-        <form action="" method="post">
+        <form action="{{ route("employees.post") }}" method="post">
+            @csrf
 
             <label for="user">Выберите пользователя</label><br>
             <select name="user" id="user">

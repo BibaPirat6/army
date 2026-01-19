@@ -23,4 +23,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post("/users/{id}/update", [UsersController::class, "update"])->name("users.update.post");
 
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
+    Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
 });

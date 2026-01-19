@@ -15,16 +15,26 @@ class EmployeesController extends Controller
             ->withoutTrashed()
             ->get();
 
-        $users = User::withoutTrashed()->get();
-        $persons = Person::withoutTrashed()->get();
+        $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
+        $users = User::whereNotIn('id', $usedUserIds)
+            ->withoutTrashed()
+            ->get();
 
-
+        $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
+        $persons = Person::whereNotIn('id', $usedPersonIds)
+            ->withoutTrashed()
+            ->get();
 
         return view("admin.employees.index")->with([
             "employees" => $employees,
             "users" => $users,
             "persons" => $persons
         ]);
+    }
+
+    public function create(Request $request)
+    {
+        dd($request->all());
     }
 }
 
