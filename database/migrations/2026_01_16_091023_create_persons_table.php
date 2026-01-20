@@ -15,8 +15,8 @@ return new class extends Migration {
             $table->string("first_name", 255);
             $table->string("last_name", 255);
             $table->string("patronymic", 255)->nullable();
-            $table->string("phone", 20)->nullable()->unique();
-            $table->string("email", 255)->nullable()->unique();
+            $table->string("phone", 20)->nullable();
+            $table->string("email", 255)->nullable();
             $table->string("photo", 255)->nullable();
             $table->timestamps();
 

@@ -3,8 +3,10 @@
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PersonsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\WorkStatuses;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -27,15 +29,28 @@ Route::middleware(['auth'])->group(function () {
 
 // админ
 Route::middleware(['auth', 'admin'])->group(function () {
+    // users
     Route::get("/users", [UsersController::class, "index"])->name("users.index");
     Route::post("/users", [UsersController::class, "create"])->name("users.post");
-    Route::post("/users/{id}/delete", [UsersController::class, "delete"])->name("users.delete");
+    Route::delete("/users/{id}/delete", [UsersController::class, "delete"])->name("users.delete");
     Route::get("/users/{id}/update", [UsersController::class, "updateShow"])->name("users.update.index");
-    Route::post("/users/{id}/update", [UsersController::class, "update"])->name("users.update.post");
+    Route::put("/users/{id}/update", [UsersController::class, "update"])->name("users.update.post");
 
+    // employess
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
     Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
     Route::post("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
     Route::get("/employees/{id}/update", [EmployeesController::class, "updateShow"])->name("employees.update.index");
     Route::post("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
+
+    // persons
+    Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");
+    Route::post("/persons", [PersonsController::class, "create"])->name("persons.post");
+    Route::delete("/persons/{id}/delete", [PersonsController::class, "delete"])->name("persons.delete");
+    Route::get("/persons/{id}/update", [PersonsController::class, "updateShow"])->name("persons.update.index");
+    Route::put("/persons/{id}/update", [PersonsController::class, "update"])->name("persons.update.post");
+
+    // work statuses
+    Route::get("/work-statuses", [WorkStatuses::class, "index"])->name("work-statuses.index");
+    Route::post("/work-statuses", [WorkStatuses::class, "create"])->name("work-statuses.post");
 });

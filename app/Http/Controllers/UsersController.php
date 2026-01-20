@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Hash;
 use Illuminate\Http\Request;
@@ -11,8 +12,9 @@ class UsersController extends Controller
     public function index()
     {
         $users = User::withoutTrashed()->get();
+        $roles = Role::all();
 
-        return view("admin.users.index")->with("users", $users);
+        return view("admin.users.index")->with(["users" => $users, "roles" => $roles]);
     }
 
     public function create(Request $request)
@@ -20,6 +22,7 @@ class UsersController extends Controller
         $request->validate([
             "login" => "required|min:5|max:255|unique:users",
             "password" => "required|min:5|max:255",
+            "role" => "required|exists:roles,id",
         ], [
             "login.required" => "Логин обязателен",
             "login.min" => "Логин минимум 5 символов",
@@ -29,11 +32,16 @@ class UsersController extends Controller
             "password.required" => "Пароль обязателен",
             "password.min" => "Пароль минимум 5 символов",
             "password.max" => "Пароль максимум 255 символов",
+
+            "role.required" => "Роль обязательна",
+            "role.exists" => "Недопустимое значение для роли",
         ]);
+
 
         $data = [
             "login" => $request["login"],
-            "password_hash" => Hash::make($request["password"])
+            "password_hash" => Hash::make($request["password"]),
+            "role_id" => $request["role"]
         ];
 
         $user = User::create($data);
@@ -57,15 +65,16 @@ class UsersController extends Controller
     public function updateShow($id)
     {
         $user = User::findOrFail($id);
+        $roles = Role::all();
 
-        return view('admin.users.update')->with("user", $user);
+        return view('admin.users.update')->with(['user' => $user, 'roles' => $roles]);
     }
 
     public function update(Request $request, $id)
     {
-        if (!$request->filled('login') && !$request->filled('password')) {
+        if (!$request->filled('login') && !$request->filled('password') && !$request->filled('role')) {
             return back()->withErrors([
-                'error' => 'Заполните хотя бы одно поле: логин или пароль'
+                'error' => 'Заполните хотя бы одно поле: логин, пароль или роль'
             ])->withInput();
         }
 
@@ -87,6 +96,12 @@ class UsersController extends Controller
             $validationMessages['password.max'] = "Пароль максимум 255 символов";
         }
 
+        if ($request->filled('role')) {
+            $validationRules['role'] = "required|exists:roles,id";
+            $validationMessages['role.required'] = "Роль обязательна";
+            $validationMessages['role.exists'] = "Недопустимое значение для роли";
+        }
+
         $request->validate($validationRules, $validationMessages);
 
         $data = [];
@@ -97,6 +112,10 @@ class UsersController extends Controller
 
         if ($request->filled('password')) {
             $data['password_hash'] = Hash::make($request->password);
+        }
+
+        if ($request->filled('role')) {
+            $data['role_id'] = $request->role;
         }
 
         $user = User::findOrFail($id);

@@ -31,6 +31,15 @@
             <input type="text" placeholder="Введите пароль" id="password" name="password" value="{{ old('password') }}">
             <br>
 
+            <label for="role">Роль</label> <br>
+            <select name="role" id="role">
+                @foreach ($roles as $role)
+                    <option value="{{ $role->id }}" @if ($role->name == 'user') selected @endif>
+                        {{ $role->description }}
+                    </option>
+                @endforeach
+            </select><br>
+
             <button type="submit">Создать</button>
         </form>
     </div>
@@ -45,11 +54,13 @@
                         <p>Логин {{ $user->login }}</p>
                         <p>Создан {{ $user->created_at }}</p>
                         <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
+                        <p>Роль {{ $user->role?->description ?? 'не назначена' }}</p>
                     </div>
                     <div>
                         <p><a href="{{ route('users.update.index', $user->id) }}">Изменить</a></p>
-                        <form action="{{ route('users.delete', $user->id) }}" method="post">@csrf <button
-                                type="submit">Удалить</button>
+                        <form action="{{ route('users.delete', $user->id) }}" method="post">@csrf
+                            @method('DELETE')
+                            <button type="submit">Удалить</button>
                         </form>
                     </div>
                 </li>

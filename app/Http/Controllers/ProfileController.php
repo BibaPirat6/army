@@ -27,7 +27,12 @@ class ProfileController extends Controller
     {
         $employee = auth()->user()->employee;
         $request->validate([
-            "login" => "required|string|min:5",
+            "login" => [
+                "required",
+                "string",
+                "min:5",
+                Rule::unique('users', 'login')->ignore($employee->user->id)
+            ],
             "last_name" => "required|string|min:2",
             "first_name" => "required|string|min:2",
             "patronymic" => "nullable|string|min:2",
@@ -46,6 +51,7 @@ class ProfileController extends Controller
         ], [
             "login.required" => "Поле Логин обязательно для заполнения",
             "login.min" => "Поле Логин минимум 5 символов",
+            "login.unique" => "Логин уже занят",
             "last_name.required" => "Поле Фамилия обязательно для заполнения",
             "last_name.min" => "Поле Фамилия минимум 2 символа",
             "first_name.required" => "Поле Имя обязательно для заполнения",
@@ -84,7 +90,7 @@ class ProfileController extends Controller
             $extension = $request->file('photo')->getClientOriginalExtension();
             $filename = time() . '.' . $extension;
             $path = $request->file('photo')->storeAs('photos', $filename, 'public');
-            
+
             $personData['photo'] = $path;
         }
 

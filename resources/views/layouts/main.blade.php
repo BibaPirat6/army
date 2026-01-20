@@ -15,11 +15,13 @@
             {{-- admin --}}
             @if (auth()->check() && auth()->user()->role?->name === 'admin')
                 <li><a href="{{ route('home.index') }}">Главная</a></li>
-                <li><a href="{{ route('users.index') }}">Пользователи</a></li>
                 <li><a href="{{ route('employees.index') }}">Сотрудники</a></li>
-                @endif
+                <li><a href="{{ route('users.index') }}">Пользователи</a></li>
+                <li><a href="{{ route('persons.index') }}">Персональные данные</a></li>
+                <li><a href="{{ route('work-statuses.index') }}">Рабочие статусы</a></li>
+            @endif
             {{-- user --}}
-            <li><a href="{{ route('profile.index') }}">Ваш профиль</a></li>
+            <li><a href="{{ route('profile.index') }}">Профиль</a></li>
             <li>
                 <form action="{{ route('logout') }}" method="POST">@csrf <button type="submit">Выйти из
                         аккаунта</button></form>

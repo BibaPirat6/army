@@ -28,6 +28,11 @@ class Employee extends Model
         return $this->belongsTo(Person::class);
     }
 
+    public function workStatus()
+    {
+        return $this->belongsTo(WorkStatus::class, 'work_status_id');
+    }
+
     // public function positions()
     // {
     //     return $this->hasMany(EmployeePosition::class);
