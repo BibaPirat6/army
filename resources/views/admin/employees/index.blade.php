@@ -31,6 +31,7 @@
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->login }}</option>
                     @endforeach
+                    <option selected value="null">Не выбирать</option>
                 @else
                     <option selected disabled>Нет свободных персональных данных</option>
                 @endif
@@ -44,6 +45,7 @@
                             {{ $person->last_name }} {{ $person->first_name }} {{ $person->phone }}
                         </option>
                     @endforeach
+                    <option selected value="null">Не выбирать</option>
                 @else
                     <option selected disabled>Нет свободных персональных данных</option>
                 @endif
@@ -52,12 +54,12 @@
             <label for="role">Выберите роль*</label><br>
             <select name="role" id="role">
                 <option value="admin">Администратор (HR)</option>
-                <option value="user">Обычный пользователь</option>
+                <option value="user" selected>Обычный пользователь</option>
             </select> <br>
 
             <label for="work_status">Рабочий статус*</label><br>
             <select name="work_status" id="work_status">
-                <option value="vacant">ВАКАНТ</option>
+                <option value="vacant" selected>ВАКАНТ</option>
                 <option value="fired">УВОЛЕН</option>
                 <option value="active">РАБОТАЕТ</option>
             </select> <br>
@@ -85,9 +87,11 @@
                                 {{ $employee->user->updated_at ? $employee->user->updated_at->format('d.m.Y H:i') : '—' }}
                                 </p>
                             </li>
+                            <li><button>Изменить пользователя</button></li>
                         </ul>
                     @else
                         <p style="color: gray;">Пользователь не указан</p>
+                          <p><a href="/">Создать пользователя</a></p>
                     @endif
 
                     <p><strong>ПЕРСОНАЛЬНЫЕ ДАННЫЕ:</strong></p>
@@ -104,9 +108,11 @@
                                 {{ $employee->person->updated_at ? $employee->person->updated_at->format('d.m.Y H:i') : '—' }}
                                 </p>
                             </li>
+                            <li><button>Изменить данные</button></li>
                         </ul>
                     @else
                         <p style="color: gray;">Персона не указана</p>
+                        <p><a href="/">Создать персональные данные</a></p>
                     @endif
 
                     <p><strong>РОЛЬ:</strong> {{ $employee->role ?? '—' }}</p>
@@ -116,9 +122,9 @@
                         {{ $employee->updated_at ? $employee->updated_at->format('d.m.Y H:i') : '—' }}</p>
                 </div>
                 <div>
-                    <p><a href="{{ route('employees.update.index', $employee->id) }}">Изменить</a></p>
+                    <p><a href="{{ route('employees.update.index', $employee->id) }}">Изменить сотрудника</a></p>
                     <form action="{{ route('employees.delete', $employee->id) }}" method="post">@csrf <button
-                            type="submit">Удалить</button>
+                            type="submit">Удалить сотрудника</button>
                     </form>
                 </div>
             </div>

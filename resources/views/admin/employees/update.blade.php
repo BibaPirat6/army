@@ -17,9 +17,48 @@
 
     <p><a href="{{ url()->previous() }}">Назад</a></p>
 
-    {{-- здесь --}}
-    <form action="" method="">
-        <button></button>
+    <form action="{{ route('employees.update.post', $employee->id) }}" method="post">
+        @csrf
+        <label for="user_id">Выберите пользователя</label><br>
+        <select name="user_id" id="user_id">
+            @if ($users && count($persons) > 0)
+                @foreach ($users as $user)
+                    <option value="{{ $user->id }}">{{ $user->login }}</option>
+                @endforeach
+                <option selected value="null">Не выбирать</option>
+            @else
+                <option selected disabled>Нет свободных персональных данных</option>
+            @endif
+        </select><br>
+
+        <label for="person_id">Выберите персональные данные сотрудника</label><br>
+        <select name="person_id" id="person_id">
+            @if ($persons && count($persons) > 0)
+                @foreach ($persons as $person)
+                    <option value="{{ $person->id }}">
+                        {{ $person->last_name }} {{ $person->first_name }} {{ $person->phone }}
+                    </option>
+                @endforeach
+                <option selected value="null">Не выбирать</option>
+            @else
+                <option selected disabled>Нет свободных персональных данных</option>
+            @endif
+        </select> <br>
+
+        <label for="role">Выберите роль*</label><br>
+        <select name="role" id="role">
+            <option value="admin">Администратор (HR)</option>
+            <option value="user">Обычный пользователь</option>
+        </select> <br>
+
+        <label for="work_status">Рабочий статус*</label><br>
+        <select name="work_status" id="work_status">
+            <option value="vacant">ВАКАНТ</option>
+            <option value="fired">УВОЛЕН</option>
+            <option value="active">РАБОТАЕТ</option>
+        </select> <br>
+
+        <button type="submit">Изменить</button>
     </form>
-    
+
 @endsection

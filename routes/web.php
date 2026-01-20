@@ -26,4 +26,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
     Route::post("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
     Route::get("/employees/{id}/update", [EmployeesController::class, "updateShow"])->name("employees.update.index");
+    Route::post("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
 });
