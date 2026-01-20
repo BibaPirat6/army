@@ -131,7 +131,6 @@ class EmployeesController extends Controller
             'work_status' => $data['work_status'],
         ];
 
-        dd($updateData);
 
         // Employee::findOrFail($id)->update($updateData);
 
