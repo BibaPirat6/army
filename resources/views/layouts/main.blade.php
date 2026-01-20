@@ -9,15 +9,17 @@
 </head>
 
 <body>
+    {{-- навигация --}}
     <nav>
         <ul>
             {{-- admin --}}
-            @if (auth()->check() && auth()->user()->employee?->role === 'admin')
+            @if (auth()->check() && auth()->user()->role?->name === 'admin')
                 <li><a href="{{ route('home.index') }}">Главная</a></li>
                 <li><a href="{{ route('users.index') }}">Пользователи</a></li>
                 <li><a href="{{ route('employees.index') }}">Сотрудники</a></li>
-            @endif
+                @endif
             {{-- user --}}
+            <li><a href="{{ route('profile.index') }}">Ваш профиль</a></li>
             <li>
                 <form action="{{ route('logout') }}" method="POST">@csrf <button type="submit">Выйти из
                         аккаунта</button></form>

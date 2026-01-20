@@ -14,9 +14,10 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        $employee = auth()->user()->employee;
+        $user = auth()->user();
+        $role = $user->role;
 
-        if (!$employee || $employee->role !== 'admin') {
+        if (!$role || $role->name !== 'admin') {
             abort(403, 'Доступ только для администратора');
         }
 

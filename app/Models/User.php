@@ -25,6 +25,7 @@ class User extends Authenticatable
         'login',
         'password_hash',
         'api_token',
+        'role_id',
     ];
 
     /**
@@ -62,5 +63,10 @@ class User extends Authenticatable
     public function employee()
     {
         return $this->hasOne(Employee::class);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 }

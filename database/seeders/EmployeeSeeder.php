@@ -24,26 +24,26 @@ class EmployeeSeeder extends Seeder
                 'person_id' => $personIds[0],
                 'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[1],
                 'person_id' => $personIds[1],
                 'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'user_id' => $userIds[2],
                 'person_id' => $personIds[2],
                 'work_status_id' => $inactiveStatus->id,
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
         foreach ($employees as $employee) {
-            DB::table('employees')->updateOrInsert(
-                ['user_id' => $employee['user_id']],
-                $employee
-            );
+            DB::table('employees')->insert($employee);
         }
     }
 }

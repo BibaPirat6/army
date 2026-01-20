@@ -16,6 +16,7 @@ class Person extends Model
         "patronymic",
         "phone",
         "email",
+        "photo",
     ];
 
     public function employee()
