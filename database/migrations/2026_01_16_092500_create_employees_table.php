@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('person_id')->unique()->nullable()->constrained('persons')->onDelete('cascade');
-            $table->enum('role', ['admin', 'user'])->default('user');
-            $table->enum('work_status', ['vacant', 'fired', 'active'])->default('active');
+            $table->foreignId('work_status_id')->nullable()->constrained('work_statuses')->onDelete('set null');
             $table->timestamps();
 
             $table->softDeletes();

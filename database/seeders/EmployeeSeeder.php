@@ -12,30 +12,29 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-
         $userIds = DB::table('users')->pluck('id')->toArray();
         $personIds = DB::table('persons')->pluck('id')->toArray();
+        
+        $activeStatus = DB::table('work_statuses')->where('name', 'active')->first();
+        $inactiveStatus = DB::table('work_statuses')->where('name', 'inactive')->first();
 
         $employees = [
             [
                 'user_id' => $userIds[0],
                 'person_id' => $personIds[0],
-                'role' => 'admin',
-                'work_status' => 'active',
+                'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
             ],
             [
                 'user_id' => $userIds[1],
                 'person_id' => $personIds[1],
-                'role' => 'user',
-                'work_status' => 'active',
+                'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
             ],
             [
                 'user_id' => $userIds[2],
                 'person_id' => $personIds[2],
-                'role' => 'user',
-                'work_status' => 'active',
+                'work_status_id' => $inactiveStatus->id,
                 'created_at' => now(),
             ],
         ];

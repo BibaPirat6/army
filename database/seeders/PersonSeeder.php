@@ -19,6 +19,7 @@ class PersonSeeder extends Seeder
                 'patronymic' => 'Иванович',
                 'phone' => '+7 (999) 123-45-67',
                 'email' => 'ivanov@example.com',
+                'photo' => 'photos/ivanov.jpg',
                 'created_at' => now(),
             ],
             [
@@ -27,6 +28,7 @@ class PersonSeeder extends Seeder
                 'patronymic' => 'Петрович',
                 'phone' => '+7 (999) 234-56-78',
                 'email' => 'petrov@example.com',
+                'photo' => 'photos/petrov.jpg',
                 'created_at' => now(),
             ],
             [
@@ -35,6 +37,7 @@ class PersonSeeder extends Seeder
                 'patronymic' => 'Сергеевна',
                 'phone' => '+7 (999) 345-67-89',
                 'email' => 'sidorova@example.com',
+                'photo' => 'photos/sidorova.jpg',
                 'created_at' => now(),
             ],
         ]);
