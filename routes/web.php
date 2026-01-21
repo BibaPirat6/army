@@ -41,7 +41,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
     Route::delete("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
     Route::get("/employees/{id}/update", [EmployeesController::class, "updateShow"])->name("employees.update.index");
-    Route::post("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
+    Route::put("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
 
     // persons
     Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");

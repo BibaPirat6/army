@@ -19,6 +19,7 @@
 
     <form action="{{ route('employees.update.post', $employee->id) }}" method="post">
         @csrf
+        @method('PUT')
         <label for="user_id">Выберите пользователя</label><br>
         <select name="user_id" id="user_id">
             <option value="">Не выбирать</option>

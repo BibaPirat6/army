@@ -74,7 +74,7 @@ class PersonsController extends Controller
         $person = Person::findOrFail($id);
         $person->delete();
 
-        return redirect()->route('persons.index')->with('success', 'Персональные данные удалены!');
+        return redirect()->back()->with('success', 'Персональные данные удалены!');
     }
 
     public function updateShow($id)

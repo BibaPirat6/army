@@ -54,7 +54,7 @@ class UsersController extends Controller
         $res = User::where('id', $id)->delete();
 
         if ($res) {
-            return redirect()->route('users.index')
+            return redirect()->back()
                 ->with('success', 'Пользователь удален');
         }
 

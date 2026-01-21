@@ -83,7 +83,14 @@
                                 {{ $employee->user->updated_at ? $employee->user->updated_at->format('d.m.Y H:i') : '—' }}
                                 </p>
                             </li>
-                            <li><button>Изменить пользователя</button></li>
+                            <li><a href="{{ route('users.update.index', $employee->user->id) }}">Изменить пользователя</a>
+                            </li>
+                            <li>
+                                <form action="{{ route('users.delete', $employee->user->id) }}" method="post">
+                                    @method('DELETE') @csrf
+                                    <button>Удалить пользователя</button>
+                                </form>
+                            </li>
                         </ul>
                     @else
                         <p style="color: gray;">Пользователь не указан</p>
@@ -112,7 +119,13 @@
                                     </div>
                                 @endif
                             </li>
-                            <li><button>Изменить данные</button></li>
+                            <li><a href="{{ route('persons.update.index', $employee->person->id) }}">Изменить данные</a></li>
+                            <li>
+                                <form action="{{ route('persons.delete', $employee->person->id) }}" method="post">
+                                    @method('DELETE') @csrf
+                                    <button>Удалить данные</button>
+                                </form>
+                            </li>
                         </ul>
                     @else
                         <p style="color: gray;">Персона не указана</p>

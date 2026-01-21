@@ -109,6 +109,8 @@ class EmployeesController extends Controller
 
     public function update(Request $request, $id)
     {
+        $employee = Employee::findOrFail($id);
+
         $requestData = $request->all();
         if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
             $requestData['user_id'] = null;
@@ -131,12 +133,12 @@ class EmployeesController extends Controller
         ])->validate();
 
         $employeeData = [
-            'work_status_id' => $data['work_status'],
-            'user_id' => $data['user_id'] ?? null,
-            'person_id' => $data['person_id'] ?? null,
+            'work_status_id' => $data['work_status'] ?? $employee->work_status_id,
+            'user_id' => $data['user_id'] !== null ? $data['user_id'] : $employee->user_id,
+            'person_id' => $data['person_id'] !== null ? $data['person_id'] : $employee->person_id,
         ];
 
-        Employee::findOrFail($id)->update($employeeData);
+        $employee->update($employeeData);
 
         return redirect()->route("employees.index")->with("success", "Сотрудник обновлен!");
     }
