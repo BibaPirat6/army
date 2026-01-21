@@ -39,7 +39,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // employess
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
     Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
-    Route::post("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
+    Route::delete("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
     Route::get("/employees/{id}/update", [EmployeesController::class, "updateShow"])->name("employees.update.index");
     Route::post("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
 
@@ -53,4 +53,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // work statuses
     Route::get("/work-statuses", [WorkStatuses::class, "index"])->name("work-statuses.index");
     Route::post("/work-statuses", [WorkStatuses::class, "create"])->name("work-statuses.post");
+    Route::delete("/work-statuses/{id}/delete", [WorkStatuses::class, "delete"])->name("work-statuses.delete");
 });

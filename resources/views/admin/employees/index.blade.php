@@ -53,15 +53,20 @@
 
             <label for="role">Выберите роль*</label><br>
             <select name="role" id="role">
-                <option value="admin">Администратор (HR)</option>
-                <option value="user" selected>Обычный пользователь</option>
+                @foreach ($roles as $role)
+                    <option value="{{ $role->id }}" @if ($role->name == 'user') selected @endif>
+                        {{ $role->description }}
+                    </option>
+                @endforeach
             </select> <br>
 
             <label for="work_status">Рабочий статус*</label><br>
             <select name="work_status" id="work_status">
-                <option value="vacant" selected>ВАКАНТ</option>
-                <option value="fired">УВОЛЕН</option>
-                <option value="active">РАБОТАЕТ</option>
+                @foreach ($statuses as $status)
+                    <option value="{{ $status->id }}" @if ($status->name == 'inactive') selected @endif>
+                        {{ $status->description }}
+                    </option>
+                @endforeach
             </select> <br>
 
 
@@ -91,7 +96,7 @@
                         </ul>
                     @else
                         <p style="color: gray;">Пользователь не указан</p>
-                          <p><a href="/">Создать пользователя</a></p>
+                        <p><a href="/">Создать пользователя</a></p>
                     @endif
 
                     <p><strong>ПЕРСОНАЛЬНЫЕ ДАННЫЕ:</strong></p>
@@ -103,10 +108,18 @@
                             <li>Отчество: {{ $employee->person->patronymic ?? '—' }}</li>
                             <li>Телефон: {{ $employee->person->phone ?? '—' }}</li>
                             <li>Email: {{ $employee->person->email ?? '—' }}</li>
-                            <li>Создан: {{ $employee->person->created_at ?? '—' }}</li>
+                            <li>Создан: {{ $employee->person->created_at->format('d.m.Y H:i') ?? '—' }}</li>
                             <li>Обновлен:
                                 {{ $employee->person->updated_at ? $employee->person->updated_at->format('d.m.Y H:i') : '—' }}
                                 </p>
+                            </li>
+                            <li>
+                                @if ($employee->person->photo)
+                                    <div>
+                                        <img src="{{ asset('storage/' . $employee->person->photo) }}"
+                                            alt="Фото пользователя" style="max-width: 200px; max-height: 200px;">
+                                    </div>
+                                @endif
                             </li>
                             <li><button>Изменить данные</button></li>
                         </ul>
@@ -115,16 +128,17 @@
                         <p><a href="/">Создать персональные данные</a></p>
                     @endif
 
-                    <p><strong>РОЛЬ:</strong> {{ $employee->role ?? '—' }}</p>
-                    <p><strong>СТАТУС:</strong> {{ $employee->work_status ?? '—' }}</p>
+                    <p><strong>РОЛЬ:</strong> {{ $employee->user->role->description ?? '—' }}</p>
+                    <p><strong>СТАТУС:</strong> {{ $employee->workStatus->description ?? '—' }}</p>
                     <p><strong>СОЗДАН:</strong> {{ $employee->created_at->format('d.m.Y H:i') }}</p>
                     <p><strong>ОБНОВЛЕН:</strong>
                         {{ $employee->updated_at ? $employee->updated_at->format('d.m.Y H:i') : '—' }}</p>
                 </div>
                 <div>
                     <p><a href="{{ route('employees.update.index', $employee->id) }}">Изменить сотрудника</a></p>
-                    <form action="{{ route('employees.delete', $employee->id) }}" method="post">@csrf <button
-                            type="submit">Удалить сотрудника</button>
+                    <form action="{{ route('employees.delete', $employee->id) }}" method="post">@csrf
+                        @method('DELETE')
+                        <button type="submit">Удалить сотрудника</button>
                     </form>
                 </div>
             </div>

@@ -11,7 +11,7 @@ class UsersController extends Controller
 {
     public function index()
     {
-        $users = User::withoutTrashed()->get();
+        $users = User::all();
         $roles = Role::all();
 
         return view("admin.users.index")->with(["users" => $users, "roles" => $roles]);

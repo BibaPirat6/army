@@ -34,4 +34,12 @@ class WorkStatuses extends Controller
 
         return redirect()->route("work-statuses.index")->with("success", "Рабочий статус " . $status->name . " успешно создан!");
     }
+
+    public function delete($id)
+    {
+        $status = WorkStatus::findOrFail($id);
+        $status->delete();
+
+        return redirect()->route("work-statuses.index")->with("success", "Рабочий статус " . $status->name . " успешно удален!");
+    }
 }

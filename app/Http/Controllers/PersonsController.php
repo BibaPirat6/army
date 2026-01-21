@@ -11,7 +11,7 @@ class PersonsController extends Controller
 {
     public function index()
     {
-        $persons = Person::withoutTrashed()->get();
+        $persons = Person::all();
         return view('admin.persons.index')->with('persons', $persons);
     }
 

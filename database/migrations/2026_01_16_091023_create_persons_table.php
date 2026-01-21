@@ -19,8 +19,6 @@ return new class extends Migration {
             $table->string("email", 255)->nullable();
             $table->string("photo", 255)->nullable();
             $table->timestamps();
-
-            $table->softDeletes();
         });
     }
 

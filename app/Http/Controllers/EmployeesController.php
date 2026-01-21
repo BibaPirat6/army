@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Person;
+use App\Models\Role;
 use App\Models\User;
+use App\Models\WorkStatus;
 use Illuminate\Http\Request;
 
 class EmployeesController extends Controller
@@ -12,23 +14,25 @@ class EmployeesController extends Controller
     public function index()
     {
         $employees = Employee::with(['user', 'person'])
-            ->withoutTrashed()
             ->get();
 
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)
-            ->withoutTrashed()
             ->get();
 
         $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
         $persons = Person::whereNotIn('id', $usedPersonIds)
-            ->withoutTrashed()
             ->get();
+
+        $roles = Role::all();
+        $statuses = WorkStatus::all();
 
         return view("admin.employees.index")->with([
             "employees" => $employees,
             "users" => $users,
-            "persons" => $persons
+            "persons" => $persons,
+            "roles" => $roles,
+            "statuses" => $statuses,
         ]);
     }
 
@@ -90,12 +94,10 @@ class EmployeesController extends Controller
 
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)
-            ->withoutTrashed()
             ->get();
 
         $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
         $persons = Person::whereNotIn('id', $usedPersonIds)
-            ->withoutTrashed()
             ->get();
 
         return view('admin.employees.update')->with([

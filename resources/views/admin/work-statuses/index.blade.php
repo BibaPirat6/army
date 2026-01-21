@@ -36,6 +36,12 @@
     <div>
         @foreach ($statuses as $status)
             <p>{{ $status->id }}. {{ $status->description }} - (на английском) {{ $status->name }}</p>
+            <form action="{{ route('work-statuses.delete', $status->id) }}" method="post">
+                @csrf
+                @method('DELETE')
+                <button type="submit">Удалить
+                    статус</button>
+            </form>
             <hr>
         @endforeach
     </div>
