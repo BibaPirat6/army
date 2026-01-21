@@ -94,7 +94,7 @@
                         </ul>
                     @else
                         <p style="color: gray;">Пользователь не указан</p>
-                        <p><a href="/">Создать пользователя</a></p>
+                        <p><a href="{{ route('users.index') }}">Создать пользователя</a></p>
                     @endif
 
                     <p><strong>ПЕРСОНАЛЬНЫЕ ДАННЫЕ:</strong></p>
@@ -129,7 +129,7 @@
                         </ul>
                     @else
                         <p style="color: gray;">Персона не указана</p>
-                        <p><a href="/">Создать персональные данные</a></p>
+                        <p><a href="{{ route('persons.index') }}">Создать персональные данные</a></p>
                     @endif
 
                     <p><strong>РОЛЬ:</strong> {{ $employee->user->role->description ?? '—' }}</p>
