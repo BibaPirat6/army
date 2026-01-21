@@ -27,37 +27,28 @@
 
             <label for="user_id">Выберите пользователя</label><br>
             <select name="user_id" id="user_id">
-                @if ($users && count($persons) > 0)
+                <option value="">Не выбирать</option>
+                @if ($users && count($users) > 0)
                     @foreach ($users as $user)
                         <option value="{{ $user->id }}">{{ $user->login }}</option>
                     @endforeach
-                    <option selected value="null">Не выбирать</option>
                 @else
-                    <option selected disabled>Нет свободных персональных данных</option>
+                    <option disabled>Нет свободных пользователей</option>
                 @endif
             </select><br>
 
             <label for="person_id">Выберите персональные данные сотрудника</label><br>
             <select name="person_id" id="person_id">
+                <option value="">Не выбирать</option>
                 @if ($persons && count($persons) > 0)
                     @foreach ($persons as $person)
                         <option value="{{ $person->id }}">
                             {{ $person->last_name }} {{ $person->first_name }} {{ $person->phone }}
                         </option>
                     @endforeach
-                    <option selected value="null">Не выбирать</option>
                 @else
-                    <option selected disabled>Нет свободных персональных данных</option>
+                    <option disabled>Нет свободных персональных данных</option>
                 @endif
-            </select> <br>
-
-            <label for="role">Выберите роль*</label><br>
-            <select name="role" id="role">
-                @foreach ($roles as $role)
-                    <option value="{{ $role->id }}" @if ($role->name == 'user') selected @endif>
-                        {{ $role->description }}
-                    </option>
-                @endforeach
             </select> <br>
 
             <label for="work_status">Рабочий статус*</label><br>

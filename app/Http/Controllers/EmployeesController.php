@@ -38,39 +38,34 @@ class EmployeesController extends Controller
 
     public function create(Request $request)
     {
-        $data = $request->validate([
-            "role" => "required|string|in:admin,user",
-            "work_status" => "required|string|in:vacant,fired,active",
+        $requestData = $request->all();
+        if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
+            $requestData['user_id'] = null;
+        }
+        if (isset($requestData['person_id']) && $requestData['person_id'] === '') {
+            $requestData['person_id'] = null;
+        }
+
+        $data = validator($requestData, [
+            "work_status" => "required|integer|exists:work_statuses,id",
+            "user_id" => "nullable|integer|min:1|exists:users,id",
+            "person_id" => "nullable|integer|min:1|exists:persons,id",
         ], [
-            'role.in' => 'Роль может быть только: admin или user',
-            'work_status.in' => 'Статус работы может быть только: vacant, fired или active',
-        ]);
+            'work_status.required' => 'Рабочий статус обязателен',
+            'work_status.exists' => 'Выбранный статус работы не существует',
+            'user_id.min' => 'ID пользователя должен быть положительным числом',
+            'user_id.exists' => 'Выбранный пользователь не существует',
+            'person_id.min' => 'ID персональных данных должен быть положительным числом',
+            'person_id.exists' => 'Выбранная персона не существует',
+        ])->validate();
 
-        if ($request->has('user_id') && $request->user_id !== 'null') {
-            $request->validate([
-                'user_id' => 'integer|min:1|exists:users,id'
-            ], [
-                'user_id.min' => 'ID пользователя должен быть положительным числом',
-                'user_id.exists' => 'Выбранный пользователь не существует',
-            ]);
-            $data['user_id'] = $request->user_id;
-        } else {
-            $data['user_id'] = null;
-        }
+        $employeeData = [
+            'work_status_id' => $data['work_status'],
+            'user_id' => $data['user_id'] ?? null,
+            'person_id' => $data['person_id'] ?? null,
+        ];
 
-        if ($request->has('person_id') && $request->person_id !== 'null') {
-            $request->validate([
-                'person_id' => 'integer|min:1|exists:persons,id'
-            ], [
-                'person_id.min' => 'ID персональных данных должен быть положительным числом',
-                'person_id.exists' => 'Выбранная персона не существует',
-            ]);
-            $data['person_id'] = $request->person_id;
-        } else {
-            $data['person_id'] = null;
-        }
-
-        Employee::create($data);
+        Employee::create($employeeData);
 
         return redirect()->route("employees.index")->with("success", "Сотрудник создан!");
     }
@@ -100,43 +95,50 @@ class EmployeesController extends Controller
         $persons = Person::whereNotIn('id', $usedPersonIds)
             ->get();
 
+        $roles = Role::all();
+        $statuses = WorkStatus::all();
+
         return view('admin.employees.update')->with([
             "employee" => $employee,
             "users" => $users,
-            "persons" => $persons
+            "persons" => $persons,
+            "roles" => $roles,
+            "statuses" => $statuses,
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $data = $request->validate([
+        $requestData = $request->all();
+        if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
+            $requestData['user_id'] = null;
+        }
+        if (isset($requestData['person_id']) && $requestData['person_id'] === '') {
+            $requestData['person_id'] = null;
+        }
+
+        $data = validator($requestData, [
+            "work_status" => "required|integer|exists:work_statuses,id",
             "user_id" => "nullable|integer|min:1|exists:users,id",
             "person_id" => "nullable|integer|min:1|exists:persons,id",
-            "role" => "required|string|in:admin,user",
-            "work_status" => "required|string|in:vacant,fired,active",
         ], [
+            'work_status.required' => 'Рабочий статус обязателен',
+            'work_status.exists' => 'Выбранный статус работы не существует',
             'user_id.min' => 'ID пользователя должен быть положительным числом',
-            'person_id.min' => 'ID персональных данных должен быть положительным числом',
             'user_id.exists' => 'Выбранный пользователь не существует',
+            'person_id.min' => 'ID персональных данных должен быть положительным числом',
             'person_id.exists' => 'Выбранная персона не существует',
-            'role.in' => 'Роль может быть только: admin или user',
-            'work_status.in' => 'Статус работы может быть только: vacant, fired или active',
-        ]);
+        ])->validate();
 
-        $user_id = $request->input('user_id', null);
-        $person_id = $request->input('person_id', null);
-
-        $updateData = [
-            'user_id' => $user_id ?: null,
-            'person_id' => $person_id ?: null,
-            'role' => $data['role'],
-            'work_status' => $data['work_status'],
+        $employeeData = [
+            'work_status_id' => $data['work_status'],
+            'user_id' => $data['user_id'] ?? null,
+            'person_id' => $data['person_id'] ?? null,
         ];
 
+        Employee::findOrFail($id)->update($employeeData);
 
-        // Employee::findOrFail($id)->update($updateData);
-
-        // return redirect()->route("employees.index")->with("success", "Сотрудник изменен!");
+        return redirect()->route("employees.index")->with("success", "Сотрудник обновлен!");
     }
 
 }
