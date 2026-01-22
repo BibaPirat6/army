@@ -4,6 +4,7 @@ use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsController;
+use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\WorkStatuses;
@@ -54,4 +55,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("/work-statuses", [WorkStatuses::class, "index"])->name("work-statuses.index");
     Route::post("/work-statuses", [WorkStatuses::class, "create"])->name("work-statuses.post");
     Route::delete("/work-statuses/{id}/delete", [WorkStatuses::class, "delete"])->name("work-statuses.delete");
+
+    // типы должностей
+    Route::get("/position-types", [PositionTypesController::class, "index"])->name("position-types.index");
+    Route::get("/position-types/create", [PositionTypesController::class, "create"])->name("position-types.create");
+    Route::post("/position-types", [PositionTypesController::class, "store"])->name("position-types.store");
+    Route::get("/position-types/{id}/edit", [PositionTypesController::class, "edit"])->name("position-types.edit");
+    Route::put("/position-types/{id}", [PositionTypesController::class, "update"])->name("position-types.update");
+    Route::delete("/position-types/{id}", [PositionTypesController::class, "delete"])->name("position-types.delete");
+
 });
