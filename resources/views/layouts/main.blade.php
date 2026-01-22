@@ -26,9 +26,9 @@
                 <li style="display: flex; justify-content: start; gap: 20px;">
                     <p style="width: auto;"><a href="{{ route('position-types.index') }}">Типы должностей</a></p>
                     <p style="width: auto;"><a href="{{ route('positions.index') }}">Должности</a></p>
-                    <p style="width: auto;"><a href="">Комиссариаты</a></p>
-                    <p style="width: auto;"><a href="">Отделы</a></p>
-                    <p style="width: auto;"><a href="">Отделения</a></p>
+                    <p style="width: auto;"><a href="{{ route('commissariats.index') }}">Комиссариаты</a></p>
+                    <p style="width: auto;"><a href="{{ route('departments.index') }}">Отделы</a></p>
+                    <p style="width: auto;"><a href="{{ route('divisions.index') }}">Отделения</a></p>
                     <p style="width: auto;"><a href="">НАЗНАЧИТЬ ДОЛЖНОСТЬ</a></p>
                     <p style="width: auto;"><a href="">СОЗДАНИЕ СТРУКТУРЫ</a></p>
                 </li>

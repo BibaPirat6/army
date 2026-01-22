@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\CommissariatsController;
+use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
@@ -73,5 +76,27 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put("/positions/{id}", [PositionsController::class, "update"])->name("positions.update");
     Route::delete("/positions/{id}", [PositionsController::class, "delete"])->name("positions.delete");
 
-    
+    // комиссариаты
+    Route::get("/commissariats", [CommissariatsController::class, "index"])->name("commissariats.index");
+    Route::get("/commissariats/create", [CommissariatsController::class, "create"])->name("commissariats.create");
+    Route::post("/commissariats", [CommissariatsController::class, "store"])->name("commissariats.store");
+    Route::get("/commissariats/{id}/edit", [CommissariatsController::class, "edit"])->name("commissariats.edit");
+    Route::put("/commissariats/{id}", [CommissariatsController::class, "update"])->name("commissariats.update");
+    Route::delete("/commissariats/{id}", [CommissariatsController::class, "delete"])->name("commissariats.delete");
+
+    // отделы
+    Route::get("/departments", [DepartmentsController::class, "index"])->name("departments.index");
+    Route::get("/departments/create", [DepartmentsController::class, "create"])->name("departments.create");
+    Route::post("/departments", [DepartmentsController::class, "store"])->name("departments.store");
+    Route::get("/departments/{id}/edit", [DepartmentsController::class, "edit"])->name("departments.edit");
+    Route::put("/departments/{id}", [DepartmentsController::class, "update"])->name("departments.update");
+    Route::delete("/departments/{id}", [DepartmentsController::class, "delete"])->name("departments.delete");
+
+    // подразделения
+    Route::get("/divisions", [DivisionsController::class, "index"])->name("divisions.index");
+    Route::get("/divisions/create", [DivisionsController::class, "create"])->name("divisions.create");
+    Route::post("/divisions", [DivisionsController::class, "store"])->name("divisions.store");
+    Route::get("/divisions/{id}/edit", [DivisionsController::class, "edit"])->name("divisions.edit");
+    Route::put("/divisions/{id}", [DivisionsController::class, "update"])->name("divisions.update");
+    Route::delete("/divisions/{id}", [DivisionsController::class, "delete"])->name("divisions.delete");
 });
