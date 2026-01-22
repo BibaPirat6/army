@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Типы должностей
+    Должности
 @endsection
 
 @section('content')
@@ -12,25 +12,27 @@
     @endif
 
 
-    <h1>Типы должностей</h1>
-    <h3><a href="{{ route('position-types.create') }}">Создать новый тип должности</a></h3>
+    <h1>Должности</h1>
+    <h3><a href="{{ route('positions.create') }}">Создать новую должность</a></h3>
 
     <table>
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Название</th>
+                <th>Тип Должности</th>
                 <th>Действия</th>
             </tr>
         </thead>
         <tbody>
-            @foreach ($types as $type)
+            @foreach ($positions as $position)
                 <tr>
-                    <td>{{ $type->id }}</td>
-                    <td>{{ $type->name }}</td>
-                    <td><a href="{{ route('position-types.edit', $type->id) }}">Редактировать</a></td>
+                    <td>{{ $position->id }}</td>
+                    <td>{{ $position->name }}</td>
+                    <td>{{ $position->positionType->name }}</td>
                     <td>
-                        <form action="{{ route('position-types.delete', $type->id) }}" method="POST">
+                        <a href="{{ route('positions.edit', $position->id) }}">Редактировать</a>
+                        <form action="{{ route('positions.delete', $position->id) }}" method="POST">
                             @csrf
                             @method('DELETE')
                             <button type="submit">Удалить</button>

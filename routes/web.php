@@ -4,6 +4,7 @@ use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsController;
+use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UsersController;
@@ -64,4 +65,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put("/position-types/{id}", [PositionTypesController::class, "update"])->name("position-types.update");
     Route::delete("/position-types/{id}", [PositionTypesController::class, "delete"])->name("position-types.delete");
 
+    // должности
+    Route::get("/positions", [PositionsController::class, "index"])->name("positions.index");
+    Route::get("/positions/create", [PositionsController::class, "create"])->name("positions.create");
+    Route::post("/positions", [PositionsController::class, "store"])->name("positions.store");
+    Route::get("/positions/{id}/edit", [PositionsController::class, "edit"])->name("positions.edit");
+    Route::put("/positions/{id}", [PositionsController::class, "update"])->name("positions.update");
+    Route::delete("/positions/{id}", [PositionsController::class, "delete"])->name("positions.delete");
+
+    
 });

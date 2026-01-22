@@ -13,7 +13,7 @@ class Position extends Model
         'position_type_id',
     ];
 
-    public function type()
+    public function positionType()
     {
         return $this->belongsTo(PositionType::class, 'position_type_id');
     }
