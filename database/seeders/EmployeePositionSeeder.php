@@ -14,17 +14,26 @@ class EmployeePositionSeeder extends Seeder
     {
         $employeeIds = DB::table('employees')->pluck('id')->toArray();
         $positionIds = DB::table('positions')->pluck('id', 'name')->toArray();
+        $commissariats = DB::table('commissariats')->pluck('id')->toArray();
+        $departments = DB::table('departments')->pluck('id', 'name')->toArray();
+        $divisions = DB::table('divisions')->pluck('id', 'name')->toArray();
 
         if (count($employeeIds) === 0 || count($positionIds) === 0) {
             return;
         }
 
         $now = now();
+        $commissariatId = $commissariats[0] ?? null;
+        $departmentId = $departments['Финансовый отдел'] ?? null;
+        $divisionId = $divisions['Строевое отделение'] ?? null;
 
         $rows = [
             [
                 'employee_id' => $employeeIds[0],
                 'position_id' => $positionIds['Менеджер'] ?? array_values($positionIds)[0],
+                'commissariat_id' => $commissariatId,
+                'department_id' => $departmentId,
+                'division_id' => $divisionId,
                 'rate' => 1.00,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -35,6 +44,9 @@ class EmployeePositionSeeder extends Seeder
             $rows[] = [
                 'employee_id' => $employeeIds[1],
                 'position_id' => $positionIds['Специалист'],
+                'commissariat_id' => $commissariatId,
+                'department_id' => $departments['Отдел кадров'] ?? null,
+                'division_id' => $divisions['Отделение по борьбе с наркотиками'] ?? null,
                 'rate' => 1.00,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -45,6 +57,9 @@ class EmployeePositionSeeder extends Seeder
             $rows[] = [
                 'employee_id' => $employeeIds[2],
                 'position_id' => $positionIds['Оператор'],
+                'commissariat_id' => $commissariatId,
+                'department_id' => $departmentId,
+                'division_id' => null,
                 'rate' => 0.50,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -54,7 +69,7 @@ class EmployeePositionSeeder extends Seeder
         DB::table('employee_positions')->upsert(
             $rows,
             ['employee_id', 'position_id'],
-            ['rate', 'updated_at']
+            ['rate', 'commissariat_id', 'department_id', 'division_id', 'updated_at']
         );
     }
 }

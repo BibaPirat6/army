@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Department extends Model
 {
@@ -10,42 +12,41 @@ class Department extends Model
 
     protected $fillable = [
         'name',
-        'is_active',
+        'commissariat_id',
+        'chief_employee_id',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    /**
+     * Получить комиссариат, к которому относится отдел
+     */
+    public function commissariat(): BelongsTo
+    {
+        return $this->belongsTo(Commissariat::class);
+    }
+
+    /**
+     * Получить начальника отдела
+     */
+    public function chiefEmployee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'chief_employee_id');
+    }
 
     /**
      * Получить все отделения отдела
      */
-    public function divisions()
+    public function divisions(): HasMany
     {
-        $divisionLinks = OrgLink::where('parent_type', 'department')
-            ->where('parent_id', $this->id)
-            ->where('child_type', 'division')
-            ->get();
-
-        return collect($divisionLinks)
-            ->map(fn($link) => Division::find($link->child_id))
-            ->filter()
-            ->values();
+        return $this->hasMany(Division::class);
     }
 
     /**
-     * Получить всех сотрудников отдела
+     * Получить всех сотрудников отдела через должности
      */
     public function employees()
     {
-        $employeeLinks = OrgLink::where('parent_type', 'department')
-            ->where('parent_id', $this->id)
-            ->where('child_type', 'employee')
-            ->get();
-
-        return collect($employeeLinks)
-            ->map(fn($link) => Employee::find($link->child_id))
-            ->filter()
-            ->values();
+        return Employee::whereHas('positions', function ($query) {
+            $query->where('department_id', $this->id);
+        })->get();
     }
 }

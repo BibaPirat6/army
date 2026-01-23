@@ -13,17 +13,25 @@ class DivisionSeeder extends Seeder
     public function run(): void
     {
         $now = now();
+        $commissariats = DB::table('commissariats')->pluck('id')->toArray();
+        $commissariatId = $commissariats[0] ?? null;
+        $departments = DB::table('departments')->pluck('id', 'name')->toArray();
 
-        foreach ([
-            ['name' => 'Строевое отделение', 'specialization' => 'Связь и сети', 'is_active' => true],
-            ['name' => 'Отделение по борьбе с наркотиками', 'specialization' => null, 'is_active' => true],
-        ] as $row) {
+        $divisionData = [
+            ['name' => 'Строевое отделение', 'department_name' => 'Финансовый отдел'],
+            ['name' => 'Отделение по борьбе с наркотиками', 'department_name' => 'Отдел кадров'],
+        ];
+
+        foreach ($divisionData as $row) {
+            $departmentId = isset($departments[$row['department_name']]) ? $departments[$row['department_name']] : null;
+
             DB::table('divisions')->updateOrInsert(
                 ['name' => $row['name']],
                 [
                     'name' => $row['name'],
-                    'specialization' => $row['specialization'],
-                    'is_active' => $row['is_active'],
+                    'commissariat_id' => $commissariatId,
+                    'department_id' => $departmentId,
+                    'chief_employee_id' => null,
                     'updated_at' => $now,
                     'created_at' => $now,
                 ]

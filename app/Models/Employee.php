@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
@@ -14,24 +16,43 @@ class Employee extends Model
         'work_status_id',
     ];
 
-    public function user()
+    /**
+     * Получить пользователя
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function person()
+    /**
+     * Получить персону
+     */
+    public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
     }
 
-    public function workStatus()
+    /**
+     * Получить статус работы
+     */
+    public function workStatus(): BelongsTo
     {
         return $this->belongsTo(WorkStatus::class, 'work_status_id');
     }
 
-    public function positions()
+    /**
+     * Получить все должности сотрудника
+     */
+    public function positions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);
     }
 
+    /**
+     * Получить должности с позициями
+     */
+    public function employeePositions(): HasMany
+    {
+        return $this->hasMany(EmployeePosition::class);
+    }
 }

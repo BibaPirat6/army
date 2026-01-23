@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Commissariat extends Model
 {
@@ -10,58 +12,40 @@ class Commissariat extends Model
 
     protected $fillable = [
         'name',
-        'is_active',
+        'chief_employee_id',
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    /**
+     * Получить начальника комиссариата
+     */
+    public function chiefEmployee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'chief_employee_id');
+    }
 
     /**
      * Получить все отделы комиссариата
      */
-    public function departments()
+    public function departments(): HasMany
     {
-        $departmentLinks = OrgLink::where('parent_type', 'commissariat')
-            ->where('parent_id', $this->id)
-            ->where('child_type', 'department')
-            ->get();
-
-        return collect($departmentLinks)
-            ->map(fn($link) => Department::find($link->child_id))
-            ->filter()
-            ->values();
+        return $this->hasMany(Department::class);
     }
 
     /**
      * Получить все отделения комиссариата
      */
-    public function divisions()
+    public function divisions(): HasMany
     {
-        $divisionLinks = OrgLink::where('parent_type', 'commissariat')
-            ->where('parent_id', $this->id)
-            ->where('child_type', 'division')
-            ->get();
-
-        return collect($divisionLinks)
-            ->map(fn($link) => Division::find($link->child_id))
-            ->filter()
-            ->values();
+        return $this->hasMany(Division::class);
     }
 
     /**
-     * Получить всех сотрудников комиссариата
+     * Получить всех сотрудников комиссариата через должности
      */
     public function employees()
     {
-        $employeeLinks = OrgLink::where('parent_type', 'commissariat')
-            ->where('parent_id', $this->id)
-            ->where('child_type', 'employee')
-            ->get();
-
-        return collect($employeeLinks)
-            ->map(fn($link) => Employee::find($link->child_id))
-            ->filter()
-            ->values();
+        return Employee::whereHas('positions', function ($query) {
+            $query->where('commissariat_id', $this->id);
+        })->get();
     }
 }

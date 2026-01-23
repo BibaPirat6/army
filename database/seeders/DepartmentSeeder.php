@@ -13,14 +13,22 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $now = now();
+        $commissariats = DB::table('commissariats')->pluck('id')->toArray();
+        $commissariatId = $commissariats[0] ?? null;
 
         foreach ([
-            ['name' => 'Отдел кадров', 'is_active' => true],
-            ['name' => 'Финансовый отдел', 'is_active' => true],
+            ['name' => 'Отдел кадров'],
+            ['name' => 'Финансовый отдел'],
         ] as $row) {
             DB::table('departments')->updateOrInsert(
                 ['name' => $row['name']],
-                ['name' => $row['name'], 'is_active' => $row['is_active'], 'updated_at' => $now, 'created_at' => $now]
+                [
+                    'name' => $row['name'],
+                    'commissariat_id' => $commissariatId,
+                    'chief_employee_id' => null,
+                    'updated_at' => $now,
+                    'created_at' => $now
+                ]
             );
         }
     }

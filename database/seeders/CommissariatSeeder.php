@@ -15,12 +15,12 @@ class CommissariatSeeder extends Seeder
         $now = now();
 
         foreach ([
-            ['name' => 'Архангельский комиссариат №1', 'is_active' => true],
-            ['name' => 'Северодвинский комиссариат №1', 'is_active' => true],
+            ['name' => 'Архангельский комиссариат №1'],
+            ['name' => 'Северодвинский комиссариат №1'],
         ] as $row) {
             DB::table('commissariats')->updateOrInsert(
                 ['name' => $row['name']],
-                ['name' => $row['name'], 'is_active' => $row['is_active'], 'updated_at' => $now, 'created_at' => $now]
+                ['name' => $row['name'], 'chief_employee_id' => null, 'updated_at' => $now, 'created_at' => $now]
             );
         }
     }
