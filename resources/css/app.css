@@ -1,3 +1,21 @@
-body{
+@import "tailwindcss";
+
+body {
     background-color: #979797;
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-size: 30px;
+    font-family: 'Arial', sans-serif;
+    color: #333333;
+}
+
+a{
+    text-decoration: underline;
+    color: #025704;
+}
+
+button{
+    background-color: #ab2b2b;
+    cursor: pointer;
 }

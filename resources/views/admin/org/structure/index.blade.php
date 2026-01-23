@@ -6,4 +6,6 @@
 
 @section(section: 'content')
     <h1>Комиссариаты</h1>
+
+   
 @endsection
