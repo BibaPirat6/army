@@ -30,7 +30,7 @@
                     <p style="width: auto;"><a href="{{ route('departments.index') }}">Отделы</a></p>
                     <p style="width: auto;"><a href="{{ route('divisions.index') }}">Отделения</a></p>
                     <p style="width: auto;"><a href="{{ route('employee-positions.index') }}">НАЗНАЧИТЬ ДОЛЖНОСТЬ</a></p>
-                    <p style="width: auto;"><a href="">СОЗДАНИЕ СТРУКТУРЫ</a></p>
+                    <p style="width: auto;"><a href="{{ route('structure.index') }}">СОЗДАНИЕ СТРУКТУРЫ</a></p>
                 </li>
             @endif
             {{-- user --}}

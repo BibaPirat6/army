@@ -11,6 +11,7 @@ use App\Http\Controllers\PersonsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StructureController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\WorkStatuses;
 use Illuminate\Support\Facades\Route;
@@ -105,4 +106,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("/employee-positions", [EmployeePositionsController::class, "index"])->name("employee-positions.index");
     Route::get("/employee-positions/{id}/create", [EmployeePositionsController::class, "create"])->name("employee-positions.create");
     Route::post("/employee-positions/{id}", [EmployeePositionsController::class, "store"])->name("employee-positions.store");
+    Route::get("/employee-positions/{id}/edit", [EmployeePositionsController::class, "edit"])->name("employee-positions.edit");
+    Route::put("/employee-positions/{id}", [EmployeePositionsController::class, "update"])->name("employee-positions.update");
+    Route::delete("/employee-positions/{id}", [EmployeePositionsController::class, "delete"])->name("employee-positions.delete");
+    Route::delete("/employee-positions/{id}", [EmployeePositionsController::class, "destroy"])->name("employee-positions.destroy");
+
+    // создание структуры
+    Route::get("/structure", [StructureController::class, "index"])->name("structure.index");
 });

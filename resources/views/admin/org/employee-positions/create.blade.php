@@ -5,12 +5,11 @@
 @endsection
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
+    @if ($errors->any())
+        @foreach ($errors->all() as $error)
+            <div style="color: red;">{{ $error }}</div>
+        @endforeach
     @endif
-
 
     <h1>Создание назначения должности сотруднику</h1>
     <p><a href="{{ route('employee-positions.index') }}">Назад к списку назначений</a></p>
@@ -49,9 +48,27 @@
             </div>
             <hr>
         @endforeach
-        <?php
-        echo '<pre>';
-        print_r($employee->toarray());
-        ?>
+
+
+        <h2>Назначение новой должности</h2>
+        <form action="{{ route('employee-positions.store', $employee->id) }}" method="POST">
+            @csrf
+            <div>
+                <label for="position_id">Должность:</label>
+                <select name="position_id" id="position_id">
+                    @foreach ($positions as $position)
+                    <option value="{{ $position->id }}">{{ $position->name }}</option>
+                @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label for="rate">Ставка:</label>
+                <input type="text" name="rate" id="rate" placeholder="Введите ставку"
+                    value="{{ old('rate', 1) }}">
+            </div>
+
+            <button type="submit">Назначить</button>
+        </form>
     </div>
 @endsection

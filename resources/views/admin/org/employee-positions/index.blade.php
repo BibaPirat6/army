@@ -46,6 +46,12 @@
                     </td>
                     <td>
                         <p><a href="{{ route('employee-positions.create', $employee->id) }}">Назначить должность</a></p>
+                        <p><a href="{{ route('employee-positions.edit', $employee->id) }}">Редактировать</a></p>
+                        <form action="{{ route('employee-positions.destroy', $employee->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Удалить все назначения</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
