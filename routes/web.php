@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\DivisionsController;
+use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
@@ -99,4 +100,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("/divisions/{id}/edit", [DivisionsController::class, "edit"])->name("divisions.edit");
     Route::put("/divisions/{id}", [DivisionsController::class, "update"])->name("divisions.update");
     Route::delete("/divisions/{id}", [DivisionsController::class, "delete"])->name("divisions.delete");
+
+    // назначение сотруднику должности
+    Route::get("/employee-positions", [EmployeePositionsController::class, "index"])->name("employee-positions.index");
+    Route::get("/employee-positions/{id}/create", [EmployeePositionsController::class, "create"])->name("employee-positions.create");
+    Route::post("/employee-positions/{id}", [EmployeePositionsController::class, "store"])->name("employee-positions.store");
 });
