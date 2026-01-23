@@ -19,4 +19,40 @@ class OrgLink extends Model
     protected $casts = [
         'is_independent' => 'boolean',
     ];
+
+    /**
+     * Получить полиморфного родителя
+     */
+    public function getParent()
+    {
+        $modelClass = match($this->parent_type) {
+            'commissariat' => Commissariat::class,
+            'department' => Department::class,
+            default => null,
+        };
+
+        if ($modelClass) {
+            return $modelClass::find($this->parent_id);
+        }
+        return null;
+    }
+
+    /**
+     * Получить полиморфного ребенка
+     */
+    public function getChild()
+    {
+        $modelClass = match($this->child_type) {
+            'department' => Department::class,
+            'division' => Division::class,
+            'employee' => Employee::class,
+            'position' => Position::class,
+            default => null,
+        };
+
+        if ($modelClass) {
+            return $modelClass::find($this->child_id);
+        }
+        return null;
+    }
 }

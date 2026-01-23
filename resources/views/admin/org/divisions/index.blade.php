@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Подразделения
+    Отделения
 @endsection
 
 @section('content')
@@ -12,8 +12,8 @@
     @endif
 
 
-    <h1>Подразделения</h1>
-    <h3><a href="{{ route('divisions.create') }}">Добавить подразделение</a></h3>
+    <h1>Отделения</h1>
+    <h3><a href="{{ route('divisions.create') }}">Добавить отделение</a></h3>
 
     <table>
         <thead>

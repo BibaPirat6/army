@@ -2,12 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commissariat;
+use App\Models\OrgLink;
 use Illuminate\Http\Request;
 
 class StructureController extends Controller
 {
     public function index()
     {
-        return view('admin.org.structure.index');
+        $commissariats = Commissariat::all();
+        return view('admin.org.structure.index', compact('commissariats'));
+    }
+
+    public function show($id)
+    {
+        $commissariat = Commissariat::findOrFail($id);
+
+        $departments = $commissariat->departments();
+        $divisions = $commissariat->divisions();
+        $employees = $commissariat->employees();
+
+        $departmentDivisions = [];
+        $departmentEmployees = [];
+        foreach ($departments as $dept) {
+            $departmentDivisions[$dept->id] = $dept->divisions();
+            $departmentEmployees[$dept->id] = $dept->employees();
+        }
+
+        return view('admin.org.structure.show', compact('commissariat', 'departments', 'divisions', 'employees', 'departmentDivisions', 'departmentEmployees'));
     }
 }

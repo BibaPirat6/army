@@ -113,4 +113,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // создание структуры
     Route::get("/structure", [StructureController::class, "index"])->name("structure.index");
+    Route::get("/structure/{id}/commissariat", [StructureController::class, "show"])->name("structure.show");
 });

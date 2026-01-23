@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Добавление подразделения
+    Добавление отделения
 @endsection
 
 @section('content')
@@ -14,14 +14,14 @@
     @endif
 
 
-    <h1> Добавление подразделения</h1>
+    <h1> Добавление отделения</h1>
     <p><a href="{{ route('divisions.index') }}">Назад к списку</a></p>
 
     <form action="{{ route('divisions.store') }}" method="POST">
         @csrf
         <div>
-            <label for="name">Название подразделения:</label>
-            <input type="text" name="name" id="name" placeholder="Название подразделения" value="{{ old('name') }}">
+            <label for="name">Название отделения:</label>
+            <input type="text" name="name" id="name" placeholder="Название отделения" value="{{ old('name') }}">
         </div>
 
         <div>

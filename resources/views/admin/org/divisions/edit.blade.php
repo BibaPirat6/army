@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Изменение подразделения
+    Изменение отделения
 @endsection
 
 @section('content')
@@ -14,15 +14,15 @@
     @endif
 
 
-    <h1>Изменение подразделения</h1>
+    <h1>Изменение отделения</h1>
     <p><a href="{{ route('divisions.index') }}">Назад к списку</a></p>
 
     <form action="{{ route('divisions.update', $division->id) }}" method="POST">
         @csrf
         @method('PUT')
         <div>
-            <label for="name">Название подразделения:</label>
-            <input type="text" name="name" id="name" placeholder="Название подразделения"
+            <label for="name">Название отделения:</label>
+            <input type="text" name="name" id="name" placeholder="Название отделения"
                 value="{{ old('name', $division->name) }}">
         </div>
 
