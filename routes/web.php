@@ -13,7 +13,7 @@ use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
 use App\Http\Controllers\UsersController;
-use App\Http\Controllers\WorkStatuses;
+use App\Http\Controllers\WorkStatusesController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -38,10 +38,11 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     // users
     Route::get("/users", [UsersController::class, "index"])->name("users.index");
-    Route::post("/users", [UsersController::class, "create"])->name("users.post");
-    Route::delete("/users/{id}/delete", [UsersController::class, "delete"])->name("users.delete");
-    Route::get("/users/{id}/update", [UsersController::class, "updateShow"])->name("users.update.index");
-    Route::put("/users/{id}/update", [UsersController::class, "update"])->name("users.update.post");
+    // Route::get("/users", [UsersController::class, "create"])->name("users.create");
+    // Route::post("/users", [UsersController::class, "store"])->name("users.store");
+    // Route::get("/users/{id}/update", [UsersController::class, "edit"])->name("users.edit");
+    // Route::put("/users/{id}", [UsersController::class, "update"])->name("users.update");
+    // Route::delete("/users/{id}", [UsersController::class, "delete"])->name("users.delete");
 
     // employess
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
@@ -52,15 +53,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // persons
     Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");
-    Route::post("/persons", [PersonsController::class, "create"])->name("persons.post");
-    Route::delete("/persons/{id}/delete", [PersonsController::class, "delete"])->name("persons.delete");
-    Route::get("/persons/{id}/update", [PersonsController::class, "updateShow"])->name("persons.update.index");
-    Route::put("/persons/{id}/update", [PersonsController::class, "update"])->name("persons.update.post");
+    Route::get("/persons/create", [PersonsController::class, "create"])->name("persons.create");
+    Route::post("/persons", [PersonsController::class, "store"])->name("persons.store");
+    Route::get("/persons/{id}/edit", [PersonsController::class, "edit"])->name("persons.edit");
+    Route::put("/persons/{id}", [PersonsController::class, "update"])->name("persons.update");
+    Route::delete("/persons/{id}", [PersonsController::class, "delete"])->name("persons.delete");
 
     // work statuses
-    Route::get("/work-statuses", [WorkStatuses::class, "index"])->name("work-statuses.index");
-    Route::post("/work-statuses", [WorkStatuses::class, "create"])->name("work-statuses.post");
-    Route::delete("/work-statuses/{id}/delete", [WorkStatuses::class, "delete"])->name("work-statuses.delete");
+    Route::get("/work-statuses", [WorkStatusesController::class, "index"])->name("work-statuses.index");
+    Route::get("/work-statuses/create", [WorkStatusesController::class, "create"])->name("work-statuses.create");
+    Route::post("/work-statuses", [WorkStatusesController::class, "store"])->name("work-statuses.store");
+    Route::get("/work-statuses/{id}/edit", [WorkStatusesController::class, "edit"])->name("work-statuses.edit");
+    Route::put("/work-statuses/{id}", [WorkStatusesController::class, "update"])->name("work-statuses.update");
+    Route::delete("/work-statuses/{id}", [WorkStatusesController::class, "delete"])->name("work-statuses.delete");
 
     // типы должностей
     Route::get("/position-types", [PositionTypesController::class, "index"])->name("position-types.index");

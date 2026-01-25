@@ -11,11 +11,16 @@ class PersonsController extends Controller
 {
     public function index()
     {
-        $persons = Person::all();
+        $persons = Person::paginate(10);
         return view('admin.persons.index')->with('persons', $persons);
     }
 
-    public function create(Request $request)
+    public function create()
+    {
+        return view("admin.persons.create");
+    }
+
+    public function store(Request $request)
     {
         $request->validate([
             "last_name" => "required|string|min:2",
@@ -69,18 +74,11 @@ class PersonsController extends Controller
         return redirect()->route('persons.index')->with('success', 'Персональные данные созданы!');
     }
 
-    public function delete($id)
+
+    public function edit($id)
     {
         $person = Person::findOrFail($id);
-        $person->delete();
-
-        return redirect()->back()->with('success', 'Персональные данные удалены!');
-    }
-
-    public function updateShow($id)
-    {
-        $person = Person::findOrFail($id);
-        return view('admin.persons.update')->with('person', $person);
+        return view('admin.persons.edit')->with('person', $person);
     }
 
     public function update(Request $request, $id)
@@ -144,4 +142,13 @@ class PersonsController extends Controller
 
         return redirect()->route('persons.index')->with('success', 'Персональные данные успешно обновлены.');
     }
+
+    public function delete($id)
+    {
+        $person = Person::findOrFail($id);
+        $person->delete();
+
+        return redirect()->route('persons.index')->with('success', 'Персональные данные удалены!');
+    }
+
 }

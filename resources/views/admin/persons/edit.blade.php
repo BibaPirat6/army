@@ -14,7 +14,7 @@
     @endif
 
     <h1>Персональные данные {{ $person->last_name }} {{ $person->first_name }} {{ $person->patronymic }}</h1>
-    <p><a href="{{ url()->previous() }}">Назад</a></p>
+    <h3><a href="{{ route("persons.index") }}">Назад к списку</a></h3>
 
     <div>
         <p><b>Фамилия</b> {{ $person->last_name }}</p>
@@ -31,7 +31,7 @@
     </div>
 
     <div>
-        <form action="{{ route('persons.update.post', $person->id) }}" method="post" enctype="multipart/form-data">
+        <form action="{{ route('persons.update', $person->id) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 

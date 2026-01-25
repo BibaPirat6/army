@@ -20,34 +20,10 @@
         {{ session('success') }}
     @endif
 
-    <div>
-        <form action="{{ route('persons.post') }}" method="post" enctype="multipart/form-data">
-            @csrf
 
-            <label for="last_name">Фамилия</label><br>
-            <input type="text" name="last_name" id="last_name" placeholder="Введите Фамилию"
-                value="{{ old('last_name') }}"><br>
-            <label for="first_name">Имя</label><br>
-            <input type="text" name="first_name" id="first_name" placeholder="Введите Имя"
-                value="{{ old('first_name') }}"><br>
-            <label for="patronymic">Отчество</label><br>
-            <input type="text" name="patronymic" id="patronymic" placeholder="Введите Отчество"
-                value="{{ old('patronymic') }}"><br>
-
-            <label for="email">Почта</label><br>
-            <input type="email" name="email" id="email" placeholder="Введите Почту" value="{{ old('email') }}"><br>
-            <label for="phone">Телефон</label><br>
-            <input type="tel" name="phone" id="phone" placeholder="Введите Телефон"
-                value="{{ old('phone') }}"><br>
+    <h3><a href="{{ route('persons.create') }}">Создать Персональные данные</a></h3>
 
 
-            <label for="photo">Фото</label><br>
-            <input type="file" name="photo" id="photo" placeholder="Введите Фото"><br>
-
-
-            <button type="submit">Создать</button>
-        </form>
-    </div>
     <h3>Список</h3>
     <table>
         <thead>
@@ -78,7 +54,7 @@
                     <td>{{ $person->phone }}</td>
                     <td>{{ $person->email }}</td>
                     <td>
-                        <a href="{{ route('persons.update.index', $person->id) }}">Редактировать</a>
+                        <a href="{{ route('persons.edit', $person->id) }}">Редактировать</a>
                         <form action="{{ route('persons.delete', $person->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
@@ -88,6 +64,7 @@
                 </tr>
             @endforeach
         </tbody>
+    </table>
 
-
-    @endsection
+    @include('includes.pagination', ['paginator' => $persons])
+@endsection

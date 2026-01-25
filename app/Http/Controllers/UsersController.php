@@ -11,13 +11,17 @@ class UsersController extends Controller
 {
     public function index()
     {
-        $users = User::all();
-        $roles = Role::all();
+        // $users = User::all();
+        // $roles = Role::all();
 
-        return view("admin.users.index")->with(["users" => $users, "roles" => $roles]);
+        return view("admin.users.index");
+    }
+    public function create()
+    {
+
     }
 
-    public function create(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             "login" => "required|min:5|max:255|unique:users",
@@ -49,25 +53,14 @@ class UsersController extends Controller
         return redirect()->route("users.index")->with("success", "Пользователь " . $user->login . " успешно создан!");
     }
 
-    public function delete($id)
-    {
-        $res = User::where('id', $id)->delete();
 
-        if ($res) {
-            return redirect()->back()
-                ->with('success', 'Пользователь удален');
-        }
 
-        return redirect()->back()
-            ->with('error', 'Не удалось удалить пользователя');
-    }
-
-    public function updateShow($id)
+    public function edit($id)
     {
         $user = User::findOrFail($id);
         $roles = Role::all();
 
-        return view('admin.users.update')->with(['user' => $user, 'roles' => $roles]);
+        return view('admin.users.edit')->with(['user' => $user, 'roles' => $roles]);
     }
 
     public function update(Request $request, $id)
@@ -124,5 +117,14 @@ class UsersController extends Controller
 
         return redirect()->route("users.index")
             ->with("success", "Пользователь обновлен!");
+    }
+
+
+    public function delete($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return redirect()->route("users.index")
+            ->with('success', 'Пользователь удален');
     }
 }

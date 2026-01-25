@@ -7,35 +7,16 @@
 @section('content')
     <h1>Рабочие статусы</h1>
 
-
-    @if ($errors->any())
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li> {{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
-
     @if (session('success'))
         {{ session('success') }}
     @endif
 
-    <div>
-        <form action="{{ route('work-statuses.post') }}" method="post">
-            @csrf
-            <label for="name">Название (на английском):</label><br>
-            <input type="text" name="name" id="name" value="{{ old('name') }}">
-            <br>
-            <label for="description">Название (на русском):</label> <br>
-            <input type="text" name="description" id="description" value="{{ old('description') }}">
-            <br>
-            <button type="submit">Добавить статус</button>
-        </form>
-    </div>
+    <h3><a href="{{ route('work-statuses.create') }}">Добавить статус</a></h3>
 
     <div>
         @foreach ($statuses as $status)
             <p>{{ $status->id }}. {{ $status->description }} - (на английском) {{ $status->name }}</p>
+            <a href="{{ route('work-statuses.edit', $status->id) }}">Редактировать</a>
             <form action="{{ route('work-statuses.delete', $status->id) }}" method="post">
                 @csrf
                 @method('DELETE')
@@ -44,5 +25,7 @@
             </form>
             <hr>
         @endforeach
+
+        @include('includes.pagination', ['paginator' => $statuses])
     </div>
 @endsection
