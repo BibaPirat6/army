@@ -38,18 +38,19 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     // users
     Route::get("/users", [UsersController::class, "index"])->name("users.index");
-    // Route::get("/users", [UsersController::class, "create"])->name("users.create");
-    // Route::post("/users", [UsersController::class, "store"])->name("users.store");
-    // Route::get("/users/{id}/update", [UsersController::class, "edit"])->name("users.edit");
-    // Route::put("/users/{id}", [UsersController::class, "update"])->name("users.update");
-    // Route::delete("/users/{id}", [UsersController::class, "delete"])->name("users.delete");
+    Route::get("/users/create", [UsersController::class, "create"])->name("users.create");
+    Route::post("/users", [UsersController::class, "store"])->name("users.store");
+    Route::get("/users/{id}/edit", [UsersController::class, "edit"])->name("users.edit");
+    Route::put("/users/{id}", [UsersController::class, "update"])->name("users.update");
+    Route::delete("/users/{id}", [UsersController::class, "delete"])->name("users.delete");
 
     // employess
     Route::get("/employees", [EmployeesController::class, "index"])->name("employees.index");
-    Route::post("/employees", [EmployeesController::class, "create"])->name("employees.post");
-    Route::delete("/employees/{id}/delete", [EmployeesController::class, "delete"])->name("employees.delete");
-    Route::get("/employees/{id}/update", [EmployeesController::class, "updateShow"])->name("employees.update.index");
-    Route::put("/employees/{id}/update", [EmployeesController::class, "update"])->name("employees.update.post");
+    Route::get("/employees/create", [EmployeesController::class, "create"])->name("employees.create");
+    Route::post("/employees", [EmployeesController::class, "store"])->name("employees.store");
+    Route::get("/employees/{id}/edit", [EmployeesController::class, "edit"])->name("employees.edit");
+    Route::put("/employees/{id}", [EmployeesController::class, "update"])->name("employees.update");
+    Route::delete("/employees/{id}", [EmployeesController::class, "delete"])->name("employees.delete");
 
     // persons
     Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");

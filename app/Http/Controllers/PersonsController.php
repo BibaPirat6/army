@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\Person;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,9 +16,12 @@ class PersonsController extends Controller
         return view('admin.persons.index')->with('persons', $persons);
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view("admin.persons.create");
+        $backUrl = $request->get("back_url");
+        $employeeId = $request->get("employee_id");
+
+        return view("admin.persons.create", compact("backUrl", "employeeId"));
     }
 
     public function store(Request $request)
@@ -38,6 +42,7 @@ class PersonsController extends Controller
                 Rule::unique('persons', 'phone')
             ],
             "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+            "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
             "last_name.required" => "Поле Фамилия обязательно для заполнения",
             "last_name.min" => "Поле Фамилия минимум 2 символа",
@@ -51,6 +56,7 @@ class PersonsController extends Controller
             "phone.unique" => "Такой номер Телефона уже зарегистрирован",
             "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
             "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            "employeeId.exists" => "Не существующий id сотрудника"
         ]);
 
         $personData = [
@@ -69,16 +75,27 @@ class PersonsController extends Controller
             $personData['photo'] = $path;
         }
 
-        Person::create($personData);
+        $person = Person::create($personData);
 
-        return redirect()->route('persons.index')->with('success', 'Персональные данные созданы!');
+        $backUrl = $request->input("backUrl");
+        $employeeId = $request->input("employeeId");
+
+        if ($employeeId) {
+            $employee = Employee::findOrFail($employeeId);
+            $employee->update(["person_id" => $person->id]);
+        }
+
+        return redirect($backUrl ?? route("persons.index"))->with('success', 'Персональные данные созданы!');
     }
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $person = Person::findOrFail($id);
-        return view('admin.persons.edit')->with('person', $person);
+
+        $backUrl = $request->input("back_url");
+
+        return view('admin.persons.edit', compact("person", "backUrl"));
     }
 
     public function update(Request $request, $id)
@@ -99,7 +116,7 @@ class PersonsController extends Controller
                 "min:10",
                 Rule::unique('persons', 'phone')->ignore($person->id)
             ],
-            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192"
         ], [
             "last_name.required" => "Поле Фамилия обязательно для заполнения",
             "last_name.min" => "Поле Фамилия минимум 2 символа",
@@ -140,15 +157,20 @@ class PersonsController extends Controller
 
         $person->update($personData);
 
-        return redirect()->route('persons.index')->with('success', 'Персональные данные успешно обновлены.');
+
+        $backUrl = $request->input("backUrl");
+
+        return redirect($backUrl ?? route("persons.index"))->with('success', 'Персональные данные успешно обновлены.');
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $person = Person::findOrFail($id);
         $person->delete();
 
-        return redirect()->route('persons.index')->with('success', 'Персональные данные удалены!');
+        $backUrl = $request->input("backUrl");
+
+        return redirect($backUrl ?? route("persons.index"))->with('success', 'Персональные данные удалены!');
     }
 
 }

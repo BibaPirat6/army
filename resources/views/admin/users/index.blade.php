@@ -1,4 +1,4 @@
-{{-- @extends('layouts.main')
+@extends('layouts.main')
 
 @section('header-title')
     Пользователи
@@ -20,15 +20,14 @@
 
     <h1>Пользователи</h1>
 
+    <h3><a href="{{ route('users.create') }}">Создать пользователя</a></h3>
+
     <div>
         <ul style="display: flex; flex-wrap: wrap; gap:10px;">
             @foreach ($users as $user)
                 <li style="background-color: antiquewhite; display: flex; width: 20%;">
                     <div>
-                        <p>ID {{ $user->id }}</p>
                         <p>Логин {{ $user->login }}</p>
-                        <p>Создан {{ $user->created_at }}</p>
-                        <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
                         <p>Роль {{ $user->role?->description ?? 'не назначена' }}</p>
                     </div>
                     <div>
@@ -42,6 +41,6 @@
             @endforeach
         </ul>
     </div>
-@endsection --}}
 
-<h1>sfd</h1>
+    @include('includes.pagination', ['paginator' => $users]);
+@endsection

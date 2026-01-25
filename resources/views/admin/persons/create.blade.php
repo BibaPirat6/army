@@ -43,6 +43,10 @@
             <input type="file" name="photo" id="photo" placeholder="Введите Фото"><br>
 
 
+            <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+            <input type="hidden" name="employeeId" value="{{ $employeeId }}">
+
+
             <button type="submit">Создать</button>
         </form>
     </div>

@@ -9,36 +9,108 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
+<style>
+    .main-nav {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        background-color: #f8f9fa;
+        padding: 10px 20px;
+    }
+
+    .main-nav>li {
+        position: relative;
+    }
+
+    .main-nav a,
+    .main-nav .dropdown-toggle {
+        text-decoration: none;
+        color: #333;
+        font-weight: bold;
+        padding: 8px 12px;
+        display: block;
+        cursor: pointer;
+    }
+
+    .main-nav a:hover,
+    .main-nav .dropdown-toggle:hover {
+        color: #007bff;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        list-style: none;
+        margin: 0;
+        padding: 8px 0;
+        min-width: 200px;
+        z-index: 1000;
+        display: none;
+    }
+
+    .dropdown:hover .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown-menu li {
+        margin: 0;
+        padding: 0;
+    }
+
+    .dropdown-menu a {
+        padding: 8px 16px;
+        display: block;
+        white-space: nowrap;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f1f1f1;
+    }
+</style>
+
 <body>
-    {{-- навигация --}}
     <nav>
-        <ul>
-            {{-- admin --}}
+        <ul class="main-nav">
             @if (auth()->check() && auth()->user()->role?->name === 'admin')
-                <li><b>Сотрудники</b></li>
-                <li style="display: flex; justify-content: start; gap: 20px;">
-                    <p style="width: auto"><a href="{{ route('employees.index') }}">Сотрудники</a></з>
-                    <p style="width: auto"><a href="{{ route('users.index') }}">Пользователи</a></з>
-                    <p style="width: auto"><a href="{{ route('persons.index') }}">Персональные данные</a></з>
-                    <p style="width: auto"><a href="{{ route('work-statuses.index') }}">Рабочие статусы</a></з>
+                <li class="dropdown">
+                    <span class="dropdown-toggle">Сотрудники 🔽</span>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ route('employees.index') }}">Сотрудники</a></li>
+                        <li><a href="{{ route('users.index') }}">Пользователи</a></li>
+                        <li><a href="{{ route('persons.index') }}">Персональные данные</a></li>
+                        <li><a href="{{ route('work-statuses.index') }}">Рабочие статусы</a></li>
+                    </ul>
                 </li>
-                <li><b>Должности</b></li>
-                <li style="display: flex; justify-content: start; gap: 20px;">
-                    <p style="width: auto;"><a href="{{ route('position-types.index') }}">Типы должностей</a></p>
-                    <p style="width: auto;"><a href="{{ route('positions.index') }}">Должности</a></p>
-                    <p style="width: auto;"><a href="{{ route('commissariats.index') }}">Комиссариаты</a></p>
-                    <p style="width: auto;"><a href="{{ route('departments.index') }}">Отделы</a></p>
-                    <p style="width: auto;"><a href="{{ route('divisions.index') }}">Отделения</a></p>
-                    <p style="width: auto;"><a href="{{ route('employee-positions.index') }}">НАЗНАЧИТЬ ДОЛЖНОСТЬ</a></p>
-                    <p style="width: auto;"><a href="{{ route('structure.index') }}">СОЗДАНИЕ СТРУКТУРЫ</a></p>
+
+                <li class="dropdown">
+                    <span class="dropdown-toggle">Должности 🔽</span>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{ route('position-types.index') }}">Типы должностей</a></li>
+                        <li><a href="{{ route('positions.index') }}">Должности</a></li>
+                        <li><a href="{{ route('commissariats.index') }}">Комиссариаты</a></li>
+                        <li><a href="{{ route('departments.index') }}">Отделы</a></li>
+                        <li><a href="{{ route('divisions.index') }}">Отделения</a></li>
+                        <li><a href="{{ route('employee-positions.index') }}">НАЗНАЧИТЬ ДОЛЖНОСТЬ</a></li>
+                        <li><a href="{{ route('structure.index') }}">СОЗДАНИЕ СТРУКТУРЫ</a></li>
+                    </ul>
                 </li>
             @endif
-            {{-- user --}}
+
             <li><a href="{{ route('home.index') }}">Главная</a></li>
             <li><a href="{{ route('profile.index') }}">Профиль</a></li>
             <li>
-                <form action="{{ route('logout') }}" method="POST">@csrf <button type="submit">Выйти из
-                        аккаунта</button></form>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit">Выйти из аккаунта</button>
+                </form>
             </li>
         </ul>
     </nav>

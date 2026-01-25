@@ -15,19 +15,11 @@
 
     <h1>Пользователь {{ $user->login }}</h1>
 
-    <p><a href="{{ url()->previous() }}">Назад</a></p>
-
-    <div>
-        <p>ID {{ $user->id }}</p>
-        <p>Логин {{ $user->login }}</p>
-        <p>Создан {{ $user->created_at }}</p>
-        <p>Обновлен {{ $user->updated_at ?? '---' }} </p>
-        <p>Роль {{ $user->role->description ?? '---' }} </p>
-    </div>
+    <p><a href="{{ route("users.index") }}">Назад к списку</a></p>
 
     <div>
         <h2>Изменить пользователя</h2>
-        <form action="{{ route('users.update.post', $user->id) }}" method="post">
+        <form action="{{ route('users.update', $user->id) }}" method="post">
             @csrf
             @method('PUT')
 
@@ -48,6 +40,9 @@
                     </option>
                 @endforeach
             </select><br>
+
+            <input type="hidden" name="employeeId" value="{{ $employeeId }}">
+            <input type="hidden" name="decodedBackUrl" value="{{ $decodedBackUrl }}">
 
             <button type="submit">Изменить</button>
         </form>

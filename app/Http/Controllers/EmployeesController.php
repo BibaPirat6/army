@@ -14,7 +14,7 @@ class EmployeesController extends Controller
     public function index()
     {
         $employees = Employee::with(['user', 'person'])
-            ->get();
+            ->paginate(10);
 
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)
@@ -36,7 +36,32 @@ class EmployeesController extends Controller
         ]);
     }
 
-    public function create(Request $request)
+    public function create()
+    {
+        $employees = Employee::with(['user', 'person'])
+            ->get();
+
+        $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
+        $users = User::whereNotIn('id', $usedUserIds)
+            ->get();
+
+        $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
+        $persons = Person::whereNotIn('id', $usedPersonIds)
+            ->get();
+
+        $roles = Role::all();
+        $statuses = WorkStatus::all();
+
+        return view("admin.employees.create")->with([
+            "employees" => $employees,
+            "users" => $users,
+            "persons" => $persons,
+            "roles" => $roles,
+            "statuses" => $statuses,
+        ]);
+    }
+
+    public function store(Request $request)
     {
         $requestData = $request->all();
         if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
@@ -70,20 +95,9 @@ class EmployeesController extends Controller
         return redirect()->route("employees.index")->with("success", "Сотрудник создан!");
     }
 
-    public function delete($id)
-    {
-        $res = Employee::where('id', $id)->delete();
 
-        if ($res) {
-            return redirect()->route('employees.index')
-                ->with('success', 'Сотрудник удален');
-        }
 
-        return redirect()->back()
-            ->with('error', 'Не удалось удалить сотрудника');
-    }
-
-    public function updateShow($id)
+    public function edit($id)
     {
         $employee = Employee::findOrFail($id);
 
@@ -98,7 +112,7 @@ class EmployeesController extends Controller
         $roles = Role::all();
         $statuses = WorkStatus::all();
 
-        return view('admin.employees.update')->with([
+        return view('admin.employees.edit')->with([
             "employee" => $employee,
             "users" => $users,
             "persons" => $persons,
@@ -143,5 +157,17 @@ class EmployeesController extends Controller
         return redirect()->route("employees.index")->with("success", "Сотрудник обновлен!");
     }
 
+    public function delete($id)
+    {
+        $res = Employee::where('id', $id)->delete();
+
+        if ($res) {
+            return redirect()->route('employees.index')
+                ->with('success', 'Сотрудник удален');
+        }
+
+        return redirect()->back()
+            ->with('error', 'Не удалось удалить сотрудника');
+    }
 }
 

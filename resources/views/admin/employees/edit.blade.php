@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Сотрудник
+    Редактирование
 @endsection
 
 @section('content')
@@ -13,11 +13,11 @@
         </ul>
     @endif
 
-    <h1>Сотрудник</h1>
+    <h1>Редактирование</h1>
 
-    <p><a href="{{ url()->previous() }}">Назад</a></p>
+    <p><a href="{{ route("employees.index") }}">Назад к списку</a></p>
 
-    <form action="{{ route('employees.update.post', $employee->id) }}" method="post">
+    <form action="{{ route('employees.update', $employee->id) }}" method="post">
         @csrf
         @method('PUT')
         <label for="user_id">Выберите пользователя</label><br>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
 use Hash;
@@ -11,14 +12,18 @@ class UsersController extends Controller
 {
     public function index()
     {
-        // $users = User::all();
-        // $roles = Role::all();
+        $users = User::paginate(10);
 
-        return view("admin.users.index");
+        return view("admin.users.index")->with("users", $users);
     }
-    public function create()
+    public function create(Request $request)
     {
+        $employeeId = $request->get('employee_id');
+        $backUrl = $request->get('back_url');
+        $decodedBackUrl = urldecode($backUrl);
 
+        $roles = Role::all();
+        return view('admin.users.create', compact('roles', 'employeeId', 'decodedBackUrl'));
     }
 
     public function store(Request $request)
@@ -27,6 +32,7 @@ class UsersController extends Controller
             "login" => "required|min:5|max:255|unique:users",
             "password" => "required|min:5|max:255",
             "role" => "required|exists:roles,id",
+            "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
             "login.required" => "Логин обязателен",
             "login.min" => "Логин минимум 5 символов",
@@ -39,7 +45,12 @@ class UsersController extends Controller
 
             "role.required" => "Роль обязательна",
             "role.exists" => "Недопустимое значение для роли",
+
+            "employeeId.exists" => "Несуществующий id сотрудника"
         ]);
+
+        $backUrl = $request->input('decodedBackUrl');
+        $employeeId = $request->input("employeeId");
 
 
         $data = [
@@ -50,17 +61,27 @@ class UsersController extends Controller
 
         $user = User::create($data);
 
-        return redirect()->route("users.index")->with("success", "Пользователь " . $user->login . " успешно создан!");
+        if ($employeeId) {
+            $employee = Employee::findOrFail($employeeId);
+            $employee->update(["user_id" => $user->id]);
+        }
+
+        return redirect($backUrl ?? route("users.index"))->with("success", "Пользователь " . $user->login . " успешно создан!");
+
     }
 
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $user = User::findOrFail($id);
         $roles = Role::all();
 
-        return view('admin.users.edit')->with(['user' => $user, 'roles' => $roles]);
+        $employeeId = $request->get('employee_id');
+        $backUrl = $request->get('back_url');
+        $decodedBackUrl = urldecode($backUrl);
+
+        return view('admin.users.edit')->with(['user' => $user, 'roles' => $roles, 'employeeId' => $employeeId, "decodedBackUrl" => $decodedBackUrl]);
     }
 
     public function update(Request $request, $id)
@@ -95,6 +116,11 @@ class UsersController extends Controller
             $validationMessages['role.exists'] = "Недопустимое значение для роли";
         }
 
+        if ($request->filled('employeeId')) {
+            $validationRules['employeeId'] = "nullable|integer|min:1|exists:employees,id";
+            $validationMessages['employeeId.exists'] = "Недопустимое значение для сотрудника id";
+        }
+
         $request->validate($validationRules, $validationMessages);
 
         $data = [];
@@ -115,16 +141,21 @@ class UsersController extends Controller
 
         $user->update($data);
 
-        return redirect()->route("users.index")
+        $backUrl = $request->input("decodedBackUrl");
+
+        return redirect($backUrl ?? route("users.index"))
             ->with("success", "Пользователь обновлен!");
     }
 
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $user = User::findOrFail($id);
         $user->delete();
-        return redirect()->route("users.index")
+
+        $backUrl = $request->input("backUrl");
+
+        return redirect($backUrl ?? route("users.index"))
             ->with('success', 'Пользователь удален');
     }
 }

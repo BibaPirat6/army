@@ -14,21 +14,7 @@
     @endif
 
     <h1>Персональные данные {{ $person->last_name }} {{ $person->first_name }} {{ $person->patronymic }}</h1>
-    <h3><a href="{{ route("persons.index") }}">Назад к списку</a></h3>
-
-    <div>
-        <p><b>Фамилия</b> {{ $person->last_name }}</p>
-        <p><b>Имя</b> {{ $person->first_name }}</p>
-        <p><b>Отчество</b> {{ $person->patronymic }}</p>
-        <p><b>Email</b> {{ $person->email }}</p>
-        <p><b>Телефон</b> {{ $person->phone }}</p>
-        @if ($person->photo)
-            <div>
-                <img src="{{ asset('storage/' . $person->photo) }}" alt="Фото пользователя"
-                    style="max-width: 200px; max-height: 200px;">
-            </div>
-        @endif
-    </div>
+    <h3><a href="{{ route('persons.index') }}">Назад к списку</a></h3>
 
     <div>
         <form action="{{ route('persons.update', $person->id) }}" method="post" enctype="multipart/form-data">
@@ -55,6 +41,7 @@
             <label for="photo">Фото</label><br>
             <input type="file" name="photo" id="photo" placeholder="Введите Фото"><br>
 
+            <input type="hidden" name="backUrl" value="{{ $backUrl }}">
 
             <button type="submit">Обновить</button>
         </form>
