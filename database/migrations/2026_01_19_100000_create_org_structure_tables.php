@@ -57,6 +57,7 @@ return new class extends Migration
             $table->foreignId('commissariat_id')->nullable()->constrained('commissariats')->nullOnDelete();
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
+            $table->foreignId('supervisor_employee_id')->nullable()->constrained('employees')->nullOnDelete();
             $table->decimal('rate', 3, 2);
             $table->boolean('is_chief')->default(false);
             $table->timestamps();

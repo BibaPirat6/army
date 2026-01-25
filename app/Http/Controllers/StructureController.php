@@ -16,18 +16,8 @@ class StructureController extends Controller
     public function show($id)
     {
         $commissariat = Commissariat::findOrFail($id);
+        
 
-        $departments = $commissariat->departments;
-        $divisions = $commissariat->divisions;
-        $employees = $commissariat->employees();
-
-        $departmentDivisions = [];
-        $departmentEmployees = [];
-        foreach ($departments as $dept) {
-            $departmentDivisions[$dept->id] = $dept->divisions;
-            $departmentEmployees[$dept->id] = $dept->employees();
-        }
-
-        return view('admin.org.structure.show', compact('commissariat', 'departments', 'divisions', 'employees', 'departmentDivisions', 'departmentEmployees'));
+        return view('admin.org.structure.show', compact('commissariat'));
     }
 }

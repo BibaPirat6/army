@@ -20,23 +20,65 @@ class EmployeeSeeder extends Seeder
 
         $employees = [
             [
-                'user_id' => $userIds[0],
+                'user_id' => $userIds[0] ?? 1,
                 'person_id' => $personIds[0],
                 'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userIds[1],
+                'user_id' => $userIds[1] ?? 2,
                 'person_id' => $personIds[1],
                 'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userIds[2],
+                'user_id' => $userIds[2] ?? 3,
                 'person_id' => $personIds[2],
                 'work_status_id' => $inactiveStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[3],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[4],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[5],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[6],
+                'work_status_id' => $inactiveStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[7],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[8],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[9],
+                'work_status_id' => $activeStatus->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
