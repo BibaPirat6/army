@@ -14,7 +14,7 @@
     @endif
 
     <h1>Персональные данные {{ $person->last_name }} {{ $person->first_name }} {{ $person->patronymic }}</h1>
-    <h3><a href="{{ route('persons.index') }}">Назад к списку</a></h3>
+    <h3><a href="{{ $backUrl ? $backUrl : route('persons.index') }}">Назад к списку</a></h3>
 
     <div>
         <form action="{{ route('persons.update', $person->id) }}" method="post" enctype="multipart/form-data">

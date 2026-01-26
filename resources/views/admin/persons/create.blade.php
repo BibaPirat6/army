@@ -14,7 +14,7 @@
     @endif
 
     <h1>Создание Персональных данных</h1>
-    <h3><a href="{{ route("persons.index") }}">Назад к списку</a></h3>
+    <h3><a href="{{ $backUrl ? $backUrl : route("persons.index") }}">Назад к списку</a></h3>
 
 
 

@@ -16,7 +16,11 @@
 
     <h1>Создание</h1>
 
-    <h3><a href="{{ route('users.index') }}">Назад к списку</a></h3>
+    <h3>
+        <a href="{{ $decodedBackUrl ? $decodedBackUrl : route('users.index') }}">
+            Назад к списку
+        </a>
+    </h3>
 
     <div>
         <h2>Создать пользователя</h2>

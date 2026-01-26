@@ -15,7 +15,7 @@
 
     <h1>Пользователь {{ $user->login }}</h1>
 
-    <p><a href="{{ route("users.index") }}">Назад к списку</a></p>
+    <h3><a href="{{ $decodedBackUrl ? $decodedBackUrl : route("users.index") }}">Назад к списку</a></h3>
 
     <div>
         <h2>Изменить пользователя</h2>
