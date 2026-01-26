@@ -18,15 +18,42 @@
 
 @section('content')
     <button id="resetView">Вернуться к центру</button>
+    <div class="instruction-move">
+        Управление ~ <span style="color: chartreuse">КОЛЕСИКОМ МЫШИ</span> +
+        Кнопка <span style="color: hotpink">ПРОБЕЛ</span> и <span style="color: hotpink">ЛЕВАЯ</span> кнопка мыши
+    </div>
 
 
     <div id="viewport">
         <div id="canvas">
             <div class="tree">
                 <div class="boss-wrapper">
-                    <!-- БОСС -->
-                    <div class="node boss">БОСС</div>
+                    <!-- Начальник комиссариата -->
+                    <div class="node boss">Начальник комиссариата
+                        <br>
+                        {{ $commissariat->chiefEmployee->person->last_name }}
+                        {{ $commissariat->chiefEmployee->person->first_name }}
+                        {{ $commissariat->chiefEmployee->person->patronymic }}
+                        <br>
+                        <details>
+                            @if ($commissariat->chiefEmployee->person->photo)
+                                <img src="{{ asset('storage/' . $commissariat->chiefEmployee->person->photo) }}"
+                                    alt="Фото {{ $commissariat->chiefEmployee->person->last_name }}">
+                            @else
+                                <div>
+                                    <span>Нет фото</span>
+                                </div>
+                            @endif
+                            <p>Должности</p>
+                            <ul>
+                                @foreach ($commissariat->chiefEmployee->positions as $position)
+                                    <li>{{ $position->position->name }}</li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    </div>
 
+                    {{-- линии --}}
                     <div class="lines-to-departments">
                         <div class="line vertical"></div>
                         <div class="line horizontal"></div>
@@ -34,98 +61,44 @@
 
                     <!-- ОТДЕЛЫ -->
                     <div class="departments">
-
-                        <!-- ОТДЕЛ A -->
-                        <div class="department">
-                            <div class="node dept-title">Отдел A</div>
-                            <div class="node head">Начальник отдела</div>
-
-                            <div class="units">
-                                <!-- Отделение 1 -->
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 1</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
+                        @foreach ($commissariat->departments as $department)
+                            <div class="department">
+                                {{-- Данные по отделу --}}
+                                <div class="node dept-title">{{ $department->name }}</div>
+                                <div class="node head">Начальник отдела
+                                    <br>
+                                    {{ $department->chiefEmployee->person->last_name }}
+                                    {{ $department->chiefEmployee->person->first_name }}
+                                    {{ $department->chiefEmployee->person->patronymic }}
                                 </div>
 
-                                <!-- Отделение 2 -->
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 2</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
+                                {{-- Отделения --}}
+                                @if ($department->divisions->count() > 0)
+                                    <div class="units">
+                                        @foreach ($department->divisions as $division)
+                                            <div class="unit">
+                                                <div class="unit-title">{{ $division->name }}</div>
+                                                <div class="node head">Начальник отделения
+                                                    <br>
+                                                    {{ $division->chiefEmployee->person->last_name }}
+                                                    {{ $division->chiefEmployee->person->first_name }}
+                                                    {{ $division->chiefEmployee->person->patronymic }}
+                                                </div>
+                                                {{-- сотрудники отделения --}}
+                                                <div class="employees">
+                                                    <div class="employee">Сотрудник</div>
+                                                    <div class="employee">Сотрудник</div>
+                                                    <div class="employee">Сотрудник</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                </div>
+                                @endif
                             </div>
-                        </div>
+                        @endforeach
 
-                        <!-- ОТДЕЛ B -->
-                        <div class="department">
-                            <div class="node dept-title">Отдел B</div>
-                            <div class="node head">Начальник отдела</div>
 
-                            <div class="units">
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 1</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
-                                </div>
 
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 2</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
-                                </div>
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 3</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
-                                </div>
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 4</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
-                                </div>
-                                <div class="unit">
-                                    <div class="unit-title">Отделение 5</div>
-                                    <div class="node head">Начальник отделения</div>
-                                    <div class="employees">
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                        <div class="employee">Сотрудник</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
 
                         {{-- сюда самостоятельных --}}
