@@ -82,6 +82,32 @@ class EmployeeSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            // 
+
+            [
+                'person_id' => $personIds[10],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[11],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[12],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'person_id' => $personIds[13],
+                'work_status_id' => $activeStatus->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($employees as $employee) {

@@ -35,6 +35,8 @@ class UserSeeder extends Seeder
                 'role_id' => $userRole->id,
                 'created_at' => now(),
             ],
+
+        
         ]);
     }
 }
