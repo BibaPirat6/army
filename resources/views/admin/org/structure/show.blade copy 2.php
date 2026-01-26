@@ -4,10 +4,6 @@
     Структура комиссариата
 @endsection
 
-@section('vite-resources')
-    @vite(['resources/css/structure.css', 'resources/js/structure.js'])
-@endsection
-
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/structure.css') }}">
 @endpush
@@ -128,7 +124,20 @@
                         </div>
 
 
-                        {{-- сюда самостоятельных --}}
+                        <div class="employee">Сотрудник</div>
+                        <div class="employee">Сотрудник</div>
+                        <div class="employee">Сотрудник</div>
+
+
+                        <div class="unit">
+                            <div class="unit-title">Отделение 5</div>
+                            <div class="node head">Начальник отделения</div>
+                            <div class="employees">
+                                <div class="employee">Сотрудник</div>
+                                <div class="employee">Сотрудник</div>
+                                <div class="employee">Сотрудник</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
