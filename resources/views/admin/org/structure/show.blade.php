@@ -44,12 +44,18 @@
                                     <span>Нет фото</span>
                                 </div>
                             @endif
-                            <p>Должности</p>
-                            <ul>
-                                @foreach ($commissariat->chiefEmployee->positions as $position)
-                                    <li>{{ $position->position->name }}</li>
-                                @endforeach
-                            </ul>
+                            @if ($commissariat->chiefEmployee->positions->count() > 0)
+                                <p>Должности</p>
+                                <ul>
+                                    @foreach ($commissariat->chiefEmployee->positions as $position)
+                                        <li>{{ $position->position->name }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <div>
+                                    <span>Не назначены Должности</span>
+                                </div>
+                            @endif
                         </details>
                     </div>
 
@@ -70,6 +76,29 @@
                                     {{ $department->chiefEmployee->person->last_name }}
                                     {{ $department->chiefEmployee->person->first_name }}
                                     {{ $department->chiefEmployee->person->patronymic }}
+                                    <br>
+                                    <details>
+                                        @if ($department->chiefEmployee->person->photo)
+                                            <img src="{{ asset('storage/' . $department->chiefEmployee->person->photo) }}"
+                                                alt="Фото {{ $department->chiefEmployee->person->last_name }}">
+                                        @else
+                                            <div>
+                                                <span>Нет фото</span>
+                                            </div>
+                                        @endif
+                                        @if ($department->chiefEmployee->positions->count() > 0)
+                                            <p>Должности</p>
+                                            <ul>
+                                                @foreach ($department->chiefEmployee->positions as $position)
+                                                    <li>{{ $position->position->name }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <div>
+                                                <span>Не назначены Должности</span>
+                                            </div>
+                                        @endif
+                                    </details>
                                 </div>
 
                                 {{-- Отделения --}}
@@ -83,6 +112,29 @@
                                                     {{ $division->chiefEmployee->person->last_name }}
                                                     {{ $division->chiefEmployee->person->first_name }}
                                                     {{ $division->chiefEmployee->person->patronymic }}
+                                                    <br>
+                                                    <details>
+                                                        @if ($division->chiefEmployee->person->photo)
+                                                            <img src="{{ asset('storage/' . $division->chiefEmployee->person->photo) }}"
+                                                                alt="Фото {{ $division->chiefEmployee->person->last_name }}">
+                                                        @else
+                                                            <div>
+                                                                <span>Нет фото</span>
+                                                            </div>
+                                                        @endif
+                                                        @if ($division->chiefEmployee->positions->count() > 0)
+                                                            <p>Должности</p>
+                                                            <ul>
+                                                                @foreach ($division->chiefEmployee->positions as $position)
+                                                                    <li>{{ $position->position->name }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @else
+                                                            <div>
+                                                                <span>Не назначены Должности</span>
+                                                            </div>
+                                                        @endif
+                                                    </details>
                                                 </div>
                                                 {{-- сотрудники отделения --}}
                                                 <div class="employees">
@@ -102,6 +154,7 @@
 
 
                         {{-- сюда самостоятельных --}}
+                        
                     </div>
                 </div>
             </div>

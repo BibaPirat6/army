@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
+
+use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+
+
 class ProfileController extends Controller
 {
     public function index()
@@ -80,16 +86,25 @@ class ProfileController extends Controller
         ];
 
         if ($request->hasFile('photo')) {
+
             if ($employee->person->photo) {
-                $oldPhotoPath = $employee->person->photo;
-                if (Storage::disk('public')->exists($oldPhotoPath)) {
-                    Storage::disk('public')->delete($oldPhotoPath);
-                }
+                Storage::disk('public')->delete($employee->person->photo);
             }
 
-            $extension = $request->file('photo')->getClientOriginalExtension();
-            $filename = time() . '.' . $extension;
-            $path = $request->file('photo')->storeAs('photos', $filename, 'public');
+            $file = $request->file('photo');
+
+            $manager = new ImageManager(new Driver());
+
+            $image = $manager->read($file);
+
+            $image->scale(width: 150);
+
+            $filename = time() . '.webp';
+            $path = 'photos/' . $filename;
+
+            $webp = $image->encode(new WebpEncoder(quality: 75));
+
+            Storage::disk('public')->put($path, $webp);
 
             $personData['photo'] = $path;
         }

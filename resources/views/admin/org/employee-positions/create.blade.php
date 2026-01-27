@@ -33,8 +33,7 @@
             <li>Почта {{ $employee->person->email }}</li>
             <li>
                 @if ($employee->person->photo)
-                    <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя"
-                        style="max-width: 200px; max-height: 200px;">
+                    <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя">
                 @endif
             </li>
         </ul>
@@ -57,8 +56,8 @@
                 <label for="position_id">Должность:</label>
                 <select name="position_id" id="position_id">
                     @foreach ($positions as $position)
-                    <option value="{{ $position->id }}">{{ $position->name }}</option>
-                @endforeach
+                        <option value="{{ $position->id }}">{{ $position->name }}</option>
+                    @endforeach
                 </select>
             </div>
 

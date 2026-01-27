@@ -23,7 +23,7 @@
         @if ($employee->person?->photo)
             <div>
                 <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя"
-                    style="max-width: 200px; max-height: 200px;">
+                    >
             </div>
         @endif
 

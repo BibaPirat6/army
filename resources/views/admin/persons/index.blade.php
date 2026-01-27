@@ -43,7 +43,7 @@
                     <td>
                         @if ($person->photo)
                             <img src="{{ asset('storage/' . $person->photo) }}" alt="Фото {{ $person->surname }}"
-                                width="100">
+                              >
                         @else
                             Нет фото
                         @endif

@@ -25,8 +25,7 @@
         <p><b>Почта</b> {{ $employee->person?->email }}</p>
         @if ($employee->person?->photo)
             <div>
-                <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя"
-                    style="max-width: 200px; max-height: 200px;">
+                <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя">
             </div>
         @endif
     </div>

@@ -34,7 +34,7 @@
             <li>
                 @if ($employee->person->photo)
                     <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя"
-                        style="max-width: 200px; max-height: 200px;">
+                       >
                 @endif
             </li>
         </ul>
