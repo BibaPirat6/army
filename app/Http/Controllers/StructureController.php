@@ -15,7 +15,6 @@ class StructureController extends Controller
 
     public function show($id)
     {
-        // $commissariat = Commissariat::with(["chiefEmployee", "departments",])->findOrFail($id);
         $commissariat = Commissariat::findOrFail($id);
         
 

@@ -290,7 +290,96 @@
 
                         {{-- самостоятеьные сотрудники из другой организации --}}
                         <div class="department">
-                            
+                            @php
+                                $employees = $commissariat->getEmployeesWithoutRelations();
+                            @endphp
+                            @if ($employees->count() > 0)
+                                <div class="employees">
+                                    <p>Самостоятельные должности</p>
+                                    @foreach ($employees as $employee)
+                                        <div class="employee">
+                                            <div class="photo">
+                                                @if (isset($employee->person->photo))
+                                                    <img src="{{ asset('storage/' . $employee->person->photo) }}"
+                                                        alt="Фото {{ $employee->person->photo }}">
+                                                @else
+                                                    <div>
+                                                        <span>Нет фото</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="data">
+                                                <p class="title">Сотрудник</p>
+                                                <p class="fio">
+                                                    {{ $employee->person->last_name ?? '' }}
+                                                    {{ $employee->person->first_name ?? '' }}
+                                                    {{ $employee->person->patronymic ?? '' }}
+                                                </p>
+                                                <p class="position">Должность</p>
+                                                @if ($employee->positions->count() > 0)
+                                                    <ul>
+                                                        @foreach ($employee->positions as $position)
+                                                            <li>{{ $position->position->name }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p>Не назначены Должности</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p>Нет сотрудников</p>
+                            @endif
+
+                        </div>
+
+
+                        {{-- Прямо зависят от начальника комиссариата --}}
+                        <div class="department">
+                            @php
+                                $employees = $commissariat->getEmployeesRight();
+                            @endphp
+                            @if ($employees->count() > 0)
+                                <div class="employees">
+                                    <p>Зависят от нач. комиссариата</p>
+                                    @foreach ($employees as $employee)
+                                        <div class="employee">
+                                            <div class="photo">
+                                                @if (isset($employee->person->photo))
+                                                    <img src="{{ asset('storage/' . $employee->person->photo) }}"
+                                                        alt="Фото {{ $employee->person->photo }}">
+                                                @else
+                                                    <div>
+                                                        <span>Нет фото</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="data">
+                                                <p class="title">Сотрудник</p>
+                                                <p class="fio">
+                                                    {{ $employee->person->last_name ?? '' }}
+                                                    {{ $employee->person->first_name ?? '' }}
+                                                    {{ $employee->person->patronymic ?? '' }}
+                                                </p>
+                                                <p class="position">Должность</p>
+                                                @if ($employee->positions->count() > 0)
+                                                    <ul>
+                                                        @foreach ($employee->positions as $position)
+                                                            <li>{{ $position->position->name }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p>Не назначены Должности</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p>Нет сотрудников</p>
+                            @endif
                         </div>
 
                     </div>
@@ -301,8 +390,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        console.log('Inline script works');
-    </script>
     <script src="{{ asset('js/structure.js') }}"></script>
 @endpush

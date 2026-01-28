@@ -6,7 +6,7 @@
 
 @section('content')
     @if (session('success'))
-        {{ session('success') }}
+        @include('includes.success', ['success' => session('success')])
     @endif
 
     <h1>Структура</h1>

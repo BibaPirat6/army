@@ -48,4 +48,33 @@ class Commissariat extends Model
             $query->where('commissariat_id', $this->id);
         })->get();
     }
+
+    // самостоятельный
+    public function getEmployeesWithoutRelations()
+    {
+        $employeePositions = EmployeePosition::where('commissariat_id', $this->id)
+            ->whereNull('department_id')
+            ->whereNull('division_id')
+            ->whereNull('supervisor_employee_id')
+            ->with('employee')
+            ->get();
+
+        return $employeePositions->pluck('employee')->filter();
+    }
+
+    // от начальника комиссариата
+    public function getEmployeesRight()
+    {
+        $boss = $this->chief_employee_id;
+
+        $employeePositions = EmployeePosition::where('commissariat_id', $this->id)
+            ->whereNull('department_id')
+            ->whereNull('division_id')
+            ->whereNotNull('supervisor_employee_id')
+            ->where('supervisor_employee_id', $boss)
+            ->with('employee')
+            ->get();
+
+        return $employeePositions->pluck('employee')->filter();
+    }
 }

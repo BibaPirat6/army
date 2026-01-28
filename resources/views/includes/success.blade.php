@@ -1,5 +1,5 @@
 @if (session('success'))
-    <div class="fixed top-4 right-4 z-50 max-w-md w-full">
+    <div class="fixed top-4 right-4 z-[999] max-w-md w-full">
         <div
             class="bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 opacity-90 hover:opacity-100 transition-opacity duration-300 rounded-xl shadow-2xl border border-emerald-300 transform hover:-translate-y-1 transition-transform duration-300">
             <div class="p-5">
