@@ -11,7 +11,7 @@
     @stack('styles')
 </head>
 
-<body>
+<body style="background: #f4f0f0">
     <nav class="navigation relative z-[900]">
         <ul class="main-nav flex list-none m-0 p-0 gap-5 items-center bg-[#e7e1e1] p-3 px-5 border-b border-[#BFBFBF]">
             @if (auth()->check() && auth()->user()->role?->name === 'admin')

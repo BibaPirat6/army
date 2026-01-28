@@ -5,6 +5,12 @@ export default {
     "./resources/**/*.js",
     "./resources/**/*.vue",
   ],
+  safelist: [
+    {
+      pattern: /text-\[.*\]/, // разрешает text-[любое_значение]
+      pattern: /bg-\[.*\]/,   // разрешает bg-[любое_значение]
+    }
+  ],
   theme: {
     extend: {
       colors: {
