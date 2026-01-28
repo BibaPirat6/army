@@ -14,7 +14,7 @@ class EmployeesController extends Controller
     public function index()
     {
         $employees = Employee::with(['user', 'person'])
-            ->paginate(10);
+            ->paginate(9);
 
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)

@@ -5,111 +5,217 @@
 @endsection
 
 @section('content')
-    @if ($errors->any())
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li> {{ $error }}</li>
-            @endforeach
-        </ul>
-    @endif
-
     @if (session('success'))
-        {{ session('success') }}
+        @include('includes.success', ['success' => session('success')])
+    @endif
+    @if ($errors->any())
+        @include('includes.errors', ['errors' => $errors])
     @endif
 
-    <h1>Сотрудники</h1>
-    <h3><a href="{{ route('employees.create') }}">Создать сотрудника</a></h3>
 
 
 
+    <div class="max-w-6xl p-6 mx-auto">
+        <!-- Заголовок и кнопка создания -->
+        <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-[#060606]">Сотрудники</h1>
+                <p class="text-[#565A5B] mt-1">Список всех сотрудников системы</p>
+            </div>
+            <a href="{{ route('employees.create') }}"
+                class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Создать сотрудника
+            </a>
+        </div>
+
+        <!-- Список сотрудников -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            @forelse($employees as $employee)
+                <div
+                    class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden flex flex-col transition-all duration-200 hover:shadow-xl hover:-translate-y-1">
+                    <div class="flex-1 p-6">
+                        <!-- Основная информация -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-[#060606] mb-1">ID: {{ $employee->id }}</h3>
+                                <p class="text-[#565A5B] text-sm mb-3">
+                                    Статус: {{ $employee->workStatus->description ?? '—' }}
+                                </p>
+                            </div>
+                            <div class="w-10 h-10 rounded-full bg-[#A60644]/10 flex items-center justify-center">
+                                @if ($employee->user?->role?->name === 'user' || $employee->user?->role === null)
+                                    <svg class="w-5 h-5 text-[#A60644]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-5 h-5 text-[#A60644]" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                    </svg>
+                                @endif
+                            </div>
+                        </div>
 
 
-    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-        @foreach ($employees as $employee)
-            <div style="width: 20%; background-color: antiquewhite; padding: 10px;">
-                <div>
-                    <p>ID: {{ $employee->id }}</p>
+                        <!-- Пользовательская информация -->
+                        <div class="mb-4 p-4 bg-white/50 rounded-lg border border-[#BFBFBF]">
+                            <h4 class="font-semibold text-[#060606] mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                {{ $employee->user->role->description ?? 'Пользователь' }}
+                            </h4>
+                            @if ($employee->user)
+                                <ul class="text-sm text-[#565A5B] space-y-1">
+                                    <li><span class="font-medium">ID:</span> {{ $employee->user->id }}</li>
+                                    <li><span class="font-medium">Логин:</span> {{ $employee->user->login }}</li>
+                                </ul>
 
-                    <p><strong>ПОЛЬЗОВАТЕЛЬ:</strong></p>
-                    @if ($employee->user)
-                        <ul>
-                            <li>ID: {{ $employee->user->id }}</li>
-                            <li>Логин: {{ $employee->user->login }}</li>
-                            <li>Роль: {{ $employee->user->role->description }}</li>
-                            </li>
-                            <li>
-                                <a
-                                    href="{{ route('users.edit', [
+                                <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
+                                    <a href="{{ route('users.edit', [
                                         'id' => $employee->user->id,
                                         'employee_id' => $employee->id,
                                         'back_url' => route('employees.index'),
-                                    ]) }}">
-                                    Изменить
-                                </a>
-                            </li>
-                            <li>
-                                <form action="{{ route('users.delete', $employee->user->id) }}" method="post">
-                                    @method('DELETE') @csrf
-                                    <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
-                                    <button>Удалить</button>
-                                </form>
-                            </li>
-                        </ul>
-                    @else
-                        <p style="color: gray;">Пользователь не указан</p>
-                        <p><a
-                                href="{{ route('users.create', ['employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}">
-                                Создать
-                            </a>
-                        </p>
-                    @endif
+                                    ]) }}"
+                                        class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                        Изменить
+                                    </a>
 
-                    <p><strong>ПЕРСОНАЛЬНЫЕ ДАННЫЕ:</strong></p>
-                    @if ($employee->person)
-                        <ul>
-                            <li>ID: {{ $employee->person->id }}</li>
-                            <li>Имя: {{ $employee->person->first_name ?? '—' }}</li>
-                            <li>Фамилия: {{ $employee->person->last_name ?? '—' }}</li>
-                            <li>Отчество: {{ $employee->person->patronymic ?? '—' }}</li>
-                            <li>Телефон: {{ $employee->person->phone ?? '—' }}</li>
-                            <li>Email: {{ $employee->person->email ?? '—' }}</li>
-                            <li><a
-                                    href="{{ route('persons.edit', [
+                                    <form action="{{ route('users.delete', $employee->user->id) }}" method="post"
+                                        class="inline-block"
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить пользователя {{ $employee->user->login }}?');">
+                                        @method('DELETE')
+                                        @csrf
+                                        <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
+                                        <button type="submit"
+                                            class="inline-flex items-center px-3 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors">
+                                            Удалить
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <p class="text-[#7F7F7F] text-sm italic mb-3">Пользователь не указан</p>
+                                <a href="{{ route('users.create', [
+                                    'employee_id' => $employee->id,
+                                    'back_url' => route('employees.index'),
+                                ]) }}"
+                                    class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                    Создать
+                                </a>
+                            @endif
+                        </div>
+
+                        <!-- Персональные данные -->
+                        <div class="p-4 bg-white/50 rounded-lg border border-[#BFBFBF]">
+                            <h4 class="font-semibold text-[#060606] mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Персональные данные
+                            </h4>
+                            @if ($employee->person)
+                                <ul class="text-sm text-[#565A5B] space-y-1">
+                                    <li><span class="font-medium">ID:</span> {{ $employee->person->id }}</li>
+                                    <li><span class="font-medium">ФИО:</span>
+                                        {{ $employee->person->last_name ?? '' }}
+                                        {{ $employee->person->first_name ?? '' }}
+                                        {{ $employee->person->patronymic ?? '' }}</li>
+                                    <li><span class="font-medium">Телефон:</span> {{ $employee->person->phone ?? '—' }}
+                                    </li>
+                                    <li><span class="font-medium">Email:</span> {{ $employee->person->email ?? '—' }}</li>
+                                </ul>
+
+                                <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
+                                    <a href="{{ route('persons.edit', [
                                         'id' => $employee->person->id,
                                         'employee_id' => $employee->id,
                                         'back_url' => route('employees.index'),
-                                    ]) }}">Изменить</a>
-                            </li>
-                            <li>
-                                <form action="{{ route('persons.delete', $employee->person->id) }}" method="post">
-                                    @method('DELETE') @csrf
-                                    <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
-                                    <button>Удалить</button>
-                                </form>
-                            </li>
-                        </ul>
-                    @else
-                        <p style="color: gray;">Персона не указана</p>
-                        <p><a
-                                href="{{ route('persons.create', [
+                                    ]) }}"
+                                        class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                        Изменить
+                                    </a>
+
+                                    <form action="{{ route('persons.delete', $employee->person->id) }}" method="post"
+                                        class="inline-block"
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}?');">
+                                        @method('DELETE')
+                                        @csrf
+                                        <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
+                                        <button type="submit"
+                                            class="inline-flex items-center px-3 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors">
+                                            Удалить
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <p class="text-[#7F7F7F] text-sm italic mb-3">Персона не указана</p>
+                                <a href="{{ route('persons.create', [
                                     'employee_id' => $employee->id,
                                     'back_url' => route('employees.index'),
-                                ]) }}">
-                                Создать</a></p>
-                    @endif
+                                ]) }}"
+                                    class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                    Создать
+                                </a>
+                            @endif
+                        </div>
+                    </div>
 
-                    <p><strong>СТАТУС:</strong> {{ $employee->workStatus->description ?? '—' }}</p>
+                    <!-- Кнопки действий -->
+                    <div class="pt-4 border-t border-[#BFBFBF] mt-auto px-6 pb-6">
+                        <div class="flex items-center justify-between">
+                            <a href="{{ route('employees.edit', $employee->id) }}"
+                                class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
+                                Редактировать
+                            </a>
+
+                            <form action="{{ route('employees.delete', $employee->id) }}" method="post"
+                                class="inline-block"
+                                onsubmit="return confirm('Вы уверены, что хотите удалить сотрудника?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 ml-2">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <p><a href="{{ route('employees.edit', $employee->id) }}">Редактировать</a></p>
-                    <form action="{{ route('employees.delete', $employee->id) }}" method="post">@csrf
-                        @method('DELETE')
-                        <button type="submit">Удалить</button>
-                    </form>
+            @empty
+                <div class="py-12 text-center col-span-full">
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
+                            </path>
+                        </svg>
+                        <p class="text-[#565A5B] text-lg font-medium">Нет сотрудников</p>
+                        <p class="text-[#7F7F7F] mt-1">Создайте первого сотрудника для начала работы</p>
+                    </div>
                 </div>
-            </div>
-        @endforeach
+            @endforelse
+        </div>
+
+
+        @include('includes.pagination', ['paginator' => $employees])
     </div>
-
-    @include('includes.pagination', ['paginator' => $employees])
 @endsection
