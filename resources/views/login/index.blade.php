@@ -41,7 +41,7 @@
                             </svg>
                         </div>
                         <input type="text" name="login" id="login"
-                            class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 
+                            class="pl-10 w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#8d2f53] transition-all duration-200 
                                   placeholder-gray-400 focus:outline-none focus:shadow-outline"
                             placeholder="Введите логин">
                     </div>
@@ -60,7 +60,7 @@
                             </svg>
                         </div>
                         <input type="password" name="password" id="password"
-                            class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200
+                            class="pl-10 w-full px-4 py-3 border border-gray-400 rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] transition-all duration-200
                                   placeholder-gray-400 focus:outline-none focus:shadow-outline"
                             placeholder="Введите пароль">
                     </div>
@@ -69,12 +69,12 @@
                 <div>
                     <button type="submit"
                         class="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg
-                               text-white font-medium bg-gradient-to-r from-blue-600 to-blue-700 
-                               hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 
-                               focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 
+                               text-white font-medium bg-gradient-to-r from-[#A60644] to-[#7f0534]
+                               hover:from-[#7f1a40] hover:to-[#a7174e] focus:outline-none focus:ring-2 
+                               focus:ring-offset-2 focus:ring-[#c71257] transition-all duration-200 
                                transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <svg class="h-5 w-5 text-blue-300 group-hover:text-blue-200" fill="none"
+                            <svg class="h-5 w-5 text-white group-hover:text-blue-200" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

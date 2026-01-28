@@ -9,7 +9,12 @@
         @include('includes.errors', ['errors' => $errors])
     @endif
 
-    <div class="max-w-2xl mx-auto bg-[#e7e1e1] rounded-2xl shadow-lg overflow-hidden p-6 md:p-8">
+    <div class="max-w-2xl mx-auto bg-[#e7e1e1] rounded-2xl shadow-lg overflow-hidden p-6 md:p-8 mt-10 relative">
+        <p class="absolute top-5 left-5">
+            <a href="{{ route('profile.index') }}" class="text-cherry hover:text-gray-low transition">
+                ← Назад
+            </a>
+        </p>
         <h1 class="text-2xl font-bold text-[#060606] text-center mb-8 pb-4 border-b border-[#BFBFBF]">Редактирование профиля
         </h1>
 

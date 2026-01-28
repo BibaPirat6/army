@@ -9,7 +9,7 @@
         @include('includes.success', ['success' => session('success')])
     @endif
 
-    <div class="max-w-md mx-auto bg-[#e7e1e1] rounded-2xl shadow-lg overflow-hidden p-6 md:p-8">
+    <div class="max-w-md mx-auto bg-[#e7e1e1] rounded-2xl shadow-lg overflow-hidden p-6 md:p-8 mt-10">
         <h1 class="text-2xl font-bold text-[#060606] text-center mb-8 pb-4 border-b border-[#BFBFBF]">Мой профиль</h1>
 
         @if ($employee->person?->photo)
