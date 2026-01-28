@@ -43,10 +43,19 @@ class Division extends Model
     /**
      * Получить всех сотрудников отделения через должности
      */
+    // public function employees()
+    // {
+    //     return Employee::whereHas('positions', function ($query) {
+    //         $query->where('division_id', $this->id);
+    //     })->get();
+    // }
     public function employees()
     {
-        return Employee::whereHas('positions', function ($query) {
-            $query->where('division_id', $this->id);
-        })->get();
+        return $this->belongsToMany(
+            Employee::class,
+            'employee_positions',
+            'division_id',
+            'employee_id'
+        );
     }
 }

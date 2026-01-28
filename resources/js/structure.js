@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const MIN_SCALE = 0.4;
     const MAX_SCALE = 2;
 
-    // 🔑 Space
+    // Space
     window.addEventListener("keydown", (e) => {
         if (e.code === "Space") {
             spacePressed = true;
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 🖱 Start drag (Space + LMB)
+    /// grab
     viewport.addEventListener("mousedown", (e) => {
         if (!spacePressed || e.button !== 0) return;
 
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         viewport.style.cursor = spacePressed ? "grab" : "default";
     });
 
-    // 🖱 Move
+    // Move
     window.addEventListener("mousemove", (e) => {
         if (!isDragging) return;
 
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         applyTransform();
     });
 
-    // 🔍 Zoom wheel
+    //  Zoom
     viewport.addEventListener("wheel", (e) => {
         e.preventDefault();
 
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const resetBtn = document.getElementById("resetView");
 
-    // 🧭 Reset view
+    //  Reset view
     resetBtn.addEventListener("click", () => {
         translateX = 0;
         translateY = 0;

@@ -17,7 +17,7 @@
             @if (auth()->check() && auth()->user()->role?->name === 'admin')
                 <li class="group relative">
                     <span
-                        class="dropdown-toggle cursor-pointer font-bold text-gray-800 px-3 py-2 block hover:text-blue-600">
+                        class="dropdown-toggle cursor-pointer font-bold text-gray-800 px-3 py-2 block hover:text-cherry">
                         Сотрудники 🔽
                     </span>
                     <ul
@@ -25,16 +25,16 @@
                           list-none m-0 p-2 min-w-[200px] z-[1000] opacity-0 invisible group-hover:opacity-100 
                           group-hover:visible transition-all duration-200 transform -translate-y-2 group-hover:translate-y-0">
                         <li><a href="{{ route('employees.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Сотрудники</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Сотрудники</a>
                         </li>
                         <li><a href="{{ route('users.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Пользователи</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Пользователи</a>
                         </li>
                         <li><a href="{{ route('persons.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Персональные
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Персональные
                                 данные</a></li>
                         <li><a href="{{ route('work-statuses.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Рабочие
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Рабочие
                                 статусы</a></li>
                     </ul>
                 </li>
@@ -42,7 +42,7 @@
 
                 <li class="group relative">
                     <span
-                        class="dropdown-toggle cursor-pointer font-bold text-gray-800 px-3 py-2 block hover:text-blue-600">
+                        class="dropdown-toggle cursor-pointer font-bold text-gray-800 px-3 py-2 block hover:text-cherry">
                         Должности 🔽
                     </span>
                     <ul
@@ -50,25 +50,25 @@
                           list-none m-0 p-2 min-w-[200px] z-[1000] opacity-0 invisible group-hover:opacity-100 
                           group-hover:visible transition-all duration-200 transform -translate-y-2 group-hover:translate-y-0">
                         <li><a href="{{ route('position-types.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Типы
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Типы
                                 должностей</a></li>
                         <li><a href="{{ route('positions.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Должности</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Должности</a>
                         </li>
                         <li><a href="{{ route('commissariats.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Комиссариаты</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Комиссариаты</a>
                         </li>
                         <li><a href="{{ route('departments.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Отделы</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Отделы</a>
                         </li>
                         <li><a href="{{ route('divisions.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">Отделения</a>
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">Отделения</a>
                         </li>
                         <li><a href="{{ route('employee-positions.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">НАЗНАЧИТЬ
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">НАЗНАЧИТЬ
                                 ДОЛЖНОСТЬ</a></li>
                         <li><a href="{{ route('structure.index') }}"
-                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded">СОЗДАНИЕ
+                                class="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-cherry rounded">СОЗДАНИЕ
                                 СТРУКТУРЫ</a></li>
                     </ul>
                 </li>
@@ -76,15 +76,15 @@
 
 
             <li><a href="{{ route('home.index') }}"
-                    class="font-bold text-gray-800 px-3 py-2 block hover:text-blue-600">Главная</a></li>
+                    class="font-bold text-gray-800 px-3 py-2 block hover:text-cherry">Главная</a></li>
             <li><a href="{{ route('profile.index') }}"
-                    class="font-bold text-gray-800 px-3 py-2 block hover:text-blue-600">Профиль</a></li>
+                    class="font-bold text-gray-800 px-3 py-2 block hover:text-cherry">Профиль</a></li>
 
             <li>
                 <form action="{{ route('logout') }}" method="POST" class="m-0">
                     @csrf
                     <button type="submit"
-                        class="font-bold text-gray-800 px-3 py-2 hover:text-blue-600 bg-transparent border-none cursor-pointer">
+                        class="font-bold text-gray-800 px-3 py-2 hover:text-cherry bg-transparent border-none cursor-pointer">
                         Выйти из аккаунта
                     </button>
                 </form>

@@ -6,7 +6,17 @@ export default {
     "./resources/**/*.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'cherry': 'var(--cherry)',
+        'black': 'var(--black)',
+        'white': 'var(--white)',
+
+        'gray-high': 'var(--gray-high)',
+        'gray-middle': 'var(--gray-middle)',
+        'gray-low': 'var(--gray-low)',
+      },
+    },
   },
   plugins: [],
 }

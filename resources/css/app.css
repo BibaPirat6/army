@@ -1,34 +1,10 @@
 @import "tailwindcss";
 
-/* body {
-    background-color: #979797;
+@theme {
+  --color-black: #060606;
+  --color-cherry: #A60644;
+  --color-white: #e7e1e1;
+  --color-gray-high: #565A5B;
+  --color-gray-middle: #7F7F7F;
+  --color-gray-low: #BFBFBF;
 }
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    font-size: 30px;
-    font-family: 'Arial', sans-serif;
-    color: #333333;
-}
-
-a {
-    text-decoration: underline;
-    color: #025704;
-}
-
-button {
-    background-color: #ab2b2b;
-    cursor: pointer;
-}
-
-input,
-textarea,
-select {
-    border: 2px solid #0f0f0f;
-    padding: 10px;
-    font-size: 16px;
-} */
