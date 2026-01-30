@@ -71,6 +71,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // типы должностей
     Route::get("/position-types", [PositionTypesController::class, "index"])->name("position-types.index");
     Route::get("/position-types/create", [PositionTypesController::class, "create"])->name("position-types.create");
+    Route::get("/position-types/{id}", [PositionTypesController::class, "show"])->name("position-types.show");
     Route::post("/position-types", [PositionTypesController::class, "store"])->name("position-types.store");
     Route::get("/position-types/{id}/edit", [PositionTypesController::class, "edit"])->name("position-types.edit");
     Route::put("/position-types/{id}", [PositionTypesController::class, "update"])->name("position-types.update");
@@ -79,6 +80,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // должности
     Route::get("/positions", [PositionsController::class, "index"])->name("positions.index");
     Route::get("/positions/create", [PositionsController::class, "create"])->name("positions.create");
+    Route::get("/positions/{id}", [PositionsController::class, "show"])->name("positions.show");
     Route::post("/positions", [PositionsController::class, "store"])->name("positions.store");
     Route::get("/positions/{id}/edit", [PositionsController::class, "edit"])->name("positions.edit");
     Route::put("/positions/{id}", [PositionsController::class, "update"])->name("positions.update");
@@ -87,6 +89,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // комиссариаты
     Route::get("/commissariats", [CommissariatsController::class, "index"])->name("commissariats.index");
     Route::get("/commissariats/create", [CommissariatsController::class, "create"])->name("commissariats.create");
+    Route::get("/commissariats/{id}", [CommissariatsController::class, "show"])->name("commissariats.show");
     Route::post("/commissariats", [CommissariatsController::class, "store"])->name("commissariats.store");
     Route::get("/commissariats/{id}/edit", [CommissariatsController::class, "edit"])->name("commissariats.edit");
     Route::put("/commissariats/{id}", [CommissariatsController::class, "update"])->name("commissariats.update");
@@ -95,6 +98,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // отделы
     Route::get("/departments", [DepartmentsController::class, "index"])->name("departments.index");
     Route::get("/departments/create", [DepartmentsController::class, "create"])->name("departments.create");
+    Route::get("/departments/{id}", [DepartmentsController::class, "show"])->name("departments.show");
     Route::post("/departments", [DepartmentsController::class, "store"])->name("departments.store");
     Route::get("/departments/{id}/edit", [DepartmentsController::class, "edit"])->name("departments.edit");
     Route::put("/departments/{id}", [DepartmentsController::class, "update"])->name("departments.update");

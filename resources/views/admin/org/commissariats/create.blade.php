@@ -40,24 +40,6 @@
                         <input type="text" name="name" id="name" placeholder="Название комиссариата"
                             value="{{ old('name') }}" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                        @error('name')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Действующий -->
-                    <div>
-                        <label for="is_active" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Действующий
-                        </label>
-                        <select name="is_active" id="is_active"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Да</option>
-                            <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Нет</option>
-                        </select>
-                        @error('is_active')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <!-- Кнопка отправки -->

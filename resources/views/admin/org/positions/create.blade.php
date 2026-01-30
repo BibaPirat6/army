@@ -41,9 +41,7 @@
                         <input type="text" name="name" id="name" placeholder="Введите название должности"
                             value="{{ old('name') }}" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                        @error('name')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+
                     </div>
 
                     <!-- Тип должности -->
@@ -60,9 +58,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        @error('position_type_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+
                     </div>
 
                     <!-- Кнопка отправки -->

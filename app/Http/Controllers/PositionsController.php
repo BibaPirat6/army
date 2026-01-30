@@ -10,9 +10,14 @@ class PositionsController extends Controller
 {
     public function index()
     {
-        $positions = Position::with('positionType')->get();
+        $positions = Position::with('positionType')->paginate(50);
 
         return view('admin.org.positions.index')->with('positions', $positions);
+    }
+    public function show($id)
+    {
+        $position = Position::findOrFail($id);
+        return view('admin.org.positions.show')->with('position', $position);
     }
     public function create()
     {

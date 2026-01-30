@@ -9,8 +9,13 @@ class PositionTypesController extends Controller
 {
     public function index()
     {
-        $types = PositionType::all();
+        $types = PositionType::paginate(50);
         return view('admin.org.position-types.index')->with('types', $types);
+    }
+    public function show($id)
+    {
+        $type = PositionType::findOrFail($id);
+        return view('admin.org.position-types.show')->with("type", $type);
     }
 
     public function create()
