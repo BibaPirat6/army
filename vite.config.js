@@ -8,16 +8,11 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/css/structure.css',  
-                'resources/js/structure.js',  
+                'resources/css/structure.css',
+                'resources/js/structure.js',
             ],
             refresh: true,
         }),
         tailwindcss(),
-    ],
-    server: {
-        watch: {
-            ignored: ['**/storage/framework/views/**'],
-        },
-    },  
+    ]
 });
