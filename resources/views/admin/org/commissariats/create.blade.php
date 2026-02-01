@@ -63,6 +63,13 @@
                         <ul id="chief_employee_list"
                             class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
                rounded-lg max-h-72 overflow-auto hidden">
+
+                            {{-- опция "Не назначать" --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="Не назначать">
+                                Не назначать
+                            </li>
+
                             @foreach ($employees as $employee)
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
                                     data-name="{{ trim(
@@ -116,8 +123,8 @@
             let hasVisible = false;
 
             items.forEach(item => {
-                const name = item.dataset.name.toLowerCase(); 
-                const id = item.dataset.id; 
+                const name = item.dataset.name.toLowerCase();
+                const id = item.dataset.id;
 
                 if (query === '') {
                     item.classList.remove('hidden');
