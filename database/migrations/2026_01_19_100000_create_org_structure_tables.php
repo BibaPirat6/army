@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -36,25 +35,49 @@ return new class extends Migration
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
-            $table->foreignId('commissariat_id')->nullable()->constrained('commissariats')->nullOnDelete();
-            $table->foreignId('chief_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+
+            $table->foreignId('commissariat_id')
+                ->constrained('commissariats')
+                ->cascadeOnDelete();
+
+            $table->foreignId('chief_employee_id')
+                ->nullable()
+                ->constrained('employees')
+                ->nullOnDelete();
+
             $table->timestamps();
         });
+
 
         Schema::create('divisions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
-            $table->foreignId('commissariat_id')->nullable()->constrained('commissariats')->nullOnDelete();
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->foreignId('chief_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+
+            $table->foreignId('commissariat_id')
+                ->constrained('commissariats')
+                ->cascadeOnDelete();
+
+            $table->foreignId('department_id')
+                ->nullable()
+                ->constrained('departments')
+                ->nullOnDelete();
+
+            $table->foreignId('chief_employee_id')
+                ->nullable()
+                ->constrained('employees')
+                ->nullOnDelete();
+
             $table->timestamps();
         });
+
 
         Schema::create('employee_positions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
             $table->foreignId('position_id')->constrained('positions')->cascadeOnDelete();
-            $table->foreignId('commissariat_id')->nullable()->constrained('commissariats')->nullOnDelete();
+            $table->foreignId('commissariat_id')
+                ->constrained('commissariats')
+                ->cascadeOnDelete();
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
             $table->foreignId('supervisor_employee_id')->nullable()->constrained('employees')->nullOnDelete();
@@ -62,7 +85,11 @@ return new class extends Migration
             $table->boolean('is_chief')->default(false);
             $table->timestamps();
 
-            $table->unique(['employee_id', 'position_id']);
+            $table->unique(
+                ['employee_id', 'position_id', 'commissariat_id'],
+                'employee_pos_comm_unique'
+            );
+
         });
     }
 

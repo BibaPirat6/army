@@ -43,14 +43,20 @@
                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $commissariat->id }}</td>
                                 <td class="px-6 py-4 text-[#060606]">{{ $commissariat->name }}</td>
+
+
                                 <td class="px-6 py-4">
                                     @if ($commissariat->chiefEmployee !== null)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $commissariat->chiefEmployee->person->last_name ?? "*"}}
-                                            {{ $commissariat->chiefEmployee->person->first_name ?? "*"}}
-                                            {{ $commissariat->chiefEmployee->person->patronymic ?? "*"}}
-                                        </span>
+                                        @if ($commissariat->chiefEmployee->person)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ $commissariat->chiefEmployee->person->last_name ?? '*' }}
+                                                {{ $commissariat->chiefEmployee->person->first_name ?? '*' }}
+                                                {{ $commissariat->chiefEmployee->person->patronymic ?? '*' }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Без ФИО (ID: {{ $commissariat->chiefEmployee->id }})</span>
+                                        @endif
                                     @else
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -58,6 +64,9 @@
                                         </span>
                                     @endif
                                 </td>
+
+
+
                                 <td class="px-6 py-4 text-right">
                                     <a href="{{ route('commissariats.show', $commissariat->id) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746ccc]/80 transition-colors duration-200 shadow-sm hover:shadow-md">

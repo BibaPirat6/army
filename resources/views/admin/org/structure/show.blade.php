@@ -53,7 +53,10 @@
                             </p>
                             <div class="node-line"></div>
                             <div class="data__positions">
-                                @if ($commissariat->chiefEmployee->positions->count() > 0)
+                                @if (
+                                    $commissariat->chiefEmployee &&
+                                        $commissariat->chiefEmployee->positions &&
+                                        $commissariat->chiefEmployee->positions->count() > 0)
                                     <p>Должности</p>
                                     <ul>
                                         @foreach ($commissariat->chiefEmployee->positions as $position)
@@ -99,7 +102,10 @@
                                             {{ $department->chiefEmployee->person->patronymic ?? '' }}
                                         </p>
                                         <p class="position">Должности</p>
-                                        @if ($department->chiefEmployee->positions->count() > 0)
+                                        @if (
+                                            $department->chiefEmployee &&
+                                                $department->chiefEmployee->positions &&
+                                                $department->chiefEmployee->positions->count() > 0)
                                             <ul>
                                                 @foreach ($department->chiefEmployee->positions as $position)
                                                     <li>{{ $position->position->name }}</li>
@@ -136,7 +142,10 @@
                                                             <span>Нет фото</span>
                                                         </div>
                                                     @endif
-                                                    @if ($division->chiefEmployee->positions->count() > 0)
+                                                    @if (
+                                                        $division->chiefEmployee &&
+                                                            $division->chiefEmployee->positions &&
+                                                            $division->chiefEmployee->positions->count() > 0)
                                                         <p>Должности</p>
                                                         <ul>
                                                             @foreach ($division->chiefEmployee->positions as $position)

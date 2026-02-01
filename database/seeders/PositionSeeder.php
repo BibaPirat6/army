@@ -20,6 +20,10 @@ class PositionSeeder extends Seeder
             ['name' => 'Менеджер', 'position_type_id' => $types['Операционные'] ?? null],
             ['name' => 'Специалист', 'position_type_id' => $types['Операционные'] ?? null],
             ['name' => 'Оператор', 'position_type_id' => $types['Управленческие'] ?? null],
+
+            ['name' => 'Начальник комиссариата', 'position_type_id' => $types['Управленческие'] ?? null],
+            ['name' => 'Начальник отдела', 'position_type_id' => $types['Управленческие'] ?? null],
+            ['name' => 'Начальник отделения', 'position_type_id' => $types['Управленческие'] ?? null],
         ];
 
         foreach ($positions as $row) {
