@@ -104,9 +104,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put("/departments/{id}", [DepartmentsController::class, "update"])->name("departments.update");
     Route::delete("/departments/{id}", [DepartmentsController::class, "delete"])->name("departments.delete");
 
-    // подразделения
+    // отделения
     Route::get("/divisions", [DivisionsController::class, "index"])->name("divisions.index");
     Route::get("/divisions/create", [DivisionsController::class, "create"])->name("divisions.create");
+    Route::get("/divisions/{id}", [DivisionsController::class, "show"])->name("divisions.show");
     Route::post("/divisions", [DivisionsController::class, "store"])->name("divisions.store");
     Route::get("/divisions/{id}/edit", [DivisionsController::class, "edit"])->name("divisions.edit");
     Route::put("/divisions/{id}", [DivisionsController::class, "update"])->name("divisions.update");

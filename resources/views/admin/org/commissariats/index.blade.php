@@ -47,9 +47,9 @@
                                     @if ($commissariat->chiefEmployee !== null)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $commissariat->chiefEmployee->person->last_name }}
-                                            {{ $commissariat->chiefEmployee->person->first_name }}
-                                            {{ $commissariat->chiefEmployee->person->patronymic }}
+                                            {{ $commissariat->chiefEmployee->person->last_name ?? "*"}}
+                                            {{ $commissariat->chiefEmployee->person->first_name ?? "*"}}
+                                            {{ $commissariat->chiefEmployee->person->patronymic ?? "*"}}
                                         </span>
                                     @else
                                         <span

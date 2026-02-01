@@ -47,9 +47,9 @@
                                     @if ($department->chief_employee_id !== null)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $department->chiefEmployee->person->last_name }}
-                                            {{ $department->chiefEmployee->person->first_name }}
-                                            {{ $department->chiefEmployee->person->patronymic }}
+                                            {{ $department->chiefEmployee->person->last_name ?? "*"}}
+                                            {{ $department->chiefEmployee->person->first_name ?? "*"}}
+                                            {{ $department->chiefEmployee->person->patronymic ?? "*"}}
                                         </span>
                                     @else
                                         <span
