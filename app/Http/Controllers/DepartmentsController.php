@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Commissariat;
 use App\Models\Department;
+use App\Models\Employee;
+use App\Models\EmployeePosition;
+use App\Models\Position;
 use Illuminate\Http\Request;
 
 class DepartmentsController extends Controller
@@ -25,13 +28,15 @@ class DepartmentsController extends Controller
     public function create()
     {
         $commissariats = Commissariat::all();
-        return view('admin.org.departments.create', compact("commissariats"));
+        $employees = Employee::all();
+        return view('admin.org.departments.create', compact("commissariats", "employees"));
     }
     public function store(Request $request)
     {
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
-            "commissariat_id" => "required|integer|min:1|exists:commissariats,id"
+            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
+            "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id"
         ], [
             "name.required" => "Название отдела обязательно для заполнения.",
             "name.string" => "Название отдела должно быть строкой.",
@@ -39,8 +44,30 @@ class DepartmentsController extends Controller
             "name.max" => "Название отдела не должно превышать 255 символов.",
             "commissariat_id.required" => "Выберите комиссариат",
             "commissariat_id.exists" => "Несуществующий комиссариат",
+            "chief_employee_id.exists" => "Несуществующий сотрудник",
         ]);
-        Department::create($data);
+
+        $department = Department::create($data);
+        $department->refresh();
+
+        if ($data["chief_employee_id"] !== null) {
+            $positionId = Position::where('name', 'Начальник отдела')->value('id');
+
+            EmployeePosition::updateOrCreate(
+                [
+                    "employee_id" => $data["chief_employee_id"],
+                    "position_id" => $positionId,
+                    "commissariat_id" => $data["commissariat_id"],
+                ],
+                [
+                    "department_id" => $department->id,
+                    "rate" => 1,
+                    "is_chief" => 1,
+                ]
+            );
+        }
+
+
         return redirect()->route('departments.index')->with('success', 'Отдел успешно создан.');
     }
 

@@ -33,24 +33,31 @@
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Начальник</span>
                         <span class="text-[#060606]">
-                            @if ($department['chief_employee_id'] !== null)
-                                {{ $department->chiefEmployee->person->last_name }}
-                                {{ $department->chiefEmployee->person->first_name }}
-                                {{ $department->chiefEmployee->person->patronymic }}
+                            @if ($department->chiefEmployee !== null)
+                                @if ($department->chiefEmployee->person)
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $department->chiefEmployee->person->last_name ?? '*' }}
+                                        {{ $department->chiefEmployee->person->first_name ?? '*' }}
+                                        {{ $department->chiefEmployee->person->patronymic ?? '*' }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">Без ФИО (ID: {{ $department->chiefEmployee->id }})</span>
+                                @endif
                             @else
-                                {{ '-' }}
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Нет
+                                </span>
                             @endif
                         </span>
                     </div>
 
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Комиссариат</span>
-                        <span class="text-[#060606]">
-                            @if ($department['commissariat_id'] !== null)
-                                {{ $department->commissariat->name }}
-                            @else
-                                {{ '-' }}
-                            @endif
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {{ $department->commissariat->name }}
                         </span>
                     </div>
 

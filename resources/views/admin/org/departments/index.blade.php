@@ -45,12 +45,17 @@
                                 <td class="px-6 py-4 text-[#060606]">{{ $department->name }}</td>
                                 <td class="px-6 py-4">
                                     @if ($department->chief_employee_id !== null)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $department->chiefEmployee->person->last_name ?? "*"}}
-                                            {{ $department->chiefEmployee->person->first_name ?? "*"}}
-                                            {{ $department->chiefEmployee->person->patronymic ?? "*"}}
-                                        </span>
+                                        @if ($department->chiefEmployee->person)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ $department->chiefEmployee->person->last_name ?? '*' }}
+                                                {{ $department->chiefEmployee->person->first_name ?? '*' }}
+                                                {{ $department->chiefEmployee->person->patronymic ?? '*' }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Без ФИО (ID:
+                                                {{ $department->chiefEmployee->id }})</span>
+                                        @endif
                                     @else
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -58,6 +63,8 @@
                                         </span>
                                     @endif
                                 </td>
+
+
                                 <td class="px-6 py-4">
                                     @if ($department->commissariat_id !== null)
                                         <span
@@ -111,7 +118,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center">
+                                <td colspan="5" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">

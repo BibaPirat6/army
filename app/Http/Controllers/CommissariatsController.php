@@ -10,10 +10,15 @@ use Illuminate\Http\Request;
 
 class CommissariatsController extends Controller
 {
-    public function index() 
+    public function index()
     {
         $commissariats = Commissariat::paginate(50);
         return view('admin.org.commissariats.index', compact('commissariats'));
+    }
+    public function show($id)
+    {
+        $commissariat = Commissariat::findOrFail($id);
+        return view('admin.org.commissariats.show', compact('commissariat'));
     }
 
     public function create()
@@ -21,11 +26,7 @@ class CommissariatsController extends Controller
         $employees = Employee::all();
         return view('admin.org.commissariats.create', compact("employees"));
     }
-    public function show($id)
-    {
-        $commissariat = Commissariat::findOrFail($id);
-        return view('admin.org.commissariats.show', compact('commissariat'));
-    }
+
 
     public function store(Request $request)
     {
@@ -43,14 +44,20 @@ class CommissariatsController extends Controller
         $commissariat = Commissariat::create($data);
         $commissariat->refresh();
 
+        $positionId = Position::where('name', 'Начальник комиссариата')->value('id');
+
         if ($data["chief_employee_id"] !== null) {
-            EmployeePosition::updateOrCreate([
-                "employee_id" => $data["chief_employee_id"],
-                "position_id" => Position::where('name', 'Начальник комиссариата')->value('id'),
-                "commissariat_id" => $commissariat->id,
-                "rate" => 1,
-                "is_chief" => 1,
-            ]);
+            EmployeePosition::updateOrCreate(
+                [
+                    "employee_id" => $data["chief_employee_id"],
+                    "position_id" => $positionId,
+                    "commissariat_id" => $commissariat->id,
+                ],
+                [
+                    "rate" => 1,
+                    "is_chief" => 1,
+                ]
+            );
         }
 
         return redirect()->route('commissariats.index')->with('success', 'Комиссариат успешно создан.');

@@ -22,11 +22,6 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             PositionTypeSeeder::class,
             PositionSeeder::class,
-            CommissariatSeeder::class,
-            DepartmentSeeder::class,
-            DivisionSeeder::class,
-
-            EmployeePositionSeeder::class
         ]);
     }
 }

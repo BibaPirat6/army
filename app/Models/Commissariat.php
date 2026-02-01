@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Commissariat extends Model
 {
@@ -22,6 +23,21 @@ class Commissariat extends Model
     {
         return $this->belongsTo(Employee::class, 'chief_employee_id');
     }
+
+
+    // вывод с EmployeePosition начальника комиссариата для того чтобы если мы сняли с должности начальника то в таблице комиссариатов выводилос что нет начальника
+
+    public function chiefEmployeePosition(): HasOne
+    {
+        return $this->hasOne(EmployeePosition::class, 'commissariat_id')
+            ->whereHas('position', function ($query) {
+                $query->where('name', 'Начальник комиссариата');
+            })
+            ->with('employee.person');
+    }
+
+
+
 
     /**
      * Получить все отделы комиссариата
