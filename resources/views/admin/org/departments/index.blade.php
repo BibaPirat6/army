@@ -25,6 +25,8 @@
             </a>
         </div>
 
+
+
         <!-- Таблица -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="overflow-x-auto">
@@ -43,18 +45,20 @@
                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $department->id }}</td>
                                 <td class="px-6 py-4 text-[#060606]">{{ $department->name }}</td>
+
+
                                 <td class="px-6 py-4">
-                                    @if ($department->chief_employee_id !== null)
-                                        @if ($department->chiefEmployee->person)
+                                    @if ($department->chiefEmployeePosition !== null)
+                                        @if ($department->chiefEmployeePosition->employee && $department->chiefEmployeePosition->employee->person)
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {{ $department->chiefEmployee->person->last_name ?? '*' }}
-                                                {{ $department->chiefEmployee->person->first_name ?? '*' }}
-                                                {{ $department->chiefEmployee->person->patronymic ?? '*' }}
+                                                {{ $department->chiefEmployeePosition->employee->person->last_name ?? '*' }}
+                                                {{ $department->chiefEmployeePosition->employee->person->first_name ?? '*' }}
+                                                {{ $department->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
                                             </span>
                                         @else
                                             <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $department->chiefEmployee->id }})</span>
+                                                {{ $department->chiefEmployeePosition->id }})</span>
                                         @endif
                                     @else
                                         <span
@@ -78,6 +82,7 @@
                                         </span>
                                     @endif
                                 </td>
+
 
                                 <td class="px-6 py-4 text-right">
                                     <a href="{{ route('departments.show', $department->id) }}"

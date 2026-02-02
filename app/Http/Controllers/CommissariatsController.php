@@ -125,11 +125,11 @@ class CommissariatsController extends Controller
             ]);
 
             // 3. Также удаляем другие записи этого сотрудника как начальника в этом комиссариате
-            EmployeePosition::where('employee_id', $data["chief_employee_id"])
-                ->where('commissariat_id', $commissariat->id)
-                ->where('position_id', '!=', $chiefPositionId)
-                ->where('is_chief', 1)
-                ->delete();
+            // EmployeePosition::where('employee_id', $data["chief_employee_id"])
+            //     ->where('commissariat_id', $commissariat->id)
+            //     ->where('position_id', '!=', $chiefPositionId)
+            //     ->where('is_chief', 1)
+            //     ->delete();
 
         } else {
             // Если начальник удален (установлен null)

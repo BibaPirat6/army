@@ -57,13 +57,13 @@
         focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
         outline-none transition-colors text-[#060606]"
                             autocomplete="off"
-                            value="{{ $commissariat->chiefEmployee
+                            value="{{ $commissariat->chiefEmployeePosition
                                 ? trim(
-                                    ($commissariat->chiefEmployee->person?->last_name ?? '') .
+                                    ($commissariat->chiefEmployeePosition->employee->person?->last_name ?? '') .
                                         ' ' .
-                                        ($commissariat->chiefEmployee->person?->first_name ?? '') .
+                                        ($commissariat->chiefEmployeePosition->employee->person?->first_name ?? '') .
                                         ' ' .
-                                        ($commissariat->chiefEmployee->person?->patronymic ?? ''),
+                                        ($commissariat->chiefEmployeePosition->employee->person?->patronymic ?? ''),
                                 )
                                 : '' }}">
 

@@ -33,16 +33,17 @@
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Начальник</span>
                         <span class="text-[#060606]">
-                            @if ($department->chiefEmployee !== null)
-                                @if ($department->chiefEmployee->person)
+                            @if ($department->chiefEmployeePosition !== null)
+                                @if ($department->chiefEmployeePosition->employee && $department->chiefEmployeePosition->employee->person)
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ $department->chiefEmployee->person->last_name ?? '*' }}
-                                        {{ $department->chiefEmployee->person->first_name ?? '*' }}
-                                        {{ $department->chiefEmployee->person->patronymic ?? '*' }}
+                                        {{ $department->chiefEmployeePosition->employee->person->last_name ?? '*' }}
+                                        {{ $department->chiefEmployeePosition->employee->person->first_name ?? '*' }}
+                                        {{ $department->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
                                     </span>
                                 @else
-                                    <span class="text-gray-400">Без ФИО (ID: {{ $department->chiefEmployee->id }})</span>
+                                    <span class="text-gray-400">Без ФИО (ID:
+                                        {{ $department->chiefEmployeePosition->id }})</span>
                                 @endif
                             @else
                                 <span

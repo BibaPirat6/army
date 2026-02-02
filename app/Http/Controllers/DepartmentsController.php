@@ -58,9 +58,9 @@ class DepartmentsController extends Controller
                     "employee_id" => $data["chief_employee_id"],
                     "position_id" => $positionId,
                     "commissariat_id" => $data["commissariat_id"],
+                    "department_id" => $department->id,
                 ],
                 [
-                    "department_id" => $department->id,
                     "rate" => 1,
                     "is_chief" => 1,
                 ]
@@ -75,24 +75,83 @@ class DepartmentsController extends Controller
     {
         $department = Department::with('commissariat')->findOrFail($id);
         $commissariats = Commissariat::all();
-        return view('admin.org.departments.edit', compact('department', "commissariats"));
+        $employees = Employee::all();
+        return view('admin.org.departments.edit', compact('department', "commissariats", "employees"));
     }
 
     public function update(Request $request, $id)
     {
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
-            "commissariat_id" => "required|integer|min:1|exists:commissariats,id"
+            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
+            "chief_employee_id" => "nullable|integer|min:1|exists:employees,id"
         ], [
-            "name.required" => "Название отдела обязательно для заполнения.",
-            "name.string" => "Название отдела должно быть строкой.",
-            "name.min" => "Название отдела должно содержать минимум 2 символа.",
-            "name.max" => "Название отдела не должно превышать 255 символов.",
+            "name.required" => "Название комиссариата обязательно для заполнения.",
+            "name.string" => "Название комиссариата должно быть строкой.",
+            "name.min" => "Название комиссариата должно содержать минимум 2 символа.",
+            "name.max" => "Название комиссариата не должно превышать 255 символов.",
+            "chief_employee_id.exists" => "Несуществующий сотрудник",
             "commissariat_id.required" => "Выберите комиссариат",
             "commissariat_id.exists" => "Несуществующий комиссариат",
         ]);
 
-        Department::where("id", $id)->update($data);
+        $department = Department::findOrFail($id);
+        $commissariat = Commissariat::findOrFail($data["commissariat_id"]);
+
+        // Сохраняем ID старого начальника перед обновлением
+        $oldChiefEmployeeId = $department->chief_employee_id;
+
+        // Обновляем комиссариат
+        $department->update([
+            "name" => $data["name"],
+            "commissariat_id" => $data["commissariat_id"],
+            "chief_employee_id" => $data["chief_employee_id"] // null или новое значение
+        ]);
+
+        // Получаем ID должности "Начальник комиссариата"
+        $chiefPositionId = Position::where('name', 'Начальник отдела')->value('id');
+
+        if (!$chiefPositionId) {
+            return back()->withErrors(['error' => 'Должность "Начальник отдела" не найдена']);
+        }
+
+        // Если указан новый начальник
+        if ($data["chief_employee_id"] !== null) {
+            // 1. Удаляем старую запись начальника (если был старый начальник)
+            if ($oldChiefEmployeeId !== null) {
+                EmployeePosition::where([
+                    'employee_id' => $oldChiefEmployeeId,
+                    'position_id' => $chiefPositionId,
+                    'commissariat_id' => $commissariat->id,
+                    "department_id" => $department->id,
+                    'is_chief' => 1
+                ])->delete();
+            }
+
+            // 2. Создаем новую запись для нового начальника
+            EmployeePosition::updateOrCreate([
+                "employee_id" => $data["chief_employee_id"],
+                "position_id" => $chiefPositionId,
+                "commissariat_id" => $commissariat->id,
+                "department_id" => $department->id,
+            ], [
+                "rate" => 1,
+                "is_chief" => 1,
+            ]);
+
+        } else {
+            // Если начальник удален (установлен null)
+            // Удаляем запись из EmployeePosition для старого начальника
+            if ($oldChiefEmployeeId !== null) {
+                EmployeePosition::where([
+                    'employee_id' => $oldChiefEmployeeId,
+                    'position_id' => $chiefPositionId,
+                    'commissariat_id' => $commissariat->id,
+                    "department_id" => $department->id,
+                    'is_chief' => 1
+                ])->delete();
+            }
+        }
 
         return redirect()->route('departments.index')->with('success', 'Отдел успешно обновлен.');
     }
