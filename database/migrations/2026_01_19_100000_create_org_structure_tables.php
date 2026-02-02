@@ -60,7 +60,7 @@ return new class extends Migration {
             $table->foreignId('department_id')
                 ->nullable()
                 ->constrained('departments')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
             $table->foreignId('chief_employee_id')
                 ->nullable()
@@ -82,15 +82,15 @@ return new class extends Migration {
                 ->nullable()
                 ->constrained('departments')
                 ->cascadeOnDelete();
-            $table->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
+            $table->foreignId('division_id')->nullable()->constrained('divisions')->cascadeOnDelete();
             $table->foreignId('supervisor_employee_id')->nullable()->constrained('employees')->nullOnDelete();
             $table->decimal('rate', 3, 2);
             $table->boolean('is_chief')->default(false);
             $table->timestamps();
 
             $table->unique(
-                ['employee_id', 'position_id', 'commissariat_id', 'department_id'],
-                'employee_pos_comm_dept_unique'
+                ['employee_id', 'position_id', 'commissariat_id', 'department_id', "division_id"],
+                'employee_pos_comm_dept_divis_unique'
             );
 
 

@@ -33,12 +33,23 @@
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Начальник</span>
                         <span class="text-[#060606]">
-                            @if ($division['chief_employee_id'] !== null)
-                                {{ $division->chiefEmployee->person->last_name ?? "*"}}
-                                {{ $division->chiefEmployee->person->first_name ?? "*"}}
-                                {{ $division->chiefEmployee->person->patronymic ?? "*"}}
+                            @if ($division->chiefEmployeePosition !== null)
+                                @if ($division->chiefEmployeePosition->employee && $division->chiefEmployeePosition->employee->person)
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $division->chiefEmployeePosition->employee->person->last_name ?? '*' }}
+                                        {{ $division->chiefEmployeePosition->employee->person->first_name ?? '*' }}
+                                        {{ $division->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">Без ФИО (ID:
+                                        {{ $division->chiefEmployeePosition->id }})</span>
+                                @endif
                             @else
-                                {{ '-' }}
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Нет
+                                </span>
                             @endif
                         </span>
                     </div>
@@ -46,22 +57,24 @@
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Отдел</span>
                         <span class="text-[#060606]">
-                            @if ($division['department_id'] !== null)
-                                {{ $division->department->name }}
+                            @if ($division->department_id !== null)
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ $division->department->name }}
+                                </span>
                             @else
-                                {{ '-' }}
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Нет
+                                </span>
                             @endif
                         </span>
                     </div>
 
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Комиссариат</span>
-                        <span class="text-[#060606]">
-                            @if ($division['commissariat_id'] !== null)
-                                {{ $division->commissariat->name }}
-                            @else
-                                {{ '-' }}
-                            @endif
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {{ $division->commissariat->name }}
                         </span>
                     </div>
 

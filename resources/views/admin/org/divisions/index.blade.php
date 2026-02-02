@@ -47,13 +47,18 @@
                                 <td class="px-6 py-4 text-[#060606]">{{ $division->name }}</td>
 
                                 <td class="px-6 py-4">
-                                    @if ($division->chief_employee_id !== null)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $division->chiefEmployee->person?->last_name ?? "*" }}
-                                            {{ $division->chiefEmployee->person?->first_name ?? "*"}}
-                                            {{ $division->chiefEmployee->person?->patronymic ?? "*"}}
-                                        </span>
+                                    @if ($division->chiefEmployeePosition !== null)
+                                        @if ($division->chiefEmployeePosition->employee && $division->chiefEmployeePosition->employee->person)
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ $division->chiefEmployeePosition->employee->person->last_name ?? '*' }}
+                                                {{ $division->chiefEmployeePosition->employee->person->first_name ?? '*' }}
+                                                {{ $division->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Без ФИО (ID:
+                                                {{ $division->chiefEmployeePosition->id }})</span>
+                                        @endif
                                     @else
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -66,7 +71,7 @@
                                     @if ($division->department_id !== null)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $division->department?->name ?? "*"}}
+                                            {{ $division->department?->name ?? '*' }}
                                         </span>
                                     @else
                                         <span
@@ -80,7 +85,7 @@
                                     @if ($division->commissariat_id !== null)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $division->commissariat?->name ?? "*"}}
+                                            {{ $division->commissariat?->name ?? '*' }}
                                         </span>
                                     @else
                                         <span

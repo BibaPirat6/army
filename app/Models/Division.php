@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Division extends Model
 {
@@ -38,6 +39,17 @@ class Division extends Model
     public function chiefEmployee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'chief_employee_id');
+    }
+
+    public function chiefEmployeePosition(): HasOne
+    {
+        return $this->hasOne(EmployeePosition::class, 'employee_id', 'chief_employee_id')
+            ->where('commissariat_id', $this->commissariat_id)
+            ->where('division_id', $this->id)
+            ->whereHas('position', function ($query) {
+                $query->where('name', 'Начальник отделения');
+            })
+            ->with('employee.person');
     }
 
     /**

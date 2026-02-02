@@ -43,7 +43,7 @@
                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $position->id }}</td>
                                 <td class="px-6 py-4 text-[#060606]">{{ $position->name }}</td>
-                                <td class="px-6 py-4 text-[#060606]">{{ $position->positionType->name }}</td>
+                                <td class="px-6 py-4 text-[#060606]">{{ $position->positionType->name ?? "*"}}</td>
                                 <td class="px-6 py-4 text-right">
                                     <a href="{{ route('positions.show', $position->id) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746ccc]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
