@@ -27,9 +27,6 @@ Route::middleware(['auth'])->group(function () {
 
     // профиль
     Route::get("/profile", [ProfileController::class, "index"])->name("profile.index");
-    Route::get("/profile/update", [ProfileController::class, "updateShow"])->name("profile.update.index");
-    Route::put("/profile/update", [ProfileController::class, "update"])->name("profile.update.post");
-
 
     Route::post("/logout", [LoginController::class, "logout"])->name("logout");
 });

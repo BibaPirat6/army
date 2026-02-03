@@ -128,9 +128,16 @@
                                         {{ $employee->person->last_name ?? '' }}
                                         {{ $employee->person->first_name ?? '' }}
                                         {{ $employee->person->patronymic ?? '' }}</li>
-                                    <li><span class="font-medium">Телефон:</span> {{ $employee->person->phone ?? '—' }}
+                                    <li><span class="font-medium">Телефон:</span>
+                                        @foreach ($employee->person->phones ?? [] as $phone)
+                                            <span>+{{ $phone }}</span>
+                                        @endforeach
                                     </li>
-                                    <li><span class="font-medium">Email:</span> {{ $employee->person->email ?? '—' }}</li>
+                                    <li><span class="font-medium">Email:</span>
+                                        @foreach ($employee->person->emails ?? [] as $email)
+                                            <span>{{ $email }}</span>
+                                        @endforeach
+                                    </li>
                                 </ul>
 
                                 <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
@@ -180,22 +187,26 @@
                             @if ($employee->positions->count() > 0)
                                 <ul class="text-sm text-[#565A5B] space-y-1">
                                     @foreach ($employee->positions as $position)
-                                        <li><span class="font-medium">ID:</span> {{ $position->id }} {{ $position->position->name}}</li>
+                                        <li><span class="font-medium">ID:</span> {{ $position->id }}
+                                            {{ $position->position->name }} | Ставка {{ $position->rate }}</li>
                                     @endforeach
                                 </ul>
 
                                 <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
-                                    <a href="{{ route('persons.edit', [
-                                        'id' => $employee->person->id,
-                                        'employee_id' => $employee->id,
+                                    <a href="{{ route('employee-positions.edit', [
+                                        'id' => $employee->id,
                                         'back_url' => route('employees.index'),
                                     ]) }}"
                                         class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
                                         Изменить
                                     </a>
 
-                                    <form action="{{ route('persons.delete', $employee->person->id) }}" method="post"
-                                        class="inline-block"
+                                    <form
+                                        action="{{ route('employee-positions.destroy', [
+                                            'id' => $employee->id,
+                                            'back_url' => route('employees.index'),
+                                        ]) }}"
+                                        method="post" class="inline-block"
                                         onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}?');">
                                         @method('DELETE')
                                         @csrf
@@ -208,8 +219,8 @@
                                 </div>
                             @else
                                 <p class="text-[#7F7F7F] text-sm italic mb-3">Не назначена должность</p>
-                                <a href="{{ route('persons.create', [
-                                    'employee_id' => $employee->id,
+                                <a href="{{ route('employee-positions.create', [
+                                    'id' => $employee->id,
                                     'back_url' => route('employees.index'),
                                 ]) }}"
                                     class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">

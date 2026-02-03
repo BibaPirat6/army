@@ -37,10 +37,14 @@
                                         {{ $employee->person->patronymic ?? '' }}
                                     </div>
                                     <div class="text-xs text-[#565A5B] mt-1">
-                                        {{ $employee->person->phone ?? '' }}
+                                        @foreach ($employee->person->phones ?? [] as $phone)
+                                            <span>+{{ $phone }} |</span>
+                                        @endforeach
                                     </div>
                                     <div class="text-xs text-[#565A5B]">
-                                        {{ $employee->person->email ?? '' }}
+                                         @foreach ($employee->person->emails ?? [] as $email)
+                                            <span>{{ $email }} |</span>
+                                        @endforeach
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-[#060606]">
@@ -59,8 +63,9 @@
                                                     / <span title="отделение">{{ $employeePosition->division->name }}</span>
                                                 @endif
                                                 @if ($employeePosition->is_independent !== false)
-                                                    <i style="color: rgb(17, 183, 17)">({{ $employeePosition->is_independent ? 'Самостоятельная должность' : ""}})</i>
-                                                @endif  
+                                                    <i
+                                                        style="color: rgb(17, 183, 17)">({{ $employeePosition->is_independent ? 'Самостоятельная должность' : '' }})</i>
+                                                @endif
                                             </div>
                                         </div>
                                     @empty

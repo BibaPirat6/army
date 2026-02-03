@@ -13,7 +13,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('employee-positions.index') }}"
+                <a href="{{ $backUrl ?? route('employee-positions.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -76,10 +76,13 @@
                         @csrf
                         @method('PUT')
 
+
+                        <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+                        <input type="hidden" name="employeeId" value="{{ $employeeId }}">
+
                         <!-- Должность -->
                         <div>
-                            <label for="position_id"
-                                class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="position_id" class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Должность *
                             </label>
                             <select name="position_id" id="position_id" required
@@ -106,8 +109,7 @@
 
                         <!-- Комиссариат -->
                         <div>
-                            <label for="commissariat_id"
-                                class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="commissariat_id" class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Комиссариат *
                             </label>
                             <select name="commissariat_id" id="commissariat_id" required
@@ -123,8 +125,7 @@
 
                         <!-- Отдел -->
                         <div>
-                            <label for="department_id"
-                                class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="department_id" class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Отдел
                             </label>
                             <select name="department_id" id="department_id"
@@ -141,8 +142,7 @@
 
                         <!-- Отделение -->
                         <div>
-                            <label for="division_id"
-                                class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="division_id" class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Отделение
                             </label>
                             <select name="division_id" id="division_id"
@@ -162,8 +162,7 @@
 
                         <!-- Самостоятельная должность -->
                         <div>
-                            <label for="is_independent"
-                                class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="is_independent" class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Самостоятельная должность
                             </label>
                             <select name="is_independent" id="is_independent"
@@ -188,8 +187,13 @@
                         </div>
                     </form>
 
-                    <form action="{{ route('employee-positions.delete', $position->id) }}" method="POST"
-                        class="mt-0.5 inline-block" onsubmit="return confirm('Вы уверены, что хотите удалить это назначение?');">
+                    <form
+                        action="{{ route('employee-positions.delete', [
+                            'id' => $position->id,
+                            'back_url' => $backUrl,
+                        ]) }}"
+                        method="POST" class="mt-0.5 inline-block"
+                        onsubmit="return confirm('Вы уверены, что хотите удалить это назначение?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit"

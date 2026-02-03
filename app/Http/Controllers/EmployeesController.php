@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\EmployeePosition;
 use App\Models\Person;
 use App\Models\Role;
 use App\Models\User;
@@ -159,6 +160,7 @@ class EmployeesController extends Controller
 
     public function delete($id)
     {
+        EmployeePosition::where('employee_id', $id)->delete();
         $res = Employee::where('id', $id)->delete();
 
         if ($res) {

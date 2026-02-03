@@ -27,7 +27,7 @@ class EmployeePositionsController extends Controller
         return view("admin.org.employee-positions.show", compact("employee"));
     }
 
-    public function create($id)
+    public function create(Request $request, $id)
     {
         $employee = Employee::with(["user.role", "workStatus", "person", "positions.position.positionType"])->findOrFail($id);
         $positions = Position::all();
@@ -35,7 +35,10 @@ class EmployeePositionsController extends Controller
         $departments = Department::all();
         $divisions = Division::all();
 
-        return view('admin.org.employee-positions.create', compact('employee', 'positions', "commissariats", "departments", "divisions"));
+        $backUrl = $request->get("back_url");
+        $employeeId = $id;
+
+        return view('admin.org.employee-positions.create', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId"));
     }
 
     public function store(Request $request, $id)
@@ -46,7 +49,8 @@ class EmployeePositionsController extends Controller
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
             "department_id" => "nullable|sometimes|exists:departments,id",
             "division_id" => "nullable|sometimes|exists:divisions,id",
-            "is_independent" => "required|integer|in:1,0"
+            "is_independent" => "required|integer|in:1,0",
+            "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
             'position_id.required' => 'Поле должность обязательно для заполнения.',
             'position_id.integer' => 'Поле должность должно быть целым числом.',
@@ -59,7 +63,8 @@ class EmployeePositionsController extends Controller
             "commissariat_id.exists" => "Несуществующий комиссариат",
             "department_id.exists" => "Несуществующий отдел",
             "division_id.exists" => "Несуществующий отдел",
-            "is_independent.required" => "Выберите тип должность самостоятельная/нет"
+            "is_independent.required" => "Выберите тип должность самостоятельная/нет",
+            "employeeId.exists" => "Не существующий id сотрудника",
         ]);
 
         Employee::findOrFail($id);
@@ -74,17 +79,23 @@ class EmployeePositionsController extends Controller
             "is_independent" => $data["is_independent"]
         ]);
 
-        return redirect()->route('employee-positions.index')->with('success', 'Должность успешно добавлена сотруднику.');
+        $backUrl = $request->input("backUrl");
+
+        return redirect($backUrl ?? route("employee-positions.index"))->with('success', 'Должность успешно добавлена сотруднику.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $employee = Employee::with(["user.role", "workStatus", "person", "positions.position.positionType"])->findOrFail($id);
         $positions = Position::all();
         $commissariats = Commissariat::all();
         $departments = Department::all();
         $divisions = Division::all();
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions"));
+
+        $backUrl = $request->get("back_url");
+        $employeeId = $id;
+
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId"));
     }
     public function update(Request $request, $id)
     {
@@ -123,23 +134,29 @@ class EmployeePositionsController extends Controller
             "is_independent" => $data['is_independent'],
         ]);
 
-        return redirect()->route('employee-positions.index')->with('success', 'Должность успешно обновлена.');
+        $backUrl = $request->input("backUrl");
+
+        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Должность успешно обновлена.');
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $employeePosition = EmployeePosition::findOrFail($id);
         $employeePosition->delete();
 
-        return redirect()->route('employee-positions.index')->with('success', 'Должность успешно удалена у сотрудника.');
+        $backUrl = $request->get("back_url");
+
+        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Должность успешно удалена у сотрудника.');
     }
 
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
         EmployeePosition::where('employee_id', $employee->id)->delete();
 
-        return redirect()->route('employee-positions.index')->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
+        $backUrl = $request->get("back_url");
+
+        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
     }
 }

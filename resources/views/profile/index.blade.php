@@ -37,24 +37,19 @@
                 </span>
 
                 <span class="font-bold text-[#565A5B]">Телефон</span>
-                <span class="text-[#060606] break-words">{{ $employee->person?->phone }}</span>
+                <span class="text-[#060606] break-words">
+                    @foreach ($employee->person?->phones ?? [] as $phone)
+                        <div>+{{ $phone }}</div>
+                    @endforeach
+                </span>
 
                 <span class="font-bold text-[#565A5B]">Почта</span>
-                <span class="text-[#060606] break-words">{{ $employee->person?->email }}</span>
+                <span class="text-[#060606] break-words">
+                    @foreach ($employee->person?->emails ?? [] as $email)
+                        <div>{{ $email }}</div>
+                    @endforeach
+                </span>
             </div>
-        </div>
-
-        <div class="mt-10 pt-6 border-t border-[#BFBFBF] flex justify-center">
-            <a href="{{ route('profile.update.index') }}"
-                class="group inline-flex items-center px-4 py-2 text-[#A60644] font-medium rounded-lg transition-all duration-200 hover:bg-[#A60644]/5 active:scale-[0.98]">
-                <svg class="w-4 h-4 mr-2 transition-transform group-hover:translate-x-1" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                    </path>
-                </svg>
-                Редактировать профиль
-            </a>
         </div>
     </div>
 @endsection
