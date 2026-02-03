@@ -68,8 +68,16 @@
                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $person->last_name }}</td>
                                 <td class="px-6 py-4 text-[#060606]">{{ $person->first_name }}</td>
                                 <td class="px-6 py-4 text-[#060606]">{{ $person->patronymic }}</td>
-                                <td class="px-6 py-4 text-[#060606] font-mono">{{ $person->phone }}</td>
-                                <td class="px-6 py-4 text-[#060606] font-mono text-sm">{{ $person->email }}</td>
+                                <td class="px-6 py-4 text-[#060606] font-mono">
+                                    @foreach ($person->phones ?? [] as $phone)
+                                        <div>+{{ $phone }}</div>
+                                    @endforeach
+                                </td>
+                                <td class="px-6 py-4 text-[#060606] font-mono text-sm">
+                                    @foreach ($person->emails ?? [] as $email)
+                                        <div>{{ $email }}</div>
+                                    @endforeach
+                                </td>
                                 <td class="px-6 py-4 text-right">
                                     <a href="{{ route('persons.edit', $person->id) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">

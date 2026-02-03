@@ -46,9 +46,7 @@
                             <input type="text" name="last_name" id="last_name" placeholder="Введите фамилию"
                                 value="{{ old('last_name', $person->last_name) }}" required
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('last_name')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                         </div>
 
                         <!-- Имя -->
@@ -59,9 +57,7 @@
                             <input type="text" name="first_name" id="first_name" placeholder="Введите имя"
                                 value="{{ old('first_name', $person->first_name) }}" required
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('first_name')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                         </div>
 
                         <!-- Отчество -->
@@ -72,36 +68,56 @@
                             <input type="text" name="patronymic" id="patronymic" placeholder="Введите отчество"
                                 value="{{ old('patronymic', $person->patronymic) }}"
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('patronymic')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                         </div>
 
-                        <!-- Почта -->
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Почта
-                            </label>
-                            <input type="email" name="email" id="email" placeholder="Введите почту"
-                                value="{{ old('email', $person->email) }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('email')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                        {{-- EMAILS --}}
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-[#565A5B]">Email</label>
+
+                            <div id="emails-wrapper" class="space-y-2">
+                                @foreach ($person->emails ?? [] as $email)
+                                    <div class="flex gap-2">
+                                        <input type="email" placeholder="Введите почту" name="emails[]" value="{{ $email }}"
+                                            class="w-full px-4 py-2 border rounded-lg">
+
+                                        <button type="button" class="remove-field px-3 text-red-600 border rounded-lg">
+                                            ✕
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <button type="button" id="add-email" class="text-sm text-[#A60644] mt-2">
+                                + Добавить email
+                            </button>
                         </div>
 
-                        <!-- Телефон -->
-                        <div>
-                            <label for="phone" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Телефон
-                            </label>
-                            <input type="tel" name="phone" id="phone" placeholder="Введите телефон"
-                                value="{{ old('phone', $person->phone) }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('phone')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                        {{-- PHONES --}}
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-[#565A5B]">Телефоны</label>
+
+                            <div id="phones-wrapper" class="space-y-2">
+                                @foreach ($person->phones ?? [] as $phone)
+                                    <div class="flex gap-2">
+                                        <input type="text" placeholder="Введите телефон" name="phones[]" value="{{ $phone }}"
+                                            class="w-full px-4 py-2 border rounded-lg">
+
+                                        <button type="button" class="remove-field px-3 text-red-600 border rounded-lg">
+                                            ✕
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <button type="button" id="add-phone" class="text-sm text-[#A60644] mt-2">
+                                + Добавить телефон
+                            </button>
                         </div>
+
+
+
+
 
                         <!-- Фото -->
                         <div class="md:col-span-2">
@@ -110,9 +126,7 @@
                             </label>
                             <input type="file" name="photo" id="photo" accept="image/*"
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#A60644] file:text-white file:font-medium file:cursor-pointer hover:file:bg-[#A60644]/80 transition-colors text-[#060606]">
-                            @error('photo')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                             @if ($person->photo)
                                 <div class="mt-2 flex items-center">
                                     <div
@@ -144,3 +158,40 @@
         </div>
     </div>
 @endsection
+
+<script>
+document.addEventListener('click', function (e) {
+
+    // удалить поле
+    if (e.target.classList.contains('remove-field')) {
+        e.target.closest('.flex').remove();
+    }
+
+    // добавить email
+    if (e.target.id === 'add-email') {
+        document.getElementById('emails-wrapper').insertAdjacentHTML(
+            'beforeend',
+            `
+            <div class="flex gap-2">
+                <input type="email" name="emails[]" placeholder="Введите почту" class="w-full px-4 py-2 border rounded-lg">
+                <button type="button" class="remove-field px-3 text-red-600 border rounded-lg">✕</button>
+            </div>
+            `
+        );
+    }
+
+    // добавить телефон
+    if (e.target.id === 'add-phone') {
+        document.getElementById('phones-wrapper').insertAdjacentHTML(
+            'beforeend',
+            `
+            <div class="flex gap-2">
+                <input type="text" name="phones[]" placeholder="Введите телефон" class="w-full px-4 py-2 border rounded-lg">
+                <button type="button" class="remove-field px-3 text-red-600 border rounded-lg">✕</button>
+            </div>
+            `
+        );
+    }
+
+});
+</script>

@@ -29,21 +29,23 @@ class PersonsController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             "last_name" => "required|string|min:2",
             "first_name" => "required|string|min:2",
             "patronymic" => "nullable|string|min:2",
-            'email' => [
-                'nullable',
-                'email',
-                Rule::unique('persons', 'email')
+
+            "emails" => "nullable|array",
+            'emails.*' => [
+                'required',
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
             ],
-            "phone" => [
-                "nullable",
-                "string",
-                "min:10",
-                Rule::unique('persons', 'phone')
+
+            "phones" => "nullable|array",
+            'phones.*' => [
+                'required',
+                'regex:/^\+?[1-9]\d{9,14}$/'
             ],
+
             "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
             "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
@@ -59,15 +61,25 @@ class PersonsController extends Controller
             "phone.unique" => "Такой номер Телефона уже зарегистрирован",
             "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
             "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
-            "employeeId.exists" => "Не существующий id сотрудника"
+            "employeeId.exists" => "Не существующий id сотрудника",
+
+
+            'emails.*.regex' => 'Некорректный формат email',
+            'emails.*.required' => 'Не заполнен email',
+            'phones.*.regex' => 'Некорректный формат телефона',
+            'phones.*.required' => 'Не заполнен телефон',
         ]);
 
+
+        $emails = array_values(array_filter($data['emails'] ?? []));
+        $phones = array_values(array_filter($data['phones'] ?? []));
+
         $personData = [
-            'last_name' => $request->input('last_name'),
-            'first_name' => $request->input('first_name'),
-            'patronymic' => $request->input('patronymic'),
-            'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
+            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'],
+            'patronymic' => $data['patronymic'] ?? null,
+            'emails' => $emails ?: null,
+            'phones' => $phones ?: null,
         ];
 
         if ($request->hasFile('photo')) {
@@ -103,23 +115,25 @@ class PersonsController extends Controller
 
     public function update(Request $request, $id)
     {
-        $person = Person::findOrFail($id);
-        $request->validate([
+        $data = $request->validate([
             "last_name" => "required|string|min:2",
             "first_name" => "required|string|min:2",
             "patronymic" => "nullable|string|min:2",
-            'email' => [
-                'nullable',
-                'email',
-                Rule::unique('persons', 'email')->ignore($person->id)
+
+            "emails" => "nullable|array",
+            'emails.*' => [
+                'required',
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
             ],
-            "phone" => [
-                "nullable",
-                "string",
-                "min:10",
-                Rule::unique('persons', 'phone')->ignore($person->id)
+
+            "phones" => "nullable|array",
+            'phones.*' => [
+                'required',
+                'regex:/^\+?[1-9]\d{9,14}$/'
             ],
-            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192"
+
+            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+            "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
             "last_name.required" => "Поле Фамилия обязательно для заполнения",
             "last_name.min" => "Поле Фамилия минимум 2 символа",
@@ -133,14 +147,27 @@ class PersonsController extends Controller
             "phone.unique" => "Такой номер Телефона уже зарегистрирован",
             "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
             "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            "employeeId.exists" => "Не существующий id сотрудника",
+
+
+            'emails.*.regex' => 'Некорректный формат email',
+            'emails.*.required' => 'Не заполнен email',
+            'phones.*.regex' => 'Некорректный формат телефона',
+            'phones.*.required' => 'Не заполнен телефон',
         ]);
 
+
+        $person = Person::findOrFail($id);
+
+        $emails = array_values(array_filter($data['emails'] ?? []));
+        $phones = array_values(array_filter($data['phones'] ?? []));
+
         $personData = [
-            'last_name' => $request->input('last_name'),
-            'first_name' => $request->input('first_name'),
-            'patronymic' => $request->input('patronymic'),
-            'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
+            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'],
+            'patronymic' => $data['patronymic'] ?? null,
+            'emails' => $emails ?: null,
+            'phones' => $phones ?: null,
         ];
 
         if ($request->hasFile('photo')) {

@@ -12,9 +12,13 @@ class Person extends Model
         "first_name",
         "last_name",
         "patronymic",
-        "phone",
-        "email",
+        "phones",
+        "emails",
         "photo",
+    ];
+    protected $casts = [
+        'phones' => 'array',
+        'emails' => 'array',
     ];
 
     public function employee()

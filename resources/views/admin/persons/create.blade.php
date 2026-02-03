@@ -39,27 +39,22 @@
                         <!-- Фамилия -->
                         <div>
                             <label for="last_name" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Фамилия
+                                Фамилия *
                             </label>
                             <input type="text" name="last_name" id="last_name" placeholder="Введите фамилию"
                                 value="{{ old('last_name') }}" required
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('last_name')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                         </div>
 
                         <!-- Имя -->
                         <div>
                             <label for="first_name" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Имя
+                                Имя *
                             </label>
                             <input type="text" name="first_name" id="first_name" placeholder="Введите имя"
                                 value="{{ old('first_name') }}" required
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('first_name')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Отчество -->
@@ -70,36 +65,36 @@
                             <input type="text" name="patronymic" id="patronymic" placeholder="Введите отчество"
                                 value="{{ old('patronymic') }}"
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('patronymic')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Почта -->
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Почта
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-[#565A5B]">
+                                Почты
                             </label>
-                            <input type="email" name="email" id="email" placeholder="Введите почту"
-                                value="{{ old('email') }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('email')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
+                            <div id="emails-wrapper" class="space-y-2">
+                            </div>
+
+                            <button type="button" onclick="addEmail()" class="text-sm text-[#A60644] mt-2">
+                                + Добавить почту
+                            </button>
                         </div>
 
                         <!-- Телефон -->
-                        <div>
-                            <label for="phone" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Телефон
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-[#565A5B]">
+                                Телефоны
                             </label>
-                            <input type="tel" name="phone" id="phone" placeholder="Введите телефон"
-                                value="{{ old('phone') }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @error('phone')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
+                            <div id="phones-wrapper" class="space-y-2">
+                            </div>
+
+                            <button type="button" onclick="addPhone()" class="text-sm text-[#A60644] mt-2">
+                                + Добавить телефон
+                            </button>
                         </div>
+
 
                         <!-- Фото -->
                         <div class="md:col-span-2">
@@ -108,9 +103,7 @@
                             </label>
                             <input type="file" name="photo" id="photo" accept="image/*"
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#A60644] file:text-white file:font-medium file:cursor-pointer hover:file:bg-[#A60644]/80 transition-colors text-[#060606]">
-                            @error('photo')
-                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+
                         </div>
                     </div>
 
@@ -131,3 +124,36 @@
         </div>
     </div>
 @endsection
+
+
+<script>
+    function addEmail() {
+        const wrapper = document.getElementById('emails-wrapper');
+        wrapper.appendChild(createRow('email', 'emails[]', 'Введите почту'));
+    }
+
+    function addPhone() {
+        const wrapper = document.getElementById('phones-wrapper');
+        wrapper.appendChild(createRow('tel', 'phones[]', 'Введите телефон'));
+    }
+
+    function createRow(type, name, placeholder) {
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 items-center';
+
+        div.innerHTML = `
+        <input type="${type}" name="${name}" placeholder="${placeholder}"
+            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+        <button type="button" onclick="removeRow(this)"
+            class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+            ✕
+        </button>
+    `;
+
+        return div;
+    }
+
+    function removeRow(button) {
+        button.parentElement.remove();
+    }
+</script>
