@@ -6,68 +6,144 @@
 
 @section('content')
     @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div style="color: red;">{{ $error }}</div>
-        @endforeach
+        @include('includes.errors', ['errors' => $errors])
     @endif
 
-    <h1>Создание назначения должности сотруднику</h1>
-    <p><a href="{{ route('employee-positions.index') }}">Назад к списку назначений</a></p>
-
-
-    <div>
-        <h3>Данные о сотруднике</h3>
-        <h4>Пользователь</h4>
-        <ul>
-            <li>Логин {{ $employee->user->login ?? '' }}</li>
-            <li>Роль {{ $employee->user->role->description ?? '' }}</li>
-            <li>Создан {{ $employee->user->created_at ?? '' }}</li>
-            <li>Обновлен {{ $employee->user->role->update_at ?? '' }}</li>
-        </ul>
-        <h4>Рабочий статус - {{ $employee->workStatus->description ?? '' }}</h4>
-        <h4>Персональные данные</h4>
-        <ul>
-            <li>ФИО {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}
-                {{ $employee->person->patronymic ?? '' }}</li>
-            <li>Телефон {{ $employee->person->phone }}</li>
-            <li>Почта {{ $employee->person->email }}</li>
-            <li>
-                @if ($employee->person->photo)
-                    <img src="{{ asset('storage/' . $employee->person->photo) }}" alt="Фото пользователя">
-                @endif
-            </li>
-        </ul>
-        <h4>Должности</h4>
-        @foreach ($employee->positions as $position)
-            <div>
-                Должность: {{ $position->position->name ?? '' }} <br>
-                Ставка: {{ $position->rate ?? '' }} <br>
-                Назначена: {{ $position->created_at ?? '' }} <br>
-                Категория: {{ $position->position->positionType->name ?? '' }} <br>
+    <div class="max-w-2xl mx-auto p-6">
+        <!-- Заголовок и ссылка назад -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{{ route('employee-positions.index') }}"
+                    class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Назад к списку назначений
+                </a>
             </div>
-            <hr>
-        @endforeach
+            <h1 class="text-2xl font-bold text-[#060606]">Назначение новой должности</h1>
+            <p class="text-[#565A5B] mt-1">Назначение должности сотруднику: "{{ $employee->person->last_name }}
+                {{ $employee->person->first_name }}"</p>
+        </div>
+
+        <!-- Форма -->
+        <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
+            <div class="p-6 md:p-8">
+                <form action="{{ route('employee-positions.store', $employee->id) }}" method="POST" class="space-y-6">
+                    @csrf
+
+                    <!-- Должность -->
+                    <div>
+                        <label for="position_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Должность *
+                        </label>
+                        <select name="position_id" id="position_id" required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($positions as $position)
+                                <option value="{{ $position->id }}">{{ $position->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Ставка -->
+                    <div>
+                        <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Ставка *
+                        </label>
+                        <input type="text" name="rate" id="rate" placeholder="Введите ставку"
+                            value="{{ old('rate', 1) }}" required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                    </div>
 
 
-        <h2>Назначение новой должности</h2>
-        <form action="{{ route('employee-positions.store', $employee->id) }}" method="POST">
-            @csrf
-            <div>
-                <label for="position_id">Должность:</label>
-                <select name="position_id" id="position_id">
-                    @foreach ($positions as $position)
-                        <option value="{{ $position->id }}">{{ $position->name }}</option>
-                    @endforeach
-                </select>
+                    <!-- комиссариат -->
+                    <div>
+                        <label for="commissariat_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Комиссариат *
+                        </label>
+                        <select name="commissariat_id" id="commissariat_id" required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($commissariats as $commissariat)
+                                <option value="{{ $commissariat->id }}"
+                                    {{ old('commissariat_id') == $commissariat->id ? 'selected' : '' }}>
+                                    {{ $commissariat->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- отдел -->
+                    <div>
+                        <label for="department_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Отдел
+                        </label>
+                        <select name="department_id" id="department_id"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->id }}"
+                                    {{ old('department_id') == $department->id ? 'selected' : '' }}>
+                                    {{ $department->name }}
+                                </option>
+                            @endforeach
+                            <option value="" selected>Не выбран (Самостоятельное отделение)</option>
+                        </select>
+                    </div>
+
+
+                    <!-- отделение -->
+                    <div>
+                        <label for="division_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Отделение
+                        </label>
+                        <select name="division_id" id="division_id"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($divisions as $division)
+                                <option value="{{ $division->id }}"
+                                    {{ old('division_id') == $division->id ? 'selected' : '' }}>
+                                    {{ $division->name }}
+                                    @if ($division->department_id === null)
+                                        (Самостоятельное отделение)
+                                    @endif
+                                </option>
+                            @endforeach
+                            <option value="" selected>Не выбрано</option>
+                        </select>
+                    </div>
+
+
+
+                    <!-- самостоятельный -->
+                    <div>
+                        <label for="is_independent" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Самостоятельная должность *
+                        </label>
+                        <select name="is_independent" id="is_independent"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            <option value="0" selected>Нет</option>
+                            <option value="1">Да</option>
+                        </select>
+                    </div>
+
+
+
+
+
+
+                    <!-- Кнопка отправки -->
+                    <div class="pt-6 flex justify-end">
+                        <button type="submit"
+                            class="group inline-flex items-center px-8 py-3 bg-[#A60644] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#A60644]/80 active:bg-[#A60644]/60 active:scale-[0.98] shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                                </path>
+                            </svg>
+                            Назначить должность
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div>
-                <label for="rate">Ставка:</label>
-                <input type="text" name="rate" id="rate" placeholder="Введите ставку"
-                    value="{{ old('rate', 1) }}">
-            </div>
-
-            <button type="submit">Назначить</button>
-        </form>
+        </div>
     </div>
 @endsection

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commissariat;
+use App\Models\Department;
+use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Position;
@@ -15,17 +18,24 @@ class EmployeePositionsController extends Controller
             ->whereHas('person', function ($query) {
                 $query->whereNotNull('id');
             })
-            ->get();
+            ->paginate(20);
         return view('admin.org.employee-positions.index')->with('employees', $employees);
+    }
+    public function show($id)
+    {
+        $employee = Employee::findOrFail($id);
+        return view("admin.org.employee-positions.show", compact("employee"));
     }
 
     public function create($id)
     {
         $employee = Employee::with(["user.role", "workStatus", "person", "positions.position.positionType"])->findOrFail($id);
+        $positions = Position::all();
+        $commissariats = Commissariat::all();
+        $departments = Department::all();
+        $divisions = Division::all();
 
-        $employeePositionIds = $employee->positions->pluck('position_id')->toArray();
-        $positions = Position::whereNotIn('id', $employeePositionIds)->get();
-        return view('admin.org.employee-positions.create', compact('employee', 'positions'));
+        return view('admin.org.employee-positions.create', compact('employee', 'positions', "commissariats", "departments", "divisions"));
     }
 
     public function store(Request $request, $id)
@@ -33,6 +43,10 @@ class EmployeePositionsController extends Controller
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric|min:0.25|max:2.0',
+            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
+            "department_id" => "nullable|sometimes|exists:departments,id",
+            "division_id" => "nullable|sometimes|exists:divisions,id",
+            "is_independent" => "required|integer|in:1,0"
         ], [
             'position_id.required' => 'Поле должность обязательно для заполнения.',
             'position_id.integer' => 'Поле должность должно быть целым числом.',
@@ -41,14 +55,23 @@ class EmployeePositionsController extends Controller
             'rate.numeric' => 'Поле ставка должно быть числом.',
             'rate.min' => 'Минимальное значение ставки 0.25.',
             'rate.max' => 'Максимальное значение ставки 2.0.',
+            "commissariat_id.required" => "Выберите комиссариат",
+            "commissariat_id.exists" => "Несуществующий комиссариат",
+            "department_id.exists" => "Несуществующий отдел",
+            "division_id.exists" => "Несуществующий отдел",
+            "is_independent.required" => "Выберите тип должность самостоятельная/нет"
         ]);
 
         Employee::findOrFail($id);
 
         EmployeePosition::create([
             "employee_id" => $id,
+            "commissariat_id" => $data["commissariat_id"],
+            "department_id" => $data["department_id"],
+            "division_id" => $data["division_id"],
             "position_id" => $data['position_id'],
-            "rate" => $data['rate']
+            "rate" => $data['rate'],
+            "is_independent" => $data["is_independent"]
         ]);
 
         return redirect()->route('employee-positions.index')->with('success', 'Должность успешно добавлена сотруднику.');
@@ -57,15 +80,21 @@ class EmployeePositionsController extends Controller
     public function edit($id)
     {
         $employee = Employee::with(["user.role", "workStatus", "person", "positions.position.positionType"])->findOrFail($id);
-
         $positions = Position::all();
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions'));
+        $commissariats = Commissariat::all();
+        $departments = Department::all();
+        $divisions = Division::all();
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions"));
     }
     public function update(Request $request, $id)
     {
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric|min:0.25|max:2.0',
+            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
+            "department_id" => "nullable|sometimes|integer|min:1|exists:departments,id",
+            "division_id" => "nullable|sometimes|integer|min:1|exists:divisions,id",
+            "is_independent" => "required|in:0,1",
         ], [
             'position_id.required' => 'Поле должность обязательно для заполнения.',
             'position_id.integer' => 'Поле должность должно быть целым числом.',
@@ -74,13 +103,24 @@ class EmployeePositionsController extends Controller
             'rate.numeric' => 'Поле ставка должно быть числом.',
             'rate.min' => 'Минимальное значение ставки 0.25.',
             'rate.max' => 'Максимальное значение ставки 2.0.',
+            "commissariat_id.required" => "Обязательное поле комиссариата",
+            "commissariat_id.exists" => "Несуществующий комиссариат",
+            "department_id.required" => "Обязательное поле отдела",
+            "department_id.exists" => "Несуществующий отдел",
+            "division_id.required" => "Обязательное поле отделения",
+            "division_id.exists" => "Несуществующее отделение",
+            "is_independent.required" => "Обязательное поле выбора самостоятельной должности"
         ]);
 
         $employeePosition = EmployeePosition::findOrFail($id);
 
         $employeePosition->update([
             "position_id" => $data['position_id'],
-            "rate" => $data['rate']
+            "rate" => $data['rate'],
+            "commissariat_id" => $data['commissariat_id'],
+            "department_id" => $data['department_id'],
+            "division_id" => $data['division_id'],
+            "is_independent" => $data['is_independent'],
         ]);
 
         return redirect()->route('employee-positions.index')->with('success', 'Должность успешно обновлена.');

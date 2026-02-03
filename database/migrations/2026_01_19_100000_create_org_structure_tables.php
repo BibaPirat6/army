@@ -83,9 +83,10 @@ return new class extends Migration {
                 ->constrained('departments')
                 ->cascadeOnDelete();
             $table->foreignId('division_id')->nullable()->constrained('divisions')->cascadeOnDelete();
-            $table->foreignId('supervisor_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+            // $table->foreignId('supervisor_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+            $table->boolean('is_independent')->default(false);
+
             $table->decimal('rate', 3, 2);
-            $table->boolean('is_chief')->default(false);
             $table->timestamps();
 
             $table->unique(

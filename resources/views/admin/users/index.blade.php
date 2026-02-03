@@ -13,7 +13,7 @@
     @endif
 
 
-    <div class="max-w-6xl mx-auto p-6">
+    <div class="max-w-4xl mx-auto p-6">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
             <div>
@@ -29,78 +29,80 @@
             </a>
         </div>
 
-        <!-- Список пользователей -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @forelse($users as $user)
-                <div
-                    class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1">
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-bold text-[#060606] mb-2">{{ $user->login }}</h3>
-                                <p class="text-[#565A5B] text-sm">
-                                    Роль: {{ $user->role?->description ?? 'не назначена' }}
-                                </p>
-                            </div>
-                            <div class="w-10 h-10 rounded-full bg-[#A60644]/10 flex items-center justify-center">
-                                @if ($user->role->name === "user")
-                                    <svg class="w-5 h-5 text-[#A60644]" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                    </svg>
-                                @else
-                                    <svg class="w-5 h-5 text-[#A60644]" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                    </svg>
-                                @endif
-
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-center pt-4 border-t border-[#BFBFBF]">
-                            <a href="{{ route('users.edit', $user->id) }}"
-                                class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                    </path>
-                                </svg>
-                                Изменить
-                            </a>
-
-                            <form action="{{ route('users.delete', $user->id) }}" method="post" class="inline-block"
-                                onsubmit="return confirm('Вы уверены, что хотите удалить пользователя \"{{ $user->login }}\"?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 ml-2">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                    Удалить
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full text-center py-12">
-                    <div class="flex flex-col items-center justify-center">
-                        <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
-                            </path>
-                        </svg>
-                        <p class="text-[#565A5B] text-lg font-medium">Нет пользователей</p>
-                        <p class="text-[#7F7F7F] mt-1">Создайте первого пользователя для начала работы</p>
-                    </div>
-                </div>
-            @endforelse
+        <!-- Таблица -->
+        <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-[#565A5B]">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#e7e1e1]">Логин</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-[#e7e1e1]">Роль</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-[#e7e1e1]">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#BFBFBF]">
+                        @forelse($users as $user)
+                            <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
+                                <td class="px-4 py-3 text-[#060606] font-medium text-sm">
+                                    {{ $user->login }}
+                                </td>
+                                <td class="px-4 py-3 text-[#060606] text-sm">
+                                    <span class="inline-flex items-center">
+                                        @if ($user->role->name === 'user')
+                                            <svg class="w-4 h-4 mr-2 text-[#A60644]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                                                </path>
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4 mr-2 text-[#A60644]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                            </svg>
+                                        @endif
+                                        {{ $user->role?->description ?? 'не назначена' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="grid grid-cols-2 gap-1">
+                                        <a href="{{ route('users.edit', $user->id) }}"
+                                            class="inline-block px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
+                                            Изменить
+                                        </a>
+                                        <form action="{{ route('users.delete', $user->id) }}" method="post"
+                                            class="inline-block"
+                                            onsubmit="return confirm('Удалить пользователя \"{{ $user->login }}\"?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-block w-full px-3 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg class="w-12 h-12 text-[#BFBFBF] mb-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
+                                            </path>
+                                        </svg>
+                                        <p class="text-[#565A5B] text-sm font-medium">Нет пользователей</p>
+                                        <p class="text-[#7F7F7F] text-xs mt-1">Создайте первого пользователя</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         @include('includes.pagination', ['paginator' => $users])

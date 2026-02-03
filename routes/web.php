@@ -116,11 +116,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // назначение сотруднику должности
     Route::get("/employee-positions", [EmployeePositionsController::class, "index"])->name("employee-positions.index");
     Route::get("/employee-positions/{id}/create", [EmployeePositionsController::class, "create"])->name("employee-positions.create");
+    Route::get("/employee-positions/{id}", [EmployeePositionsController::class, "show"])->name("employee-positions.show");
     Route::post("/employee-positions/{id}", [EmployeePositionsController::class, "store"])->name("employee-positions.store");
     Route::get("/employee-positions/{id}/edit", [EmployeePositionsController::class, "edit"])->name("employee-positions.edit");
     Route::put("/employee-positions/{id}", [EmployeePositionsController::class, "update"])->name("employee-positions.update");
     Route::delete("/employee-positions/{id}", [EmployeePositionsController::class, "delete"])->name("employee-positions.delete");
-    Route::delete("/employee-positions/{id}", [EmployeePositionsController::class, "destroy"])->name("employee-positions.destroy");
+    Route::delete("/employee-positions/{id}/deleteAll", [EmployeePositionsController::class, "destroy"])->name("employee-positions.destroy");
 
     // создание структуры
     Route::get("/structure", [StructureController::class, "index"])->name("structure.index");

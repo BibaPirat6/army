@@ -62,7 +62,7 @@ class DepartmentsController extends Controller
                 ],
                 [
                     "rate" => 1,
-                    "is_chief" => 1,
+                    "" => 1,
                 ]
             );
         }
@@ -124,7 +124,7 @@ class DepartmentsController extends Controller
                     'position_id' => $chiefPositionId,
                     'commissariat_id' => $commissariat->id,
                     "department_id" => $department->id,
-                    'is_chief' => 1
+                    '' => 1
                 ])->delete();
             }
 
@@ -136,7 +136,6 @@ class DepartmentsController extends Controller
                 "department_id" => $department->id,
             ], [
                 "rate" => 1,
-                "is_chief" => 1,
             ]);
 
         } else {
@@ -148,7 +147,6 @@ class DepartmentsController extends Controller
                     'position_id' => $chiefPositionId,
                     'commissariat_id' => $commissariat->id,
                     "department_id" => $department->id,
-                    'is_chief' => 1
                 ])->delete();
             }
         }

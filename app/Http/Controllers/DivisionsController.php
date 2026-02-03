@@ -69,7 +69,6 @@ class DivisionsController extends Controller
                 ],
                 [
                     "rate" => 1,
-                    "is_chief" => 1,
                 ]
             );
         }
@@ -135,7 +134,6 @@ class DivisionsController extends Controller
                 'commissariat_id' => $oldCommissariatId,
                 'department_id' => $oldDepartmentId, // null обрабатывается корректно
                 'division_id' => $division->id,
-                'is_chief' => 1
             ])->delete();
         }
 
@@ -151,7 +149,6 @@ class DivisionsController extends Controller
                 ],
                 [
                     'rate' => 1,
-                    'is_chief' => 1,
                 ]
             );
         }

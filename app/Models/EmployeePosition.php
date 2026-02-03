@@ -15,12 +15,13 @@ class EmployeePosition extends Model
         'commissariat_id',
         'department_id',
         'division_id',
+        "is_independent",
         'rate',
-        'is_chief',
     ];
 
     protected $casts = [
-        'is_chief' => 'boolean',
+        "is_independent" => "boolean",
+        "rate" => "decimal:2",
     ];
 
     /**
