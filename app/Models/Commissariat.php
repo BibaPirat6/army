@@ -64,29 +64,52 @@ class Commissariat extends Model
         })->get();
     }
 
-    // самостоятельный
-    public function getEmployeesWithoutRelations()
+    // сотрудники прямо зависящие от комиссариата
+    public function employeesNotIndependent()
     {
-        $employeePositions = EmployeePosition::where('commissariat_id', $this->id)
-            ->whereNull('department_id')
-            ->whereNull('division_id')
-            ->with('employee')
+        return Employee::whereHas('employeePositions', function ($query) {
+            $query->where('commissariat_id', $this->id)
+                ->where('is_independent', 0)
+                ->whereNull('department_id')
+                ->whereNull('division_id');
+        })
+            ->with([
+                'employeePositions' => function ($query) {
+                    $query->where('commissariat_id', $this->id)
+                        ->where('is_independent', 0)
+                        ->whereNull('department_id')
+                        ->whereNull('division_id')
+                        ->with('position');
+                }
+            ])
             ->get();
-
-        return $employeePositions->pluck('employee')->filter();
     }
 
-    // от начальника комиссариата
-    public function getEmployeesRight()
+    // сотрудники самостоятельные
+    public function employeesIndependent()
     {
-        $boss = $this->chief_employee_id;
-
-        $employeePositions = EmployeePosition::where('commissariat_id', $this->id)
-            ->whereNull('department_id')
-            ->whereNull('division_id')
-            ->with('employee')
+        return Employee::whereHas('employeePositions', function ($query) {
+            $query->where('commissariat_id', $this->id)
+                ->where('is_independent', 1)
+                ->whereNull('department_id')
+                ->whereNull('division_id');
+        })
+            ->with([
+                'employeePositions' => function ($query) {
+                    $query->where('commissariat_id', $this->id)
+                        ->where('is_independent', 1)
+                        ->whereNull('department_id')
+                        ->whereNull('division_id')
+                        ->with('position');
+                }
+            ])
             ->get();
+    }
 
-        return $employeePositions->pluck('employee')->filter();
+
+    // самостоятельные отделения
+    public function divisionsIntependent()
+    {
+        return $this->divisions()->whereNull('department_id')->get();
     }
 }

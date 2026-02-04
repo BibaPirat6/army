@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+
+
     const viewport = document.getElementById("viewport");
     const canvas = document.getElementById("canvas");
+    canvas.style.transformOrigin = "0 0";
+
 
     if (!viewport || !canvas) return;
 
@@ -33,6 +38,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    const MOVE_STEP = 80;
+
+    window.addEventListener("keydown", (e) => {
+        switch (e.code) {
+            case "ArrowUp":
+                translateY += MOVE_STEP;
+                break;
+            case "ArrowDown":
+                translateY -= MOVE_STEP;
+                break;
+            case "ArrowLeft":
+                translateX += MOVE_STEP;
+                break;
+            case "ArrowRight":
+                translateX -= MOVE_STEP;
+                break;
+            default:
+                return;
+        }
+
+        applyTransform();
+    });
+
+
     /// grab
     viewport.addEventListener("mousedown", (e) => {
         if (!spacePressed || e.button !== 0) return;
@@ -60,17 +89,39 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     //  Zoom
-    viewport.addEventListener("wheel", (e) => {
-        e.preventDefault();
+    viewport.addEventListener(
+        "wheel",
+        (e) => {
+            e.preventDefault();
 
-        const delta = e.deltaY > 0 ? -0.1 : 0.1;
-        scale += delta;
-        scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+            const viewportRect = viewport.getBoundingClientRect();
 
-        applyTransform();
-    }, {
-        passive: false
-    });
+            // центр экрана (viewport)
+            const centerX = viewportRect.width / 2;
+            const centerY = viewportRect.height / 2;
+
+            // текущая точка canvas в центре экрана
+            const canvasX = (centerX - translateX) / scale;
+            const canvasY = (centerY - translateY) / scale;
+
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.min(
+                MAX_SCALE,
+                Math.max(MIN_SCALE, scale * zoomFactor)
+            );
+
+            // пересчёт translate, чтобы центр остался на месте
+            translateX = centerX - canvasX * newScale;
+            translateY = centerY - canvasY * newScale;
+
+            scale = newScale;
+
+            applyTransform();
+        },
+        { passive: false }
+    );
+
+
 
 
     function applyTransform() {
@@ -89,4 +140,31 @@ document.addEventListener("DOMContentLoaded", () => {
         scale = 1;
         applyTransform();
     });
+
+
+
+
+    function fitToScreen() {
+        const viewportRect = viewport.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+
+        const scaleX = viewportRect.width / canvasRect.width;
+        const scaleY = viewportRect.height / canvasRect.height;
+
+        // берём меньший масштаб, чтобы ВСЁ влезло
+        scale = Math.min(scaleX, scaleY);
+
+        // ограничим, если надо
+        scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+
+        // центрируем
+        translateX = (viewportRect.width - canvasRect.width * scale) / 2;
+        translateY = (viewportRect.height - canvasRect.height * scale) / 2;
+
+        applyTransform();
+    }
+
+    // 🔥 запуск при загрузке
+    fitToScreen();
+
 });
