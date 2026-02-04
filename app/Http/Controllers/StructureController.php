@@ -17,7 +17,6 @@ class StructureController extends Controller
     {
         $commissariat = Commissariat::findOrFail($id);
         
-
         return view('admin.org.structure.show', compact('commissariat'));
     }
 }

@@ -33,6 +33,7 @@ class Division extends Model
         return $this->belongsTo(Department::class);
     }
 
+
     /**
      * Получить начальника отделения
      */
@@ -52,15 +53,6 @@ class Division extends Model
             ->with('employee.person');
     }
 
-    /**
-     * Получить всех сотрудников отделения через должности
-     */
-    // public function employees()
-    // {
-    //     return Employee::whereHas('positions', function ($query) {
-    //         $query->where('division_id', $this->id);
-    //     })->get();
-    // }
     public function employees()
     {
         return $this->belongsToMany(

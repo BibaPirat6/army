@@ -5,12 +5,14 @@
 @endsection
 
 @section(section: 'content')
+
+
     <div class="max-w-4xl p-6 mx-auto">
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
                 <h1 class="text-2xl font-bold text-[#060606] mb-8">Комиссариаты</h1>
 
-                @if ($commissariats->count() > 0)
+                @if ($commissariats?->count() > 0)
                     <ul class="space-y-3">
                         @foreach ($commissariats as $commissariat)
                             <li
@@ -29,6 +31,20 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7"></path>
                                     </svg>
+
+                                    <p>
+                                        <b>Начальник комиссариата:</b>
+
+                                        @if (!$commissariat->chiefEmployeePosition?->employee?->person)
+                                            <span class="text-[#A60644]">Не назначен начальник</span>
+                                        @else
+                                            <span
+                                                class="text-[#A60644]">{{ $commissariat->chiefEmployeePosition->employee->person->last_name }}
+                                                {{ $commissariat->chiefEmployeePosition->employee->person->first_name }}
+                                                {{ $commissariat->chiefEmployeePosition->employee->person->patronymic ?? '' }}</span>
+                                        @endif
+                                    </p>
+
                                 </a>
                             </li>
                         @endforeach

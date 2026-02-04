@@ -62,7 +62,6 @@ class DepartmentsController extends Controller
                 ],
                 [
                     "rate" => 1,
-                    "" => 1,
                 ]
             );
         }
@@ -124,7 +123,6 @@ class DepartmentsController extends Controller
                     'position_id' => $chiefPositionId,
                     'commissariat_id' => $commissariat->id,
                     "department_id" => $department->id,
-                    '' => 1
                 ])->delete();
             }
 
