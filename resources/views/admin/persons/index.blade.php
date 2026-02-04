@@ -13,7 +13,7 @@
     @endif
 
 
-    <div class="max-w-6xl mx-auto p-6">
+    <div class="max-w-4xl mx-auto p-6">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
             <div>
@@ -25,7 +25,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Создать персональные данные
+                Создать
             </a>
         </div>
 
@@ -35,28 +35,26 @@
                 <table class="w-full">
                     <thead class="bg-[#565A5B]">
                         <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Фото</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Фамилия</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Имя</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Отчество</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Телефон</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Email</th>
-                            <th class="px-6 py-4 text-right text-sm font-semibold text-[#e7e1e1]">Действия</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-[#e7e1e1]">Фото</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-[#e7e1e1]">ФИО</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-[#e7e1e1]">Телефон</th>
+                            <th class="px-3 py-2 text-left text-xs font-semibold text-[#e7e1e1]">Email</th>
+                            <th class="px-3 py-2 text-right text-xs font-semibold text-[#e7e1e1]">Действия</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#BFBFBF]">
                         @forelse($persons as $person)
                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
-                                <td class="px-6 py-4">
+                                <td class="px-3 py-2">
                                     @if ($person->photo)
                                         <div
-                                            class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#565A5B] bg-[#060606]">
+                                            class="w-8 h-8 rounded-full overflow-hidden border border-[#565A5B] bg-[#060606]">
                                             <img src="{{ asset('storage/' . $person->photo) }}"
                                                 alt="Фото {{ $person->last_name }}" class="w-full h-full object-cover">
                                         </div>
                                     @else
-                                        <div class="w-12 h-12 rounded-full bg-[#BFBFBF] flex items-center justify-center">
-                                            <svg class="w-6 h-6 text-[#565A5B]" fill="none" stroke="currentColor"
+                                        <div class="w-8 h-8 rounded-full bg-[#BFBFBF] flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-[#565A5B]" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
@@ -65,60 +63,64 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $person->last_name }}</td>
-                                <td class="px-6 py-4 text-[#060606]">{{ $person->first_name }}</td>
-                                <td class="px-6 py-4 text-[#060606]">{{ $person->patronymic }}</td>
-                                <td class="px-6 py-4 text-[#060606] font-mono">
-                                    @foreach ($person->phones ?? [] as $phone)
-                                        <div>+{{ $phone }}</div>
-                                    @endforeach
+                                <td class="px-3 py-2 text-[#060606] text-xs">
+                                    <div class="font-medium">{{ $person->last_name ?? '' }}</div>
+                                    <div>{{ $person->first_name ?? '' }}</div>
+                                    <div>{{ $person->patronymic ?? '' }}</div>
                                 </td>
-                                <td class="px-6 py-4 text-[#060606] font-mono text-sm">
-                                    @foreach ($person->emails ?? [] as $email)
-                                        <div>{{ $email }}</div>
-                                    @endforeach
+                                <td class="px-3 py-2 text-[#060606] text-xs">
+                                    @if ($person->phones && count($person->phones) > 0)
+                                        @foreach ($person->phones as $phone)
+                                            <div>+{{ $phone }}</div>
+                                        @endforeach
+                                    @else
+                                        <div>-</div>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('persons.edit', $person->id) }}"
-                                        class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                            </path>
-                                        </svg>
-                                        Редактировать
-                                    </a>
-                                    <form class="mt-0.5" action="{{ route('persons.delete', $person->id) }}" method="POST"
-                                        class="inline-block"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные {{ $person->last_name }} {{ $person->first_name }}?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                            Удалить
-                                        </button>
-                                    </form>
+                                <td class="px-3 py-2 text-[#060606] text-xs">
+                                    @if ($person->emails && count($person->emails) > 0)
+                                        @foreach ($person->emails as $email)
+                                            <div>{{ $email }}</div>
+                                        @endforeach
+                                    @else
+                                        <div>-</div>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-right">
+                                    <div class="grid grid-cols-3 gap-0.5">
+                                        <a href="{{ route('persons.show', $person->id) }}"
+                                            class="inline-block px-2 py-1 bg-[#aa9fa3] text-white text-xs font-medium rounded hover:bg-[#aa9fa3]/80 transition-colors text-center">
+                                            Подробнее
+                                        </a>
+                                        <a href="{{ route('persons.edit', $person->id) }}"
+                                            class="inline-block px-2 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
+                                            Редакт.
+                                        </a>
+                                        <form action="{{ route('persons.delete', $person->id) }}" method="POST"
+                                            class="inline-block"
+                                            onsubmit="return confirm('Удалить {{ $person->last_name }} {{ $person->first_name }}?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-block w-full px-2 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors">
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
+                                <td colspan="5" class="px-3 py-8 text-center">
                                     <div class="flex flex-col items-center justify-center">
-                                        <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor"
+                                        <svg class="w-12 h-12 text-[#BFBFBF] mb-2" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
                                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
                                             </path>
                                         </svg>
-                                        <p class="text-[#565A5B] text-lg font-medium">Нет персональных данных</p>
-                                        <p class="text-[#7F7F7F] mt-1">Создайте первые персональные данные для начала работы
-                                        </p>
+                                        <p class="text-[#565A5B] text-sm font-medium">Нет данных</p>
+                                        <p class="text-[#7F7F7F] text-xs mt-1">Создайте первые персональные данные</p>
                                     </div>
                                 </td>
                             </tr>
@@ -127,6 +129,7 @@
                 </table>
             </div>
         </div>
+
         @include('includes.pagination', ['paginator' => $persons])
     </div>
 @endsection

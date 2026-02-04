@@ -36,6 +36,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // users
     Route::get("/users", [UsersController::class, "index"])->name("users.index");
     Route::get("/users/create", [UsersController::class, "create"])->name("users.create");
+    Route::get("/users/{id}", [UsersController::class, "show"])->name("users.show");
     Route::post("/users", [UsersController::class, "store"])->name("users.store");
     Route::get("/users/{id}/edit", [UsersController::class, "edit"])->name("users.edit");
     Route::put("/users/{id}", [UsersController::class, "update"])->name("users.update");
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // persons
     Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");
     Route::get("/persons/create", [PersonsController::class, "create"])->name("persons.create");
+    Route::get("/persons/{id}", [PersonsController::class, "show"])->name("persons.show");
     Route::post("/persons", [PersonsController::class, "store"])->name("persons.store");
     Route::get("/persons/{id}/edit", [PersonsController::class, "edit"])->name("persons.edit");
     Route::put("/persons/{id}", [PersonsController::class, "update"])->name("persons.update");

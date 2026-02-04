@@ -18,6 +18,12 @@ class PersonsController extends Controller
         $persons = Person::paginate(10);
         return view('admin.persons.index')->with('persons', $persons);
     }
+    public function show(Request $request, $id)
+    {
+        $person = Person::findOrFail($id);
+        $backUrl = $request->input("back_url");
+        return view('admin.persons.show', compact("person", "backUrl"));
+    }
 
     public function create(Request $request)
     {

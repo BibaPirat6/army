@@ -79,6 +79,13 @@
                                 </ul>
 
                                 <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
+                                    <a href="{{ route('users.show', [
+                                        'id' => $employee->user->id,
+                                        'back_url' => route('employees.index'),
+                                    ]) }}"
+                                        class="inline-flex items-center px-3 py-1 bg-[#c0b6b9] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                        Подробнее
+                                    </a>
                                     <a href="{{ route('users.edit', [
                                         'id' => $employee->user->id,
                                         'employee_id' => $employee->id,
@@ -141,6 +148,13 @@
                                 </ul>
 
                                 <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
+                                    <a href="{{ route('persons.show', [
+                                        'id' => $employee->person->id,
+                                        'back_url' => route('employees.index'),
+                                    ]) }}"
+                                        class="inline-flex items-center px-3 py-1 bg-[#c0b6b9] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                        Подробнее
+                                    </a>
                                     <a href="{{ route('persons.edit', [
                                         'id' => $employee->person->id,
                                         'employee_id' => $employee->id,
@@ -185,34 +199,46 @@
                                 Должности
                             </h4>
                             @if ($employee->positions->count() > 0)
-                                <ul class="text-sm text-[#565A5B] space-y-1">
+                                <ul class="text-sm text-[#565A5B] space-y-1 mb-4">
                                     @foreach ($employee->positions as $position)
                                         <li><span class="font-medium">ID:</span> {{ $position->id }}
                                             {{ $position->position->name }} | Ставка {{ $position->rate }}</li>
                                     @endforeach
                                 </ul>
 
-                                <div class="flex items-center justify-between pt-3 mt-3 border-t border-[#BFBFBF]">
+                                <div class="grid grid-cols-2 gap-1">
+                                    <a href="{{ route('employee-positions.create', [
+                                        'id' => $employee->id,
+                                        'back_url' => route('employees.index'),
+                                    ]) }}"
+                                        class="inline-block px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
+                                        Создать
+                                    </a>
+                                    <a href="{{ route('employee-positions.show', [
+                                        'id' => $employee->id,
+                                        'back_url' => route('employees.index'),
+                                    ]) }}"
+                                        class="inline-block px-3 py-1 bg-[#c0b6b9] text-white text-xs font-medium rounded hover:bg-[#c0b6b9]/80 transition-colors text-center">
+                                        Подробнее
+                                    </a>
                                     <a href="{{ route('employee-positions.edit', [
                                         'id' => $employee->id,
                                         'back_url' => route('employees.index'),
                                     ]) }}"
-                                        class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors">
+                                        class="inline-block px-3 py-1 bg-[#5a4a50] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
                                         Изменить
                                     </a>
-
                                     <form
                                         action="{{ route('employee-positions.destroy', [
                                             'id' => $employee->id,
                                             'back_url' => route('employees.index'),
                                         ]) }}"
-                                        method="post" class="inline-block"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}?');">
-                                        @method('DELETE')
+                                        method="POST" class="inline-block">
                                         @csrf
-                                        <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
+                                        @method('DELETE')
                                         <button type="submit"
-                                            class="inline-flex items-center px-3 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors">
+                                            class="inline-block w-full px-3 py-1 bg-[#060606] text-white text-xs font-medium rounded hover:bg-[#060606]/80 transition-colors"
+                                            onclick="return confirm('Удалить все назначения для сотрудника?')">
                                             Удалить
                                         </button>
                                     </form>

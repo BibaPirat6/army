@@ -21,10 +21,12 @@ class EmployeePositionsController extends Controller
             ->paginate(20);
         return view('admin.org.employee-positions.index')->with('employees', $employees);
     }
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
-        return view("admin.org.employee-positions.show", compact("employee"));
+        $backUrl = $request->input("back_url");
+
+        return view("admin.org.employee-positions.show", compact("employee", "backUrl"));
     }
 
     public function create(Request $request, $id)

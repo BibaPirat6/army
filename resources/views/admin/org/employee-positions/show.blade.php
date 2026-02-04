@@ -11,7 +11,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('employee-positions.index') }}"
+                <a href="{{ $backUrl ?? route('employee-positions.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

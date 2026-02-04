@@ -16,6 +16,13 @@ class UsersController extends Controller
 
         return view("admin.users.index")->with("users", $users);
     }
+    public function show(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $backUrl = $request->input("back_url");
+
+        return view("admin.users.show", compact("user", "backUrl"));
+    }
     public function create(Request $request)
     {
         $employeeId = $request->get('employee_id');

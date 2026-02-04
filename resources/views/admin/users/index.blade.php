@@ -66,7 +66,11 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="grid grid-cols-2 gap-1">
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <a href="{{ route('users.show', $user->id) }}"
+                                            class="inline-block px-3 py-1 bg-[#ab9da2] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
+                                            Подробнее
+                                        </a>
                                         <a href="{{ route('users.edit', $user->id) }}"
                                             class="inline-block px-3 py-1 bg-[#A60644] text-white text-xs font-medium rounded hover:bg-[#A60644]/80 transition-colors text-center">
                                             Изменить
