@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('header-title')</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon/android-chrome-192x192.png') }}">
+    <!-- Theme color -->
+    <meta name="msapplication-TileColor" content="#A60644">
+    <meta name="theme-color" content="#ffffff">
+
+    {{-- styles --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @yield('vite-resources')
     @stack('styles')
