@@ -136,7 +136,7 @@ class EmployeePositionsController extends Controller
 
         $backUrl = $request->input("backUrl");
 
-        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Должность успешно обновлена.');
+        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Должность успешно обновлена.');
     }
 
     public function delete(Request $request, $id)
@@ -146,7 +146,7 @@ class EmployeePositionsController extends Controller
 
         $backUrl = $request->get("back_url");
 
-        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Должность успешно удалена у сотрудника.');
+        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Должность успешно удалена у сотрудника.');
     }
 
 
@@ -157,6 +157,6 @@ class EmployeePositionsController extends Controller
 
         $backUrl = $request->get("back_url");
 
-        return redirect($backUrl ?? 'employee-positions.index')->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
+        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
     }
 }
