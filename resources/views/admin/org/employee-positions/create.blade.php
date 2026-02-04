@@ -23,8 +23,8 @@
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Назначение новой должности</h1>
-            <p class="text-[#565A5B] mt-1">Назначение должности сотруднику: "{{ $employee->person->last_name ?? "" }}
-                {{ $employee->person->first_name ?? "" }}"</p>
+            <p class="text-[#565A5B] mt-1">Назначение должности сотруднику: "{{ $employee->person->last_name ?? '' }}
+                {{ $employee->person->first_name ?? '' }}"</p>
         </div>
 
         <!-- Форма -->
@@ -43,8 +43,15 @@
                         </label>
                         <select name="position_id" id="position_id" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @foreach ($positions as $position)
-                                <option value="{{ $position->id }}">{{ $position->name }}</option>
+                            @foreach ($positions as $pos)
+                                @if (
+                                    $pos->name !== 'Начальник комиссариата' &&
+                                        $pos->name !== 'Начальник отдела' &&
+                                        $pos->name !== 'Начальник отделения')
+                                    <option value="{{ $pos->id }}">
+                                        {{ $pos->name }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                     </div>

@@ -88,10 +88,15 @@
                             <select name="position_id" id="position_id" required
                                 class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                                 @foreach ($positions as $pos)
-                                    <option value="{{ $pos->id }}"
-                                        {{ $pos->id == $position->position_id ? 'selected' : '' }}>
-                                        {{ $pos->name }}
-                                    </option>
+                                    @if (
+                                        $pos->name !== 'Начальник комиссариата' &&
+                                            $pos->name !== 'Начальник отдела' &&
+                                            $pos->name !== 'Начальник отделения')
+                                        <option value="{{ $pos->id }}"
+                                            {{ $pos->id == $position->position_id ? 'selected' : '' }}>
+                                            {{ $pos->name }}
+                                        </option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>
