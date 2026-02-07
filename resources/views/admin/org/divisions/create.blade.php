@@ -74,11 +74,14 @@
 
                             @foreach ($departments as $department)
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $department->id }}"
-                                    data-name="{{ $department->name }}">
+                                    data-name="{{ $department->name }}"
+                                    data-commissariat-id="{{ $department->commissariat->id ?? '' }}"
+                                    data-commissariat-name="{{ $department->commissariat->name ?? '' }}">
                                     {{ $department->name }}
                                     <span class="text-gray-400">(ID: {{ $department->id }})</span>
-                                </li>
+                                    < {{ $department->commissariat->name ?? '' }} </li>
                             @endforeach
+
                         </ul>
                     </div>
 
@@ -120,6 +123,8 @@
                                     data-name="{{ $commissariat->name }}">
                                     {{ $commissariat->name }}
                                     <span class="text-gray-400">(ID: {{ $commissariat->id }})</span>
+
+
                                 </li>
                             @endforeach
                         </ul>
@@ -372,21 +377,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('department_search');
-    const hiddenInput = document.getElementById('department_id');
-    const list = document.getElementById('department_list');
-    const items = list.querySelectorAll('li');
+    const departmentInput = document.getElementById('department_search');
+    const departmentHidden = document.getElementById('department_id');
+    const departmentList = document.getElementById('department_list');
+    const departmentItems = departmentList.querySelectorAll('li');
 
-    function showList() {
-        list.classList.remove('hidden');
-    }
+    const commissariatInput = document.getElementById('commissariat_search');
+    const commissariatHidden = document.getElementById('commissariat_id');
+    const commissariatList = document.getElementById('commissariat_list');
+    const commissariatItems = commissariatList.querySelectorAll('li');
 
-    function hideList() {
-        list.classList.add('hidden');
-    }
-
-    function filterList(value) {
-        const query = value.toLowerCase().trim();
+    // Универсальная фильтрация списка
+    function filterList(input, list) {
+        const query = input.value.toLowerCase().trim();
+        const items = list.querySelectorAll('li');
         let hasVisible = false;
 
         items.forEach(item => {
@@ -395,10 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 hasVisible = true;
                 return;
             }
-
-            const name = item.dataset.name?.toLowerCase() || '';
-
-            if (query === '' || name.includes(query)) {
+            const name = (item.dataset.name || '').toLowerCase();
+            if (!query || name.includes(query)) {
                 item.classList.remove('hidden');
                 hasVisible = true;
             } else {
@@ -409,35 +411,76 @@ document.addEventListener('DOMContentLoaded', () => {
         list.classList.toggle('hidden', !hasVisible);
     }
 
-    input.addEventListener('focus', () => {
-        showList();
-        filterList(input.value);
-    });
-
-    input.addEventListener('input', () => {
-        hiddenInput.value = '';
-        showList();
-        filterList(input.value);
-    });
-
-    items.forEach(item => {
+    // --- ОТДЕЛ ---
+    departmentItems.forEach(item => {
         item.addEventListener('click', () => {
             if (item.dataset.static === 'true') {
-                input.value = '';
-                hiddenInput.value = '';
-                hideList();
+                // Очистка отдела и связанного комиссариата
+                departmentInput.value = '';
+                departmentHidden.value = '';
+                commissariatInput.value = '';
+                commissariatHidden.value = '';
+                departmentList.classList.add('hidden');
                 return;
             }
-            input.value = item.dataset.name;
-            hiddenInput.value = item.dataset.id;
-            hideList();
+
+            departmentInput.value = item.dataset.name;
+            departmentHidden.value = item.dataset.id;
+            departmentList.classList.add('hidden');
+
+            // Подставляем связанный комиссариат
+            commissariatInput.value = item.dataset.commissariatName || '';
+            commissariatHidden.value = item.dataset.commissariatId || '';
         });
     });
 
+    departmentInput.addEventListener('focus', () => filterList(departmentInput, departmentList));
+    departmentInput.addEventListener('input', () => {
+        departmentHidden.value = '';
+        commissariatInput.value = '';
+        commissariatHidden.value = '';
+        filterList(departmentInput, departmentList);
+    });
+
+    // --- КОМИССАРИАТ ---
+    commissariatItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (item.dataset.static === 'true') {
+                // Очистка комиссариата и связанного отдела
+                commissariatInput.value = '';
+                commissariatHidden.value = '';
+                departmentInput.value = '';
+                departmentHidden.value = '';
+                commissariatList.classList.add('hidden');
+                return;
+            }
+
+            commissariatInput.value = item.dataset.name;
+            commissariatHidden.value = item.dataset.id;
+            commissariatList.classList.add('hidden');
+
+            // При выборе вручную не трогаем отдел, только если есть связь
+        });
+    });
+
+    commissariatInput.addEventListener('focus', () => filterList(commissariatInput, commissariatList));
+    commissariatInput.addEventListener('input', () => {
+        commissariatHidden.value = '';
+        // Очищаем отдел, если удаляем комиссариат вручную
+        if (commissariatInput.value === '') {
+            departmentInput.value = '';
+            departmentHidden.value = '';
+        }
+        filterList(commissariatInput, commissariatList);
+    });
+
+    // --- Закрытие списков при клике вне ---
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.relative')) {
-            hideList();
+            departmentList.classList.add('hidden');
+            commissariatList.classList.add('hidden');
         }
     });
 });
 </script>
+

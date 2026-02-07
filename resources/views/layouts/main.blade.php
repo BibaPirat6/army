@@ -132,7 +132,7 @@
                         </li>
 
                         <li class="mb-1 last:mb-0">
-                            <a href="{{ route('divisions.index') }}"
+                            <a href="{{ route('employee-positions.index') }}"
                                 class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

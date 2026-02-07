@@ -38,6 +38,10 @@
                                 <span class="font-medium text-[#060606]">Должность</span>
                                 <span class="text-[#060606]">{{ $position->position->name }}</span>
                             </div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-[#060606]">Тип должности</span>
+                                <span class="text-[#060606]">{{ $position->position->positionType->name }}</span>
+                            </div>
 
                             <div class="flex items-center justify-between">
                                 <span class="font-medium text-[#060606]">Ставка</span>
@@ -47,21 +51,21 @@
                             @if ($position->commissariat_id)
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">Комиссариат</span>
-                                    <span class="text-[#060606]">{{ $position->commissariat->name }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->commissariat->name }}</span>
                                 </div>
                             @endif
 
                             @if ($position->department_id)
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">Отдел</span>
-                                    <span class="text-[#060606]">{{ $position->department->name }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->department->name }}</span>
                                 </div>
                             @endif
 
                             @if ($position->division_id)
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">Отделение</span>
-                                    <span class="text-[#060606]">{{ $position->division->name }}</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->division->name }}</span>
                                 </div>
                             @endif
 

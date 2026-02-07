@@ -85,7 +85,18 @@ return new class extends Migration {
             $table->foreignId('division_id')->nullable()->constrained('divisions')->cascadeOnDelete();
             $table->boolean('is_independent')->default(false);
 
-            $table->decimal('rate', 3, 2);
+            $table->enum('rate', [
+                '0.25',
+                '0.50',
+                '0.75',
+                '1.00',
+                '1.25',
+                '1.50',
+                '1.75',
+                '2.00'
+            ])->default('1.00');
+
+
             $table->timestamps();
 
             $table->unique(

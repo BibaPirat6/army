@@ -8,6 +8,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Position;
+use DB;
 use Illuminate\Http\Request;
 
 class EmployeePositionsController extends Controller
@@ -40,7 +41,13 @@ class EmployeePositionsController extends Controller
         $backUrl = $request->get("back_url");
         $employeeId = $id;
 
-        return view('admin.org.employee-positions.create', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId"));
+        $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
+        $type = $column->Type;
+
+        preg_match_all("/'([^']+)'/", $type, $matches);
+        $rates = $matches[1];
+
+        return view('admin.org.employee-positions.create', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId", "rates"));
     }
 
     public function store(Request $request, $id)
@@ -97,7 +104,14 @@ class EmployeePositionsController extends Controller
         $backUrl = $request->get("back_url");
         $employeeId = $id;
 
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId"));
+
+        $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
+        $type = $column->Type;
+
+        preg_match_all("/'([^']+)'/", $type, $matches);
+        $rates = $matches[1];
+
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId","rates"));
     }
     public function update(Request $request, $id)
     {

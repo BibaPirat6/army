@@ -57,10 +57,10 @@
                                             <div class="text-xs text-[#565A5B] mt-1">
                                                 <span title="комиссариат">{{ $employeePosition->commissariat->name }}</span>
                                                 @if (isset($employeePosition->department->name))
-                                                    / <span title="отдел">{{ $employeePosition->department->name }}</span>
+                                                    > <span title="отдел">{{ $employeePosition->department->name }}</span>
                                                 @endif
                                                 @if (isset($employeePosition->division->name))
-                                                    / <span title="отделение">{{ $employeePosition->division->name }}</span>
+                                                    > <span title="отделение">{{ $employeePosition->division->name }}</span>
                                                 @endif
                                                 @if ($employeePosition->is_independent !== false)
                                                     <i

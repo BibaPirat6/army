@@ -21,7 +21,7 @@ class EmployeePosition extends Model
 
     protected $casts = [
         "is_independent" => "boolean",
-        "rate" => "decimal:2",
+        'rate' => 'string', 
     ];
 
     /**

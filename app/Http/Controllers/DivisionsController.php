@@ -36,6 +36,7 @@ class DivisionsController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
