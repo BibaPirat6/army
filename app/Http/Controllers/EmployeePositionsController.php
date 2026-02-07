@@ -10,6 +10,7 @@ use App\Models\EmployeePosition;
 use App\Models\Position;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EmployeePositionsController extends Controller
 {
@@ -55,9 +56,25 @@ class EmployeePositionsController extends Controller
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric|min:0.25|max:2.0',
+
+
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => "nullable|sometimes|exists:departments,id",
-            "division_id" => "nullable|sometimes|exists:divisions,id",
+            "department_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+            "division_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+
+
             "is_independent" => "required|integer|in:1,0",
             "employeeId" => "nullable|integer|min:1|exists:employees,id"
         ], [
@@ -111,7 +128,7 @@ class EmployeePositionsController extends Controller
         preg_match_all("/'([^']+)'/", $type, $matches);
         $rates = $matches[1];
 
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId","rates"));
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', "commissariats", "departments", "divisions", "backUrl", "employeeId", "rates"));
     }
     public function update(Request $request, $id)
     {
@@ -119,8 +136,21 @@ class EmployeePositionsController extends Controller
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric|min:0.25|max:2.0',
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => "nullable|sometimes|integer|min:1|exists:departments,id",
-            "division_id" => "nullable|sometimes|integer|min:1|exists:divisions,id",
+            "department_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+            "division_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+
             "is_independent" => "required|in:0,1",
         ], [
             'position_id.required' => 'Поле должность обязательно для заполнения.',

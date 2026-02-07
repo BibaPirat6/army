@@ -143,124 +143,122 @@
                             </select>
                         </div>
 
-                        {{-- комиссариат --}}
-                        <div class="relative">
-                            <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Комиссариат *
-                            </label>
 
-                            {{-- visible input --}}
-                            <input required type="text" id="commissariat_search" placeholder="Выберите комиссариат"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                  outline-none transition-colors text-[#060606]"
-                                autocomplete="off"
-                                value="{{ old('commissariat_id', $position->commissariat->id ? $position->commissariat->name : '') }}">
 
-                            {{-- hidden value --}}
-                            <input type="hidden" name="commissariat_id" id="commissariat_id"
-                                value="{{ old('commissariat_id', $position->commissariat->id) }}">
 
-                            {{-- dropdown --}}
-                            <ul id="commissariat_list"
-                                class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-               rounded-lg max-h-72 overflow-auto hidden">
+                        <div class="position-form space-y-6">
 
-                                {{-- очистить --}}
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                    data-name="" data-static="true">
-                                    Очистить
-                                </li>
+                            {{-- комиссариат --}}
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Комиссариат *
+                                </label>
 
-                                @foreach ($commissariats as $commissariat)
-                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                        data-id="{{ $commissariat->id }}" data-name="{{ $commissariat->name }}">
-                                        {{ $commissariat->name }}
-                                        <span class="text-gray-400">(ID: {{ $commissariat->id }})</span>
+                                <input type="text"
+                                    class="commissariat-search w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none"
+                                    placeholder="Выберите комиссариат" autocomplete="off"
+                                    value="{{ old('commissariat_id', $position->commissariat->id ? $position->commissariat->name : '') }}">
+
+                                <input type="hidden" name="commissariat_id" class="commissariat-id"
+                                    value="{{ old('commissariat_id', $position->commissariat->id) }}">
+
+                                <ul
+                                    class="commissariat-list absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+                   rounded-lg max-h-72 overflow-auto hidden">
+
+                                    <li class="px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100" data-static="true"
+                                        data-id="" data-name="">
+                                        Очистить
                                     </li>
-                                @endforeach
-                            </ul>
-                        </div>
 
-                        {{-- отдел --}}
-                        <div class="relative">
-                            <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Отдел
-                            </label>
+                                    @foreach ($commissariats as $commissariat)
+                                        <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                            data-id="{{ $commissariat->id }}" data-name="{{ $commissariat->name }}">
+                                            {{ $commissariat->name }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
 
-                            {{-- visible input --}}
-                            <input type="text" id="department_search" placeholder="Выберите отдел"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                  outline-none transition-colors text-[#060606]"
-                                autocomplete="off"
-                                value="{{ old('department_id', $position?->department?->id ? $position?->department?->name : '') }}">
+                            {{-- отдел --}}
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Отдел
+                                </label>
 
-                            {{-- hidden value --}}
-                            <input type="hidden" name="department_id" id="department_id"
-                                value="{{ old('department_id', $position?->department?->id) }}">
+                                <input type="text"
+                                    class="department-search w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none"
+                                    placeholder="Выберите отдел" autocomplete="off"
+                                    value="{{ old('department_id', $position?->department?->id ? $position?->department?->name : '') }}">
 
-                            {{-- dropdown --}}
-                            <ul id="department_list"
-                                class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-               rounded-lg max-h-72 overflow-auto hidden">
+                                <input type="hidden" name="department_id" class="department-id"
+                                    value="{{ old('department_id', $position?->department?->id) }}">
 
-                                {{-- не выбирать --}}
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                    data-name="" data-static="true">
-                                    Не выбирать (самостоятельное отделение)
-                                </li>
+                                <ul
+                                    class="department-list absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+                   rounded-lg max-h-72 overflow-auto hidden">
 
-                                @foreach ($departments as $department)
-                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                        data-id="{{ $department->id }}" data-name="{{ $department->name }}">
-                                        {{ $department->name }}
-                                        <span class="text-gray-400">(ID: {{ $department->id }})</span>
+                                    <li class="px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100" data-static="true"
+                                        data-id="" data-name="">
+                                        Не выбирать
                                     </li>
-                                @endforeach
-                            </ul>
-                        </div>
 
-                        {{-- отделение --}}
-                        <div class="relative">
-                            <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Отделение
-                            </label>
+                                    @foreach ($departments as $department)
+                                        <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                            data-id="{{ $department->id }}" data-name="{{ $department->name }}"
+                                            data-commissariat-id="{{ $department->commissariat->id }}"
+                                            data-commissariat-name="{{ $department->commissariat->name }}">
+                                            {{ $department->name }}
+                                            <span class="text-gray-400">({{ $department->commissariat->name }})</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
 
-                            {{-- видимое поле --}}
-                            <input type="text" id="division_search" placeholder="Выберите отделение"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-               outline-none transition-colors text-[#060606]"
-                                autocomplete="off"
-                                value="{{ old('division_id', $position?->division?->id ? $position?->division?->name : '') }}">
+                            {{-- отделение --}}
+                            <div class="relative">
+                                <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Отделение
+                                </label>
 
-                            {{-- скрытое поле для отправки формы --}}
-                            <input type="hidden" name="division_id" id="division_id"
-                                value="{{ old('division_id', $position?->division?->id) }}">
+                                <input type="text"
+                                    class="division-search w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none"
+                                    placeholder="Выберите отделение" autocomplete="off"
+                                    value="{{ old('division_id', $position?->division?->id ? $position?->division?->name : '') }}">
 
-                            {{-- выпадающий список --}}
-                            <ul id="division_list"
-                                class="absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden">
+                                <input type="hidden" name="division_id" class="division-id"
+                                    value="{{ old('division_id', $position?->division?->id) }}">
 
-                                {{-- кнопка очистить --}}
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                    data-name="" data-static="true">
+                                <ul
+                                    class="division-list
+                                    absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72
+                                    overflow-auto hidden">
+
+                                <li class="px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100" data-static="true"
+                                    data-id="" data-name="">
                                     Не выбирать
                                 </li>
 
-                                {{-- список отделений --}}
                                 @foreach ($divisions as $division)
                                     <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $division->id }}"
-                                        data-name="{{ $division->name }}">
+                                        data-name="{{ $division->name }}"
+                                        data-department-id="{{ $division?->department?->id }}"
+                                        data-department-name="{{ $division?->department?->name }}"
+                                        data-commissariat-id="{{ $division->commissariat->id }}"
+                                        data-commissariat-name="{{ $division->commissariat->name }}">
                                         {{ $division->name }}
-                                        @if ($division->department_id === null)
-                                            (Самостоятельное отделение)
-                                        @endif
                                     </li>
                                 @endforeach
-                            </ul>
+                                </ul>
+                            </div>
+
                         </div>
+
+
+
 
                         <!-- Самостоятельная должность -->
                         <div>
@@ -399,206 +397,121 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('commissariat_search');
-        const hiddenInput = document.getElementById('commissariat_id');
-        const list = document.getElementById('commissariat_list');
-        const items = list.querySelectorAll('li');
 
-        function showList() {
-            list.classList.remove('hidden');
-        }
+        document.querySelectorAll('.position-form').forEach(form => {
 
-        function hideList() {
-            list.classList.add('hidden');
-        }
+            const commissariatInput = form.querySelector('.commissariat-search');
+            const commissariatHidden = form.querySelector('.commissariat-id');
+            const commissariatList = form.querySelector('.commissariat-list');
 
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
+            const departmentInput = form.querySelector('.department-search');
+            const departmentHidden = form.querySelector('.department-id');
+            const departmentList = form.querySelector('.department-list');
 
-            items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
+            const divisionInput = form.querySelector('.division-search');
+            const divisionHidden = form.querySelector('.division-id');
+            const divisionList = form.querySelector('.division-list');
 
-                const name = item.dataset.name?.toLowerCase() || '';
+            // ---------- фильтр ----------
+            function filterList(input, list) {
+                const q = input.value.toLowerCase().trim();
+                let visible = false;
 
-                if (query === '' || name.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
+                list.querySelectorAll('li').forEach(li => {
+                    if (li.dataset.static === 'true') {
+                        li.classList.remove('hidden');
+                        visible = true;
+                        return;
+                    }
 
-            list.classList.toggle('hidden', !hasVisible);
-        }
+                    const name = (li.dataset.name || '').toLowerCase();
+                    const show = !q || name.includes(q);
 
-        input.addEventListener('focus', () => {
-            showList();
-            filterList(input.value);
-        });
+                    li.classList.toggle('hidden', !show);
+                    if (show) visible = true;
+                });
 
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            showList();
-            filterList(input.value);
-        });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-
-
-                if (item.dataset.static === 'true') {
-                    input.value = '';
-                    hiddenInput.value = '';
-                    hideList();
-                    return;
-                }
-
-
-                input.value = item.dataset.name;
-                hiddenInput.value = item.dataset.id;
-                hideList();
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                hideList();
+                list.classList.toggle('hidden', !visible);
             }
-        });
-    });
-</script>
 
+            // ---------- комиссариат ----------
+            commissariatInput.addEventListener('focus', () => filterList(commissariatInput,
+                commissariatList));
+            commissariatInput.addEventListener('input', () => {
+                commissariatHidden.value = '';
+                departmentInput.value = '';
+                departmentHidden.value = '';
+                divisionInput.value = '';
+                divisionHidden.value = '';
+                filterList(commissariatInput, commissariatList);
+            });
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('department_search');
-        const hiddenInput = document.getElementById('department_id');
-        const list = document.getElementById('department_list');
-        const items = list.querySelectorAll('li');
+            commissariatList.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', () => {
+                    commissariatInput.value = li.dataset.name || '';
+                    commissariatHidden.value = li.dataset.id || '';
+                    commissariatList.classList.add('hidden');
+                });
+            });
 
-        function showList() {
-            list.classList.remove('hidden');
-        }
+            // ---------- отдел ----------
+            departmentInput.addEventListener('focus', () => filterList(departmentInput,
+                departmentList));
+            departmentInput.addEventListener('input', () => {
+                departmentHidden.value = '';
+                divisionInput.value = '';
+                divisionHidden.value = '';
+                filterList(departmentInput, departmentList);
+            });
 
-        function hideList() {
-            list.classList.add('hidden');
-        }
+            departmentList.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', () => {
+                    departmentInput.value = li.dataset.name || '';
+                    departmentHidden.value = li.dataset.id || '';
 
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
+                    commissariatInput.value = li.dataset.commissariatName || '';
+                    commissariatHidden.value = li.dataset.commissariatId || '';
 
-            items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
+                    departmentList.classList.add('hidden');
+                });
+            });
 
-                const name = item.dataset.name?.toLowerCase() || '';
+            // ---------- отделение ----------
+            divisionInput.addEventListener('focus', () => filterList(divisionInput, divisionList));
+            divisionInput.addEventListener('input', () => {
+                divisionHidden.value = '';
+                filterList(divisionInput, divisionList);
+            });
 
-                if (query === '' || name.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
+            divisionList.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', () => {
+                    divisionInput.value = li.dataset.name || '';
+                    divisionHidden.value = li.dataset.id || '';
+
+                    commissariatInput.value = li.dataset.commissariatName || '';
+                    commissariatHidden.value = li.dataset.commissariatId || '';
+
+                    if (li.dataset.departmentId) {
+                        departmentInput.value = li.dataset.departmentName;
+                        departmentHidden.value = li.dataset.departmentId;
+                    } else {
+                        departmentInput.value = '';
+                        departmentHidden.value = '';
+                    }
+
+                    divisionList.classList.add('hidden');
+                });
+            });
+
+            // ---------- закрытие ----------
+            document.addEventListener('click', e => {
+                if (!form.contains(e.target)) {
+                    commissariatList.classList.add('hidden');
+                    departmentList.classList.add('hidden');
+                    divisionList.classList.add('hidden');
                 }
             });
 
-            list.classList.toggle('hidden', !hasVisible);
-        }
-
-        input.addEventListener('focus', () => {
-            showList();
-            filterList(input.value);
-        });
-
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            showList();
-            filterList(input.value);
-        });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                if (item.dataset.static === 'true') {
-                    input.value = '';
-                    hiddenInput.value = '';
-                    hideList();
-                    return;
-                }
-                input.value = item.dataset.name;
-                hiddenInput.value = item.dataset.id;
-                hideList();
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                hideList();
-            }
-        });
-    });
-</script>
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('division_search');
-        const hiddenInput = document.getElementById('division_id');
-        const list = document.getElementById('division_list');
-        const items = list.querySelectorAll('li');
-
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
-
-            items.forEach(item => {
-                const name = item.dataset.name.toLowerCase();
-                const id = item.dataset.id;
-
-                if (query === '') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                if (name.includes(query) || id.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-
-            list.classList.toggle('hidden', !hasVisible);
-        }
-
-        // открываем список при фокусе
-        input.addEventListener('focus', () => filterList(input.value));
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            filterList(input.value);
-        });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                input.value = item.dataset.name || '';
-                hiddenInput.value = item.dataset.id || '';
-                list.classList.add('hidden');
-            });
-        });
-
-        // закрытие списка при клике вне
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                list.classList.add('hidden');
-            }
         });
     });
 </script>

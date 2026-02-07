@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Position;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DivisionsController extends Controller
 {
@@ -36,11 +37,16 @@ class DivisionsController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => "nullable|sometimes|exists:departments,id",
+            "department_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
             "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id"
         ], [
             "name.required" => "Название подразделения обязательно для заполнения.",
@@ -92,7 +98,13 @@ class DivisionsController extends Controller
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
             "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => "nullable|sometimes|exists:departments,id",
+            "department_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
             "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id",
         ], [
             "name.required" => "Название подразделения обязательно для заполнения.",
