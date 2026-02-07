@@ -549,7 +549,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script src="{{ asset('js/structure.js') }}"></script>
-@endpush

@@ -211,8 +211,8 @@
                                             data-commissariat-id="{{ $department->commissariat->id }}"
                                             data-commissariat-name="{{ $department->commissariat->name }}">
                                             {{ $department->name }}
-                                            <span class="text-gray-400">({{ $department->commissariat->name }})</span>
-                                        </li>
+                                            <span class="text-gray-400">(ID: {{ $department->id }})</span>
+                                            < {{ $department->commissariat->name }} </li>
                                     @endforeach
                                 </ul>
                             </div>
@@ -237,21 +237,26 @@
                                     absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72
                                     overflow-auto hidden">
 
-                                <li class="px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100" data-static="true"
-                                    data-id="" data-name="">
-                                    Не выбирать
-                                </li>
-
-                                @foreach ($divisions as $division)
-                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $division->id }}"
-                                        data-name="{{ $division->name }}"
-                                        data-department-id="{{ $division?->department?->id }}"
-                                        data-department-name="{{ $division?->department?->name }}"
-                                        data-commissariat-id="{{ $division->commissariat->id }}"
-                                        data-commissariat-name="{{ $division->commissariat->name }}">
-                                        {{ $division->name }}
+                                    <li class="px-4 py-2 cursor-pointer text-red-500 hover:bg-gray-100" data-static="true"
+                                        data-id="" data-name="">
+                                        Не выбирать
                                     </li>
-                                @endforeach
+
+                                    @foreach ($divisions as $division)
+                                        <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                            data-id="{{ $division->id }}" data-name="{{ $division->name }}"
+                                            data-department-id="{{ $division?->department?->id }}"
+                                            data-department-name="{{ $division?->department?->name }}"
+                                            data-commissariat-id="{{ $division->commissariat->id }}"
+                                            data-commissariat-name="{{ $division->commissariat->name }}">
+                                            {{ $division->name }}
+                                            <span class="text-gray-400">(ID: {{ $division->id }})</span>
+                                            @if ($division?->department?->id === null)
+                                                <span class="text-gray-400">(сам. отделение)</span>
+                                            @else
+                                                < {{ $division?->department?->name }} @endif
+                                                    < {{ $division->commissariat->name }} </li>
+                                            @endforeach
                                 </ul>
                             </div>
 
