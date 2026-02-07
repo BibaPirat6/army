@@ -23,7 +23,7 @@ Route::post("/login", [LoginController::class, "login"])->name("login.post");
 
 // пользователь
 Route::middleware(['auth'])->group(function () {
-    Route::get("/", [HomeController::class, "index"])->name("home.index");
+    Route::get("/", [StructureController::class, "index"])->name("structure.index");
 
     // профиль
     Route::get("/profile", [ProfileController::class, "index"])->name("profile.index");
@@ -123,6 +123,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete("/employee-positions/{id}/deleteAll", [EmployeePositionsController::class, "destroy"])->name("employee-positions.destroy");
 
     // создание структуры
-    Route::get("/structure", [StructureController::class, "index"])->name("structure.index");
     Route::get("/structure/{id}/commissariat", [StructureController::class, "show"])->name("structure.show");
 });

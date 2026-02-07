@@ -41,25 +41,51 @@
                         <input type="text" name="name" id="name" placeholder="Введите название должности"
                             value="{{ old('name') }}" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-
                     </div>
 
-                    <!-- Тип должности -->
-                    <div>
-                        <label for="position_type_id" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Тип должности *
+
+
+                    {{-- тип должности --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Тип должности
                         </label>
-                        <select name="position_type_id" id="position_type_id" required
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @foreach ($types as $type)
-                                <option value="{{ $type->id }}"
-                                    {{ old('position_type_id') == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
 
+                        {{-- visible input --}}
+                        <input type="text" id="position_type_search" placeholder="Выберите тип должности"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+               outline-none transition-colors text-[#060606]"
+                            autocomplete="off" value="{{ old('position_type_name') }}">
+
+                        {{-- hidden value --}}
+                        <input type="hidden" name="position_type_id" id="position_type_id"
+                            value="{{ old('position_type_id') }}">
+
+                        {{-- dropdown --}}
+                        <ul id="position_type_list"
+                            class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
+               rounded-lg max-h-72 overflow-auto hidden">
+
+                            {{-- не выбирать --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
+                                Не выбирать
+                            </li>
+
+                            @foreach ($types as $type)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $type->id }}"
+                                    data-name="{{ $type->name }}">
+                                    {{ $type->name }}
+                                    <span class="text-gray-400">(ID: {{ $type->id }})</span>
+                                </li>
+                            @endforeach
+
+                        </ul>
                     </div>
+
+
+
 
                     <!-- Кнопка отправки -->
                     <div class="flex justify-end pt-6">
@@ -78,3 +104,48 @@
         </div>
     </div>
 @endsection
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('position_type_search');
+        const hidden = document.getElementById('position_type_id');
+        const list = document.getElementById('position_type_list');
+
+        input.addEventListener('focus', () => {
+            list.classList.remove('hidden');
+        });
+
+        input.addEventListener('input', () => {
+            const q = input.value.toLowerCase();
+
+            [...list.children].forEach(li => {
+                if (li.dataset.static) return;
+                li.classList.toggle(
+                    'hidden',
+                    !li.dataset.name.toLowerCase().includes(q)
+                );
+            });
+
+            list.classList.remove('hidden');
+        });
+
+        list.addEventListener('click', (e) => {
+            const item = e.target.closest('li');
+            if (!item) return;
+
+            input.value = item.dataset.name || '';
+            hidden.value = item.dataset.id || '';
+
+            list.classList.add('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#position_type_search') &&
+                !e.target.closest('#position_type_list')) {
+                list.classList.add('hidden');
+            }
+        });
+    });
+</script>

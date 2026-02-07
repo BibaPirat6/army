@@ -15,9 +15,11 @@ class CommissariatsController extends Controller
         $commissariats = Commissariat::paginate(50);
         return view('admin.org.commissariats.index', compact('commissariats'));
     }
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $commissariat = Commissariat::findOrFail($id);
+        
+
         return view('admin.org.commissariats.show', compact('commissariat'));
     }
 
@@ -65,8 +67,9 @@ class CommissariatsController extends Controller
     public function edit($id)
     {
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
-
         $employees = Employee::all();
+     
+
         return view('admin.org.commissariats.edit', compact('commissariat', "employees"));
     }
 

@@ -28,13 +28,12 @@ class PositionsController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
-            'position_type_id' => 'required|exists:position_types,id',
+            'position_type_id' => 'nullable|sometimes|exists:position_types,id',
         ], [
             'name.required' => 'Название должности обязательно для заполнения.',
             'name.string' => 'Название должности должно быть строкой.',
             'name.min' => 'Название должности должно содержать минимум 2 символа.',
             'name.max' => 'Название должности не должно превышать 255 символов.',
-            'position_type_id.required' => 'Тип должности обязателен для заполнения.',
             'position_type_id.exists' => 'Выбранный тип должности не существует.',
         ]);
 
@@ -52,13 +51,12 @@ class PositionsController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
-            'position_type_id' => 'required|exists:position_types,id',
+            'position_type_id' => 'nullable|sometimes|exists:position_types,id',
         ], [
             'name.required' => 'Название должности обязательно для заполнения.',
             'name.string' => 'Название должности должно быть строкой.',
             'name.min' => 'Название должности должно содержать минимум 2 символа.',
             'name.max' => 'Название должности не должно превышать 255 символов.',
-            'position_type_id.required' => 'Тип должности обязателен для заполнения.',
             'position_type_id.exists' => 'Выбранный тип должности не существует.',
         ]);
 

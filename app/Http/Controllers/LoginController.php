@@ -35,7 +35,7 @@ class LoginController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route("home.index")
+        return redirect()->route("structure.index")
             ->with("success", "Привет " . $user->login . "!");
     }
 

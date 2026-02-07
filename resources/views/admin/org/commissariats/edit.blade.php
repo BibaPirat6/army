@@ -14,7 +14,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('commissariats.index') }}"
+                <a href="{{  route('commissariats.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -33,6 +33,7 @@
                 <form action="{{ route('commissariats.update', $commissariat->id) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PUT')
+
 
                     <!-- Название комиссариата -->
                     <div>
@@ -78,7 +79,7 @@
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="Не назначать">
+                                data-name="Не назначать" data-static="true">
                                 Не назначать
                             </li>
 
@@ -132,13 +133,28 @@
         const list = document.getElementById('chief_employee_list');
         const items = list.querySelectorAll('li');
 
+        function showList() {
+            list.classList.remove('hidden');
+        }
+
+        function hideList() {
+            list.classList.add('hidden');
+        }
+
         function filterList(value) {
             const query = value.toLowerCase().trim();
             let hasVisible = false;
 
             items.forEach(item => {
-                const name = item.dataset.name.toLowerCase();
-                const id = item.dataset.id;
+
+                if (item.dataset.static === 'true') {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                    return;
+                }
+
+                const name = item.dataset.name?.toLowerCase() || '';
+                const id = item.dataset.id || '';
 
                 if (query === '') {
                     item.classList.remove('hidden');
@@ -146,10 +162,7 @@
                     return;
                 }
 
-                if (
-                    id.includes(query) ||
-                    (name && name.includes(query))
-                ) {
+                if (name.includes(query) || id.includes(query)) {
                     item.classList.remove('hidden');
                     hasVisible = true;
                 } else {
@@ -160,23 +173,48 @@
             list.classList.toggle('hidden', !hasVisible);
         }
 
-        input.addEventListener('focus', () => filterList(input.value));
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
+        input.addEventListener('focus', () => {
+            showList();
             filterList(input.value);
         });
 
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
-                list.classList.add('hidden');
-            });
+
+        input.addEventListener('input', () => {
+            hiddenInput.value = '';
+            showList();
+            filterList(input.value);
         });
 
+
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+
+
+                if (item.dataset.static === 'true') {
+
+                    const wasNotEmpty =
+                        input.value.trim() !== '' || hiddenInput.value !== '';
+
+                    input.value = '';
+                    hiddenInput.value = '';
+
+                    if (wasNotEmpty) {
+                        showList();
+                        filterList('');
+                    } else {
+                        hideList();
+                    }
+
+                    return;
+                }
+                input.value = item.dataset.name || `ID ${item.dataset.id}`;
+                hiddenInput.value = item.dataset.id;
+                hideList();
+            });
+        });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.relative')) {
-                list.classList.add('hidden');
+                hideList();
             }
         });
     });

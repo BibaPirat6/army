@@ -66,7 +66,7 @@
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="Не назначать">
+                                data-name="Не назначать" data-static="true">
                                 Не назначать
                             </li>
 
@@ -118,13 +118,28 @@
         const list = document.getElementById('chief_employee_list');
         const items = list.querySelectorAll('li');
 
+        function showList() {
+            list.classList.remove('hidden');
+        }
+
+        function hideList() {
+            list.classList.add('hidden');
+        }
+
         function filterList(value) {
             const query = value.toLowerCase().trim();
             let hasVisible = false;
 
             items.forEach(item => {
-                const name = item.dataset.name.toLowerCase();
-                const id = item.dataset.id;
+
+                if (item.dataset.static === 'true') {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                    return;
+                }
+
+                const name = item.dataset.name?.toLowerCase() || '';
+                const id = item.dataset.id || '';
 
                 if (query === '') {
                     item.classList.remove('hidden');
@@ -132,10 +147,7 @@
                     return;
                 }
 
-                if (
-                    id.includes(query) ||
-                    (name && name.includes(query))
-                ) {
+                if (name.includes(query) || id.includes(query)) {
                     item.classList.remove('hidden');
                     hasVisible = true;
                 } else {
@@ -146,23 +158,48 @@
             list.classList.toggle('hidden', !hasVisible);
         }
 
-        input.addEventListener('focus', () => filterList(input.value));
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
+        input.addEventListener('focus', () => {
+            showList();
             filterList(input.value);
         });
 
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
-                list.classList.add('hidden');
-            });
+
+        input.addEventListener('input', () => {
+            hiddenInput.value = '';
+            showList();
+            filterList(input.value);
         });
 
+
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+
+
+                if (item.dataset.static === 'true') {
+
+                    const wasNotEmpty =
+                        input.value.trim() !== '' || hiddenInput.value !== '';
+
+                    input.value = '';
+                    hiddenInput.value = '';
+
+                    if (wasNotEmpty) {
+                        showList();
+                        filterList('');
+                    } else {
+                        hideList();
+                    }
+
+                    return;
+                }
+                input.value = item.dataset.name || `ID ${item.dataset.id}`;
+                hiddenInput.value = item.dataset.id;
+                hideList();
+            });
+        });
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.relative')) {
-                list.classList.add('hidden');
+                hideList();
             }
         });
     });
