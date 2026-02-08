@@ -139,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
         translateY = 0;
         scale = 1;
         applyTransform();
+        fitToScreen();
     });
 
 

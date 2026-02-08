@@ -4,8 +4,11 @@
     Комиссариаты
 @endsection
 
-@section(section: 'content')
+@section('vite-resources')
+    @vite(['resources/css/map.css'])
+@endsection
 
+@section(section: 'content')
 
     <div class="max-w-4xl p-6 mx-auto">
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
@@ -59,11 +62,52 @@
                                 </path>
                             </svg>
                             <p class="text-[#565A5B] text-lg font-medium">Нет доступных комиссариатов</p>
-                            <p class="text-[#7F7F7F] mt-1">Создайте первый комиссариат для начала работы со структурой</p>
+                            <p class="text-[#7F7F7F] mt-1">Создайте первый комиссариат для начала работы со структурой
+                            </p>
                         </div>
                     </div>
                 @endif
             </div>
         </div>
     </div>
+
+    <div class="max-w-6xl p-6 mx-auto">
+        <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
+            <div class="p-6 md:p-8">
+                <div class="map-wrapper">
+                    <img src="{{ asset('storage/map.jpg') }}" alt="map">
+
+                    <div class="grid" id="grid">
+                        @for ($y = 0; $y < 60; $y++)
+                            @for ($x = 0; $x < 100; $x++)
+                                <div class="cell" data-x="{{ $x }}" data-y="{{ $y }}"></div>
+                            @endfor
+                        @endfor
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                const x = cell.dataset.x;
+                const y = cell.dataset.y;
+
+                const confirmed = confirm(
+                    `Вы хотите назначить комиссариат по координатам X: ${x}, Y: ${y}?`
+                );
+
+                if (confirmed) {
+                    window.location.href =
+                        "{{ route('commissariats.create') }}" + `?x=${x}&y=${y}`;
+                }
+            });
+        });
+    });
+</script>

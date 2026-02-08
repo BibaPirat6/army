@@ -122,6 +122,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete("/employee-positions/{id}", [EmployeePositionsController::class, "delete"])->name("employee-positions.delete");
     Route::delete("/employee-positions/{id}/deleteAll", [EmployeePositionsController::class, "destroy"])->name("employee-positions.destroy");
 
-    // создание структуры
+    // структуры
     Route::get("/structure/{id}/commissariat", [StructureController::class, "show"])->name("structure.show");
 });

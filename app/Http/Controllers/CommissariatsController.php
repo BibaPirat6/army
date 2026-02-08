@@ -18,9 +18,9 @@ class CommissariatsController extends Controller
     public function show(Request $request, $id)
     {
         $commissariat = Commissariat::findOrFail($id);
-        
+        $backUrl = $request->input("back_url");
 
-        return view('admin.org.commissariats.show', compact('commissariat'));
+        return view('admin.org.commissariats.show', compact('commissariat', 'backUrl'));
     }
 
     public function create()
