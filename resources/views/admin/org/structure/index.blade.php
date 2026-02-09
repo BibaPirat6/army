@@ -29,6 +29,11 @@
                                         </path>
                                     </svg>
                                     {{ $commissariat->name }}
+
+                                    <span>
+                                        ⠀(ID: {{ $commissariat->id }})
+                                    </span>
+
                                     <svg class="w-4 h-4 ml-2 text-[#A60644]" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -36,18 +41,9 @@
                                     </svg>
 
                                     <p>
-                                        <b>Начальник комиссариата:</b>
-
-                                        @if (!$commissariat->chiefEmployeePosition?->employee?->person)
-                                            <span class="text-[#A60644]">Не назначен начальник</span>
-                                        @else
-                                            <span
-                                                class="text-[#A60644]">{{ $commissariat->chiefEmployeePosition->employee->person->last_name }}
-                                                {{ $commissariat->chiefEmployeePosition->employee->person->first_name }}
-                                                {{ $commissariat->chiefEmployeePosition->employee->person->patronymic ?? '' }}</span>
-                                        @endif
+                                        ⠀(X: {{ $commissariat->longitude }}
+                                        Y: {{ $commissariat->latitude }})
                                     </p>
-
                                 </a>
                             </li>
                         @endforeach
@@ -71,43 +67,66 @@
         </div>
     </div>
 
-    <div class="max-w-6xl p-6 mx-auto">
-        <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
-            <div class="p-6 md:p-8">
-                <div class="map-wrapper">
-                    <img src="{{ asset('storage/map.jpg') }}" alt="map">
+    <div class="map-wrapper max-w-6xl mx-auto">
+        <img class="rounded-2xl" src="{{ asset('storage/map.jpg') }}" alt="map">
 
-                    <div class="grid" id="grid">
-                        @for ($y = 0; $y < 60; $y++)
-                            @for ($x = 0; $x < 100; $x++)
-                                <div class="cell" data-x="{{ $x }}" data-y="{{ $y }}"></div>
-                            @endfor
-                        @endfor
-                    </div>
+        {{-- СЕТКА ДЛЯ HOVER И КЛИКА --}}
+        <div class="grid grid-cells">
+            @for ($y = 0; $y < 60; $y++)
+                @for ($x = 0; $x < 100; $x++)
+                    <div class="cell" data-x="{{ $x }}" data-y="{{ $y }}"></div>
+                @endfor
+            @endfor
+        </div>
+
+        {{-- МАРКЕРЫ КОМИССАРИАТОВ --}}
+        <div class="grid grid-markers">
+            @foreach ($commissariats as $commissariat)
+                <div class="marker" data-id="{{ $commissariat->id }}"
+                    style="
+                    left: {{ ($commissariat->longitude / 100) * 100 }}%;
+                    top: {{ ($commissariat->latitude / 60) * 100 }}%;
+                "
+                    title="{{ $commissariat->name }}">
+                    {{ $commissariat->id }}
                 </div>
-
-            </div>
+            @endforeach
         </div>
     </div>
+
 @endsection
 
-
 <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // клики по ячейкам
         document.querySelectorAll('.cell').forEach(cell => {
             cell.addEventListener('click', () => {
                 const x = cell.dataset.x;
                 const y = cell.dataset.y;
+                
 
-                const confirmed = confirm(
-                    `Вы хотите назначить комиссариат по координатам X: ${x}, Y: ${y}?`
-                );
-
-                if (confirmed) {
+                if (confirm(`Назначить комиссариат в X:${x}, Y:${y}?`)) {
+                    const backUrl = encodeURIComponent(window.location.href); 
                     window.location.href =
-                        "{{ route('commissariats.create') }}" + `?x=${x}&y=${y}`;
+                        "{{ route('commissariats.create') }}" + `?x=${x}&y=${y}&back_url=${backUrl}`;
                 }
             });
         });
+
+        // клики по маркерам
+        document.querySelectorAll('.marker').forEach(marker => {
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                const id = marker.dataset.id;
+                const backUrl = encodeURIComponent(window.location.href); 
+
+                const url = `/commissariats/${id}?back_url=${backUrl}`;
+
+                window.location.href = url;
+            });
+        });
+
     });
 </script>

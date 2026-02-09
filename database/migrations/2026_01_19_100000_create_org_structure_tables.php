@@ -29,6 +29,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name', 255);
             $table->foreignId('chief_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+
+            $table->integer('longitude')->nullable();
+            $table->integer('latitude')->nullable();
             $table->timestamps();
         });
 

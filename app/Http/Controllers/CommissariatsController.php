@@ -23,18 +23,24 @@ class CommissariatsController extends Controller
         return view('admin.org.commissariats.show', compact('commissariat', 'backUrl'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $employees = Employee::all();
-        return view('admin.org.commissariats.create', compact("employees"));
+        $backUrl = $request->input("back_url");
+        $x = $request->input("x");
+        $y = $request->input("y");
+        return view('admin.org.commissariats.create', compact("employees", 'backUrl', 'x', 'y'));
     }
 
 
     public function store(Request $request)
     {
+
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
-            "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id"
+            "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id",
+            "longitude" => "nullable|sometimes|integer|min:1|max:99",
+            "latitude" => "nullable|sometimes|integer|min:1|max:59",
         ], [
             "name.required" => "Название комиссариата обязательно для заполнения.",
             "name.string" => "Название комиссариата должно быть строкой.",
@@ -68,7 +74,7 @@ class CommissariatsController extends Controller
     {
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
         $employees = Employee::all();
-     
+
 
         return view('admin.org.commissariats.edit', compact('commissariat', "employees"));
     }
@@ -77,7 +83,9 @@ class CommissariatsController extends Controller
     {
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
-            "chief_employee_id" => "nullable|integer|min:1|exists:employees,id"
+            "chief_employee_id" => "nullable|integer|min:1|exists:employees,id",
+            "longitude" => "nullable|sometimes|integer|min:1|max:99",
+            "latitude" => "nullable|sometimes|integer|min:1|max:59",
         ], [
             "name.required" => "Название комиссариата обязательно для заполнения.",
             "name.string" => "Название комиссариата должно быть строкой.",
@@ -94,7 +102,9 @@ class CommissariatsController extends Controller
         // Обновляем комиссариат
         $commissariat->update([
             "name" => $data["name"],
-            "chief_employee_id" => $data["chief_employee_id"] // null или новое значение
+            "chief_employee_id" => $data["chief_employee_id"], // null или новое значение
+            "longitude" => $data['longitude'],
+            "latitude" => $data['latitude'],
         ]);
 
         // Получаем ID должности "Начальник комиссариата"

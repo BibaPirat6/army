@@ -82,6 +82,12 @@
                             </div>
 
                             <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <span class="font-medium text-[#565A5B]">Координаты</span>
+                                <span class="text-[#060606]">X: {{ $commissariat['longitude'] ?? "*" }} Y:
+                                    {{ $commissariat['latitude'] ?? "*" }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                 <span class="font-medium text-[#565A5B]">Создан</span>
                                 <span
                                     class="text-[#060606]">{{ \Carbon\Carbon::parse($commissariat['created_at'])->format('d.m.Y H:i') }}</span>

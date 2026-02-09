@@ -13,7 +13,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('commissariats.index') }}"
+                <a href="{{ $backUrl ?? route('commissariats.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -31,6 +31,8 @@
             <div class="p-6 md:p-8">
                 <form action="{{ route('commissariats.store') }}" method="POST" class="space-y-6">
                     @csrf
+
+                    <input type="hidden" value="backUrl" value="{{ $backUrl }}">
 
                     <!-- Название комиссариата -->
                     <div>
@@ -92,6 +94,28 @@
                             @endforeach
                         </ul>
                     </div>
+
+
+                    <!-- x -->
+                    <div>
+                        <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Координаты по горизонтали
+                        </label>
+                        <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="99"
+                            min="1" value="{{ old('longitude', $x) }}"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                    </div>
+
+                    <!-- y -->
+                    <div>
+                        <label for="latitude" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Координаты по вертикали
+                        </label>
+                        <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="59"
+                            min="1" value="{{ old('latitude', $y) }}"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                    </div>
+
 
                     <!-- Кнопка отправки -->
                     <div class="flex justify-end pt-6">

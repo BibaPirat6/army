@@ -35,6 +35,7 @@
                             <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">ID</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Название</th>
                             <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Начальник</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Координаты</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-[#e7e1e1]">Действия</th>
                         </tr>
                     </thead>
@@ -64,6 +65,10 @@
                                             Нет
                                         </span>
                                     @endif
+                                </td>
+
+                                <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}
+                                    Y: {{ $commissariat->latitude ?? '*' }}
                                 </td>
 
 
