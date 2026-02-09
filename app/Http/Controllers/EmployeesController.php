@@ -12,30 +12,65 @@ use Illuminate\Http\Request;
 
 class EmployeesController extends Controller
 {
-    public function index()
+    // public function index()
+    // {
+    //     $employees = Employee::with(['user', 'person'])->orderByDesc("id")
+    //         ->paginate(9);
+
+    //     $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
+    //     $users = User::whereNotIn('id', $usedUserIds)
+    //         ->get();
+
+    //     $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
+    //     $persons = Person::whereNotIn('id', $usedPersonIds)
+    //         ->get();
+
+    //     $roles = Role::all();
+    //     $statuses = WorkStatus::all();
+
+    //     return view("admin.employees.index")->with([
+    //         "employees" => $employees,
+    //         "users" => $users,
+    //         "persons" => $persons,
+    //         "roles" => $roles,
+    //         "statuses" => $statuses,
+    //     ]);
+    // }
+    public function index(Request $request)
     {
-        $employees = Employee::with(['user', 'person'])
-            ->paginate(9);
+        $sort = $request->get('sort_id', 'desc'); 
+        $selectedStatuses = $request->get('sort_status', []);
 
-        $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
-        $users = User::whereNotIn('id', $usedUserIds)
-            ->get();
+        // Если пришла строка (один чекбокс), преобразуем в массив
+        if (!is_array($selectedStatuses)) {
+            $selectedStatuses = [$selectedStatuses];
+        }
 
-        $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
-        $persons = Person::whereNotIn('id', $usedPersonIds)
-            ->get();
+        // Стартуем запрос
+        $query = Employee::query();
 
-        $roles = Role::all();
+        // Фильтруем, если выбраны статусы
+        if (!empty($selectedStatuses)) {
+            // Предполагаем, что связь с workStatus: employee->workStatus
+            $query->whereHas('workStatus', function ($q) use ($selectedStatuses) {
+                $q->whereIn('name', $selectedStatuses);
+            });
+        }
+
+        // Сортировка
+        $query->orderBy('id', $sort);
+
+        // Пагинация
+        $employees = $query->paginate(10)->withQueryString();
+        // withQueryString() сохранит параметры GET при переходе на следующую страницу
+
+        // Все статусы для формы
         $statuses = WorkStatus::all();
 
-        return view("admin.employees.index")->with([
-            "employees" => $employees,
-            "users" => $users,
-            "persons" => $persons,
-            "roles" => $roles,
-            "statuses" => $statuses,
-        ]);
+        return view("admin.employees.index", compact('employees', 'statuses'));
     }
+
+
 
     public function create()
     {

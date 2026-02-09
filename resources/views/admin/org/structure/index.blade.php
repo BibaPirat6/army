@@ -87,7 +87,7 @@
                     left: {{ ($commissariat->longitude / 100) * 100 }}%;
                     top: {{ ($commissariat->latitude / 60) * 100 }}%;
                 "
-                    title="{{ $commissariat->name }}">
+                    title="{{ $commissariat->name }} (X: {{ $commissariat->longitude }} Y: {{ $commissariat->latitude }})">
                     {{ $commissariat->id }}
                 </div>
             @endforeach

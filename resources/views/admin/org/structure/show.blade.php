@@ -12,6 +12,13 @@
 @section('content')
     <button id="resetView">Вернуться к центру</button>
 
+    <a href="{{ route("structure.index") }}" class="absolute left-4 mt-2 inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200 z-[100]">
+         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Назад
+    </a>
+
     <div class="fixed top-20 right-5 z-[9999]">
         <div class="relative group">
             <button
@@ -25,7 +32,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-
             <ul
                 class="absolute top-full right-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[220px] z-[1000] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0">
                 <li class="mb-1 last:mb-0">
@@ -76,7 +82,7 @@
                     <div class="node boss">
                         <a href="{{ route('commissariats.show', [
                             'id' => $commissariat->id,
-                            "back_url"=>route("structure.show", $commissariat->id)
+                            'back_url' => route('structure.show', $commissariat->id),
                         ]) }}"
                             class="node-info" aria-label="Подробнее">
                             <!-- SVG иконка info -->
