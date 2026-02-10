@@ -57,36 +57,187 @@
                             </div>
                             <div
                                 class="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-2 text-xs text-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                {{-- id --}}
-                                <form class="mb-2" method="GET" action="{{ route('employees.index') }}">
-                                    <span class="text-black block">ID</span>
+                                <!-- Объединенная форма фильтрации -->
+                                <form method="GET" action="{{ route('employees.index') }}"
+                                    class="mb-2 p-2 bg-white border border-gray-300 rounded shadow-sm">
+                                    <span class="text-black block font-medium mb-1">ID</span>
+
                                     {{-- ASC --}}
                                     <label class="flex items-center gap-1 mb-1 cursor-pointer">
-                                        <input type="checkbox" name="sort_id" value="asc" onchange="this.form.submit()"
-                                            {{ request('sort_id') === 'asc' ? 'checked' : '' }}>
+                                        <input type="checkbox" name="sort_id[]" value="asc"
+                                            {{ in_array('asc', (array) request('sort_id', [])) ? 'checked' : '' }}>
                                         Первые (ASC)
                                     </label>
-                                </form>
 
-                                {{-- status --}}
-                                <form class="mb-2" method="GET" action="{{ route('employees.index') }}">
-                                    <span class="text-black block">Статус</span>
+                                    {{-- DESC --}}
+                                    <label class="flex items-center gap-1 mb-2 cursor-pointer">
+                                        <input type="checkbox" name="sort_id[]" value="desc"
+                                            {{ in_array('desc', (array) request('sort_id', [])) ? 'checked' : '' }}>
+                                        Последние (DESC)
+                                    </label>
+
+                                    <span class="text-black block font-medium mb-1 mt-2">Статус</span>
                                     @foreach ($statuses as $status)
                                         <label class="flex items-center gap-1 mb-1 cursor-pointer">
-                                            <input type="checkbox" name="sort_status" value="{{ $status->name }}"
-                                                onchange="this.form.submit()"
-                                                {{ request('sort_status') === $status->name ? 'checked' : '' }}>
+                                            <input type="checkbox" name="sort_status[]" value="{{ $status->name }}"
+                                                {{ in_array($status->name, (array) request('sort_status', [])) ? 'checked' : '' }}>
                                             {{ $status?->description }}
                                         </label>
                                     @endforeach
+
+                                    {{-- Кнопка поиска --}}
+                                    <button type="submit"
+                                        class="mt-2 px-4 py-2 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">
+                                        Поиск
+                                    </button>
                                 </form>
+
+
                             </div>
                         </th>
 
                         <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Пользователь</th>
                         <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Персона (ФИО, контакты)
                         </th>
-                        <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Должности</th>
+
+
+                        <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap relative group">
+                            <div class="flex items-center gap-1 cursor-pointer">
+                                Должности
+                                <svg class="w-3 h-3 transition-transform group-hover:rotate-180" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+
+                            {{-- фильтры --}}
+                            <div
+                                class="absolute top-full -translate-x-1/2 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 p-3 text-xs text-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 w-[1000px] max-h-[none] overflow-visible flex gap-4">
+
+
+                                <form method="GET" action="{{ route('employees.index') }}" class="flex-1 flex gap-4">
+
+                                    <!-- Левый блок: комиссариаты / отделы / отделения -->
+                                    <div class="flex-1 space-y-3">
+                                        <!-- Поле поиска -->
+                                        <input type="text" id="positionSearch" placeholder="Поиск по всем фильтрам..."
+                                            class="w-full mb-2 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#A60644]">
+
+                                        <!-- Комиссариаты -->
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1">Комиссариаты</span>
+                                            @foreach ($commissariats as $com)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_commissariat[]"
+                                                        value="{{ $com->id }}"
+                                                        {{ in_array($com->id, (array) request('sort_commissariat', [])) ? 'checked' : '' }}>
+                                                    ID: {{ $com->id }} | {{ $com->name }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+
+                                        <!-- Отделы -->
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1">Отделы</span>
+                                            @foreach ($departments as $dep)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_department[]"
+                                                        value="{{ $dep->id }}"
+                                                        {{ in_array($dep->id, (array) request('sort_department', [])) ? 'checked' : '' }}>
+                                                    ID: {{ $dep->id }} | {{ $dep->name }} <
+                                                        {{ $dep->commissariat->name }} (ID: {{ $dep->commissariat->id }})
+                                                        </label>
+                                            @endforeach
+                                        </div>
+
+                                        <!-- Отделения -->
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1">Отделения</span>
+                                            @foreach ($divisions as $div)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_division[]"
+                                                        value="{{ $div->id }}"
+                                                        {{ in_array($div->id, (array) request('sort_division', [])) ? 'checked' : '' }}>
+                                                    ID: {{ $div->id }} | {{ $div->name }}
+                                                    @if (isset($div?->department?->id))
+                                                        < {{ $div?->department?->name ?? '-' }} (ID:
+                                                            {{ $div?->department?->id ?? '-' }}) <
+                                                            {{ $div->commissariat->name }} (ID:
+                                                        {{ $div->commissariat->id }}) @else <
+                                                            {{ $div->commissariat->name }} (ID:
+                                                            {{ $div->commissariat->id }}) <span class="text-green-500">
+                                                            (Сам. отделение)
+                                                            </span>
+                                                    @endif
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    <!-- Правый блок: должности / типы должностей -->
+                                    <div class="flex-1 space-y-3">
+                                        <!-- Должности -->
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1">Должности</span>
+                                            @foreach ($positions as $pos)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_position[]"
+                                                        value="{{ $pos->id }}"
+                                                        {{ in_array($pos->id, (array) request('sort_position', [])) ? 'checked' : '' }}>
+                                                    ID: {{ $pos->id }} | <b>{{ $pos->name }}</b> | Тип:
+                                                    {{ $pos->positionType->name }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+
+                                        <!-- Типы должностей -->
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1 mt-2">Типы должностей</span>
+                                            @foreach ($positionTypes as $type)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_type[]" value="{{ $type->id }}"
+                                                        {{ in_array($type->id, (array) request('sort_type', [])) ? 'checked' : '' }}>
+                                                    {{ $type->name }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+
+
+                                        {{-- ставка --}}
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1 mt-2">Ставка</span>
+                                            @foreach ($rates as $rate)
+                                                <label class="flex items-center gap-1 mb-1 cursor-pointer position-item">
+                                                    <input type="checkbox" name="sort_rate[]"
+                                                        value="{{ $rate }}"
+                                                        {{ in_array($rate, (array) request('sort_rate', [])) ? 'checked' : '' }}>
+                                                    {{ $rate }}
+                                                </label>
+                                            @endforeach
+                                        </div>
+
+                                        {{-- самостоятельная должность --}}
+                                        <div id="positionList">
+                                            <span class="text-black block font-medium mb-1 mt-2">самостоятельная</span>
+                                            <select name="is_independent" id="is_independent">
+                                                <option value="0" selected>Нет</option>
+                                                <option value="1">Да</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Кнопка поиска -->
+                                        <button type="submit"
+                                            class="mt-2 px-4 py-2 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">
+                                            Поиск
+                                        </button>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </th>
+
+
                         <th class="px-4 py-2 text-right text-[#060606] font-medium whitespace-nowrap">Действия</th>
                     </tr>
                 </thead>
@@ -164,8 +315,8 @@
                                             class="text-[10px] px-2 py-1 bg-[#c0b6b9] text-white rounded hover:bg-[#A60644]/80 transition-colors">Подробнее</a>
                                         <a href="{{ route('persons.edit', ['id' => $employee->person->id, 'employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}"
                                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Изменить</a>
-                                        <form action="{{ route('persons.delete', $employee->person->id) }}" method="POST"
-                                            class="inline-block"
+                                        <form action="{{ route('persons.delete', $employee->person->id) }}"
+                                            method="POST" class="inline-block"
                                             onsubmit="return confirm('Удалить персональные данные {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}?')">
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
@@ -187,8 +338,11 @@
                                 @if ($employee->positions->count() > 0)
                                     <ul class="text-[#565A5B] text-xs space-y-1">
                                         @foreach ($employee->positions as $ep)
-                                            <li>{{ $ep->position->name }} (ставка:
-                                                {{ number_format($ep->rate, 2, ',', '') }})</li>
+                                            <li>ID: {{ $ep->position->id }} | {{ $ep->position->name }} (ставка:
+                                                {{ number_format($ep->rate, 2, ',', '') }})
+                                                <br>
+                                                Тип: {{ $ep->position->positionType->name }}
+                                            </li>
                                         @endforeach
                                     </ul>
                                     <div class="flex flex-wrap gap-1 mt-2">
@@ -250,3 +404,21 @@
         @include('includes.pagination', ['paginator' => $employees])
     </div>
 @endsection
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('positionSearch');
+        const positionItems = document.querySelectorAll('#positionList .position-item');
+
+        searchInput.addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+
+            positionItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        });
+    });
+</script>

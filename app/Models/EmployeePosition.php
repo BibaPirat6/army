@@ -21,7 +21,7 @@ class EmployeePosition extends Model
 
     protected $casts = [
         "is_independent" => "boolean",
-        'rate' => 'string', 
+        'rate' => 'string',
     ];
 
     /**
@@ -38,6 +38,18 @@ class EmployeePosition extends Model
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
+    }
+
+    public function positionType()
+    {
+        return $this->hasOneThrough(
+            PositionType::class,
+            Position::class,
+            'id',
+            'id',
+            'position_id',
+            'position_type_id'
+        );
     }
 
     /**
