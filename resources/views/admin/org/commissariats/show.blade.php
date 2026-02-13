@@ -5,6 +5,11 @@
 @endsection
 
 @section('content')
+    @if (session('success'))
+        @include('includes.success', ['success' => session('success')])
+    @endif
+
+
     <div class="max-w-2xl p-6 mx-auto">
         <div class="flex items-center mb-4">
             <a href="{{ $backUrl ?? route('commissariats.index') }}"
@@ -19,8 +24,6 @@
 
 
 
-
-
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
                 <div class="mb-6">
@@ -31,8 +34,31 @@
                             <span
                                 class="text-[#060606]">{{ $commissariat->chiefEmployeePosition->employee->workStatus->description }}</span>
                         </div>
+                    @else
+                        @if (isset($commissariat?->chiefEmployee))
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <a
+                                    href="{{ route('employees.edit', [
+                                        'id' => $commissariat->chiefEmployee,
+                                        'back_url' => url()->full(),
+                                    ]) }}">
+                                    Нет статуса сотрудника.</a>
+                            </span>
+                        @else
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <a
+                                    href="{{ route('commissariats.edit', [
+                                        'id' => $commissariat->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}">
+                                    Не назначен начальник.</a>
+                            </span>
+                        @endif
                     @endif
                 </div>
+
 
 
                 <div class="space-y-4">
@@ -70,7 +96,7 @@
                                             </span>
                                         @else
                                             <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $commissariat->chiefEmployeePosition->id }})</span>
+                                                {{ $commissariat->chiefEmployeePosition->employee->id }})</span>
                                         @endif
                                     @else
                                         <span
@@ -83,8 +109,8 @@
 
                             <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                 <span class="font-medium text-[#565A5B]">Координаты</span>
-                                <span class="text-[#060606]">X: {{ $commissariat['longitude'] ?? "*" }} Y:
-                                    {{ $commissariat['latitude'] ?? "*" }}</span>
+                                <span class="text-[#060606]">X: {{ $commissariat['longitude'] ?? '*' }} Y:
+                                    {{ $commissariat['latitude'] ?? '*' }}</span>
                             </div>
 
                             <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
@@ -268,7 +294,18 @@
                                 </div>
                             </div>
                         </details>
-
+                    @else
+                        @if (isset($commissariat?->chiefEmployee))
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <a
+                                    href="{{ route('employees.edit', [
+                                        'id' => $commissariat->chiefEmployee,
+                                        'back_url' => url()->full(),
+                                    ]) }}">
+                                    Нет перс. данных.</a>
+                            </span>
+                        @endif
                     @endif
 
 
@@ -355,6 +392,18 @@
                                 </div>
                             </div>
                         </details>
+                    @else
+                        @if (isset($commissariat?->chiefEmployee))
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <a
+                                    href="{{ route('employees.edit', [
+                                        'id' => $commissariat->chiefEmployee,
+                                        'back_url' => url()->full(),
+                                    ]) }}">
+                                    Нет пользовательских данных.</a>
+                            </span>
+                        @endif
                     @endif
 
 

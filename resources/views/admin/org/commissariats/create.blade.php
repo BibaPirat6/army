@@ -19,7 +19,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Назад к списку
+                    Назад
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Добавление комиссариата</h1>
@@ -32,7 +32,7 @@
                 <form action="{{ route('commissariats.store') }}" method="POST" class="space-y-6">
                     @csrf
 
-                    <input type="hidden" value="backUrl" value="{{ $backUrl }}">
+                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
 
                     <!-- Название комиссариата -->
                     <div>

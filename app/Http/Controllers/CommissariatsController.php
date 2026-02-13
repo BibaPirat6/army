@@ -35,7 +35,6 @@ class CommissariatsController extends Controller
 
     public function store(Request $request)
     {
-
         $data = $request->validate([
             "name" => "required|string|min:2|max:255",
             "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id",
@@ -67,16 +66,20 @@ class CommissariatsController extends Controller
             );
         }
 
-        return redirect()->route('commissariats.index')->with('success', 'Комиссариат успешно создан.');
+        $backUrl = $request->get("backUrl", route('commissariats.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Комиссариат успешно создан.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
         $employees = Employee::all();
 
+        $backUrl = $request->input("back_url");
 
-        return view('admin.org.commissariats.edit', compact('commissariat', "employees"));
+
+        return view('admin.org.commissariats.edit', compact('commissariat', "employees", 'backUrl'));
     }
 
     public function update(Request $request, $id)
@@ -146,7 +149,11 @@ class CommissariatsController extends Controller
             }
         }
 
-        return redirect()->route('commissariats.index')->with('success', 'Комиссариат успешно обновлен.');
+        $backUrl = $request->get('back_url', route('commissariats.index'));
+
+        return redirect()->to($backUrl)
+            ->with('success', 'Комиссариат успешно обновлен.');
+
     }
 
     public function delete($id)

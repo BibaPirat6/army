@@ -43,7 +43,7 @@
                                     </span>
                                 @else
                                     <span class="text-gray-400">Без ФИО (ID:
-                                        {{ $division->chiefEmployeePosition->id }})</span>
+                                        {{ $division->chiefEmployeePosition->employee->id }})</span>
                                 @endif
                             @else
                                 <span

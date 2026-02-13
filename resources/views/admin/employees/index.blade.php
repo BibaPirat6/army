@@ -406,7 +406,7 @@
 @endsection
 
 
-
+{{-- поиск по всем полям --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('positionSearch');

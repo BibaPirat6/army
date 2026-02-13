@@ -58,7 +58,7 @@
                                             </span>
                                         @else
                                             <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $department->chiefEmployeePosition->id }})</span>
+                                                {{ $department->chiefEmployeePosition->employee->id }})</span>
                                         @endif
                                     @else
                                         <span

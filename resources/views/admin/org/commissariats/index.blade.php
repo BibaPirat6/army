@@ -17,7 +17,9 @@
                 <h1 class="text-2xl font-bold text-[#060606]">Комиссариаты</h1>
                 <p class="text-[#565A5B] mt-1">Список всех комиссариатов</p>
             </div>
-            <a href="{{ route('commissariats.create') }}"
+            <a href="{{ route('commissariats.create', [
+                'back_url' => route('commissariats.index'),
+            ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -48,7 +50,7 @@
                                 {{-- начальник --}}
                                 <td class="px-6 py-4">
                                     @if ($commissariat->chiefEmployeePosition !== null)
-                                        @if ($commissariat->chiefEmployeePosition->employee && $commissariat->chiefEmployeePosition->employee->person)
+                                        @if (isset($commissariat->chiefEmployeePosition->employee->person->id))
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 {{ $commissariat->chiefEmployeePosition->employee->person->last_name ?? '*' }}
@@ -57,7 +59,7 @@
                                             </span>
                                         @else
                                             <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $commissariat->chiefEmployeePosition->id }})</span>
+                                                {{ $commissariat->chiefEmployeePosition->employee->id }})</span>
                                         @endif
                                     @else
                                         <span
@@ -95,7 +97,7 @@
                                     </a>
                                     <form action="{{ route('commissariats.delete', $commissariat->id) }}" method="POST"
                                         class="inline-block mt-0.5"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \"{{ $commissariat->name }}\"?');">
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \'{{ $commissariat->name }}\'?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

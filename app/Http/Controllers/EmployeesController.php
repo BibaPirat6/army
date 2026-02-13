@@ -14,7 +14,13 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkStatus;
 use DB;
+use Hash;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
+use Storage;
 
 class EmployeesController extends Controller
 {
@@ -173,6 +179,10 @@ class EmployeesController extends Controller
         ]);
     }
 
+
+
+
+
     public function store(Request $request)
     {
         $requestData = $request->all();
@@ -209,7 +219,7 @@ class EmployeesController extends Controller
 
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
 
@@ -224,50 +234,178 @@ class EmployeesController extends Controller
         $roles = Role::all();
         $statuses = WorkStatus::all();
 
+
+
+        $backUrl = $request->input("back_url");
+
         return view('admin.employees.edit')->with([
             "employee" => $employee,
             "users" => $users,
             "persons" => $persons,
             "roles" => $roles,
             "statuses" => $statuses,
+            "backUrl" => $backUrl
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
+        $employee = Employee::with(['person', 'user'])->findOrFail($id);
+        $isCreatingUser = !$employee->user;
 
-        $requestData = $request->all();
-        if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
-            $requestData['user_id'] = null;
-        }
-        if (isset($requestData['person_id']) && $requestData['person_id'] === '') {
-            $requestData['person_id'] = null;
-        }
 
-        $data = validator($requestData, [
+        $data = $request->validate([
             "work_status" => "required|integer|exists:work_statuses,id",
-            "user_id" => "nullable|integer|min:1|exists:users,id",
-            "person_id" => "nullable|integer|min:1|exists:persons,id",
+
+            "last_name" => "required|string|min:2",
+            "first_name" => "required|string|min:2",
+            "patronymic" => "nullable|string|min:2",
+
+            "emails" => "nullable|array",
+            'emails.*' => [
+                'required',
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
+            ],
+
+            "phones" => "nullable|array",
+            'phones.*' => [
+                'required',
+                'regex:/^\+?[1-9]\d{9,14}$/'
+            ],
+
+            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+
+            "login" => [
+                "required",
+                "min:5",
+                "max:255",
+                Rule::unique('users', 'login')->ignore($employee->user?->id),
+            ],
+
+            "password" => [
+                $isCreatingUser ? "required" : "nullable",
+                "min:5",
+                "max:255"
+            ],
+
+            "role" => "required|exists:roles,id",
+
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
-            'user_id.min' => 'ID пользователя должен быть положительным числом',
-            'user_id.exists' => 'Выбранный пользователь не существует',
-            'person_id.min' => 'ID персональных данных должен быть положительным числом',
-            'person_id.exists' => 'Выбранная персона не существует',
-        ])->validate();
 
-        $employeeData = [
-            'work_status_id' => $data['work_status'] ?? $employee->work_status_id,
-            'user_id' => $data['user_id'] !== null ? $data['user_id'] : $employee->user_id,
-            'person_id' => $data['person_id'] !== null ? $data['person_id'] : $employee->person_id,
+            "last_name.required" => "Поле Фамилия обязательно для заполнения",
+            "last_name.min" => "Поле Фамилия минимум 2 символа",
+            "first_name.required" => "Поле Имя обязательно для заполнения",
+            "first_name.min" => "Поле Имя минимум 2 символа",
+            "patronymic.required" => "Поле Отчество обязательно для заполнения",
+            "patronymic.min" => "Поле Отчество минимум 2 символа",
+            "email.email" => "Поле Почта должно быть действительным электронным адресом",
+            "email.unique" => "Такой адрес Почты уже зарегистрирован",
+            "phone.min" => "Поле Телефон минимум 10 символов",
+            "phone.unique" => "Такой номер Телефона уже зарегистрирован",
+            "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
+            "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            'emails.*.regex' => 'Некорректный формат email',
+            'emails.*.required' => 'Не заполнен email',
+            'phones.*.regex' => 'Некорректный формат телефона',
+            'phones.*.required' => 'Не заполнен телефон',
+
+            "login.required" => "Логин обязателен",
+            "login.min" => "Логин минимум 5 символов",
+            "login.max" => "Логин максимум 255 символов",
+            "login.unique" => "Логин уже занят",
+            "password.required" => "Пароль обязателен",
+            "password.min" => "Пароль минимум 5 символов",
+            "password.max" => "Пароль максимум 255 символов",
+            "role.required" => "Роль обязательна",
+            "role.exists" => "Недопустимое значение для роли",
+        ]);
+
+        // person
+        $person = $employee->person;
+
+        $emails = array_values(array_filter($data['emails'] ?? []));
+        $phones = array_values(array_filter($data['phones'] ?? []));
+
+        $personData = [
+            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'],
+            'patronymic' => $data['patronymic'] ?? null,
+            'emails' => $emails ?: null,
+            'phones' => $phones ?: null,
         ];
 
-        $employee->update($employeeData);
 
-        return redirect()->route("employees.index")->with("success", "Сотрудник обновлен!");
+
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file);
+            $image->scale(width: 150);
+
+            $filename = time() . '.webp';
+            $path = 'photos/' . $filename;
+
+            $webp = $image->encode(new WebpEncoder(quality: 75));
+            Storage::disk('public')->put($path, $webp);
+
+            if ($person && !empty($person->photo)) {
+                Storage::disk('public')->delete($person->photo);
+            }
+
+            $personData['photo'] = $path;
+        }
+
+
+        if ($person) {
+            $person->update($personData);
+        } else {
+            $person = Person::create($personData);
+            $employee->person_id = $person->id;
+            $employee->save();
+        }
+
+
+
+
+
+        // user
+        $userData = [
+            'login' => $data['login'],
+            'role_id' => $data['role'],
+        ];
+        if (!empty($data['password'])) {
+            $userData['password_hash'] = Hash::make($data['password']);
+        }
+
+        if ($employee->user) {
+            $employee->user->update($userData);
+            $user = $employee->user;
+        } else {
+            $user = User::create($userData);
+            $employee->user_id = $user->id;
+        }
+
+
+        // workStatus
+        $employee->work_status_id = $data['work_status'];
+        $employee->save();
+
+
+
+        $backUrl = $request->get('backUrl', route('employees.index'));
+        return redirect()->to($backUrl)
+            ->with('success', 'Сотрудник успешно обновлен!');
+
     }
+
+
+
+
+
 
     public function delete($id)
     {
