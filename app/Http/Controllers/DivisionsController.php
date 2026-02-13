@@ -19,10 +19,11 @@ class DivisionsController extends Controller
         return view('admin.org.divisions.index', compact('divisions'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $division = Division::findOrFail($id);
-        return view('admin.org.divisions.show', compact('division'));
+        $backUrl = $request->input("back_url");
+        return view('admin.org.divisions.show', compact('division', 'backUrl'));
     }
 
     public function create()
@@ -83,14 +84,16 @@ class DivisionsController extends Controller
         return redirect()->route('divisions.index')->with('success', 'Отделение успешно создано.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $division = Division::findOrFail($id);
         $commissariats = Commissariat::all();
         $departments = Department::all();
         $employees = Employee::all();
 
-        return view('admin.org.divisions.edit', compact('division', 'commissariats', 'departments', "employees"));
+        $backUrl = $request->input("back_url");
+
+        return view('admin.org.divisions.edit', compact('division', 'commissariats', 'departments', "employees", 'backUrl'));
     }
 
     public function update(Request $request, $id)
@@ -166,7 +169,9 @@ class DivisionsController extends Controller
             );
         }
 
-        return redirect()->route('divisions.index')->with('success', 'Отделение успешно обновлено.');
+        $backUrl = $request->get("backUrl", route('divisions.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Отделение успешно обновлено.');
     }
 
     public function delete($id)
