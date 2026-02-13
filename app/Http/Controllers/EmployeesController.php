@@ -337,8 +337,6 @@ class EmployeesController extends Controller
         ];
 
 
-
-
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
 

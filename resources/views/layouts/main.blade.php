@@ -203,16 +203,6 @@
             <li class="ml-auto">
                 <ul class="flex justify-end items-center">
                     <li>
-                        <a href="{{ route('profile.index') }}"
-                            class="font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            Профиль
-                        </a>
-                    </li>
-                    <li>
                         <form action="{{ route('logout') }}" method="POST" class="m-0">
                             @csrf
                             <button type="submit"
@@ -225,6 +215,16 @@
                                 Выйти
                             </button>
                         </form>
+                    </li>
+                    <li>
+                        <a href="{{ route('profile.index') }}"
+                            class="font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Профиль
+                        </a>
                     </li>
                 </ul>
             </li>

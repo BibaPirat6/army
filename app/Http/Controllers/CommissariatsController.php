@@ -149,7 +149,7 @@ class CommissariatsController extends Controller
             }
         }
 
-        $backUrl = $request->get('back_url', route('commissariats.index'));
+        $backUrl = $request->get('backUrl', route('commissariats.index'));
 
         return redirect()->to($backUrl)
             ->with('success', 'Комиссариат успешно обновлен.');

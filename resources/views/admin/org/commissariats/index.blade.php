@@ -86,7 +86,10 @@
                                         </svg>
                                         Подробнее
                                     </a>
-                                    <a href="{{ route('commissariats.edit', $commissariat->id) }}"
+                                    <a href="{{ route('commissariats.edit', [
+                                        'id' => $commissariat->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

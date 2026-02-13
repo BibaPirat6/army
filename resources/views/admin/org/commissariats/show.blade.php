@@ -11,6 +11,7 @@
 
 
     <div class="max-w-2xl p-6 mx-auto">
+        {{-- кнопка назад --}}
         <div class="flex items-center mb-4">
             <a href="{{ $backUrl ?? route('commissariats.index') }}"
                 class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
@@ -22,10 +23,10 @@
             </a>
         </div>
 
-
-
+        {{-- данные --}}
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
+                {{-- название - верх --}}
                 <div class="mb-6">
                     <h1 class="text-2xl font-bold text-[#060606]">{{ $commissariat['name'] }}</h1>
                     @if (isset($commissariat?->chiefEmployeePosition?->employee?->workStatus?->id))
@@ -59,9 +60,8 @@
                     @endif
                 </div>
 
-
-
                 <div class="space-y-4">
+                    {{-- комиссариат --}}
                     <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                         <!-- Заголовок аккордеона -->
                         <summary
@@ -129,7 +129,7 @@
                             <div>
                                 <a href="{{ route('commissariats.edit', [
                                     'id' => $commissariat->id,
-                                    'back_url' => $backUrl ?? route('commissariats.index'),
+                                    'back_url' => url()->full(),
                                 ]) }}"
                                     class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@
                                 </a>
                                 <form action="{{ route('commissariats.delete', $commissariat->id) }}" method="POST"
                                     class="inline-block mt-0.5"
-                                    onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \"{{ $commissariat->name }}\"?');">
+                                    onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \'{{ $commissariat->name }}\'?');">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" name="backUrl"
@@ -160,10 +160,7 @@
                         </div>
                     </details>
 
-
-
-
-
+                    {{-- персона --}}
                     @if (isset($commissariat?->chiefEmployeePosition?->employee?->person?->id))
                         <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                             <!-- Заголовок аккордеона -->
@@ -260,9 +257,9 @@
                                 </div>
 
                                 <div>
-                                    <a href="{{ route('commissariats.edit', [
-                                        'id' => $commissariat->id,
-                                        'back_url' => $backUrl ?? route('commissariats.index'),
+                                    <a href="{{ route('persons.edit', [
+                                        'id' => $commissariat->chiefEmployee->person->id,
+                                        'back_url' => url()->full(),
                                     ]) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -273,13 +270,12 @@
                                         </svg>
                                         Редактировать
                                     </a>
-                                    <form action="{{ route('commissariats.delete', $commissariat->id) }}" method="POST"
-                                        class="inline-block mt-0.5"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \"{{ $commissariat->name }}\"?');">
+                                    <form action="{{ route('persons.delete', $commissariat->chiefEmployee->person->id) }}"
+                                        method="POST" class="inline-block mt-0.5"
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные?');">
                                         @csrf
                                         @method('DELETE')
-                                        <input type="hidden" name="backUrl"
-                                            value="{{ $backUrl ?? route('commissariats.index') }}">
+                                        <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                                         <button type="submit"
                                             class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -308,10 +304,7 @@
                         @endif
                     @endif
 
-
-
-
-
+                    {{-- user --}}
                     @if (isset($commissariat?->chiefEmployeePosition?->employee?->user?->id))
                         <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                             <!-- Заголовок аккордеона -->
@@ -358,9 +351,9 @@
                                 </div>
 
                                 <div>
-                                    <a href="{{ route('commissariats.edit', [
-                                        'id' => $commissariat->id,
-                                        'back_url' => $backUrl ?? route('commissariats.index'),
+                                    <a href="{{ route('users.edit', [
+                                        'id' => $commissariat->chiefEmployee->user->id,
+                                        'back_url' => url()->full(),
                                     ]) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -371,13 +364,12 @@
                                         </svg>
                                         Редактировать
                                     </a>
-                                    <form action="{{ route('commissariats.delete', $commissariat->id) }}" method="POST"
-                                        class="inline-block mt-0.5"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \"{{ $commissariat->name }}\"?');">
+                                    <form action="{{ route('users.delete', $commissariat->chiefEmployee->user->id) }}"
+                                        method="POST" class="inline-block mt-0.5"
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить пользовательские данные');">
                                         @csrf
                                         @method('DELETE')
-                                        <input type="hidden" name="backUrl"
-                                            value="{{ $backUrl ?? route('commissariats.index') }}">
+                                        <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                                         <button type="submit"
                                             class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -406,8 +398,7 @@
                         @endif
                     @endif
 
-
-
+                    {{-- должности --}}
                     @if ($commissariat?->chiefEmployeePosition?->employee?->positions->count() > 0)
                         <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                             <!-- Заголовок аккордеона -->
@@ -424,6 +415,17 @@
 
                             <!-- Содержимое аккордеона -->
                             <div class="p-4 space-y-3 animate-fadeIn">
+                                <a href="{{ route('employee-positions.create', [
+                                    'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
+                                    'back_url' => url()->full(),
+                                ]) }}"
+                                    class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Назначить должность
+                                </a>
                                 @foreach ($commissariat?->chiefEmployeePosition?->employee?->positions as $position)
                                     <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
                                         <div class="space-y-2">
@@ -471,11 +473,10 @@
                                                     style="color: rgb(17, 183, 17)">({{ $position->is_independent ? 'Самостоятельная должность' : '' }})</i>
                                             @endif
 
-
                                             <div>
-                                                <a href="{{ route('commissariats.edit', [
-                                                    'id' => $commissariat->id,
-                                                    'back_url' => $backUrl ?? route('commissariats.index'),
+                                                <a href="{{ route('employee-positions.edit', [
+                                                    'id' => $commissariat->chiefEmployee->id,
+                                                    'back_url' => url()->full(),
                                                 ]) }}"
                                                     class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -487,13 +488,12 @@
                                                     </svg>
                                                     Редактировать
                                                 </a>
-                                                <form action="{{ route('commissariats.delete', $commissariat->id) }}"
+                                                <form action="{{ route('employee-positions.delete', $position->id) }}"
                                                     method="POST" class="inline-block mt-0.5"
-                                                    onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \"{{ $commissariat->name }}\"?');">
+                                                    onsubmit="return confirm('Вы уверены, что хотите удалить должность?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <input type="hidden" name="backUrl"
-                                                        value="{{ $backUrl ?? route('commissariats.index') }}">
+                                                    <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                                                     <button type="submit"
                                                         class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
@@ -515,15 +515,20 @@
                         </details>
                     @endif
 
-
-
-
-
-
-
-
-
-
+                    @if (isset($commissariat?->chiefEmployee))
+                        <a href="{{ route('employees.edit', [
+                            'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
+                            'back_url' => url()->full(),
+                        ]) }}"
+                            class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                </path>
+                            </svg>
+                            Редактировать сотрудника
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

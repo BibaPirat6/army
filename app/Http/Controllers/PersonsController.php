@@ -213,9 +213,9 @@ class PersonsController extends Controller
         $person = Person::findOrFail($id);
         $person->delete();
 
-        $backUrl = $request->input("backUrl");
+        $backUrl = $request->get("backUrl", route("persons.index"));
 
-        return redirect($backUrl ?? route("persons.index"))->with('success', 'Персональные данные удалены!');
+        return redirect()->to($backUrl)->with('success', 'Персональные данные удалены!');
     }
 
 }

@@ -105,9 +105,9 @@ class EmployeePositionsController extends Controller
             "is_independent" => $data["is_independent"]
         ]);
 
-        $backUrl = $request->input("backUrl");
+        $backUrl = $request->get("backUrl", route("employee-positions.index"));
 
-        return redirect($backUrl ?? route("employee-positions.index"))->with('success', 'Должность успешно добавлена сотруднику.');
+        return redirect()->to($backUrl)->with('success', 'Должность успешно добавлена сотруднику.');
     }
 
     public function edit(Request $request, $id)
@@ -190,9 +190,9 @@ class EmployeePositionsController extends Controller
         $employeePosition = EmployeePosition::findOrFail($id);
         $employeePosition->delete();
 
-        $backUrl = $request->get("back_url");
+        $backUrl = $request->get("backUrl", route('employee-positions.index'));
 
-        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Должность успешно удалена у сотрудника.');
+        return redirect()->to($backUrl)->with('success', 'Должность успешно удалена у сотрудника.');
     }
 
 

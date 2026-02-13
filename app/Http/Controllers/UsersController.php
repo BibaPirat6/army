@@ -27,10 +27,9 @@ class UsersController extends Controller
     {
         $employeeId = $request->get('employee_id');
         $backUrl = $request->get('back_url');
-        $decodedBackUrl = urldecode($backUrl);
 
         $roles = Role::all();
-        return view('admin.users.create', compact('roles', 'employeeId', 'decodedBackUrl'));
+        return view('admin.users.create', compact('roles', 'employeeId', 'backUrl'));
     }
 
     public function store(Request $request)
@@ -56,7 +55,6 @@ class UsersController extends Controller
             "employeeId.exists" => "Несуществующий id сотрудника"
         ]);
 
-        $backUrl = $request->input('decodedBackUrl');
         $employeeId = $request->input("employeeId");
 
 
@@ -73,7 +71,8 @@ class UsersController extends Controller
             $employee->update(["user_id" => $user->id]);
         }
 
-        return redirect($backUrl ?? route("users.index"))->with("success", "Пользователь " . $user->login . " успешно создан!");
+        $backUrl = $request->get('backUrl', route("users.index"));
+        return redirect()->to($backUrl)->with("success", "Пользователь " . $user->login . " успешно создан!");
 
     }
 
@@ -85,10 +84,10 @@ class UsersController extends Controller
         $roles = Role::all();
 
         $employeeId = $request->get('employee_id');
-        $backUrl = $request->get('back_url');
-        $decodedBackUrl = urldecode($backUrl);
 
-        return view('admin.users.edit')->with(['user' => $user, 'roles' => $roles, 'employeeId' => $employeeId, "decodedBackUrl" => $decodedBackUrl]);
+        $backUrl = $request->get('back_url');
+
+        return view('admin.users.edit')->with(['user' => $user, 'roles' => $roles, 'employeeId' => $employeeId, "backUrl" => $backUrl]);
     }
 
     public function update(Request $request, $id)
@@ -148,9 +147,9 @@ class UsersController extends Controller
 
         $user->update($data);
 
-        $backUrl = $request->input("decodedBackUrl");
+        $backUrl = $request->get("backUrl", route("users.index"));
 
-        return redirect($backUrl ?? route("users.index"))
+        return redirect()->to($backUrl)
             ->with("success", "Пользователь обновлен!");
     }
 
@@ -160,9 +159,9 @@ class UsersController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        $backUrl = $request->input("backUrl");
+        $backUrl = $request->input("backUrl", route("users.index"));
 
-        return redirect($backUrl ?? route("users.index"))
+        return redirect()->to($backUrl)
             ->with('success', 'Пользователь удален');
     }
 }
