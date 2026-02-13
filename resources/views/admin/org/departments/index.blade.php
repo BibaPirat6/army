@@ -16,7 +16,9 @@
                 <h1 class="text-2xl font-bold text-[#060606]">Отделы</h1>
                 <p class="text-[#565A5B] mt-1">Список всех отделов</p>
             </div>
-            <a href="{{ route('departments.create') }}"
+            <a href="{{ route('departments.create', [
+                'back_url' => route('departments.index'),
+            ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -83,9 +85,12 @@
                                     @endif
                                 </td>
 
-
+                                {{-- кнопки --}}
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('departments.show', $department->id) }}"
+                                    <a href="{{ route('departments.show', [
+                                        'id' => $department->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746ccc]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -94,7 +99,10 @@
                                         </svg>
                                         Подробнее
                                     </a>
-                                    <a href="{{ route('departments.edit', $department->id) }}"
+                                    <a href="{{ route('departments.edit', [
+                                        'id' => $department->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
                                         class="mt-0.5 inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,7 +113,7 @@
                                     </a>
                                     <form class="mt-0.5" action="{{ route('departments.delete', $department->id) }}"
                                         method="POST" class="inline-block"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить отдел \"{{ $department->name }}\"?');">
+                                        onsubmit="return confirm('Вы уверены, что хотите удалить отдел \'{{ $department->name }}\'?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

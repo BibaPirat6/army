@@ -19,10 +19,11 @@ class DepartmentsController extends Controller
 
 
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $department = Department::findOrFail($id);
-        return view('admin.org.departments.show', compact('department'));
+        $backUrl = $request->input("back_url");
+        return view('admin.org.departments.show', compact('department', 'backUrl'));
     }
 
     public function create()
@@ -70,12 +71,14 @@ class DepartmentsController extends Controller
         return redirect()->route('departments.index')->with('success', 'Отдел успешно создан.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $department = Department::with('commissariat')->findOrFail($id);
         $commissariats = Commissariat::all();
         $employees = Employee::all();
-        return view('admin.org.departments.edit', compact('department', "commissariats", "employees"));
+
+        $backUrl = $request->input("back_url");
+        return view('admin.org.departments.edit', compact('department', "commissariats", "employees", "backUrl"));
     }
 
     public function update(Request $request, $id)
@@ -149,7 +152,10 @@ class DepartmentsController extends Controller
             }
         }
 
-        return redirect()->route('departments.index')->with('success', 'Отдел успешно обновлен.');
+
+        $backUrl = $request->get("backUrl", route('departments.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Отдел успешно обновлен.');
     }
 
     public function delete($id)

@@ -515,6 +515,7 @@
                         </details>
                     @endif
 
+                    {{-- кнопка создания сотрудника --}}
                     @if (isset($commissariat?->chiefEmployee))
                         <a href="{{ route('employees.edit', [
                             'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
