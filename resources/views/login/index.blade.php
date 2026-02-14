@@ -7,6 +7,17 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Вход в систему</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon/favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('favicon/android-chrome-192x192.png') }}">
+    <!-- Theme color -->
+    <meta name="msapplication-TileColor" content="#A60644">
+    <meta name="theme-color" content="#ffffff">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -74,8 +85,8 @@
                                focus:ring-offset-2 focus:ring-[#c71257] transition-all duration-200 
                                transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <svg class="w-5 h-5 text-white group-hover:text-blue-200" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-5 h-5 text-white group-hover:text-blue-200" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>

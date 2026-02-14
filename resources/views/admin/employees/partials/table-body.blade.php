@@ -19,15 +19,15 @@
                         Роль: {{ $employee->user->role?->description ?? '—' }}
                     </div>
                     <div class="flex flex-wrap gap-1 mt-2">
-                        <a href="{{ route('users.show', ['id' => $employee->user->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('users.show', ['id' => $employee->user->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#c0b6b9] text-white rounded hover:bg-[#A60644]/80 transition-colors">Подробнее</a>
-                        <a href="{{ route('users.edit', ['id' => $employee->user->id, 'employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('users.edit', ['id' => $employee->user->id, 'employee_id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Изменить</a>
                         <form action="{{ route('users.delete', $employee->user->id) }}" method="POST"
                             class="inline-block"
-                            onsubmit="return confirm('Удалить пользователя {{ $employee->user->login }}?')">
+                            onsubmit="return confirm('Удалить пользователя \'{{ $employee->user->login }}\'?')">
                             @csrf @method('DELETE')
-                            <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
+                            <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                             <button type="submit"
                                 class="text-[10px] px-2 py-1 bg-[#060606] text-white rounded hover:bg-[#060606]/80 transition-colors">Удалить</button>
                         </form>
@@ -35,7 +35,7 @@
                 @else
                     <span class="text-[#7F7F7F] italic text-xs">Не привязан</span>
                     <div class="mt-2">
-                        <a href="{{ route('users.create', ['employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('users.create', ['employee_id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Создать</a>
                     </div>
                 @endif
@@ -67,15 +67,15 @@
                         </div>
                     @endif
                     <div class="flex flex-wrap gap-1 mt-2">
-                        <a href="{{ route('persons.show', ['id' => $employee->person->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('persons.show', ['id' => $employee->person->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#c0b6b9] text-white rounded hover:bg-[#A60644]/80 transition-colors">Подробнее</a>
-                        <a href="{{ route('persons.edit', ['id' => $employee->person->id, 'employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('persons.edit', ['id' => $employee->person->id, 'employee_id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Изменить</a>
                         <form action="{{ route('persons.delete', $employee->person->id) }}" method="POST"
                             class="inline-block"
-                            onsubmit="return confirm('Удалить персональные данные {{ $employee->person->last_name ?? '' }} {{ $employee->person->first_name ?? '' }}?')">
+                            onsubmit="return confirm('Удалить персональные данные \'{{ $employee->person->last_name ?? '' }}\' \'{{ $employee->person->first_name ?? '' }}\'?')">
                             @csrf @method('DELETE')
-                            <input type="hidden" name="backUrl" value="{{ route('employees.index') }}">
+                            <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                             <button type="submit"
                                 class="text-[10px] px-2 py-1 bg-[#060606] text-white rounded hover:bg-[#060606]/80 transition-colors">Удалить</button>
                         </form>
@@ -83,7 +83,7 @@
                 @else
                     <span class="text-[#7F7F7F] italic text-xs">Не указана</span>
                     <div class="mt-2">
-                        <a href="{{ route('persons.create', ['employee_id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('persons.create', ['employee_id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Создать</a>
                     </div>
                 @endif
@@ -105,14 +105,14 @@
                         @endforeach
                     </ul>
                     <div class="flex flex-wrap gap-1 mt-2">
-                        <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Назначить</a>
-                        <a href="{{ route('employee-positions.show', ['id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('employee-positions.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#c0b6b9] text-white rounded hover:bg-[#c0b6b9]/80 transition-colors">Подробнее</a>
-                        <a href="{{ route('employee-positions.edit', ['id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('employee-positions.edit', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#5a4a50] text-white rounded hover:bg-[#A60644]/80 transition-colors">Изменить</a>
                         <form
-                            action="{{ route('employee-positions.destroy', ['id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                            action="{{ route('employee-positions.destroy', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                             method="POST" class="inline-block"
                             onsubmit="return confirm('Удалить все назначения для сотрудника?')">
                             @csrf @method('DELETE')
@@ -123,7 +123,7 @@
                 @else
                     <span class="text-[#7F7F7F] italic text-xs">Не назначены</span>
                     <div class="mt-2">
-                        <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => route('employees.index')]) }}"
+                        <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                             class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Назначить</a>
                     </div>
                 @endif
@@ -154,6 +154,6 @@
                 <p class="text-[#565A5B] font-medium">Нет сотрудников</p>
                 <p class="text-[#7F7F7F] text-sm">Создайте первого сотрудника для начала работы</p>
             </td>
-        </tr>
+        </tr>   
     @endforelse
 </tbody>

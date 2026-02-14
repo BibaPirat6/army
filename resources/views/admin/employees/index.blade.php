@@ -25,7 +25,9 @@
                 <x-search-input name="search" placeholder="Поиск по сотрудникам..." :route="route('employees.index')" />
             </div>
 
-            <a href="{{ route('employees.create') }}"
+            <a href="{{ route('employees.create', [
+                'back_url' => url()->full(),
+            ]) }}"
                 class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors shadow hover:shadow-md active:scale-[0.98]">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -180,7 +182,7 @@
 @endsection
 
 
-{{-- поиск по всем полям в фильтре--}}
+{{-- поиск по всем полям в фильтре --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('positionSearch');

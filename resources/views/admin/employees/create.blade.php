@@ -9,72 +9,151 @@
         @include('includes.errors', ['errors' => $errors])
     @endif
 
+
     <div class="max-w-2xl p-6 mx-auto">
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('employees.index') }}"
+                <a href="{{ $backUrl ?? route('employees.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Назад к списку
+                    Назад
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Создание сотрудника</h1>
-            <p class="text-[#565A5B] mt-1">Заполните все необходимые поля для создания нового сотрудника</p>
+            <p class="text-[#565A5B] mt-1">Создание данных сотрудника</p>
         </div>
 
         <!-- Форма -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
-                <form action="{{ route('employees.store') }}" method="post" class="space-y-6">
+                <form action="{{ route('employees.store') }}" method="post" class="space-y-6"
+                    enctype="multipart/form-data">
                     @csrf
 
-                    <!-- Выбор пользователя -->
+
+                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+
+                    {{-- person --}}
                     <div>
-                        <label for="user_id" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Выберите пользователя
-                        </label>
-                        <select name="user_id" id="user_id"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="">Не выбирать</option>
-                            @if ($users && count($users) > 0)
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->login }}</option>
-                                @endforeach
-                            @else
-                                <option value="" disabled>Нет свободных пользователей</option>
-                            @endif
-                        </select>
-                        @error('user_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Фамилия -->
+                            <div>
+                                <label for="last_name" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Фамилия
+                                </label>
+                                <input type="text" name="last_name" id="last_name" placeholder="Введите фамилию"
+                                    value="{{ old('last_name') }}" required
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                            </div>
+
+                            <!-- Имя -->
+                            <div>
+                                <label for="first_name" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Имя
+                                </label>
+                                <input type="text" name="first_name" id="first_name" placeholder="Введите имя"
+                                    value="{{ old('first_name') }}" required
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                            </div>
+
+                            <!-- Отчество -->
+                            <div class="md:col-span-2">
+                                <label for="patronymic" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Отчество
+                                </label>
+                                <input type="text" name="patronymic" id="patronymic" placeholder="Введите отчество"
+                                    value="{{ old('patronymic') }}"
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                            </div>
+
+                            <!-- Почта -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-[#565A5B]">
+                                    Почты
+                                </label>
+
+                                <div id="emails-wrapper" class="space-y-2">
+                                </div>
+
+                                <button type="button" onclick="addEmail()" class="text-sm text-[#A60644] mt-2">
+                                    + Добавить почту
+                                </button>
+                            </div>
+
+                            <!-- Телефон -->
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-[#565A5B]">
+                                    Телефоны
+                                </label>
+
+                                <div id="phones-wrapper" class="space-y-2">
+                                </div>
+
+                                <button type="button" onclick="addPhone()" class="text-sm text-[#A60644] mt-2">
+                                    + Добавить телефон
+                                </button>
+                            </div>
+
+
+                            <!-- Фото -->
+                            <div class="md:col-span-2">
+                                <label for="photo" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Фото
+                                </label>
+                                <input type="file" name="photo" id="photo" accept="image/*"
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#A60644] file:text-white file:font-medium file:cursor-pointer hover:file:bg-[#A60644]/80 transition-colors text-[#060606]">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Выбор персональных данных -->
+                    {{-- user --}}
                     <div>
-                        <label for="person_id" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Выберите персональные данные сотрудника
-                        </label>
-                        <select name="person_id" id="person_id"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="">Не выбирать</option>
-                            @if ($persons && count($persons) > 0)
-                                @foreach ($persons as $person)
-                                    <option value="{{ $person->id }}">
-                                        {{ $person->last_name }} {{ $person->first_name }} {{ $person->phone }}
+                        <!-- Логин -->
+                        <div>
+                            <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Логин *
+                            </label>
+                            <input type="text" name="login" id="login" placeholder="Введите логин"
+                                value="{{ old('login') }}" required
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                        </div>
+
+
+                        <!-- Пароль -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Пароль *
+                            </label>
+                            <input type="password" name="password" id="password" required
+                                placeholder="Введите пароль" value=""
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                        </div>
+
+                        <!-- Роль -->
+                        <div>
+                            <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Роль
+                            </label>
+                            <select name="role" id="role"
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                @foreach ($roles as $role)
+                                    <option value="{{ $role->id }}">
+                                        {{ $role->description }}
                                     </option>
                                 @endforeach
-                            @else
-                                <option value="" disabled>Нет свободных персональных данных</option>
-                            @endif
-                        </select>
-                        @error('person_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                            </select>
+                        </div>
                     </div>
+
 
                     <!-- Рабочий статус -->
                     <div>
@@ -84,14 +163,11 @@
                         <select name="work_status" id="work_status" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                             @foreach ($statuses as $status)
-                                <option value="{{ $status->id }}" @if (old('work_status', $status->name) == 'inactive') selected @endif>
+                                <option value="{{ $status->id }}">
                                     {{ $status->description }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('work_status')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <!-- Кнопка отправки -->
@@ -100,7 +176,8 @@
                             class="group inline-flex items-center px-8 py-3 bg-[#A60644] text-white font-medium rounded-lg transition-all duration-200 hover:bg-[#A60644]/80 active:bg-[#A60644]/60 active:scale-[0.98] shadow-lg hover:shadow-xl">
                             <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                 </path>
                             </svg>
                             Создать сотрудника
@@ -110,6 +187,39 @@
             </div>
         </div>
     </div>
-
-
 @endsection
+
+
+{{--  телефоны и почта --}}
+<script>
+    function addEmail() {
+        const wrapper = document.getElementById('emails-wrapper');
+        wrapper.appendChild(createRow('email', 'emails[]', 'Введите почту'));
+    }
+
+    function addPhone() {
+        const wrapper = document.getElementById('phones-wrapper');
+        wrapper.appendChild(createRow('tel', 'phones[]', 'Введите телефон'));
+    }
+
+    function createRow(type, name, placeholder) {
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 items-center';
+
+        div.innerHTML = `
+        <input type="${type}" name="${name}" placeholder="${placeholder}"
+            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+        <button type="button" onclick="removeRow(this)"
+            class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+            ✕
+        </button>
+    `;
+
+        return div;
+    }
+
+    function removeRow(button) {
+        button.parentElement.remove();
+    }
+</script>
+

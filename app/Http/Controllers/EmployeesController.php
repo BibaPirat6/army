@@ -169,8 +169,7 @@ class EmployeesController extends Controller
         ));
     }
 
-
-
+    // живой поиск
     public function liveSearch(Request $request)
     {
         $query = Employee::query()
@@ -218,74 +217,147 @@ class EmployeesController extends Controller
         return view('admin.employees.partials.table-body', compact('employees'))->render();
     }
 
-
-
-
-
-    public function create()
+    public function create(Request $request)
     {
-        $employees = Employee::with(['user', 'person'])
-            ->get();
-
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)
             ->get();
-
         $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
         $persons = Person::whereNotIn('id', $usedPersonIds)
             ->get();
-
         $roles = Role::all();
         $statuses = WorkStatus::all();
 
-        return view("admin.employees.create")->with([
-            "employees" => $employees,
+        $backUrl = $request->input("back_url");
+
+        return view('admin.employees.create')->with([
             "users" => $users,
             "persons" => $persons,
             "roles" => $roles,
             "statuses" => $statuses,
+            "backUrl" => $backUrl
         ]);
     }
 
-
-
-
-
     public function store(Request $request)
     {
-        $requestData = $request->all();
-        if (isset($requestData['user_id']) && $requestData['user_id'] === '') {
-            $requestData['user_id'] = null;
-        }
-        if (isset($requestData['person_id']) && $requestData['person_id'] === '') {
-            $requestData['person_id'] = null;
-        }
-
-        $data = validator($requestData, [
+        $data = $request->validate([
             "work_status" => "required|integer|exists:work_statuses,id",
-            "user_id" => "nullable|integer|min:1|exists:users,id",
-            "person_id" => "nullable|integer|min:1|exists:persons,id",
+
+            "last_name" => "required|string|min:2",
+            "first_name" => "required|string|min:2",
+            "patronymic" => "nullable|string|min:2",
+
+            "emails" => "nullable|array",
+            'emails.*' => [
+                'required',
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
+            ],
+
+            "phones" => "nullable|array",
+            'phones.*' => [
+                'required',
+                'regex:/^\+?[1-9]\d{9,14}$/'
+            ],
+
+            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+
+            "login" => [
+                "required",
+                "min:5",
+                "max:255",
+                "unique:users",
+            ],
+
+            "password" => [
+                "required",
+                "min:5",
+                "max:255"
+            ],
+
+            "role" => "required|exists:roles,id",
+
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
-            'user_id.min' => 'ID пользователя должен быть положительным числом',
-            'user_id.exists' => 'Выбранный пользователь не существует',
-            'person_id.min' => 'ID персональных данных должен быть положительным числом',
-            'person_id.exists' => 'Выбранная персона не существует',
-        ])->validate();
 
-        $employeeData = [
-            'work_status_id' => $data['work_status'],
-            'user_id' => $data['user_id'] ?? null,
-            'person_id' => $data['person_id'] ?? null,
+            "last_name.required" => "Поле Фамилия обязательно для заполнения",
+            "last_name.min" => "Поле Фамилия минимум 2 символа",
+            "first_name.required" => "Поле Имя обязательно для заполнения",
+            "first_name.min" => "Поле Имя минимум 2 символа",
+            "patronymic.required" => "Поле Отчество обязательно для заполнения",
+            "patronymic.min" => "Поле Отчество минимум 2 символа",
+            "email.email" => "Поле Почта должно быть действительным электронным адресом",
+            "email.unique" => "Такой адрес Почты уже зарегистрирован",
+            "phone.min" => "Поле Телефон минимум 10 символов",
+            "phone.unique" => "Такой номер Телефона уже зарегистрирован",
+            "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
+            "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            'emails.*.regex' => 'Некорректный формат email',
+            'emails.*.required' => 'Не заполнен email',
+            'phones.*.regex' => 'Некорректный формат телефона',
+            'phones.*.required' => 'Не заполнен телефон',
+
+            "login.required" => "Логин обязателен",
+            "login.min" => "Логин минимум 5 символов",
+            "login.max" => "Логин максимум 255 символов",
+            "login.unique" => "Логин уже занят",
+            "password.required" => "Пароль обязателен",
+            "password.min" => "Пароль минимум 5 символов",
+            "password.max" => "Пароль максимум 255 символов",
+            "role.required" => "Роль обязательна",
+            "role.exists" => "Недопустимое значение для роли",
+        ]);
+
+        // person
+        $emails = array_values(array_filter($data['emails'] ?? []));
+        $phones = array_values(array_filter($data['phones'] ?? []));
+
+        $personData = [
+            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'],
+            'patronymic' => $data['patronymic'] ?? null,
+            'emails' => $emails ?: null,
+            'phones' => $phones ?: null,
         ];
 
-        Employee::create($employeeData);
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
 
-        return redirect()->route("employees.index")->with("success", "Сотрудник создан!");
+            $manager = new ImageManager(new Driver());
+            $image = $manager->read($file);
+            $image->scale(width: 150);
+
+            $filename = time() . '.webp';
+            $path = 'photos/' . $filename;
+
+            $webp = $image->encode(new WebpEncoder(quality: 75));
+            Storage::disk('public')->put($path, $webp);
+
+            $personData['photo'] = $path;
+        }
+
+        $person = Person::create($personData);
+
+        // user
+        $userData = [
+            'login' => $data['login'],
+            'role_id' => $data['role'],
+        ];
+        $userData['password_hash'] = Hash::make($data['password']);
+        $user = User::create($userData);
+
+        // workStatus
+        $employee = Employee::create();
+        $employee->work_status_id = $data['work_status'];
+        $employee->user_id = $user->id;
+        $employee->person_id = $person->id;
+        $employee->save();
+
+        $backUrl = $request->get('backUrl', route('employees.index'));
+        return redirect()->to($backUrl)
+            ->with('success', 'Сотрудник успешно создан!');
     }
-
-
 
     public function edit(Request $request, $id)
     {
@@ -467,11 +539,6 @@ class EmployeesController extends Controller
             ->with('success', 'Сотрудник успешно обновлен!');
 
     }
-
-
-
-
-
 
     public function delete($id)
     {
