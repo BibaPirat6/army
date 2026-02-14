@@ -28,6 +28,7 @@ class EmployeesController extends Controller
     {
         $query = Employee::query();
 
+
         // -------------------------
         // Фильтр по статусу
         // -------------------------
@@ -101,14 +102,10 @@ class EmployeesController extends Controller
         }
 
         if ($isIndependent === '1') {
-            $query->whereHas(
-                'employeePositions',
-                fn($q) =>
-                $q->whereNull('department_id')
-                    ->whereNull('division_id')
-            );
+            $query->whereHas('employeePositions', function ($q) {
+                $q->where('is_independent', 1);
+            });
         }
-
         // -------------------------
         // Сортировка
         // -------------------------
@@ -171,6 +168,56 @@ class EmployeesController extends Controller
             'rates'
         ));
     }
+
+
+
+    public function liveSearch(Request $request)
+    {
+        $query = Employee::query()
+            ->with([
+                'user.role',
+                'person',
+                'workStatus',
+                'positions.position.positionType'
+            ]);
+
+        if ($search = trim($request->search)) {
+
+            $query->where(function ($q) use ($search) {
+
+                // ID сотрудника
+                $q->where('id', 'like', "%{$search}%")
+
+                    // Логин
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('login', 'like', "%{$search}%");
+                    })
+
+                    // ФИО
+                    ->orWhereHas('person', function ($q) use ($search) {
+                        $q->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('patronymic', 'like', "%{$search}%");
+                    })
+
+                    // 🔥 Поиск по телефонам (JSON LIKE)
+                    ->orWhereHas('person', function ($q) use ($search) {
+                        $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(phones, '$')) LIKE ?", ["%{$search}%"]);
+                    })
+
+                    // 🔥 Поиск по email (JSON LIKE)
+                    ->orWhereHas('person', function ($q) use ($search) {
+                        $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(emails, '$')) LIKE ?", ["%{$search}%"]);
+                    });
+
+            });
+        }
+
+        $employees = $query->limit(50)->get();
+
+        return view('admin.employees.partials.table-body', compact('employees'))->render();
+    }
+
 
 
 

@@ -50,6 +50,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put("/employees/{id}", [EmployeesController::class, "update"])->name("employees.update");
     Route::delete("/employees/{id}", [EmployeesController::class, "delete"])->name("employees.delete");
 
+    Route::get('/employees/live-search', [EmployeesController::class, 'liveSearch'])
+        ->name('employees.live-search');
+
+
     // persons
     Route::get("/persons", [PersonsController::class, "index"])->name("persons.index");
     Route::get("/persons/create", [PersonsController::class, "create"])->name("persons.create");
