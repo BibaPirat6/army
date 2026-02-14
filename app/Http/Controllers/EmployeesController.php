@@ -26,17 +26,23 @@ class EmployeesController extends Controller
 {
     public function index(Request $request)
     {
-        // --- Сортировка по ID ---
-        $sortOptions = $request->get('sort_id', []); // массив чекбоксов
-        if (!is_array($sortOptions)) {
-            $sortOptions = [$sortOptions];
+        $query = Employee::query();
+
+        // -------------------------
+        // Фильтр по статусу
+        // -------------------------
+
+        $selectedStatuses = (array) $request->get('sort_status', []);
+
+        if (!empty($selectedStatuses)) {
+            $query->whereHas('workStatus', function ($q) use ($selectedStatuses) {
+                $q->whereIn('name', $selectedStatuses);
+            });
         }
 
-        // --- Фильтр по статусам ---
-        $selectedStatuses = $request->get('sort_status', []);
-        if (!is_array($selectedStatuses)) {
-            $selectedStatuses = [$selectedStatuses];
-        }
+        // -------------------------
+        // Фильтры по должностям
+        // -------------------------
 
         $sortCommissariats = (array) $request->get('sort_commissariat', []);
         $sortDepartments = (array) $request->get('sort_department', []);
@@ -44,27 +50,87 @@ class EmployeesController extends Controller
         $sortPositions = (array) $request->get('sort_position', []);
         $sortTypes = (array) $request->get('sort_type', []);
         $sortRates = (array) $request->get('sort_rate', []);
-        $isIndependent = $request->get('is_independent', null);
+        $isIndependent = $request->get('is_independent');
 
-
-        $query = Employee::query();
-
-        // --- Фильтр по статусу ---
-        if (!empty($selectedStatuses)) {
-            $query->whereHas('workStatus', function ($q) use ($selectedStatuses) {
-                $q->whereIn('name', $selectedStatuses);
-            });
+        if (!empty($sortCommissariats)) {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereIn('commissariat_id', $sortCommissariats)
+            );
         }
 
-        // --- Сортировка по ID ---
-        // Если выбрано несколько, берем первый в массиве (или можно кастомную логику)
+        if (!empty($sortDepartments)) {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereIn('department_id', $sortDepartments)
+            );
+        }
+
+        if (!empty($sortDivisions)) {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereIn('division_id', $sortDivisions)
+            );
+        }
+
+        if (!empty($sortPositions)) {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereIn('position_id', $sortPositions)
+            );
+        }
+
+        if (!empty($sortTypes)) {
+            $query->whereHas(
+                'employeePositions.position',
+                fn($q) =>
+                $q->whereIn('position_type_id', $sortTypes)
+            );
+        }
+
+        if (!empty($sortRates)) {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereIn('rate', $sortRates)
+            );
+        }
+
+        if ($isIndependent === '1') {
+            $query->whereHas(
+                'employeePositions',
+                fn($q) =>
+                $q->whereNull('department_id')
+                    ->whereNull('division_id')
+            );
+        }
+
+        // -------------------------
+        // Сортировка
+        // -------------------------
+
+        $sortOptions = (array) $request->get('sort_id', []);
+
         if (!empty($sortOptions)) {
-            $query->orderBy('id', $sortOptions[0]); // берем первый выбранный
+            $query->orderBy('id', $sortOptions[0]);
         } else {
-            $query->orderBy('id', 'desc'); // по умолчанию
+            $query->orderBy('id', 'desc');
         }
+
+        // -------------------------
+        // paginate В САМОМ КОНЦЕ
+        // -------------------------
 
         $employees = $query->paginate(10)->withQueryString();
+
+        // -------------------------
+        // Остальные данные
+        // -------------------------
+
         $statuses = WorkStatus::all();
         $positions = Position::all();
         $positionTypes = PositionType::has('positions')->get();
@@ -83,7 +149,6 @@ class EmployeesController extends Controller
                 ->whereNotNull('employee_id');
         })->get();
 
-
         $divisions = Division::whereIn('id', function ($query) {
             $query->select('division_id')
                 ->from('employee_positions')
@@ -91,66 +156,22 @@ class EmployeesController extends Controller
                 ->whereNotNull('employee_id');
         })->get();
 
-
         $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
-        $type = $column->Type;
-        preg_match_all("/'([^']+)'/", $type, $matches);
+        preg_match_all("/'([^']+)'/", $column->Type, $matches);
         $rates = $matches[1];
 
-
-        if (!empty($sortCommissariats)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortCommissariats) {
-                $q->whereIn('commissariat_id', $sortCommissariats);
-            });
-        }
-
-        if (!empty($sortDepartments)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortDepartments) {
-                $q->whereIn('department_id', $sortDepartments);
-            });
-        }
-
-        if (!empty($sortDivisions)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortDivisions) {
-                $q->whereIn('division_id', $sortDivisions);
-            });
-        }
-
-
-        if (!empty($sortPositions)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortPositions) {
-                $q->whereIn('position_id', $sortPositions);
-            });
-        }
-
-        if (!empty($sortTypes)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortTypes) {
-                $q->whereHas('position', function ($q) use ($sortTypes) {
-                    $q->whereIn('position_type_id', $sortTypes);
-                });
-            });
-        }
-
-
-        if (!empty($sortRates)) {
-            $query->whereHas('employeePositions', function ($q) use ($sortRates) {
-                $q->whereIn('rate', $sortRates);
-            });
-        }
-
-
-        if ($isIndependent === '1') {
-            $query->whereHas('employeePositions', function ($q) {
-                $q->whereNull('department_id')
-                    ->whereNull('division_id');
-            });
-        }
-
-
-
-
-        return view("admin.employees.index", compact('employees', 'statuses', "positions", 'positionTypes', 'commissariats', 'departments', 'divisions', 'rates'));
+        return view("admin.employees.index", compact(
+            'employees',
+            'statuses',
+            'positions',
+            'positionTypes',
+            'commissariats',
+            'departments',
+            'divisions',
+            'rates'
+        ));
     }
+
 
 
 
