@@ -14,13 +14,13 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('divisions.index') }}"
+                <a href="{{ $backUrl ?? route('divisions.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Назад к списку
+                    Назад
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Добавление отделения</h1>
@@ -32,6 +32,8 @@
             <div class="p-6 md:p-8">
                 <form action="{{ route('divisions.store') }}" method="POST" class="space-y-6">
                     @csrf
+
+                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
 
                     <!-- Название отделения -->
                     <div>
@@ -101,11 +103,11 @@
                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                   outline-none transition-colors text-[#060606]"
                             autocomplete="off"
-                            value="{{ old('commissariat_id') ? optional($commissariats->firstWhere('id', old('commissariat_id')))->name : '' }}">
+                            value="{{ $commissariat ? $commissariat->name : "" }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="commissariat_id" id="commissariat_id"
-                            value="{{ old('commissariat_id') }}">
+                            value="{{ $commissariat ? $commissariat->id : "" }}">
 
                         {{-- dropdown --}}
                         <ul id="commissariat_list"
@@ -376,111 +378,110 @@
 
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const departmentInput = document.getElementById('department_search');
-    const departmentHidden = document.getElementById('department_id');
-    const departmentList = document.getElementById('department_list');
-    const departmentItems = departmentList.querySelectorAll('li');
+    document.addEventListener('DOMContentLoaded', () => {
+        const departmentInput = document.getElementById('department_search');
+        const departmentHidden = document.getElementById('department_id');
+        const departmentList = document.getElementById('department_list');
+        const departmentItems = departmentList.querySelectorAll('li');
 
-    const commissariatInput = document.getElementById('commissariat_search');
-    const commissariatHidden = document.getElementById('commissariat_id');
-    const commissariatList = document.getElementById('commissariat_list');
-    const commissariatItems = commissariatList.querySelectorAll('li');
+        const commissariatInput = document.getElementById('commissariat_search');
+        const commissariatHidden = document.getElementById('commissariat_id');
+        const commissariatList = document.getElementById('commissariat_list');
+        const commissariatItems = commissariatList.querySelectorAll('li');
 
-    // Универсальная фильтрация списка
-    function filterList(input, list) {
-        const query = input.value.toLowerCase().trim();
-        const items = list.querySelectorAll('li');
-        let hasVisible = false;
+        // Универсальная фильтрация списка
+        function filterList(input, list) {
+            const query = input.value.toLowerCase().trim();
+            const items = list.querySelectorAll('li');
+            let hasVisible = false;
 
-        items.forEach(item => {
-            if (item.dataset.static === 'true') {
-                item.classList.remove('hidden');
-                hasVisible = true;
-                return;
-            }
-            const name = (item.dataset.name || '').toLowerCase();
-            if (!query || name.includes(query)) {
-                item.classList.remove('hidden');
-                hasVisible = true;
-            } else {
-                item.classList.add('hidden');
-            }
-        });
+            items.forEach(item => {
+                if (item.dataset.static === 'true') {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                    return;
+                }
+                const name = (item.dataset.name || '').toLowerCase();
+                if (!query || name.includes(query)) {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
 
-        list.classList.toggle('hidden', !hasVisible);
-    }
+            list.classList.toggle('hidden', !hasVisible);
+        }
 
-    // --- ОТДЕЛ ---
-    departmentItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (item.dataset.static === 'true') {
-                // Очистка отдела и связанного комиссариата
-                departmentInput.value = '';
-                departmentHidden.value = '';
-                commissariatInput.value = '';
-                commissariatHidden.value = '';
+        // --- ОТДЕЛ ---
+        departmentItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.dataset.static === 'true') {
+                    // Очистка отдела и связанного комиссариата
+                    departmentInput.value = '';
+                    departmentHidden.value = '';
+                    commissariatInput.value = '';
+                    commissariatHidden.value = '';
+                    departmentList.classList.add('hidden');
+                    return;
+                }
+
+                departmentInput.value = item.dataset.name;
+                departmentHidden.value = item.dataset.id;
                 departmentList.classList.add('hidden');
-                return;
-            }
 
-            departmentInput.value = item.dataset.name;
-            departmentHidden.value = item.dataset.id;
-            departmentList.classList.add('hidden');
-
-            // Подставляем связанный комиссариат
-            commissariatInput.value = item.dataset.commissariatName || '';
-            commissariatHidden.value = item.dataset.commissariatId || '';
+                // Подставляем связанный комиссариат
+                commissariatInput.value = item.dataset.commissariatName || '';
+                commissariatHidden.value = item.dataset.commissariatId || '';
+            });
         });
-    });
 
-    departmentInput.addEventListener('focus', () => filterList(departmentInput, departmentList));
-    departmentInput.addEventListener('input', () => {
-        departmentHidden.value = '';
-        commissariatInput.value = '';
-        commissariatHidden.value = '';
-        filterList(departmentInput, departmentList);
-    });
+        departmentInput.addEventListener('focus', () => filterList(departmentInput, departmentList));
+        departmentInput.addEventListener('input', () => {
+            departmentHidden.value = '';
+            commissariatInput.value = '';
+            commissariatHidden.value = '';
+            filterList(departmentInput, departmentList);
+        });
 
-    // --- КОМИССАРИАТ ---
-    commissariatItems.forEach(item => {
-        item.addEventListener('click', () => {
-            if (item.dataset.static === 'true') {
-                // Очистка комиссариата и связанного отдела
-                commissariatInput.value = '';
-                commissariatHidden.value = '';
+        // --- КОМИССАРИАТ ---
+        commissariatItems.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.dataset.static === 'true') {
+                    // Очистка комиссариата и связанного отдела
+                    commissariatInput.value = '';
+                    commissariatHidden.value = '';
+                    departmentInput.value = '';
+                    departmentHidden.value = '';
+                    commissariatList.classList.add('hidden');
+                    return;
+                }
+
+                commissariatInput.value = item.dataset.name;
+                commissariatHidden.value = item.dataset.id;
+                commissariatList.classList.add('hidden');
+
+                // При выборе вручную не трогаем отдел, только если есть связь
+            });
+        });
+
+        commissariatInput.addEventListener('focus', () => filterList(commissariatInput, commissariatList));
+        commissariatInput.addEventListener('input', () => {
+            commissariatHidden.value = '';
+            // Очищаем отдел, если удаляем комиссариат вручную
+            if (commissariatInput.value === '') {
                 departmentInput.value = '';
                 departmentHidden.value = '';
-                commissariatList.classList.add('hidden');
-                return;
             }
+            filterList(commissariatInput, commissariatList);
+        });
 
-            commissariatInput.value = item.dataset.name;
-            commissariatHidden.value = item.dataset.id;
-            commissariatList.classList.add('hidden');
-
-            // При выборе вручную не трогаем отдел, только если есть связь
+        // --- Закрытие списков при клике вне ---
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                departmentList.classList.add('hidden');
+                commissariatList.classList.add('hidden');
+            }
         });
     });
-
-    commissariatInput.addEventListener('focus', () => filterList(commissariatInput, commissariatList));
-    commissariatInput.addEventListener('input', () => {
-        commissariatHidden.value = '';
-        // Очищаем отдел, если удаляем комиссариат вручную
-        if (commissariatInput.value === '') {
-            departmentInput.value = '';
-            departmentHidden.value = '';
-        }
-        filterList(commissariatInput, commissariatList);
-    });
-
-    // --- Закрытие списков при клике вне ---
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.relative')) {
-            departmentList.classList.add('hidden');
-            commissariatList.classList.add('hidden');
-        }
-    });
-});
 </script>
-

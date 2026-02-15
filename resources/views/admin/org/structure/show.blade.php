@@ -12,8 +12,9 @@
 @section('content')
     <button id="resetView">Вернуться к центру</button>
 
-    <a href="{{ route("structure.index") }}" class="absolute left-4 mt-2 inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200 z-[100]">
-         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <a href="{{ route('structure.index') }}"
+        class="absolute left-4 mt-2 inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200 z-[100]">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
         </svg>
         Назад
@@ -35,7 +36,10 @@
             <ul
                 class="absolute top-full right-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[220px] z-[1000] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0">
                 <li class="mb-1 last:mb-0">
-                    <a href="{{ route('departments.create') }}"
+                    <a href="{{ route('departments.create', [
+                        'commissariat_id' => $commissariat->id,
+                        'back_url' => url()->full(),
+                    ]) }}"
                         class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -46,7 +50,10 @@
                     </a>
                 </li>
                 <li class="mb-1 last:mb-0">
-                    <a href="{{ route('divisions.create') }}"
+                    <a href="{{ route('divisions.create', [
+                        'commissariat_id' => $commissariat->id,
+                        'back_url' => url()->full(),
+                    ]) }}"
                         class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -57,7 +64,10 @@
                     </a>
                 </li>
                 <li class="mb-0">
-                    <a href="{{ route('employees.create') }}"
+                    <a href="{{ route('employees.create', [
+                        'commissariat_id' => $commissariat->id,
+                        'back_url' => url()->full(),
+                    ]) }}"
                         class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -82,7 +92,7 @@
                     <div class="node boss">
                         <a href="{{ route('commissariats.show', [
                             'id' => $commissariat->id,
-                            'back_url' => route('structure.show', $commissariat->id),
+                            'back_url' => url()->full(),
                         ]) }}"
                             class="node-info" aria-label="Подробнее">
                             <!-- SVG иконка info -->
@@ -93,7 +103,6 @@
                                 </path>
                             </svg>
                         </a>
-
 
                         <div class="photo">
                             @if (isset($commissariat->chiefEmployeePosition))
@@ -134,7 +143,6 @@
                         <div class="line vertical"></div>
                         <div class="line horizontal"></div>
                     </div>
-
 
                     <!-- ОТДЕЛЫ -->
                     <div class="departments">

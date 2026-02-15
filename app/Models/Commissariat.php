@@ -15,7 +15,7 @@ class Commissariat extends Model
         'name',
         'chief_employee_id',
         'longitude',
-    'latitude',
+        'latitude',
     ];
 
     /**
@@ -114,4 +114,23 @@ class Commissariat extends Model
     {
         return $this->divisions()->whereNull('department_id')->get();
     }
+
+
+    // получаем все назначения должностей в нашем комисариате
+    public function employeePositions(): HasMany
+    {
+        return $this->hasMany(EmployeePosition::class, 'commissariat_id');
+    }
+    // вывод сколько каких должностей в каждом комиссариате
+    public function positionsCommissariat()
+    {
+        return $this->employeePositions()
+            ->with('position')
+            ->get()
+            ->pluck('position')
+            ->filter()
+            ->unique('id'); 
+    }
+
+
 }

@@ -26,11 +26,20 @@ class DepartmentsController extends Controller
         return view('admin.org.departments.show', compact('department', 'backUrl'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $commissariats = Commissariat::all();
         $employees = Employee::all();
-        return view('admin.org.departments.create', compact("commissariats", "employees"));
+
+        $commissariatId = $request->get('commissariat_id');
+        $commissariat = $commissariatId
+            ? Commissariat::find($commissariatId)
+            : null;
+
+        $backUrl = $request->get("back_url");
+
+
+        return view('admin.org.departments.create', compact("commissariats", "employees", 'commissariat', 'backUrl'));
     }
     public function store(Request $request)
     {
@@ -67,8 +76,8 @@ class DepartmentsController extends Controller
             );
         }
 
-
-        return redirect()->route('departments.index')->with('success', 'Отдел успешно создан.');
+        $backUrl = $request->get("backUrl", route('departments.index'));
+        return redirect()->to($backUrl)->with('success', 'Отдел успешно создан.');
     }
 
     public function edit(Request $request, $id)

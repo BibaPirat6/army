@@ -17,6 +17,81 @@
                 <h1 class="text-2xl font-bold text-[#060606]">Должности</h1>
                 <p class="text-[#565A5B] mt-1">Список всех должностей</p>
             </div>
+            {{-- сортировка по комиссариату --}}
+            <div class="relative group inline-block">
+
+                {{-- Кнопка --}}
+                <button
+                    class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200
+               rounded-lg transition font-medium">
+
+                    Фильтр по комиссариатам
+
+                    <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {{-- Dropdown --}}
+                <div
+                    class="absolute left-0 mt-2 w-72 bg-white border border-gray-200
+                rounded-xl shadow-xl z-50 p-4
+                opacity-0 invisible
+                group-hover:opacity-100 group-hover:visible
+                transition-all duration-200">
+
+                    <form method="GET" action="{{ route('positions.index') }}">
+
+                        {{-- Комиссариаты --}}
+                        <div>
+                            <span class="block text-sm font-semibold mb-2">
+                                Комиссариат
+                            </span>
+
+                            <div class="max-h-48 overflow-y-auto space-y-2">
+
+                                @foreach ($commissariats as $commissariat)
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+
+                                        <input type="radio" name="sort_commissariat[]" value="{{ $commissariat->id }}"
+                                            {{ in_array($commissariat->id, (array) request('sort_commissariat', [])) ? 'checked' : '' }}
+                                            class="rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]">
+
+                                        {{ $commissariat->name }}
+
+                                    </label>
+                                @endforeach
+
+                            </div>
+                        </div>
+
+                        {{-- Кнопки --}}
+                        <div class="mt-4 space-y-2">
+
+                            <button type="submit"
+                                class="w-full py-2 bg-[#A60644] text-white
+                               rounded-lg hover:bg-[#8c0538] transition">
+                                Применить
+                            </button>
+
+                            @if (request()->has('sort_commissariat'))
+                                <a href="{{ route('positions.index') }}"
+                                    class="block w-full text-center py-2 border border-gray-400
+                              rounded-lg hover:bg-gray-100 transition">
+                                    Сбросить
+                                </a>
+                            @endif
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
             <a href="{{ route('positions.create') }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,6 +100,7 @@
                 Создать должность
             </a>
         </div>
+
 
         <!-- Таблица -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">

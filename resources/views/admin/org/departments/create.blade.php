@@ -14,13 +14,13 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('departments.index') }}"
+                <a href="{{ $backUrl ?? route('departments.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Назад к списку
+                    Назад
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Добавление отдела</h1>
@@ -33,6 +33,8 @@
                 <form action="{{ route('departments.store') }}" method="POST" class="space-y-6">
                     @csrf
 
+                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+
                     <!-- Название отдела -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -42,7 +44,6 @@
                             value="{{ old('name') }}" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
-
 
                     {{-- комиссариат --}}
                     <div class="relative">
@@ -56,11 +57,11 @@
                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                   outline-none transition-colors text-[#060606]"
                             autocomplete="off"
-                            value="{{ old('commissariat_id') ? optional($commissariats->firstWhere('id', old('commissariat_id')))->name : '' }}">
+                            value="{{ $commissariat ? $commissariat->name : ""}}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="commissariat_id" id="commissariat_id"
-                            value="{{ old('commissariat_id') }}">
+                            value="{{ $commissariat ? $commissariat->id : "" }}">
 
                         {{-- dropdown --}}
                         <ul id="commissariat_list"
@@ -305,7 +306,7 @@
         items.forEach(item => {
             item.addEventListener('click', () => {
 
-    
+
                 if (item.dataset.static === 'true') {
                     input.value = '';
                     hiddenInput.value = '';
@@ -313,7 +314,7 @@
                     return;
                 }
 
-        
+
                 input.value = item.dataset.name;
                 hiddenInput.value = item.dataset.id;
                 hideList();

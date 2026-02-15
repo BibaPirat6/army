@@ -2,17 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commissariat;
+use App\Models\EmployeePosition;
 use App\Models\Position;
 use App\Models\PositionType;
 use Illuminate\Http\Request;
 
 class PositionsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $positions = Position::with('positionType')->paginate(50);
+        $query = Position::query();
 
-        return view('admin.org.positions.index')->with('positions', $positions);
+        if ($request->filled('sort_commissariat')) {
+
+            $positionIds = EmployeePosition::query()
+                ->whereIn('commissariat_id', $request->sort_commissariat)
+                ->distinct()
+                ->pluck('position_id');
+
+            $query->whereIn('id', $positionIds);
+        }
+
+        $positions = $query
+            ->paginate(10)
+            ->withQueryString();
+
+        $commissariats = Commissariat::all();
+
+
+        return view('admin.org.positions.index', compact("positions", 'commissariats'));
     }
     public function show($id)
     {

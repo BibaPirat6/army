@@ -229,13 +229,33 @@ class EmployeesController extends Controller
         $statuses = WorkStatus::all();
 
         $backUrl = $request->input("back_url");
+        $commissariatId = $request->get('commissariat_id');
+        $commissariat = $commissariatId
+            ? Commissariat::find($commissariatId)
+            : null;
+
+
+        $positions = Position::all();
+        $commissariats = Commissariat::all();
+        $departments = Department::all();
+        $divisions = Division::all();
+        $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
+        $type = $column->Type;
+        preg_match_all("/'([^']+)'/", $type, $matches);
+        $rates = $matches[1];
 
         return view('admin.employees.create')->with([
             "users" => $users,
             "persons" => $persons,
             "roles" => $roles,
             "statuses" => $statuses,
-            "backUrl" => $backUrl
+            "backUrl" => $backUrl,
+            'positions' => $positions,
+            'commissariats' => $commissariats,
+            'departments' => $departments,
+            'divisions' => $divisions,
+            'rates' => $rates,
+            'commissariat' => $commissariat
         ]);
     }
 
@@ -243,24 +263,21 @@ class EmployeesController extends Controller
     {
         $data = $request->validate([
             "work_status" => "required|integer|exists:work_statuses,id",
-
             "last_name" => "required|string|min:2",
             "first_name" => "required|string|min:2",
             "patronymic" => "nullable|string|min:2",
-
             "emails" => "nullable|array",
             'emails.*' => [
                 'required',
                 'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
             ],
-
             "phones" => "nullable|array",
             'phones.*' => [
                 'required',
                 'regex:/^\+?[1-9]\d{9,14}$/'
             ],
-
             "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+
 
             "login" => [
                 "required",
@@ -268,15 +285,32 @@ class EmployeesController extends Controller
                 "max:255",
                 "unique:users",
             ],
-
             "password" => [
                 "required",
                 "min:5",
                 "max:255"
             ],
-
             "role" => "required|exists:roles,id",
 
+
+            'position_id' => 'required|integer|exists:positions,id',
+            'rate' => 'required|numeric|min:0.25|max:2.0',
+            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
+            "department_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+            "division_id" => [
+                "nullable",
+                "sometimes",
+                Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+            "is_independent" => "required|integer|in:1,0",
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
@@ -307,6 +341,19 @@ class EmployeesController extends Controller
             "password.max" => "Пароль максимум 255 символов",
             "role.required" => "Роль обязательна",
             "role.exists" => "Недопустимое значение для роли",
+
+            'position_id.required' => 'Поле должность обязательно для заполнения.',
+            'position_id.integer' => 'Поле должность должно быть целым числом.',
+            'position_id.exists' => 'Выбранная должность не существует.',
+            'rate.required' => 'Поле ставка обязательно для заполнения.',
+            'rate.numeric' => 'Поле ставка должно быть числом.',
+            'rate.min' => 'Минимальное значение ставки 0.25.',
+            'rate.max' => 'Максимальное значение ставки 2.0.',
+            "commissariat_id.required" => "Выберите комиссариат",
+            "commissariat_id.exists" => "Несуществующий комиссариат",
+            "department_id.exists" => "Несуществующий отдел",
+            "division_id.exists" => "Несуществующий отдел",
+            "is_independent.required" => "Выберите тип должность самостоятельная/нет",
         ]);
 
         // person
@@ -353,6 +400,19 @@ class EmployeesController extends Controller
         $employee->user_id = $user->id;
         $employee->person_id = $person->id;
         $employee->save();
+
+
+        // employeePosition
+        EmployeePosition::create([
+            "employee_id" => $employee->id,
+            "commissariat_id" => $data["commissariat_id"],
+            "department_id" => $data["department_id"],
+            "division_id" => $data["division_id"],
+            "position_id" => $data['position_id'],
+            "rate" => $data['rate'],
+            "is_independent" => $data["is_independent"]
+        ]);
+
 
         $backUrl = $request->get('backUrl', route('employees.index'));
         return redirect()->to($backUrl)

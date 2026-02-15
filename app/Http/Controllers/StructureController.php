@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commissariat;
-use Illuminate\Http\Request;
 
 class StructureController extends Controller
 {
