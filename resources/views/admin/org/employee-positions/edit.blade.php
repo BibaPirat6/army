@@ -329,6 +329,7 @@
                             onsubmit="return confirm('Вы уверены, что хотите удалить это назначение?');">
                             @csrf
                             @method('DELETE')
+                            <input type="hidden" name="backUrl" value="{{ $backUrl }}">
                             <button type="submit"
                                 class="inline-flex items-center px-6 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

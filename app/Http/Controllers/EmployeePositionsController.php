@@ -201,8 +201,8 @@ class EmployeePositionsController extends Controller
         $employee = Employee::findOrFail($id);
         EmployeePosition::where('employee_id', $employee->id)->delete();
 
-        $backUrl = $request->get("back_url");
+        $backUrl = $request->get("back_url", route('employee-positions.index'));
 
-        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
+        return redirect()->to($backUrl)->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
     }
 }

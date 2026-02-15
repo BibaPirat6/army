@@ -1,9 +1,9 @@
 @extends('layouts.main')
 
 @section('header-title')
-    {{ $employee->person->last_name }}
-    {{ $employee->person->first_name }}
-    {{ $employee->person->patronymic }}
+    {{ $employee->person->last_name ?? ""}}
+    {{ $employee->person->first_name ?? ""}}
+    {{ $employee->person->patronymic ?? ""}}
 @endsection
 
 @section('content')
@@ -21,9 +21,9 @@
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">
-                {{ $employee->person->last_name }}
-                {{ $employee->person->first_name }}
-                {{ $employee->person->patronymic }}
+                {{ $employee->person->last_name ?? ""}}
+                {{ $employee->person->first_name ?? ""}}
+                {{ $employee->person->patronymic ?? ""}}
             </h1>
             <p class="text-[#565A5B] mt-1">Детали должностей сотрудника</p>
         </div>
