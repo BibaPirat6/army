@@ -104,37 +104,40 @@
                             </svg>
                         </a>
 
-                        <div class="photo">
-                            @if (isset($commissariat->chiefEmployeePosition))
-                                <img src="{{ asset('storage/' . $commissariat->chiefEmployee->person->photo) }}">
-                            @else
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                    <circle cx="32" cy="18" r="10" fill="#e5e7eb" />
-                                    <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z" fill="#d1d5db" />
-                                </svg>
-                            @endif
-                        </div>
+                        @if ($commissariat->chiefEmployeePosition?->employee?->person)
+                            <div class="photo">
+                                @if (isset($commissariat->chiefEmployee->person->photo))
+                                    <img src="{{ asset('storage/' . $commissariat->chiefEmployee->person->photo) }}">
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                        <circle cx="32" cy="18" r="10" fill="#e5e7eb" />
+                                        <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z" fill="#d1d5db" />
+                                    </svg>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="data">
-                            @if (!$commissariat->chiefEmployeePosition?->employee?->person)
-                                <p>Не назначен начальник</p>
-                            @else
+                            @if ($commissariat->chiefEmployeePosition?->employee?->person)
                                 <p class="data__fio">{{ $commissariat->chiefEmployee->person->last_name ?? '' }}
                                     {{ $commissariat->chiefEmployee->person->first_name ?? '' }}
                                     {{ $commissariat->chiefEmployee->person->patronymic ?? '' }}
                                 </p>
+                                <div class="node-line"></div>
+                                <div class="data__positions">
+                                    @if ($commissariat->chiefEmployeePosition?->employee?->person)
+                                        <ul>
+                                            @foreach ($commissariat->chiefEmployee->positions as $position)
+                                                <li>{{ $position->position->name }} {{ $position->rate }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <p>Не назначены должности</p>
+                                    @endif
+                                </div>
+                            @else
+                                <p>Не назначен начальник</p>
                             @endif
-                            <div class="node-line"></div>
-                            <div class="data__positions">
-                                @if ($commissariat->chiefEmployeePosition?->employee?->person)
-                                    <ul>
-                                        @foreach ($commissariat->chiefEmployee->positions as $position)
-                                            <li>{{ $position->position->name }} {{ $position->rate }}</li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <p>Не назначены должности</p>
-                                @endif
-                            </div>
                         </div>
                     </div>
 
@@ -153,7 +156,7 @@
                                 <div class="node boss">
                                     <a href="{{ route('departments.show', [
                                         'id' => $department->id,
-                                        'back_url' => route('structure.show', $commissariat->id),
+                                        'back_url' => url()->full(),
                                     ]) }}"
                                         class="node-info" aria-label="Подробнее">
                                         <!-- SVG иконка info -->
@@ -164,42 +167,44 @@
                                             </path>
                                         </svg>
                                     </a>
-
-                                    <div class="photo">
-                                        @if (isset($department->chiefEmployee->person->photo))
-                                            <img src="{{ asset('storage/' . $department->chiefEmployee->person->photo) }}">
-                                        @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                                <circle cx="32" cy="18" r="10" fill="#e5e7eb" />
-                                                <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                    fill="#d1d5db" />
-                                            </svg>
-                                        @endif
-                                    </div>
+                                    @if ($department->chiefEmployeePosition?->employee?->person)
+                                        <div class="photo">
+                                            @if (isset($department->chiefEmployee->person->photo))
+                                                <img
+                                                    src="{{ asset('storage/' . $department->chiefEmployee->person->photo) }}">
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                                    <circle cx="32" cy="18" r="10" fill="#e5e7eb" />
+                                                    <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                        fill="#d1d5db" />
+                                                </svg>
+                                            @endif
+                                        </div>
+                                    @endif
                                     <div class="data">
-                                        @if (!$department->chiefEmployeePosition?->employee?->person)
-                                            <p>Не назначен начальник</p>
-                                        @else
+                                        @if ($department->chiefEmployeePosition?->employee?->person)
                                             <p class="data__fio">{{ $department->chiefEmployee->person->last_name ?? '' }}
                                                 {{ $department->chiefEmployee->person->first_name ?? '' }}
                                                 {{ $department->chiefEmployee->person->patronymic ?? '' }}
                                             </p>
+                                            <div class="node-line"></div>
+                                            <div class="data__positions">
+                                                @if (
+                                                    $department->chiefEmployee &&
+                                                        $department->chiefEmployee->positions &&
+                                                        $department->chiefEmployee->positions->count() > 0)
+                                                    <ul>
+                                                        @foreach ($department->chiefEmployee->positions as $position)
+                                                            <li>{{ $position->position->name }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p>Не назначены должности</p>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <p>Не назначен начальник отдела</p>
                                         @endif
-                                        <div class="node-line"></div>
-                                        <div class="data__positions">
-                                            @if (
-                                                $department->chiefEmployee &&
-                                                    $department->chiefEmployee->positions &&
-                                                    $department->chiefEmployee->positions->count() > 0)
-                                                <ul>
-                                                    @foreach ($department->chiefEmployee->positions as $position)
-                                                        <li>{{ $position->position->name }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <p>Не назначены должности</p>
-                                            @endif
-                                        </div>
                                     </div>
                                 </div>
 
@@ -213,6 +218,7 @@
                                                 <div class="node boss">
                                                     <a href="{{ route('divisions.show', [
                                                         'id' => $division->id,
+                                                        'back_url' => url()->full(),
                                                     ]) }}"
                                                         class="node-info" aria-label="Подробнее">
                                                         <!-- SVG иконка info -->
@@ -224,43 +230,47 @@
                                                         </svg>
                                                     </a>
 
+                                                    @if ($division->chiefEmployeePosition?->employee?->person)
+                                                        <div class="photo">
+                                                            @if (isset($division->chiefEmployeePosition?->employee?->person))
+                                                                <img
+                                                                    src="{{ asset('storage/' . $division->chiefEmployee->person->photo) }}">
+                                                            @else
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    viewBox="0 0 64 64">
+                                                                    <circle cx="32" cy="18" r="10"
+                                                                        fill="#e5e7eb" />
+                                                                    <path
+                                                                        d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                                        fill="#d1d5db" />
+                                                                </svg>
+                                                            @endif
+                                                        </div>
+                                                    @endif
 
-                                                    <div class="photo">
-                                                        @if (isset($division->chiefEmployeePosition?->employee?->person))
-                                                            <img
-                                                                src="{{ asset('storage/' . $division->chiefEmployee->person->photo) }}">
-                                                        @else
-                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                                                <circle cx="32" cy="18" r="10"
-                                                                    fill="#e5e7eb" />
-                                                                <path
-                                                                    d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                                    fill="#d1d5db" />
-                                                            </svg>
-                                                        @endif
-                                                    </div>
                                                     <div class="data">
-                                                        @if (!$division->chiefEmployeePosition?->employee?->person)
-                                                            <p>Не назначен начальник</p>
-                                                        @else
+                                                        @if ($division->chiefEmployeePosition?->employee?->person)
                                                             <p class="data__fio">
                                                                 {{ $division->chiefEmployee->person->last_name ?? '' }}
                                                                 {{ $division->chiefEmployee->person->first_name ?? '' }}
                                                                 {{ $division->chiefEmployee->person->patronymic ?? '' }}
                                                             </p>
+                                                            <div class="node-line"></div>
+                                                            <div class="data__positions">
+                                                                @if ($division->chiefEmployeePosition?->employee?->person)
+                                                                    <ul>
+                                                                        @foreach ($division->chiefEmployee->positions as $position)
+                                                                            <li>{{ $position->position->name }}</li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @else
+                                                                    <p>Не назначены должности</p>
+                                                                @endif
+                                                            </div>
+                                                        @else
+                                                            <p>Не назначен начальник</p>
                                                         @endif
-                                                        <div class="node-line"></div>
-                                                        <div class="data__positions">
-                                                            @if ($division->chiefEmployeePosition?->employee?->person)
-                                                                <ul>
-                                                                    @foreach ($division->chiefEmployee->positions as $position)
-                                                                        <li>{{ $position->position->name }}</li>
-                                                                    @endforeach
-                                                                </ul>
-                                                            @else
-                                                                <p>Не назначены должности</p>
-                                                            @endif
-                                                        </div>
+
                                                     </div>
                                                 </div>
 
@@ -272,6 +282,7 @@
                                                             <div class="employee">
                                                                 <a href="{{ route('employee-positions.show', [
                                                                     'id' => $employee->id,
+                                                                    'back_url' => url()->full(),
                                                                 ]) }}"
                                                                     class="node-info" aria-label="Подробнее">
                                                                     <!-- SVG иконка info -->
@@ -285,58 +296,118 @@
                                                                 </a>
 
                                                                 <div class="employee__data">
-                                                                    <div class="photo">
-                                                                        @if (isset($employee->person->photo))
-                                                                            <img
-                                                                                src="{{ asset('storage/' . $employee->person->photo) }}">
-                                                                        @else
-                                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                viewBox="0 0 64 64">
-                                                                                <circle cx="32" cy="18"
-                                                                                    r="10" fill="#e5e7eb" />
-                                                                                <path
-                                                                                    d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                                                    fill="#d1d5db" />
-                                                                            </svg>
-                                                                        @endif
-                                                                    </div>
+                                                                    @if ($employee->person)
+                                                                        <div class="photo">
+                                                                            @if (isset($employee->person->photo))
+                                                                                <img
+                                                                                    src="{{ asset('storage/' . $employee->person->photo) }}">
+                                                                            @else
+                                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                                    viewBox="0 0 64 64">
+                                                                                    <circle cx="32" cy="18"
+                                                                                        r="10" fill="#e5e7eb" />
+                                                                                    <path
+                                                                                        d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                                                        fill="#d1d5db" />
+                                                                                </svg>
+                                                                            @endif
+                                                                        </div>
+                                                                    @endif
 
                                                                     <div class="employee__fio">
-                                                                        @if (!$employee->person)
-                                                                            <p>Нет <br> персональных <br> данных</p>
+                                                                        @if ($employee->person)
+                                                                            <p>{{ $employee->person->last_name ?? '' }}</p>
+                                                                            <p>{{ $employee->person->first_name ?? '' }}
+                                                                            </p>
+                                                                            <p>{{ $employee->person->patronymic ?? '' }}
+                                                                            </p>
+
+                                                                            <div class="node-line"></div>
+
+                                                                            <div class="employee__positions">
+                                                                                @if ($employee->positions->count())
+                                                                                    <ul>
+                                                                                        @foreach ($employee->positions as $position)
+                                                                                            <li>{{ $position->position->name }}
+                                                                                                {{ $position->rate }}</li>
+                                                                                        @endforeach
+                                                                                    </ul>
+                                                                                @else
+                                                                                    <p>Не назначены должности</p>
+                                                                                @endif
+                                                                            </div>
                                                                         @else
-                                                                            <p>{{ $employee->person->last_name }}</p>
-                                                                            <p>{{ $employee->person->first_name }}</p>
-                                                                            <p>{{ $employee->person->patronymic }}</p>
+                                                                            <p>Нет <br> персональных <br> данных</p>
                                                                         @endif
                                                                     </div>
-                                                                </div>
-
-                                                                <div class="node-line"></div>
-
-                                                                <div class="employee__positions">
-                                                                    @if ($employee->positions->count())
-                                                                        <ul>
-                                                                            @foreach ($employee->positions as $position)
-                                                                                <li>{{ $position->position->name }}
-                                                                                    {{ $position->rate }}</li>
-                                                                            @endforeach
-                                                                        </ul>
-                                                                    @else
-                                                                        <p>Не назначены должности</p>
-                                                                    @endif
                                                                 </div>
                                                             </div>
                                                         @endforeach
+
+
+                                                        <a href="{{ route('employees.create', [
+                                                            'commissariat_id' => $commissariat->id,
+                                                            'department_id' => $department->id,
+                                                            'division_id' => $division->id,
+                                                            'back_url' => url()->full(),
+                                                        ]) }}"
+                                                            class="mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                            <svg class="w-5 h-5 mr-2" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                            </svg>
+                                                            Добавить сотрудника
+                                                        </a>
+
                                                     </div>
                                                 @else
-                                                    <p>Не назначены сотрудники</p>
+                                                    <a href="{{ route('employees.create', [
+                                                        'commissariat_id' => $commissariat->id,
+                                                        'department_id' => $department->id,
+                                                        'division_id' => $division->id,
+                                                        'back_url' => url()->full(),
+                                                    ]) }}"
+                                                        class="mt-2 inline-flex items-center px-6 py-3 bg-[#a37084] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                        </svg>
+                                                        Добавить сотрудника
+                                                    </a>
                                                 @endif
                                             </div>
                                         @endforeach
+
+                                        <a href="{{ route('divisions.create', [
+                                            'commissariat_id' => $commissariat->id,
+                                            'department_id' => $department->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}"
+                                            class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Добавить отделение
+                                        </a>
                                     </div>
                                 @else
-                                    <p>Не назначены отделения</p>
+                                    <a href="{{ route('divisions.create', [
+                                        'commissariat_id' => $commissariat->id,
+                                        'department_id' => $department->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
+                                        class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Добавить отделение
+                                    </a>
                                 @endif
                             </div>
                         @endforeach
@@ -352,6 +423,7 @@
                                         <div class="employee">
                                             <a href="{{ route('employee-positions.show', [
                                                 'id' => $employee->id,
+                                                'back_url' => url()->full(),
                                             ]) }}"
                                                 class="node-info" aria-label="Подробнее">
                                                 <!-- SVG иконка info -->
@@ -365,46 +437,63 @@
 
 
                                             <div class="employee__data">
-                                                <div class="photo">
-                                                    @if (isset($employee->person->photo))
-                                                        <img src="{{ asset('storage/' . $employee->person->photo) }}">
-                                                    @else
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                                            <circle cx="32" cy="18" r="10"
-                                                                fill="#e5e7eb" />
-                                                            <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                                fill="#d1d5db" />
-                                                        </svg>
-                                                    @endif
-                                                </div>
+                                                @if ($employee->person)
+                                                    <div class="photo">
+                                                        @if (isset($employee->person->photo))
+                                                            <img src="{{ asset('storage/' . $employee->person->photo) }}">
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                                                <circle cx="32" cy="18" r="10"
+                                                                    fill="#e5e7eb" />
+                                                                <path
+                                                                    d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                                    fill="#d1d5db" />
+                                                            </svg>
+                                                        @endif
+                                                    </div>
+                                                @endif
 
                                                 <div class="employee__fio">
-                                                    @if (!$employee->person)
-                                                        <p>Нет <br> персональных <br> данных</p>
+                                                    @if ($employee->person)
+                                                        <p>{{ $employee->person->last_name ?? '' }}</p>
+                                                        <p>{{ $employee->person->first_name ?? '' }}</p>
+                                                        <p>{{ $employee->person->patronymic ?? '' }}</p>
+                                                        <div class="node-line"></div>
+
+                                                        <div class="employee__positions">
+                                                            @if ($employee->positions->count())
+                                                                <ul>
+                                                                    @foreach ($employee->positions as $position)
+                                                                        <li>{{ $position->position->name }}
+                                                                            {{ $position->rate }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @else
+                                                                <p>Не назначены должности</p>
+                                                            @endif
+                                                        </div>
                                                     @else
-                                                        <p>{{ $employee->person->last_name }}</p>
-                                                        <p>{{ $employee->person->first_name }}</p>
-                                                        <p>{{ $employee->person->patronymic }}</p>
+                                                        <p>Нет персональных данных</p>
                                                     @endif
                                                 </div>
                                             </div>
 
-                                            <div class="node-line"></div>
 
-                                            <div class="employee__positions">
-                                                @if ($employee->positions->count())
-                                                    <ul>
-                                                        @foreach ($employee->positions as $position)
-                                                            <li>{{ $position->position->name }}
-                                                                {{ $position->rate }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    <p>Не назначены должности</p>
-                                                @endif
-                                            </div>
                                         </div>
                                     @endforeach
+
+                                    <a href="{{ route('employees.create', [
+                                        'commissariat_id' => $commissariat->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
+                                        class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Добавить сотрудника
+                                    </a>
                                 </div>
                             </div>
                         @endif
@@ -419,6 +508,7 @@
                                         <div class="employee">
                                             <a href="{{ route('employee-positions.show', [
                                                 'id' => $employee->id,
+                                                'back_url' => url()->full(),
                                             ]) }}"
                                                 class="node-info" aria-label="Подробнее">
                                                 <!-- SVG иконка info -->
@@ -432,46 +522,64 @@
 
 
                                             <div class="employee__data">
-                                                <div class="photo">
-                                                    @if (isset($employee->person->photo))
-                                                        <img src="{{ asset('storage/' . $employee->person->photo) }}">
-                                                    @else
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                                            <circle cx="32" cy="18" r="10"
-                                                                fill="#e5e7eb" />
-                                                            <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                                fill="#d1d5db" />
-                                                        </svg>
-                                                    @endif
-                                                </div>
+                                                @if ($employee->person)
+                                                    <div class="photo">
+                                                        @if (isset($employee->person->photo))
+                                                            <img src="{{ asset('storage/' . $employee->person->photo) }}">
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                                                <circle cx="32" cy="18" r="10"
+                                                                    fill="#e5e7eb" />
+                                                                <path
+                                                                    d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                                    fill="#d1d5db" />
+                                                            </svg>
+                                                        @endif
+                                                    </div>
+                                                @endif
 
                                                 <div class="employee__fio">
-                                                    @if (!$employee->person)
-                                                        <p>Нет <br> персональных <br> данных</p>
+                                                    @if ($employee->person)
+                                                        <p>{{ $employee->person->last_name ?? '' }}</p>
+                                                        <p>{{ $employee->person->first_name ?? '' }}</p>
+                                                        <p>{{ $employee->person->patronymic ?? '' }}</p>
+                                                        <div class="node-line"></div>
+
+                                                        <div class="employee__positions">
+                                                            @if ($employee->positions->count())
+                                                                <ul>
+                                                                    @foreach ($employee->positions as $position)
+                                                                        <li>{{ $position->position->name }}
+                                                                            {{ $position->rate }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @else
+                                                                <p>Не назначены должности</p>
+                                                            @endif
+                                                        </div>
                                                     @else
-                                                        <p>{{ $employee->person->last_name }}</p>
-                                                        <p>{{ $employee->person->first_name }}</p>
-                                                        <p>{{ $employee->person->patronymic }}</p>
+                                                        <p>Нет персональных данных</p>
                                                     @endif
                                                 </div>
                                             </div>
 
-                                            <div class="node-line"></div>
 
-                                            <div class="employee__positions">
-                                                @if ($employee->positions->count())
-                                                    <ul>
-                                                        @foreach ($employee->positions as $position)
-                                                            <li>{{ $position->position->name }}
-                                                                {{ $position->rate }}</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    <p>Не назначены должности</p>
-                                                @endif
-                                            </div>
                                         </div>
                                     @endforeach
+
+                                    <a href="{{ route('employees.create', [
+                                        'commissariat_id' => $commissariat->id,
+                                        'is_independent' => 1,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
+                                        class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Добавить сотрудника
+                                    </a>
                                 </div>
                             </div>
                         @endif
@@ -488,6 +596,7 @@
                                             <div class="node boss">
                                                 <a href="{{ route('divisions.show', [
                                                     'id' => $division->id,
+                                                    'back_url' => url()->full(),
                                                 ]) }}"
                                                     class="node-info" aria-label="Подробнее">
                                                     <!-- SVG иконка info -->
@@ -499,42 +608,45 @@
                                                     </svg>
                                                 </a>
 
+                                                @if ($division->chiefEmployeePosition?->employee?->person)
+                                                    <div class="photo">
+                                                        @if (isset($division->chiefEmployeePosition?->employee?->person?->photo))
+                                                            <img
+                                                                src="{{ asset('storage/' . $division->chiefEmployee->person->photo) }}">
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                                                                <circle cx="32" cy="18" r="10"
+                                                                    fill="#e5e7eb" />
+                                                                <path
+                                                                    d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
+                                                                    fill="#d1d5db" />
+                                                            </svg>
+                                                        @endif
+                                                    </div>
+                                                @endif
 
-                                                <div class="photo">
-                                                    @if (isset($division->chiefEmployeePosition?->employee?->person))
-                                                        <img
-                                                            src="{{ asset('storage/' . $division->chiefEmployee->person->photo) }}">
-                                                    @else
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-                                                            <circle cx="32" cy="18" r="10"
-                                                                fill="#e5e7eb" />
-                                                            <path d="M32 36 C20 36 12 44 12 56 L52 56 C52 44 44 36 32 36 Z"
-                                                                fill="#d1d5db" />
-                                                        </svg>
-                                                    @endif
-                                                </div>
                                                 <div class="data">
-                                                    @if (!$division->chiefEmployeePosition?->employee?->person)
-                                                        <p>Не назначен начальник</p>
-                                                    @else
+                                                    @if ($division->chiefEmployeePosition?->employee?->person)
                                                         <p class="data__fio">
                                                             {{ $division->chiefEmployee->person->last_name ?? '' }}
                                                             {{ $division->chiefEmployee->person->first_name ?? '' }}
                                                             {{ $division->chiefEmployee->person->patronymic ?? '' }}
                                                         </p>
+                                                        <div class="node-line"></div>
+                                                        <div class="data__positions">
+                                                            @if ($division->chiefEmployeePosition?->employee?->person)
+                                                                <ul>
+                                                                    @foreach ($division->chiefEmployee->positions as $position)
+                                                                        <li>{{ $position->position->name }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @else
+                                                                <p>Не назначены должности</p>
+                                                            @endif
+                                                        </div>
+                                                    @else
+                                                        <p>Не назначен начальник</p>
                                                     @endif
-                                                    <div class="node-line"></div>
-                                                    <div class="data__positions">
-                                                        @if ($division->chiefEmployeePosition?->employee?->person)
-                                                            <ul>
-                                                                @foreach ($division->chiefEmployee->positions as $position)
-                                                                    <li>{{ $position->position->name }}</li>
-                                                                @endforeach
-                                                            </ul>
-                                                        @else
-                                                            <p>Не назначены должности</p>
-                                                        @endif
-                                                    </div>
                                                 </div>
                                             </div>
 
@@ -546,6 +658,7 @@
                                                         <div class="employee">
                                                             <a href="{{ route('employee-positions.show', [
                                                                 'id' => $employee->id,
+                                                                'back_url' => url()->full(),
                                                             ]) }}"
                                                                 class="node-info" aria-label="Подробнее">
                                                                 <!-- SVG иконка info -->
@@ -575,38 +688,80 @@
                                                                 </div>
 
                                                                 <div class="employee__fio">
-                                                                    @if (!$employee->person)
-                                                                        <p>Нет <br> персональных <br> данных</p>
+                                                                    @if ($employee->person)
+                                                                        <p>{{ $employee->person->last_name ?? '' }}</p>
+                                                                        <p>{{ $employee->person->first_name ?? '' }}
+                                                                        </p>
+                                                                        <p>{{ $employee->person->patronymic ?? '' }}
+                                                                        </p>
+                                                                        <div class="node-line"></div>
+
+                                                                        <div class="employee__positions">
+                                                                            @if ($employee->positions->count())
+                                                                                <ul>
+                                                                                    @foreach ($employee->positions as $position)
+                                                                                        <li>{{ $position->position->name }}
+                                                                                            {{ $position->rate }}</li>
+                                                                                    @endforeach
+                                                                                </ul>
+                                                                            @else
+                                                                                <p>Не назначены должности</p>
+                                                                            @endif
+                                                                        </div>
                                                                     @else
-                                                                        <p>{{ $employee->person->last_name }}</p>
-                                                                        <p>{{ $employee->person->first_name }}</p>
-                                                                        <p>{{ $employee->person->patronymic }}</p>
+                                                                        <p>Нет персональных данных</p>
                                                                     @endif
                                                                 </div>
                                                             </div>
 
-                                                            <div class="node-line"></div>
 
-                                                            <div class="employee__positions">
-                                                                @if ($employee->positions->count())
-                                                                    <ul>
-                                                                        @foreach ($employee->positions as $position)
-                                                                            <li>{{ $position->position->name }}
-                                                                                {{ $position->rate }}</li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                @else
-                                                                    <p>Не назначены должности</p>
-                                                                @endif
-                                                            </div>
                                                         </div>
                                                     @endforeach
+
+                                                    <a href="{{ route('employees.create', [
+                                                        'commissariat_id' => $commissariat->id,
+                                                        'division_id' => $division->id,
+                                                        'back_url' => url()->full(),
+                                                    ]) }}"
+                                                        class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                        </svg>
+                                                        Добавить сотрудника
+                                                    </a>
                                                 </div>
                                             @else
-                                                <p>Не назначены сотрудники</p>
+                                                <a href="{{ route('employees.create', [
+                                                    'commissariat_id' => $commissariat->id,
+                                                    'division_id' => $division->id,
+                                                    'back_url' => url()->full(),
+                                                ]) }}"
+                                                    class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                    Добавить сотрудника
+                                                </a>
                                             @endif
                                         </div>
                                     @endforeach
+
+                                    <a href="{{ route('divisions.create', [
+                                        'commissariat_id' => $commissariat->id,
+                                        'back_url' => url()->full(),
+                                    ]) }}"
+                                        class=" mt-2 inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Добавить самостоятельное отделение
+                                    </a>
                                 </div>
                             </div>
                         @endif

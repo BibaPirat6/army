@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let translateY = 0;
 
     let scale = 1;
-    const MIN_SCALE = 0.4;
+    const MIN_SCALE = 0.01;
     const MAX_SCALE = 2;
 
     // Space

@@ -250,11 +250,11 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                   outline-none transition-colors text-[#060606]"
-                            autocomplete="off" value="{{ $commissariat ? $commissariat->name : "" }}">
+                            autocomplete="off" value="{{ $commissariat ? $commissariat->name : '' }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="commissariat_id" id="commissariat_id"
-                            value="{{ $commissariat ? $commissariat->id : "" }}">
+                            value="{{ $commissariat ? $commissariat->id : '' }}">
 
                         {{-- dropdown --}}
                         <ul id="commissariat_list"
@@ -288,11 +288,11 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                   outline-none transition-colors text-[#060606]"
-                            autocomplete="off" value="{{ old('department_id') }}">
+                            autocomplete="off" value="{{ $department ? $department->name : '' }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="department_id" id="department_id"
-                            value="{{ old('department_id') }}">
+                            value="{{ $department ? $department->id : '' }}">
 
                         {{-- dropdown --}}
                         <ul id="department_list"
@@ -328,11 +328,10 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                outline-none transition-colors text-[#060606]"
-                            autocomplete="off"
-                            value="{{ old('division_id') ? optional($divisions->firstWhere('id', old('division_id')))->name : '' }}">
+                            autocomplete="off" value="{{ $division ? $division->name : '' }}">
 
-                        {{-- скрытое поле для отправки формы --}}
-                        <input type="hidden" name="division_id" id="division_id" value="{{ old('division_id') }}">
+                        <input type="hidden" name="division_id" id="division_id"
+                            value="{{ $division ? $division->id : '' }}">
 
                         {{-- выпадающий список --}}
                         <ul id="division_list"
@@ -371,8 +370,8 @@
                         </label>
                         <select name="is_independent" id="is_independent"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="0" selected>Нет</option>
-                            <option value="1">Да</option>
+                            <option value="0" {{ $isIndependent ? '' : 'selected' }}>Нет</option>
+                            <option value="1" {{ $isIndependent ? 'selected' : '' }}>Да</option>
                         </select>
                     </div>
 

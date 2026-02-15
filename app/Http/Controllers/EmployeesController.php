@@ -233,6 +233,15 @@ class EmployeesController extends Controller
         $commissariat = $commissariatId
             ? Commissariat::find($commissariatId)
             : null;
+        $departmentId = $request->get('department_id');
+        $department = $departmentId
+            ? Department::find($departmentId)
+            : null;
+        $divisionId = $request->get('division_id');
+        $division = $divisionId
+            ? Division::find($divisionId)
+            : null;
+        $isIndependent = $request->get("is_independent", null);
 
 
         $positions = Position::all();
@@ -255,7 +264,10 @@ class EmployeesController extends Controller
             'departments' => $departments,
             'divisions' => $divisions,
             'rates' => $rates,
-            'commissariat' => $commissariat
+            'commissariat' => $commissariat,
+            'department' => $department,
+            'division' => $division,
+            "isIndependent"=>$isIndependent,
         ]);
     }
 

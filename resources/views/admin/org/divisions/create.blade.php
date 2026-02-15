@@ -58,10 +58,10 @@
                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                   outline-none transition-colors text-[#060606]"
                             autocomplete="off"
-                            value="{{ old('department_id') ? optional($departments->firstWhere('id', old('department_id')))->name : '' }}">
+                            value="{{ $department ? $department->name : "" }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="department_id" id="department_id" value="{{ old('department_id') }}">
+                        <input type="hidden" name="department_id" id="department_id" value="{{ $department ? $department->id : "" }}">
 
                         {{-- dropdown --}}
                         <ul id="department_list"

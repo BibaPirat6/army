@@ -38,9 +38,14 @@ class DivisionsController extends Controller
             ? Commissariat::find($commissariatId)
             : null;
 
+        $departmentId = $request->get('department_id');
+        $department = $departmentId
+            ? Department::find($departmentId)
+            : null;
+
         $backUrl = $request->get("back_url");
 
-        return view('admin.org.divisions.create', compact("commissariats", "departments", "employees", 'commissariat', 'backUrl'));
+        return view('admin.org.divisions.create', compact("commissariats", "departments", "employees", 'commissariat', 'backUrl', 'department'));
     }
 
     public function store(Request $request)

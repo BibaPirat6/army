@@ -28,8 +28,9 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    transform: translate(0px, 0px);
     transform-origin: 0 0;
+    display: inline-block;
+    min-width: max-content;
 }
 
 #canvas {
@@ -59,7 +60,7 @@ body {
 
 /* начальник комиссариата */
 
-/* .boss-wrapper {
+.boss-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -72,6 +73,7 @@ body {
     align-items: center;
     justify-content: start;
     gap: 20px;
+    height: 100px;
 }
 
 .photo {
@@ -117,7 +119,7 @@ body {
 
 .data__positions {
     color: var(--gray-middle);
-} */
+}
 
 
 
@@ -134,6 +136,8 @@ body {
     padding: 20px 15px;
     position: relative;
     border-radius: 7px;
+
+    flex-shrink: 0;
 }
 
 .dept-title {
@@ -268,10 +272,11 @@ body {
 .line.horizontal {
     position: absolute;
     top: 40px;
-    left: 0;
-    right: 0;
     height: 2px;
     background: var(--black);
+
+    left: 0;
+    width: 100%;
 }
 
 /* линии к департаментам вертикальные*/
@@ -311,7 +316,8 @@ body {
 }
 
 /* затемнение */
-.node::after, .employee::after {
+.node::after,
+.employee::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -321,7 +327,8 @@ body {
     z-index: 1;
 }
 
-.node:hover::after, .employee:hover::after {
+.node:hover::after,
+.employee:hover::after {
     opacity: 1;
 }
 
@@ -345,7 +352,8 @@ body {
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.node:hover .node-info, .employee:hover .node-info {
+.node:hover .node-info,
+.employee:hover .node-info {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
 }
