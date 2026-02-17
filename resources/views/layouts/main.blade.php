@@ -181,9 +181,7 @@
                     </a>
                 </li>
             @endif
-
-
-
+            
             <li>
                 <a href="{{ route('structure.index') }}"
                     class="font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
@@ -195,10 +193,6 @@
                     Структура
                 </a>
             </li>
-
-
-
-
 
             <li class="ml-auto">
                 <ul class="flex justify-end items-center">

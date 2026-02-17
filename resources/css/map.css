@@ -6,7 +6,7 @@
 .map-wrapper img {
   position: relative;
   z-index: 1;
-  pointer-events: none; /* 👈 важно */
+  pointer-events: none; 
 }
 
 /* СЕТКА */
@@ -14,13 +14,15 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(100, 1fr);
-  grid-template-rows: repeat(60, 1fr);
+  grid-template-columns: repeat(200, 1fr);
+  grid-template-rows: repeat(120, 1fr);
   z-index: 2;
 }
 
+/* точка */
 .cell:hover{
   background-color: red;
+  border-radius: 200%;
 }
 
 /* МАРКЕРЫ */
@@ -28,17 +30,17 @@
   position: absolute;
   inset: 0;
   z-index: 3;
-  pointer-events: none; /* 👈 мышь ПРОХОДИТ СКВОЗЬ */
+  pointer-events: none; 
 }
 
-/* САМ МАРКЕР */
+/*  МАРКЕР */
 .marker {
-  pointer-events: auto; /* 👈 НО САМ МАРКЕР ЛОВИТ */
+  pointer-events: auto; 
   cursor: pointer;
 
   position: absolute;
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
   background: red;
 
   display: flex;

@@ -9,7 +9,6 @@
 @endsection
 
 @section(section: 'content')
-
     <div class="max-w-4xl p-6 mx-auto">
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
@@ -72,8 +71,8 @@
 
         {{-- СЕТКА ДЛЯ HOVER И КЛИКА --}}
         <div class="grid grid-cells">
-            @for ($y = 0; $y < 60; $y++)
-                @for ($x = 0; $x < 100; $x++)
+            @for ($y = 0; $y < 120; $y++)
+                @for ($x = 0; $x < 200; $x++)
                     <div class="cell" data-x="{{ $x }}" data-y="{{ $y }}"></div>
                 @endfor
             @endfor
@@ -84,8 +83,8 @@
             @foreach ($commissariats as $commissariat)
                 <div class="marker" data-id="{{ $commissariat->id }}"
                     style="
-                    left: {{ ($commissariat->longitude / 100) * 100 }}%;
-                    top: {{ ($commissariat->latitude / 60) * 100 }}%;
+                    left: {{ ($commissariat->longitude / 200) * 100 }}%;
+                    top: {{ ($commissariat->latitude / 120) * 100 }}%;
                 "
                     title="{{ $commissariat->name }} (X: {{ $commissariat->longitude }} Y: {{ $commissariat->latitude }})">
                     {{ $commissariat->id }}

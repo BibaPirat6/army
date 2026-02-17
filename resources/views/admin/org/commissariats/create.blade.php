@@ -101,7 +101,7 @@
                         <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">
                             Координаты по горизонтали
                         </label>
-                        <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="99"
+                        <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="200"
                             min="1" value="{{ old('longitude', $x) }}"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
@@ -111,7 +111,7 @@
                         <label for="latitude" class="block text-sm font-medium text-[#565A5B] mb-2">
                             Координаты по вертикали
                         </label>
-                        <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="59"
+                        <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="120"
                             min="1" value="{{ old('latitude', $y) }}"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
