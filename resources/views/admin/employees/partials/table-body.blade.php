@@ -74,22 +74,21 @@
                     </ul>
 
                     {{-- меню кнопок --}}
-                    <div class="relative inline-block text-left group">
-                        {{-- Кнопка-триггер с тремя точками --}}
+                    <div class="relative inline-block text-left">
+                        <!-- Кнопка-триггер -->
                         <button
-                            class="p-1.5 text-gray-500 hover:text-[#A60644] hover:bg-gray-100 rounded-full transition-colors"
+                            class="dropdown-btn p-1.5 text-gray-500 hover:text-[#A60644] hover:bg-gray-100 rounded-full transition-colors"
                             title="Действия">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                    d="M12 5v.01M12 12v.01M12 19v.01" />
                             </svg>
                         </button>
 
-                        {{-- Выпадающее меню (горизонтальное вправо) --}}
+                        <!-- Меню -->
                         <div
-                            class="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
-                opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                transition-all duration-200 p-1 flex flex-row gap-0.5 min-w-[40px]">
+                            class="dropdown-menu absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
+        p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
 
                             <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                 class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"

@@ -23,80 +23,146 @@
     @stack('styles')
 </head>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const dropdowns = document.querySelectorAll(".dropdown-btn");
+
+        dropdowns.forEach(btn => {
+            const menu = btn.nextElementSibling; // сразу следующий div
+            const arrow = btn.querySelector(".dropdown-arrow");
+
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                // закрыть все остальные dropdown
+                document.querySelectorAll(".dropdown-menu").forEach(m => {
+                    if (m !== menu) {
+                        m.classList.add("hidden", "opacity-0", "scale-95");
+                    }
+                });
+
+                document.querySelectorAll(".dropdown-arrow").forEach(a => {
+                    if (a !== arrow) a.classList.remove("rotate-180");
+                });
+
+                // открыть/закрыть текущий
+                menu.classList.toggle("hidden");
+                setTimeout(() => {
+                    menu.classList.toggle("opacity-0");
+                    menu.classList.toggle("scale-95");
+                }, 10);
+
+                arrow.classList.toggle("rotate-180");
+            });
+
+            // чтобы клик внутри меню не закрывал его
+            menu.addEventListener("click", function(e) {
+                e.stopPropagation();
+            });
+        });
+
+        // закрытие при клике вне
+        document.addEventListener("click", function() {
+            document.querySelectorAll(".dropdown-menu").forEach(m => {
+                m.classList.add("hidden", "opacity-0", "scale-95");
+            });
+
+            document.querySelectorAll(".dropdown-arrow").forEach(a => {
+                a.classList.remove("rotate-180");
+            });
+        });
+    });
+</script>
+
+
+
 <body style="background: #f4f0f0">
     <nav class="navigation fixed top-0 left-0 right-0 z-[900] bg-[#e7e1e1] border-b border-[#BFBFBF] shadow-lg">
         <ul class="main-nav flex list-none m-0 p-0 gap-5 items-center px-5 py-3">
             @if (auth()->check() && auth()->user()->role?->name === 'admin')
-                <li class="group relative">
-                    <span
-                        class="dropdown-toggle cursor-pointer font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
-                        <svg class="w-5 h-5 mr-1 text-[#A60644]" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        Данные
-                        <svg class="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
-                        </svg>
-                    </span>
-                    <ul
-                        class="dropdown-menu absolute top-full left-0 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[220px] z-[1000] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 backdrop-blur-sm">
-                        <li class="mb-1 last:mb-0">
-                            <a href="{{ route('users.index') }}"
-                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                                Пользователи
-                            </a>
-                        </li>
-                        <li class="mb-1 last:mb-0">
-                            <a href="{{ route('persons.index') }}"
-                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2">
-                                    </path>
-                                </svg>
-                                Перс. данные
-                            </a>
-                        </li>
-                        <li class="mb-0">
-                            <a href="{{ route('work-statuses.index') }}"
-                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                                    </path>
-                                </svg>
-                                Рабочие статусы
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                <li class="relative">
 
-                <li class="group relative">
-                    <span
-                        class="dropdown-toggle cursor-pointer font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
+                    <!-- Кнопка -->
+                    <button type="button"
+                        class="dropdown-btn cursor-pointer font-bold text-[#060606] px-3 py-2 flex items-center gap-1 transition-colors duration-200 hover:text-[#A60644]">
+
                         <svg class="w-5 h-5 mr-1 text-[#A60644]" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                             </path>
                         </svg>
-                        Должности
-                        <svg class="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" fill="none"
+
+                        Данные
+
+                        <svg class="w-4 h-4 transition-transform duration-300 dropdown-arrow" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
                             </path>
                         </svg>
-                    </span>
+                    </button>
+
+
+                    <!-- Меню -->
                     <ul
-                        class="dropdown-menu absolute top-full left-0 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[240px] z-[1000] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 backdrop-blur-sm">
+                        class="dropdown-menu absolute top-full left-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[240px] z-[1000]
+               hidden opacity-0 scale-95 transition-all duration-200">
+
+                        <li class="mb-1 last:mb-0">
+                            <a href="{{ route('users.index') }}"
+                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5">
+                                Пользователи
+                            </a>
+                        </li>
+
+                        <li class="mb-1 last:mb-0">
+                            <a href="{{ route('persons.index') }}"
+                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5">
+                                Перс. данные
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('work-statuses.index') }}"
+                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5">
+                                Рабочие статусы
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
+
+
+
+                <li class="relative">
+
+                    <!-- Кнопка -->
+                    <button type="button"
+                        class="dropdown-btn cursor-pointer font-bold text-[#060606] px-3 py-2 flex items-center gap-1 transition-colors duration-200 hover:text-[#A60644]">
+
+                        <svg class="w-5 h-5 mr-1 text-[#A60644]" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                            </path>
+                        </svg>
+
+                        Должности
+
+                        <svg class="w-4 h-4 transition-transform duration-300 dropdown-arrow" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <!-- Меню -->
+                    <ul
+                        class="dropdown-menu absolute top-full left-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[240px] z-[1000]
+               hidden opacity-0 scale-95 transition-all duration-200">
+
+                        <!-- ТВОИ ПУНКТЫ МЕНЮ БЕЗ ИЗМЕНЕНИЙ -->
                         <li class="mb-1 last:mb-0">
                             <a href="{{ route('commissariats.index') }}"
                                 class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
@@ -181,7 +247,7 @@
                     </a>
                 </li>
             @endif
-            
+
             <li>
                 <a href="{{ route('structure.index') }}"
                     class="font-bold text-[#060606] px-3 py-2 block transition-colors duration-200 hover:text-[#A60644] flex items-center gap-1">
@@ -233,3 +299,55 @@
 </body>
 
 </html>
+
+
+{{-- <script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const dropdowns = document.querySelectorAll(".dropdown-btn");
+
+        dropdowns.forEach(btn => {
+
+            const menu = btn.nextElementSibling;
+            const arrow = btn.querySelector(".dropdown-arrow");
+
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+
+                // закрыть все остальные
+                document.querySelectorAll(".dropdown-menu").forEach(m => {
+                    if (m !== menu) {
+                        m.classList.add("hidden", "opacity-0", "scale-95");
+                    }
+                });
+
+                document.querySelectorAll(".dropdown-arrow").forEach(a => {
+                    if (a !== arrow) {
+                        a.classList.remove("rotate-180");
+                    }
+                });
+
+                // toggle текущего
+                menu.classList.toggle("hidden");
+
+                setTimeout(() => {
+                    menu.classList.toggle("opacity-0");
+                    menu.classList.toggle("scale-95");
+                }, 10);
+
+                arrow.classList.toggle("rotate-180");
+            });
+        });
+
+        // клик вне меню
+        document.addEventListener("click", function() {
+            document.querySelectorAll(".dropdown-menu").forEach(m => {
+                m.classList.add("hidden", "opacity-0", "scale-95");
+            });
+
+            document.querySelectorAll(".dropdown-arrow").forEach(a => {
+                a.classList.remove("rotate-180");
+            });
+        });
+    });
+</script> --}}

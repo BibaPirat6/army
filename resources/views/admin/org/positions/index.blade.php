@@ -18,78 +18,72 @@
                 <p class="text-[#565A5B] mt-1">Список всех должностей</p>
             </div>
             {{-- сортировка по комиссариату --}}
-            <div class="relative group inline-block">
 
-                {{-- Кнопка --}}
-                <button
-                    class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200
-               rounded-lg transition font-medium">
 
-                    Фильтр по комиссариатам
+          <div class="relative inline-block">
 
-                    <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
+    {{-- Кнопка --}}
+    <button type="button"
+        class="dropdown-btn flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium">
+        Фильтр по комиссариатам
 
-                {{-- Dropdown --}}
-                <div
-                    class="absolute left-0 mt-2 w-72 bg-white border border-gray-200
-                rounded-xl shadow-xl z-50 p-4
-                opacity-0 invisible
-                group-hover:opacity-100 group-hover:visible
-                transition-all duration-200">
+        <svg class="w-4 h-4 transition-transform dropdown-arrow" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 9l-7 7-7-7" />
+        </svg>
+    </button>
 
-                    <form method="GET" action="{{ route('positions.index') }}">
+    {{-- Dropdown --}}
+    <div class="dropdown-menu absolute left-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-4
+                hidden opacity-0 scale-95 transition-all duration-200">
 
-                        {{-- Комиссариаты --}}
-                        <div>
-                            <span class="block text-sm font-semibold mb-2">
-                                Комиссариат
-                            </span>
+        <form method="GET" action="{{ route('positions.index') }}">
 
-                            <div class="max-h-48 overflow-y-auto space-y-2">
+            {{-- Комиссариаты --}}
+            <div>
+                <span class="block text-sm font-semibold mb-2">
+                    Комиссариат
+                </span>
 
-                                @foreach ($commissariats as $commissariat)
-                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <div class="max-h-48 overflow-y-auto space-y-2">
 
-                                        <input type="radio" name="sort_commissariat[]" value="{{ $commissariat->id }}"
-                                            {{ in_array($commissariat->id, (array) request('sort_commissariat', [])) ? 'checked' : '' }}
-                                            class="rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]">
+                    @foreach ($commissariats as $commissariat)
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
 
-                                        {{ $commissariat->name }}
+                            <input type="radio" name="sort_commissariat[]"
+                                value="{{ $commissariat->id }}"
+                                {{ in_array($commissariat->id, (array) request('sort_commissariat', [])) ? 'checked' : '' }}
+                                class="rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]">
 
-                                    </label>
-                                @endforeach
+                            {{ $commissariat->name }}
 
-                            </div>
-                        </div>
-
-                        {{-- Кнопки --}}
-                        <div class="mt-4 space-y-2">
-
-                            <button type="submit"
-                                class="w-full py-2 bg-[#A60644] text-white
-                               rounded-lg hover:bg-[#8c0538] transition">
-                                Применить
-                            </button>
-
-                            @if (request()->has('sort_commissariat'))
-                                <a href="{{ route('positions.index') }}"
-                                    class="block w-full text-center py-2 border border-gray-400
-                              rounded-lg hover:bg-gray-100 transition">
-                                    Сбросить
-                                </a>
-                            @endif
-
-                        </div>
-
-                    </form>
+                        </label>
+                    @endforeach
 
                 </div>
-
             </div>
+
+            {{-- Кнопки --}}
+            <div class="mt-4 space-y-2">
+                <button type="submit"
+                    class="w-full py-2 bg-[#A60644] text-white rounded-lg hover:bg-[#8c0538] transition">
+                    Применить
+                </button>
+
+                @if (request()->has('sort_commissariat'))
+                    <a href="{{ route('positions.index') }}"
+                        class="block w-full text-center py-2 border border-gray-400 rounded-lg hover:bg-gray-100 transition">
+                        Сбросить
+                    </a>
+                @endif
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
 
 
             <a href="{{ route('positions.create') }}"
