@@ -82,7 +82,9 @@
                                             :items="$commissariats" valueKey="id" :selected="request('sort_commissariat', [])" :labelCallback="fn($item) => 'ID: ' . $item->id . ' | ' . $item->name" />
 
                                         <x-filter-checkbox-block title="Отделы" name="sort_department" :items="$departments"
-                                            valueKey="id" :selected="request('sort_department', [])" :labelCallback="fn($item) => 'ID: ' .
+                                            valueKey="id" :sephp artisan serve --host=0.0.0.0
+                                            npm run dev
+                                            lected="request('sort_department', [])" :labelCallback="fn($item) => 'ID: ' .
                                                 $item->id .
                                                 ' | ' .
                                                 $item->name .
