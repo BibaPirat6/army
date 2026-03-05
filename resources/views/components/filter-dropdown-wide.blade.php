@@ -1,3 +1,4 @@
+{{-- В компоненте filter-dropdown-wide.blade.php --}}
 @props(['title', 'route'])
 
 <th class="relative inline-block px-4 py-2 text-left font-medium whitespace-nowrap">
@@ -13,13 +14,24 @@
     </button>
 
     <!-- Содержимое dropdown -->
-    <div
-        class="dropdown-menu absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[950px] bg-white border rounded-xl shadow-xl p-4
-               opacity-0 scale-95 hidden transition-all duration-200 z-50">
+    <div class="dropdown-menu absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[950px] bg-white border rounded-xl shadow-xl p-4 hidden opacity-0 scale-95 transition-all duration-200 z-[9999]">
 
-        <div class="grid grid-cols-2 gap-6 text-sm">
-            {{ $slot }}
-        </div>
+        <form method="GET" action="{{ $route }}" class="filter-form">
+            <div class="grid grid-cols-2 gap-6 text-sm">
+                {{ $slot }}
+            </div>
+            
+            <div class="col-span-2 flex justify-end gap-2 mt-4 pt-2 border-t">
+                <button type="submit"
+                    class="px-6 py-2 bg-[#A60644] text-white rounded-lg hover:bg-[#A60644]/90 transition cursor-pointer">
+                    Применить фильтр
+                </button>
+                <a href="{{ $route }}"
+                    class="px-6 py-2 border border-gray-500 rounded-lg hover:bg-gray-100 transition inline-block text-center">
+                    Сбросить
+                </a>
+            </div>
+        </form>
 
     </div>
 

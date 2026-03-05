@@ -34,6 +34,7 @@
 
             btn.addEventListener("click", function(e) {
                 e.stopPropagation();
+                e.preventDefault(); // Добавили preventDefault для надежности
 
                 // закрыть все остальные dropdown
                 document.querySelectorAll(".dropdown-menu").forEach(m => {
@@ -63,15 +64,41 @@
         });
 
         // закрытие при клике вне
-        document.addEventListener("click", function() {
-            document.querySelectorAll(".dropdown-menu").forEach(m => {
-                m.classList.add("hidden", "opacity-0", "scale-95");
-            });
+        document.addEventListener("click", function(e) {
+            // Проверяем, что клик был не по кнопке submit и не по элементам формы
+            if (!e.target.closest('.dropdown-menu') && !e.target.closest('.dropdown-btn')) {
+                document.querySelectorAll(".dropdown-menu").forEach(m => {
+                    m.classList.add("hidden", "opacity-0", "scale-95");
+                });
 
-            document.querySelectorAll(".dropdown-arrow").forEach(a => {
-                a.classList.remove("rotate-180");
+                document.querySelectorAll(".dropdown-arrow").forEach(a => {
+                    a.classList.remove("rotate-180");
+                });
+            }
+        });
+
+        // Добавляем обработчик для отправки формы через Enter в input
+        const filterInputs = document.querySelectorAll('.dropdown-menu input, .dropdown-menu select');
+        filterInputs.forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const form = this.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                }
             });
         });
+
+        // Для отладки - проверяем клики по кнопке submit
+        document.querySelectorAll('button[type="submit"]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                console.log('Submit button clicked');
+                // Не останавливаем propagation, чтобы форма отправилась
+            });
+        });
+
     });
 </script>
 

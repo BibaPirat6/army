@@ -7,6 +7,7 @@ use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PersonsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
@@ -62,6 +63,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get("/persons/{id}/edit", [PersonsController::class, "edit"])->name("persons.edit");
     Route::put("/persons/{id}", [PersonsController::class, "update"])->name("persons.update");
     Route::delete("/persons/{id}", [PersonsController::class, "delete"])->name("persons.delete");
+    // persons columns
+     Route::get("/persons-columns", [PersonsColumnsController::class, "index"])->name("persons-columns.index");
+     Route::get("/persons-columns/create", [PersonsColumnsController::class, "create"])->name("persons-columns.create");
 
     // work statuses
     Route::get("/work-statuses", [WorkStatusesController::class, "index"])->name("work-statuses.index");
