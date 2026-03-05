@@ -50,6 +50,7 @@ export default defineConfig({
     //     },
     // },
     // http://localhost:8000 запуск php artisan serve - apache не запускать 
+
     server: {
         host: '127.0.0.1',
         port: 5173,
@@ -58,6 +59,25 @@ export default defineConfig({
             host: '127.0.0.1',
         },
     }
+
+    // server: {
+    //     host: '127.0.0.1',
+    //     port: 5173,
+    //     strictPort: true,
+    //     hmr: {
+    //         host: '127.0.0.1',
+    //     },
+    // }
+
+    // тест на своем пк для клиента
+    // server: {
+    //     host: '0.0.0.0',
+    //     port: 5173,  
+    //     strictPort: true,
+    //     hmr: {
+    //         host: '192.168.0.16',
+    //     },
+    // }
 
     // тест на своем пк для клиента
     // server: {
