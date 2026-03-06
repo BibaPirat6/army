@@ -110,7 +110,7 @@ class Person extends Model
 
             $item[$field] = match ($field) {
                 'nullable' => $info->nullable === 'YES',
-                'default' => $info->default,
+                'default'  => $info->default !== null ? trim($info->default, "'\"") : null,
                 'key' => $info->key ?? '',
                 'extra' => $info->extra ?? '',
                 'comment' => $info->comment ?? '',

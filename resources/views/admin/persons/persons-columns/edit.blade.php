@@ -44,6 +44,8 @@
                             Настройки колонки
                         </h3>
 
+                        <h3>Тип: {{ $column["data_type"] }}</h3>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             <!-- Имя колонки -->
@@ -58,50 +60,7 @@
                                                                           outline-none transition-colors text-[#060606]">
                             </div>
 
-                               <div>
-                                    <label for="column_type" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                        Тип данных *
-                                    </label>
-                                    <select name="column_type" id="column_type" required class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
-                                                                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
-                                                                outline-none transition-colors text-[#060606]">
-
-                                        <option value="" disabled>— Выберите тип —</option>
-
-                                        <optgroup label="Числовые">
-                                            <option value="int" {{ $column['data_type'] === 'int' ? 'selected' : '' }}>INT (целое
-                                                число)</option>
-                                            <option value="decimal" {{ $column['data_type'] === 'decimal' ? 'selected' : '' }}>
-                                                DECIMAL (числа с плавающей точкой)</option>
-                                        </optgroup>
-
-                                        <optgroup label="Строки / Текст">
-                                            <option value="varchar" {{ $column['data_type'] === 'varchar' ? 'selected' : '' }}>
-                                                VARCHAR (до 255 символов)</option>
-                                            <option value="text" {{ $column['data_type'] === 'text' ? 'selected' : '' }}>TEXT
-                                                (комментарий, адрес, примечание)</option>
-                                        </optgroup>
-
-                                        <optgroup label="Дата и время">
-                                            <option value="date" {{ $column['data_type'] === 'date' ? 'selected' : '' }}>DATE
-                                                (2025-12-31)</option>
-                                            <option value="datetime" {{ $column['data_type'] === 'datetime' ? 'selected' : '' }}>
-                                                DATETIME (2025-12-31 23:59:59)</option>
-                                        </optgroup>
-
-                                        <optgroup label="Файлы / Бинарные">
-                                            <option value="file" {{ $column["comment"] === "file" ? 'selected' : '' }}>
-                                                Файл / Фото / Документ (PDF, Word, Excel, изображение)
-                                            </option>
-                                        </optgroup>
-
-                                        <optgroup label="Списки / Структурированные">
-                                            <option value="json" {{ $column["comment"] === "json" ? 'selected' : '' }}>
-                                                JSON (послужной список, места работы, массив объектов)
-                                            </option>
-                                        </optgroup>
-                                    </select>
-                                </div>
+                           
 
 
 

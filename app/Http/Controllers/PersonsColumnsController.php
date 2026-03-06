@@ -88,12 +88,18 @@ class PersonsColumnsController extends Controller
                 }
 
                 // 3. Default значение
-                if (array_key_exists('default', $data) && $data['default'] !== null && $data['default'] !== '') {
-                    // Важно: для CURRENT_TIMESTAMP и подобных нужно передавать как выражение
-                    if (strtoupper($data['default']) === 'CURRENT_TIMESTAMP') {
-                        $column->default(\DB::raw('CURRENT_TIMESTAMP'));
+                // Default значение
+                if (array_key_exists('default', $data)) {
+                    $def = trim($data['default'] ?? '');
+
+                    if ($def === '' || $def === null) {
+                        $column->default(null);
+                    } elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
+                        $column->default(DB::raw('CURRENT_TIMESTAMP'));
                     } else {
-                        $column->default($data['default']);
+                        // Для всех типов — используем DB::raw с правильным экранированием
+                        $escaped = addslashes($def);  // экранируем только опасные символы
+                        $column->default(DB::raw("'{$escaped}'"));
                     }
                 }
 
@@ -110,10 +116,6 @@ class PersonsColumnsController extends Controller
         }
 
     }
-
-
-
-
 
     public function edit(Request $request, $id)
     {
@@ -135,91 +137,112 @@ class PersonsColumnsController extends Controller
         $data = $request->validate(
             [
                 'column_name' => 'required|string',
-                'column_type' => 'required|string|in:int,decimal,varchar,text,date,datetime,file,json',
+                'label' => 'sometimes|nullable|string',
                 'default' => 'sometimes|nullable',
                 'nullable' => 'sometimes|in:1',
             ],
             [
-                // Сообщения для column_name
                 'column_name.required' => 'Имя колонки обязательно.',
                 'column_name.string' => 'Имя колонки должно быть текстом.',
-
-                // Сообщения для column_type
-                'column_type.required' => 'Выберите тип данных для колонки.',
-                'column_type.string' => 'Тип данных указан неверно.',
-                'column_type.in' => 'Недопустимый тип данных. Доступны: int, decimal, varchar, text, date, datetime,file,json.',
-
-                // Сообщения для default
-                'default.string' => 'Значение по умолчанию должно быть текстом.',
-
-                // Сообщения для nullable
-                'nullable.in' => 'Неверное значение для поля NULL (должно быть 1 или пусто).',
             ]
         );
 
         try {
-            $columnName = $data['column_name'];
-            $type = $data['column_type'];
 
-            // ПРОВЕРКА: колонка ДОЛЖНА существовать для изменения
+            $oldName = $id;
+            $newName = $data['column_name'];
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. Переименование колонки
+            |--------------------------------------------------------------------------
+            */
+
+            if ($oldName !== $newName) {
+                Schema::table('persons', function (Blueprint $table) use ($oldName, $newName) {
+                    $table->renameColumn($oldName, $newName);
+                });
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Получаем текущий тип колонки
+            |--------------------------------------------------------------------------
+            */
+
+            $column = DB::selectOne("
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = 'persons'
+            AND COLUMN_NAME = ?
+        ", [$newName]);
+
+            $columnType = $column->COLUMN_TYPE;
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. Формируем SQL изменения
+            |--------------------------------------------------------------------------
+            */
+
+            $nullable = ! empty($data['nullable']) ? 'NULL' : 'NOT NULL';
+
+            $default = '';
+
+            if (array_key_exists('default', $data) && $data['default'] !== null && $data['default'] !== '') {
+                $value = addslashes($data['default']);
+                $default = "DEFAULT '{$value}'";
+            }
+
+            $comment = '';
+            if (! empty($data['label'])) {
+                $label = addslashes($data['label']);
+                $comment = "COMMENT '{$label}'";
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Выполняем изменение
+            |--------------------------------------------------------------------------
+            */
+
+            DB::statement("
+            ALTER TABLE persons 
+            MODIFY `$newName` $columnType $nullable $default $comment
+        ");
+
+            return redirect($request->input('backUrl') ?? route('persons-columns.index'))
+                ->with('success', "Колонка обновлена → {$newName}");
+
+        } catch (\Exception $e) {
+
+            return back()
+                ->withInput()
+                ->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function delete(Request $request, $id)
+    {
+        $columnName = $id;
+
+        try {
             if (! Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception("Колонка «{$columnName}» не найдена в таблице persons.");
             }
 
-            Schema::table('persons', function (Blueprint $table) use ($columnName, $type, $data) {
-                $comment = null;
-                if ($type === 'file') {
-                    $comment = 'file';
-                } elseif ($type === 'json') {
-                    $comment = 'json';
-                }
-
-                $column = match ($type) {
-                    'int' => $table->integer($columnName),
-                    'decimal' => $table->decimal($columnName, 10, 2),
-                    'varchar' => $table->string($columnName, 255),
-                    'text' => $table->text($columnName),
-                    'date' => $table->date($columnName),
-                    'datetime' => $table->dateTime($columnName),
-                    'file' => $table->string($columnName, 255),
-                    'json' => $table->json($columnName),
-                    default => throw new \Exception("Неподдерживаемый тип: $type"),
-                };
-
-                if (! empty($data['nullable'])) {
-                    $column->nullable();
-                } else {
-                    $column->nullable(false);
-                }
-
-                if (isset($data['default']) && $data['default'] !== '') {
-                    if (strtoupper($data['default']) === 'CURRENT_TIMESTAMP') {
-                        $column->default(DB::raw('CURRENT_TIMESTAMP'));
-                    } else {
-                        $column->default($data['default']);
-                    }
-                } else {
-                    $column->default(null);
-                }
-
-                if ($comment !== null) {
-                    $column->comment($comment);
-                } else {
-                    $column->comment(null);
-                }
-
-                $column->change();
+            Schema::table('persons', function (Blueprint $table) use ($columnName) {
+                $table->dropColumn($columnName);
             });
 
-            $backUrl = $request->input('backUrl');
+            $backUrl = $request->get('backUrl', route('persons-columns.index'));
 
-            return redirect($backUrl ?? route('persons-columns.index'))
-                ->with('success', "Колонка «{$columnName}» успешно изменена.");
+            return redirect()->to($backUrl)
+                ->with('success', "Колонка «{$columnName}» успешно удалена!");
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->withInput()
-                ->withErrors(['error' => 'Не удалось изменить колонку: '.$e->getMessage()]);
+                ->withErrors(['error' => $e->getMessage()]);
         }
     }
 }
