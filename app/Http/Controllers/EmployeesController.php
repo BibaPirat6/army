@@ -253,6 +253,10 @@ class EmployeesController extends Controller
         preg_match_all("/'([^']+)'/", $type, $matches);
         $rates = $matches[1];
 
+
+        $columns = Person::getTableColumns();
+        
+
         return view('admin.employees.create')->with([
             "users" => $users,
             "persons" => $persons,
@@ -268,6 +272,7 @@ class EmployeesController extends Controller
             'department' => $department,
             'division' => $division,
             "isIndependent"=>$isIndependent,
+            'columns'=>$columns
         ]);
     }
 

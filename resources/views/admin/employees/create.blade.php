@@ -394,6 +394,70 @@
             </div>
         </div>
     </div>
+
+
+    <div class="w-full mx-auto p-4 sm:p-6">
+    <form method="POST" action="{{ route('persons.store') }}" enctype="multipart/form-data" class="space-y-4">
+        @csrf
+
+        @foreach ($columns as $column)
+            @php
+                $name = $column['name'];
+                $type = $column['type'];
+                $nullable = $column['nullable'] ?? false;
+                $value = old($name) ?? ($person->{$name} ?? '');
+                
+                $inputType = match(true) {
+                    str_contains($type, 'int') => 'number',
+                    str_contains($type, 'decimal') => 'number',
+                    str_contains($type, 'varchar') && $name !== 'photo' => 'text',
+                    $name === 'photo' || str_contains($type, 'file') => 'file',
+                    str_contains($type, 'json') => 'textarea',
+                    str_contains($type, 'date') && !str_contains($type, 'time') => 'date',
+                    str_contains($type, 'datetime') || str_contains($type, 'timestamp') => 'datetime-local',
+                    str_contains($type, 'text') || str_contains($type, 'longtext') => 'textarea',
+                    default => 'text',
+                };
+                
+                $isTextarea = in_array($inputType, ['textarea']);
+                $step = str_contains($type, 'decimal') ? ' step="0.01"' : '';
+            @endphp
+
+            @if (!in_array($name, ['id', 'created_at', 'updated_at'])) {{-- Игнорируем авто-поля --}}
+                <div class="flex flex-col">
+                    <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
+                        {{ ucfirst(str_replace('_', ' ', $name)) }} {{ $nullable ? '(опционально)' : '' }}
+                    </label>
+                    
+                    @if ($isTextarea)
+                        <textarea id="{{ $name }}" name="{{ $name }}" rows="3"
+                                  class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm text-[#060606] focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644] transition-colors"
+                                  placeholder="Введите {{ strtolower($name) }}">{{ $value }}</textarea>
+                    @else
+                        <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}"{{ $step }}
+                               value="{{ $value }}"
+                               class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm text-[#060606] focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644] transition-colors"
+                               placeholder="Введите {{ strtolower($name) }}" {{ $nullable ? '' : 'required' }}>
+                    @endif
+                    
+                    @error($name)
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+        @endforeach
+
+        <div class="flex justify-end mt-6">
+            <button type="submit"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/85 transition-colors shadow-sm hover:shadow active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Сохранить
+            </button>
+        </div>
+    </form>
+</div>
 @endsection
 
 
