@@ -9,7 +9,7 @@
         @include('includes.success', ['success' => session('success')])
     @endif
 
-    <div class="max-w-4xl p-6 mx-auto">
+    <div class="w-full p-6 mx-auto">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
             <div>

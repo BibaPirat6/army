@@ -13,7 +13,7 @@
     @endif
 
 
-    <div class="max-w-6xl mx-auto p-4">
+    <div class="w-full mx-auto p-4">
         <!-- кнопка создания -->
         <div class="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>

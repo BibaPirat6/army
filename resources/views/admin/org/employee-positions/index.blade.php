@@ -10,7 +10,7 @@
     @endif
 
 
-    <div class="max-w-4xl mx-auto p-6">
+    <div class="w-full mx-auto p-6">
         <!-- Заголовок -->
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-[#060606] mb-4">Назначение должностей сотрудникам</h1>

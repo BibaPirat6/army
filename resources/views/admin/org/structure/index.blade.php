@@ -33,7 +33,7 @@
                                         ⠀(ID: {{ $commissariat->id }})
                                     </span>
 
-                                    <svg class="w-4 h-4 ml-2 text-[#A60644]" fill="none" stroke="currentColor"
+                                    {{-- <svg class="w-4 h-4 ml-2 text-[#A60644]" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7"></path>
@@ -42,7 +42,7 @@
                                     <p>
                                         ⠀(X: {{ $commissariat->longitude }}
                                         Y: {{ $commissariat->latitude }})
-                                    </p>
+                                    </p> --}}
                                 </a>
                             </li>
                         @endforeach

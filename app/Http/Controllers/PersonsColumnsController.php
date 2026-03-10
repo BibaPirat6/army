@@ -28,93 +28,88 @@ class PersonsColumnsController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate(
-            [
-                'column_name' => 'required|string',
-                'column_type' => 'required|string|in:int,decimal,varchar,text,date,datetime,file,json',
-                'default' => 'sometimes|nullable',
-                'nullable' => 'sometimes|in:1',
-            ],
-            [
-                // Сообщения для column_name
-                'column_name.required' => 'Имя колонки обязательно.',
-                'column_name.string' => 'Имя колонки должно быть текстом.',
+        $data = $request->validate([
+            'column_name' => 'required|string|regex:/^[a-z0-9_]+$/|max:64',
+            'column_type' => 'required|string|in:integer,decimal,string,text,json,date,datetime,mediumBlob,longBlob',
+            'comment_ru' => 'required|nullable|string|max:255',
+            'default' => 'nullable|string|max:255',
+            'nullable' => 'sometimes|in:1',
+        ], [
+            'column_name.regex' => 'Имя колонки может содержать только латинские буквы, цифры и подчёркивание.',
+            'column_name.max' => 'Имя колонки слишком длинное (максимум 64 символа).',
 
-                // Сообщения для column_type
-                'column_type.required' => 'Выберите тип данных для колонки.',
-                'column_type.string' => 'Тип данных указан неверно.',
-                'column_type.in' => 'Недопустимый тип данных. Доступны: int, decimal, varchar, text, date, datetime,file,json.',
-
-                // Сообщения для default
-                'default.string' => 'Значение по умолчанию должно быть текстом.',
-
-                // Сообщения для nullable
-                'nullable.in' => 'Неверное значение для поля NULL (должно быть 1 или пусто).',
-            ]
-        );
+            'column_name.required' => 'Поле "Имя колонки" обязательно для заполнения.',
+            'column_type.required' => 'Поле "Тип колонки" обязательно для заполнения.',
+            'comment_ru.required' => 'Поле "Имя на русском" обязательно для заполнения.',
+        ]);
 
         try {
+            $columnName = $data['column_name'];
+
+            if (Schema::hasColumn('persons', $columnName)) {
+                throw new \Exception("колонка уже существует");
+            }
+
             Schema::table('persons', function (Blueprint $table) use ($data) {
                 $type = $data['column_type'];
-                $columnName = $data['column_name'];
-                if (Schema::hasColumn('persons', $columnName)) {
-                    throw new \Exception("Колонка «{$columnName}» уже существует в таблице persons.");
-                }
+                $name = $data['column_name'];
 
-                // Определяем тип колонки и комментарий
-                $comment = null;
-                if ($type === 'file') {
-                    $comment = 'file';
-                } elseif ($type === 'json') {
-                    $comment = 'json';
-                }
-
-                // 1. Создаём базовую колонку в зависимости от типа
                 $column = match ($type) {
-                    'int' => $table->integer($columnName),
-                    'decimal' => $table->decimal($columnName, 3, 2),
-                    'text' => $table->text($columnName),
-                    'varchar' => $table->string($columnName),
-                    'date' => $table->date($columnName)->nullable(),
-                    'datetime' => $table->dateTime($columnName)->nullable(),
-                    'file' => $table->string($columnName, 255)->nullable(),
-                    'json' => $table->json($columnName)->nullable(),
-                    default => throw new \Exception("Неподдерживаемый тип: $type"),
+                    'integer' => $table->integer($name),
+                    'decimal' => $table->decimal($name, 3, 2),   // можно сделать настраиваемым позже
+                    'string' => $table->string($name),
+                    'text' => $table->text($name),
+                    'json' => $table->json($name),
+                    'date' => $table->date($name),
+                    'datetime' => $table->dateTime($name),
+                    'mediumBlob' => $table->mediumBinary($name),     // mediumBlob
+                    'longBlob' => $table->longBinary($name),       // longBlob
+                    default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
-                // 2. Применяем модификаторы
                 if (! empty($data['nullable'])) {
                     $column->nullable();
                 }
 
-                // 3. Default значение
-                // Default значение
-                if (array_key_exists('default', $data)) {
-                    $def = trim($data['default'] ?? '');
+                // Значение по умолчанию
+                if (array_key_exists('default', $data) && $data['default'] !== null) {
+                    $def = trim($data['default']);
 
-                    if ($def === '' || $def === null) {
+                    if (strtoupper($def) === 'NULL') {
                         $column->default(null);
                     } elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
                         $column->default(DB::raw('CURRENT_TIMESTAMP'));
                     } else {
-                        // Для всех типов — используем DB::raw с правильным экранированием
-                        $escaped = addslashes($def);  // экранируем только опасные символы
-                        $column->default(DB::raw("'{$escaped}'"));
+                        $column->default($def);
                     }
                 }
 
-                // Устанавливаем комментарий
-                if ($comment !== null) {
-                    $column->comment($comment);
+                // Комментарий — только то, что ввёл пользователь (русский текст)
+                if (! empty($data['comment_ru'])) {
+                    $column->comment($data['comment_ru']);
                 }
             });
+
+            // Сохраняем метаданные колонки в persons_columns
+            Person::create([
+                'column_name' => $columnName,
+                'type' => $data['column_type'],
+                'comment_ru' => $data['comment_ru'],
+                'nullable' => ! empty($data['nullable']),
+                'default' => $data['default'] ?? null,
+                // другие поля, если есть
+            ]);
+
             $backUrl = $request->input('backUrl');
 
-            return redirect($backUrl ?? route('persons-columns.index'))->with('success', 'Колонка успешно создана.');
-        } catch (\Exception $e) {
-            return redirect(route('persons-columns.create'))->withErrors(['error' => 'Не удалось добавить колонку: '.$e->getMessage()]);
-        }
+            return redirect($backUrl ?? route('persons-columns.index'))
+                ->with('success', 'Колонка успешно создана.');
 
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Ошибка при создании колонки: '.$e->getMessage()]);
+        }
     }
 
     public function edit(Request $request, $id)

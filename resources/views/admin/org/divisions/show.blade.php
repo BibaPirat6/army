@@ -273,7 +273,7 @@
                                         class="text-[#060606]">{{ \Carbon\Carbon::parse($division?->chiefEmployeePosition?->employee?->person?->updated_at)->format('d.m.Y H:i') }}</span>
                                 </div>
 
-                                <div>
+                                {{-- <div>
                                     <a href="{{ route('persons.edit', [
                                         'id' => $division->chiefEmployee->person->id,
                                         'back_url' => url()->full(),
@@ -304,7 +304,7 @@
                                             Удалить
                                         </button>
                                     </form>
-                                </div>
+                                </div> --}}
                             </div>
                         </details>
                     @else
@@ -367,7 +367,7 @@
                                     </span>
                                 </div>
 
-                                <div>
+                                {{-- <div>
                                     <a href="{{ route('users.edit', [
                                         'id' => $division->chiefEmployee->user->id,
                                         'back_url' => url()->full(),
@@ -398,7 +398,7 @@
                                             Удалить
                                         </button>
                                     </form>
-                                </div>
+                                </div> --}}
                             </div>
                         </details>
                     @else
