@@ -21,8 +21,7 @@
                                 class="bg-white rounded-lg border border-[#BFBFBF] p-4 hover:bg-[#A60644]/5 transition-colors duration-200">
                                 <a href="{{ route('structure.show', $commissariat->id) }}"
                                     class="inline-flex items-center text-[#060606] font-medium hover:text-[#A60644] transition-colors duration-200">
-                                    <svg class="w-5 h-5 mr-3 text-[#A60644]" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 mr-3 text-[#A60644]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                                         </path>
@@ -35,8 +34,8 @@
 
                                     {{-- <svg class="w-4 h-4 ml-2 text-[#A60644]" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                        </path>
                                     </svg>
 
                                     <p>
@@ -50,8 +49,7 @@
                 @else
                     <div class="py-12 text-center">
                         <div class="flex flex-col items-center justify-center">
-                            <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                            <svg class="w-16 h-16 text-[#BFBFBF] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
                                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                                 </path>
@@ -81,11 +79,10 @@
         {{-- МАРКЕРЫ КОМИССАРИАТОВ --}}
         <div class="grid grid-markers">
             @foreach ($commissariats as $commissariat)
-                <div class="marker" data-id="{{ $commissariat->id }}"
-                    style="
-                    left: {{ ($commissariat->longitude / 200) * 100 }}%;
-                    top: {{ ($commissariat->latitude / 120) * 100 }}%;
-                "
+                <div class="marker" data-id="{{ $commissariat->id }}" style="
+                                    left: {{ ($commissariat->longitude / 200) * 100 }}%;
+                                    top: {{ ($commissariat->latitude / 120) * 100 }}%;
+                                "
                     title="{{ $commissariat->name }} (X: {{ $commissariat->longitude }} Y: {{ $commissariat->latitude }})">
                     {{ $commissariat->id }}
                 </div>
@@ -103,10 +100,10 @@
             cell.addEventListener('click', () => {
                 const x = cell.dataset.x;
                 const y = cell.dataset.y;
-                
+
 
                 if (confirm(`Назначить комиссариат в X:${x}, Y:${y}?`)) {
-                    const backUrl = encodeURIComponent(window.location.href); 
+                    const backUrl = encodeURIComponent(window.location.href);
                     window.location.href =
                         "{{ route('commissariats.create') }}" + `?x=${x}&y=${y}&back_url=${backUrl}`;
                 }
@@ -119,7 +116,7 @@
                 e.stopPropagation();
 
                 const id = marker.dataset.id;
-                const backUrl = encodeURIComponent(window.location.href); 
+                const backUrl = encodeURIComponent(window.location.href);
 
                 const url = `/commissariats/${id}?back_url=${backUrl}`;
 

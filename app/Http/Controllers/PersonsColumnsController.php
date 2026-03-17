@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Person;
+use App\Models\PersonColumn;
 use DB;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class PersonsColumnsController extends Controller
     {
         $backUrl = $request->input('back_url');
 
-        $columns = Person::getTableColumns();
+        $columns = PersonColumn::getTableColumns('persons');
 
         return view('admin.persons.persons-columns.index', compact('backUrl', 'columns'));
     }
@@ -30,7 +31,7 @@ class PersonsColumnsController extends Controller
     {
         $data = $request->validate([
             'column_name' => 'required|string|regex:/^[a-z0-9_]+$/|max:64',
-            'column_type' => 'required|string|in:integer,decimal,string,text,json,date,datetime,mediumBlob,longBlob',
+            'column_type' => 'required|string|in:integer,decimal,string,text,json,date,datetime,blob',
             'comment_ru' => 'required|nullable|string|max:255',
             'default' => 'nullable|string|max:255',
             'nullable' => 'sometimes|in:1',
@@ -47,7 +48,15 @@ class PersonsColumnsController extends Controller
             $columnName = $data['column_name'];
 
             if (Schema::hasColumn('persons', $columnName)) {
-                throw new \Exception("колонка уже существует");
+                throw new \Exception('колонка уже существует');
+            }
+
+            if (
+                empty($data['nullable']) &&
+                ! isset($data['default']) &&
+                in_array($data['column_type'], ['date', 'datetime'])
+            ) {
+                throw new \Exception('Для DATE/DATETIME без default поле должно быть nullable');
             }
 
             Schema::table('persons', function (Blueprint $table) use ($data) {
@@ -56,14 +65,13 @@ class PersonsColumnsController extends Controller
 
                 $column = match ($type) {
                     'integer' => $table->integer($name),
-                    'decimal' => $table->decimal($name, 3, 2),   // можно сделать настраиваемым позже
+                    'decimal' => $table->decimal($name, 3, 2),
                     'string' => $table->string($name),
                     'text' => $table->text($name),
                     'json' => $table->json($name),
                     'date' => $table->date($name),
                     'datetime' => $table->dateTime($name),
-                    'mediumBlob' => $table->mediumBinary($name),     // mediumBlob
-                    'longBlob' => $table->longBinary($name),       // longBlob
+                    'blob' => $table->binary($name)->nullable(),
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
@@ -71,16 +79,26 @@ class PersonsColumnsController extends Controller
                     $column->nullable();
                 }
 
+                if (empty($data['nullable']) && empty($data['default'])) {
+                    $column->nullable();
+                }
+
                 // Значение по умолчанию
                 if (array_key_exists('default', $data) && $data['default'] !== null) {
                     $def = trim($data['default']);
-
-                    if (strtoupper($def) === 'NULL') {
-                        $column->default(null);
-                    } elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
-                        $column->default(DB::raw('CURRENT_TIMESTAMP'));
+                    if ($type === 'blob') {
                     } else {
-                        $column->default($def);
+                        if (strtoupper($def) === 'NULL') {
+                            $column->default(null);
+                        } elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
+                            $column->default(DB::raw('CURRENT_TIMESTAMP'));
+                        } else {
+                            if (in_array($type, ['integer', 'bigint', 'float', 'double', 'decimal'])) {
+                                $column->default(is_numeric($def) ? $def : 0);
+                            } else {
+                                $column->default($def);
+                            }
+                        }
                     }
                 }
 
@@ -91,13 +109,12 @@ class PersonsColumnsController extends Controller
             });
 
             // Сохраняем метаданные колонки в persons_columns
-            Person::create([
+            PersonColumn::create([
                 'column_name' => $columnName,
                 'type' => $data['column_type'],
                 'comment_ru' => $data['comment_ru'],
                 'nullable' => ! empty($data['nullable']),
                 'default' => $data['default'] ?? null,
-                // другие поля, если есть
             ]);
 
             $backUrl = $request->input('backUrl');
