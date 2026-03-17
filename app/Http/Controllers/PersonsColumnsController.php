@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Person;
 use App\Models\PersonColumn;
 use DB;
 use Illuminate\Database\Schema\Blueprint;
@@ -34,7 +33,6 @@ class PersonsColumnsController extends Controller
             'column_type' => 'required|string|in:integer,decimal,string,text,json,date,datetime,blob',
             'comment_ru' => 'required|nullable|string|max:255',
             'default' => 'nullable|string|max:255',
-            'nullable' => 'sometimes|in:1',
         ], [
             'column_name.regex' => 'Имя колонки может содержать только латинские буквы, цифры и подчёркивание.',
             'column_name.max' => 'Имя колонки слишком длинное (максимум 64 символа).',
@@ -49,14 +47,6 @@ class PersonsColumnsController extends Controller
 
             if (Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception('колонка уже существует');
-            }
-
-            if (
-                empty($data['nullable']) &&
-                ! isset($data['default']) &&
-                in_array($data['column_type'], ['date', 'datetime'])
-            ) {
-                throw new \Exception('Для DATE/DATETIME без default поле должно быть nullable');
             }
 
             Schema::table('persons', function (Blueprint $table) use ($data) {
@@ -75,40 +65,16 @@ class PersonsColumnsController extends Controller
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
-                if (! empty($data['nullable'])) {
-                    $column->nullable();
-                }
-
-                if (empty($data['nullable']) && empty($data['default'])) {
-                    $column->nullable();
-                }
-
-                // Значение по умолчанию
-                if (array_key_exists('default', $data) && $data['default'] !== null) {
+                if (array_key_exists('default', $data) && $data['default'] !== null && $data['default'] !== '') {
                     $def = trim($data['default']);
-                    if ($type === 'blob') {
-                    } else {
-                        if (strtoupper($def) === 'NULL') {
-                            $column->default(null);
-                        } elseif (strtoupper($def) === 'CURRENT_TIMESTAMP') {
-                            $column->default(DB::raw('CURRENT_TIMESTAMP'));
-                        } else {
-                            if (in_array($type, ['integer', 'bigint', 'float', 'double', 'decimal'])) {
-                                $column->default(is_numeric($def) ? $def : 0);
-                            } else {
-                                $column->default($def);
-                            }
-                        }
-                    }
+                    $column->default($def);
                 }
 
-                // Комментарий — только то, что ввёл пользователь (русский текст)
                 if (! empty($data['comment_ru'])) {
                     $column->comment($data['comment_ru']);
                 }
             });
 
-            // Сохраняем метаданные колонки в persons_columns
             PersonColumn::create([
                 'column_name' => $columnName,
                 'type' => $data['column_type'],
@@ -134,8 +100,7 @@ class PersonsColumnsController extends Controller
         $backUrl = $request->input('back_url');
         $columnName = $id;
 
-        // Получаем данные о колонке
-        $column = Person::getColumnInfo($columnName);
+        $column = PersonColumn::getColumnInfo('persons', $columnName);
 
         if (! $column) {
             return redirect()->back()->withErrors(['error' => "Колонка «{$columnName}» не найдена"]);
@@ -151,86 +116,84 @@ class PersonsColumnsController extends Controller
                 'column_name' => 'required|string',
                 'label' => 'sometimes|nullable|string',
                 'default' => 'sometimes|nullable',
-                'nullable' => 'sometimes|in:1',
+                'comment_ru' => 'required|nullable|string|max:255',
             ],
             [
                 'column_name.required' => 'Имя колонки обязательно.',
                 'column_name.string' => 'Имя колонки должно быть текстом.',
+                'comment_ru.required' => 'Поле "Имя на русском" обязательно для заполнения.',
             ]
         );
 
+        $table = 'persons';
+        $oldName = $id;
+        $newName = $data['column_name'];
+
         try {
-
-            $oldName = $id;
-            $newName = $data['column_name'];
-
-            /*
-            |--------------------------------------------------------------------------
-            | 1. Переименование колонки
-            |--------------------------------------------------------------------------
-            */
-
+            // Если имя изменилось - переименовываем
             if ($oldName !== $newName) {
-                Schema::table('persons', function (Blueprint $table) use ($oldName, $newName) {
+                Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
                     $table->renameColumn($oldName, $newName);
                 });
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | 2. Получаем текущий тип колонки
-            |--------------------------------------------------------------------------
-            */
-
-            $column = DB::selectOne("
-            SELECT COLUMN_TYPE 
+            // Получаем информацию о колонке (уже по новому имени!)
+            $column = DB::selectOne('
+            SELECT COLUMN_TYPE, DATA_TYPE
             FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = 'persons'
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = ?
             AND COLUMN_NAME = ?
-        ", [$newName]);
+        ', [$table, $newName]); // Используем $newName, а не $oldName!
 
-            $columnType = $column->COLUMN_TYPE;
-
-            /*
-            |--------------------------------------------------------------------------
-            | 3. Формируем SQL изменения
-            |--------------------------------------------------------------------------
-            */
-
-            $nullable = ! empty($data['nullable']) ? 'NULL' : 'NOT NULL';
-
-            $default = '';
-
-            if (array_key_exists('default', $data) && $data['default'] !== null && $data['default'] !== '') {
-                $value = addslashes($data['default']);
-                $default = "DEFAULT '{$value}'";
+            if (! $column) {
+                throw new \Exception('Колонка не найдена в базе данных');
             }
 
-            $comment = '';
-            if (! empty($data['label'])) {
-                $label = addslashes($data['label']);
-                $comment = "COMMENT '{$label}'";
+            $type = $column->COLUMN_TYPE;
+            $dataType = $column->DATA_TYPE;
+
+            $defaultSql = '';
+            $value = $data['default'] ?? null;
+
+            if ($value !== null && $value !== '') {
+                // Пользователь явно указал default
+                if (in_array($dataType, ['date', 'datetime', 'timestamp']) && strtoupper($value) === 'CURRENT_TIMESTAMP') {
+                    $defaultSql = 'DEFAULT CURRENT_TIMESTAMP';
+                } elseif ($dataType === 'json' || str_contains($type, 'blob')) {
+                    // BLOB/JSON не поддерживают default
+                } else {
+                    $defaultSql = "DEFAULT '".addslashes($value)."'";
+                }
+            } else {
+                // Пользователь очистил поле default
+                if (in_array($dataType, ['varchar', 'text', 'char'])) {
+                    $defaultSql = "DEFAULT ''"; // пустая строка
+                } elseif (in_array($dataType, ['int', 'decimal', 'float'])) {
+                    $defaultSql = 'DEFAULT 0'; // число по умолчанию
+                } elseif (in_array($dataType, ['date', 'datetime', 'timestamp'])) {
+                    $defaultSql = ''; // оставляем без default (NULL)
+                }
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | 4. Выполняем изменение
-            |--------------------------------------------------------------------------
-            */
+            $commentSql = '';
+            if (! empty($data['comment_ru'])) {
+                $commentSql = "COMMENT '".addslashes($data['comment_ru'])."'";
+            }
 
             DB::statement("
-            ALTER TABLE persons 
-            MODIFY `$newName` $columnType $nullable $default $comment
+            ALTER TABLE `$table`
+            MODIFY `$newName` $type $defaultSql $commentSql
         ");
 
-            return redirect($request->input('backUrl') ?? route('persons-columns.index'))
-                ->with('success', "Колонка обновлена → {$newName}");
+            return redirect()->route('persons-columns.index')
+                ->with('success', "Колонка '{$newName}' успешно обновлена");
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            DB::rollBack();
 
-            return back()
-                ->withInput()
-                ->withErrors(['error' => $e->getMessage()]);
+            return redirect()->route('persons-columns.index')
+                ->withErrors(['error' => 'Ошибка: '.$e->getMessage()]);
         }
     }
 

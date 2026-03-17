@@ -121,16 +121,6 @@
                                                                                                                       outline-none transition-colors text-[#060606]">
                             </div>
 
-                            <!-- Чекбоксы -->
-                            <div class="md:col-span-2 mt-2">
-                                <div class="flex flex-wrap gap-6 text-sm text-[#565A5B]">
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="checkbox" name="nullable" value="1" {{ old('nullable') ? 'checked' : '' }} class="mr-2 accent-[#A60644]">
-                                        Разрешить NULL
-                                    </label>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
 

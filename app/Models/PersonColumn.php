@@ -12,7 +12,6 @@ class PersonColumn extends Model
         'column_name',
         'type',
         'comment_ru',
-        'nullable',
         'default',
     ];
 

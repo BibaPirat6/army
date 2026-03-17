@@ -46,7 +46,7 @@
 
                         <h3>Тип: {{ $column["data_type"] }}</h3>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid gap-6">
 
                             <!-- Имя колонки -->
                             <div>
@@ -58,6 +58,20 @@
                                     value="{{ old('column_name', $column["name"]) }}" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
                                                                           focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
                                                                           outline-none transition-colors text-[#060606]">
+                            </div>
+
+
+                               <!-- Русское название / комментарий -->
+                            <div class="md:col-span-2">
+                                <label for="comment_ru" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Название поля на русском *
+                                </label>
+                                <input required type="text" name="comment_ru" id="comment_ru"
+                                    placeholder="Фотография сотрудника, Список телефонов в формате JSON, Документы"
+                                    value="{{ old('comment_ru', $column["comment"]) }}"
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
+                                                                                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
+                                                                                                                      outline-none transition-colors text-[#060606]">
                             </div>
 
                            
@@ -73,17 +87,6 @@
                                         value="{{ old('default', $column["default"]) }}" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
                                                                           focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
                                                                           outline-none transition-colors text-[#060606]">
-                                </div>
-
-                                <!-- Чекбоксы -->
-                                <div class="md:col-span-2 mt-2">
-                                    <div class="flex flex-wrap gap-6 text-sm text-[#565A5B]">
-                                        <label class="flex items-center cursor-pointer">
-                                            <input type="checkbox" name="nullable" value="1" class="mr-2 accent-[#A60644]"
-                                                {{ $column["nullable"] ? "checked" : "" }}>
-                                            Разрешить NULL
-                                        </label>
-                                    </div>
                                 </div>
 
                             </div>
