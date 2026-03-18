@@ -38,7 +38,7 @@
                     ) ?:
                         '—' }}
                         </div>
-                        <div class="text-[#565A5B] text-xs">ID: {{ $employee->person->id }}</div>
+                        {{-- <div class="text-[#565A5B] text-xs">ID: {{ $employee->person->id }}</div>
                         @if ($employee->person->phones && count($employee->person->phones))
                             <div class="text-[#565A5B] text-xs mt-1">
                                 Телефоны:
@@ -49,7 +49,7 @@
                             <div class="text-[#565A5B] text-xs mt-1">
                                 Email: {{ implode(', ', $employee->person->emails) }}
                             </div>
-                        @endif
+                        @endif --}}
                 @else
                     <span class="text-[#A60644] italic text-xs"><a
                             href="{{ route('persons.create', ['employee_id' => $employee->id, 'back_url' => url()->full()]) }}">Не

@@ -14,17 +14,24 @@ use App\Models\PositionType;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkStatus;
+use App\Services\JsonColumnService;
 use DB;
 use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
-use Storage;
+
+// сервисы
 
 class EmployeesController extends Controller
 {
+    protected $jsonService;
+
+    // Внедряем сервис через конструктор
+    public function __construct(JsonColumnService $jsonService)
+    {
+        $this->jsonService = $jsonService;
+    }
+
     public function index(Request $request)
     {
         $query = Employee::query();
@@ -269,21 +276,12 @@ class EmployeesController extends Controller
 
     public function store(Request $request)
     {
+
         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
             'last_name' => 'required|string|min:2',
             'first_name' => 'required|string|min:2',
             'patronymic' => 'nullable|string|min:2',
-            'emails' => 'nullable|array',
-            'emails.*' => [
-                'required',
-                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/',
-            ],
-            'phones' => 'nullable|array',
-            'phones.*' => [
-                'required',
-                'regex:/^\+?[1-9]\d{9,14}$/',
-            ],
             'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
             'login' => [
@@ -333,10 +331,6 @@ class EmployeesController extends Controller
             'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
             'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
             'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
-            'emails.*.regex' => 'Некорректный формат email',
-            'emails.*.required' => 'Не заполнен email',
-            'phones.*.regex' => 'Некорректный формат телефона',
-            'phones.*.required' => 'Не заполнен телефон',
 
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
@@ -362,33 +356,107 @@ class EmployeesController extends Controller
             'is_independent.required' => 'Выберите тип должность самостоятельная/нет',
         ]);
 
-        // person
-        $emails = array_values(array_filter($data['emails'] ?? []));
-        $phones = array_values(array_filter($data['phones'] ?? []));
+        $columns = PersonColumn::getTableColumns();
 
-        $personData = [
-            'last_name' => $data['last_name'],
-            'first_name' => $data['first_name'],
-            'patronymic' => $data['patronymic'] ?? null,
-            'emails' => $emails ?: null,
-            'phones' => $phones ?: null,
-        ];
+        $personData = [];
 
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
+        foreach ($columns as $column) {
+            $name = $column['name'];
+            $type = $column['type'];
 
-            // Ресайзим и конвертируем в WebP (как и раньше)
-            $manager = new ImageManager(new Driver);
-            $image = $manager->read($file);
-            $image->scale(width: 150);
+            // исключаем системные поля
+            if (in_array($name, ['id', 'created_at', 'updated_at'])) {
+                continue;
+            }
 
-            // Кодируем в WebP, но НЕ СОХРАНЯЕМ на диск
-            $webp = $image->encode(new WebpEncoder(quality: 75));
+            // FILE (BLOB) — обрабатываем отдельно
+            if (str_contains($type, 'blob')) {
+                if ($request->hasFile($name)) {
+                    $file = $request->file($name);
 
-            // Сохраняем бинарные данные прямо в БД
-            $personData['photo'] = $webp->toString(); // или $webp->getString()
+                    // Просто читаем файл и сохраняем как есть
+                    $personData[$name] = file_get_contents($file->getRealPath());
+                } else {
+                    $personData[$name] = null;
+                }
+
+                continue;
+            }
+
+            $value = $request->input($name);
+
+            // 🔴 сначала JSON
+            if (
+                str_contains($type, 'json') ||
+                (str_contains($type, 'longtext') && preg_match('/^a\d+$/', $name))
+            ) {
+
+                if ($value === null || trim((string) $value) === '') {
+                    $personData[$name] = null;
+                } else {
+                    $personData[$name] = json_encode(
+                        $this->jsonService->parseLines($value),
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                    );
+                }
+
+                continue;
+            }
+
+            // пустые значения → NULL
+            $nullable = $column['nullable'];
+            $default = $column['default'];
+
+            if ($value === null || $value === '') {
+
+                // если можно NULL → ставим NULL
+                if ($nullable) {
+                    $personData[$name] = null;
+                }
+
+                // если есть DEFAULT → не передаём поле вообще (MySQL сам подставит)
+                elseif ($default !== null) {
+                    continue;
+                }
+
+                // если NOT NULL и нет DEFAULT → ставим безопасное значение
+                else {
+                    if (str_contains($type, 'int')) {
+                        $personData[$name] = 0;
+                    } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                        $personData[$name] = 0;
+                    } elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
+                        $personData[$name] = now(); // или null если хочешь падать
+                    } else {
+                        $personData[$name] = ''; // varchar/text
+                    }
+                }
+
+                continue;
+            }
+
+            // INT
+            elseif (str_contains($type, 'int')) {
+                $personData[$name] = (int) $value;
+            }
+
+            // DECIMAL / FLOAT
+            elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                $personData[$name] = (float) $value;
+            }
+
+            // DATE / DATETIME
+            elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
+                $personData[$name] = $value; // при необходимости можно нормализовать
+            }
+
+            // ВСЁ ОСТАЛЬНОЕ (varchar, text)
+            else {
+                $personData[$name] = $value;
+            }
         }
 
+        // сохранение
         $person = Person::create($personData);
 
         // user
@@ -440,6 +508,8 @@ class EmployeesController extends Controller
 
         $backUrl = $request->input('back_url');
 
+        $columns = PersonColumn::getTableColumns();
+
         return view('admin.employees.edit')->with([
             'employee' => $employee,
             'users' => $users,
@@ -447,48 +517,32 @@ class EmployeesController extends Controller
             'roles' => $roles,
             'statuses' => $statuses,
             'backUrl' => $backUrl,
+            'columns' => $columns,
         ]);
     }
 
     public function update(Request $request, $id)
     {
         $employee = Employee::with(['person', 'user'])->findOrFail($id);
-        $isCreatingUser = ! $employee->user;
 
-        $data = $request->validate([
+         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
-
             'last_name' => 'required|string|min:2',
             'first_name' => 'required|string|min:2',
             'patronymic' => 'nullable|string|min:2',
+            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
-            'emails' => 'nullable|array',
-            'emails.*' => [
-                'required',
-                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/',
-            ],
-
-            'phones' => 'nullable|array',
-            'phones.*' => [
-                'required',
-                'regex:/^\+?[1-9]\d{9,14}$/',
-            ],
-
-            'photo' => 'nullable|mimes:jpeg,png,jpg,gif|max:8192',
-
-            'login' => [
-                'required',
-                'min:5',
-                'max:255',
-                Rule::unique('users', 'login')->ignore($employee->user?->id),
-            ],
-
-            'password' => [
-                $isCreatingUser ? 'required' : 'nullable',
-                'min:5',
-                'max:255',
-            ],
-
+          'login' => [
+    'required',
+    'min:5',
+    'max:255',
+    'unique:users,login,' . $employee->user->id, // Исключаем текущего пользователя
+],
+'password' => [
+    'nullable',           // Можно не заполнять
+    'min:5',
+    'max:255',
+],
             'role' => 'required|exists:roles,id',
 
         ], [
@@ -507,10 +561,6 @@ class EmployeesController extends Controller
             'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
             'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
             'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
-            'emails.*.regex' => 'Некорректный формат email',
-            'emails.*.required' => 'Не заполнен email',
-            'phones.*.regex' => 'Некорректный формат телефона',
-            'phones.*.required' => 'Не заполнен телефон',
 
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
@@ -521,40 +571,117 @@ class EmployeesController extends Controller
             'password.max' => 'Пароль максимум 255 символов',
             'role.required' => 'Роль обязательна',
             'role.exists' => 'Недопустимое значение для роли',
+
         ]);
 
         // person
         $person = $employee->person;
 
-        $emails = array_values(array_filter($data['emails'] ?? []));
-        $phones = array_values(array_filter($data['phones'] ?? []));
+        $columns = PersonColumn::getTableColumns();
 
-        $personData = [
-            'last_name' => $data['last_name'],
-            'first_name' => $data['first_name'],
-            'patronymic' => $data['patronymic'] ?? null,
-            'emails' => $emails ?: null,
-            'phones' => $phones ?: null,
-        ];
+        $personData = [];
 
-        if ($request->hasFile('photo')) {
-            $file = $request->file('photo');
+        foreach ($columns as $column) {
+            $name = $column['name'];
+            $type = $column['type'];
 
-            $manager = new ImageManager(new Driver);
-            $image = $manager->read($file);
-            $image->scale(width: 150);
-
-            $filename = time().'.webp';
-            $path = 'photos/'.$filename;
-
-            $webp = $image->encode(new WebpEncoder(quality: 75));
-            Storage::disk('public')->put($path, $webp);
-
-            if ($person && ! empty($person->photo)) {
-                Storage::disk('public')->delete($person->photo);
+            // исключаем системные поля
+            if (in_array($name, ['id', 'created_at', 'updated_at'])) {
+                continue;
             }
 
-            $personData['photo'] = $path;
+            // FILE (BLOB) — обрабатываем отдельно
+            
+// FILE (BLOB) — обрабатываем отдельно
+if (str_contains($type, 'blob')) {
+    if ($request->hasFile($name)) {
+        // 1. Если загружен новый файл
+        $file = $request->file($name);
+        
+        // Читаем новый файл
+        $personData[$name] = file_get_contents($file->getRealPath());
+        
+    } else {
+        // 2. Если новый файл НЕ загружен — оставляем старый
+        // НЕ передаем поле в $personData, чтобы Laravel не перезаписал его NULL
+        // Просто пропускаем — continue без сохранения
+        continue;
+    }
+    
+    // ВАЖНО: continue должен быть ПОСЛЕ обработки обоих случаев
+    continue;
+}
+            $value = $request->input($name);
+
+            // 🔴 сначала JSON
+            if (
+                str_contains($type, 'json') ||
+                (str_contains($type, 'longtext') && preg_match('/^a\d+$/', $name))
+            ) {
+
+                if ($value === null || trim((string) $value) === '') {
+                    $personData[$name] = null;
+                } else {
+                    $personData[$name] = json_encode(
+                        $this->jsonService->parseLines($value),
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                    );
+                }
+
+                continue;
+            }
+
+            // пустые значения → NULL
+            $nullable = $column['nullable'];
+            $default = $column['default'];
+
+            if ($value === null || $value === '') {
+
+                // если можно NULL → ставим NULL
+                if ($nullable) {
+                    $personData[$name] = null;
+                }
+
+                // если есть DEFAULT → не передаём поле вообще (MySQL сам подставит)
+                elseif ($default !== null) {
+                    continue;
+                }
+
+                // если NOT NULL и нет DEFAULT → ставим безопасное значение
+                else {
+                    if (str_contains($type, 'int')) {
+                        $personData[$name] = 0;
+                    } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                        $personData[$name] = 0;
+                    } elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
+                        $personData[$name] = now(); // или null если хочешь падать
+                    } else {
+                        $personData[$name] = ''; // varchar/text
+                    }
+                }
+
+                continue;
+            }
+
+            // INT
+            elseif (str_contains($type, 'int')) {
+                $personData[$name] = (int) $value;
+            }
+
+            // DECIMAL / FLOAT
+            elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                $personData[$name] = (float) $value;
+            }
+
+            // DATE / DATETIME
+            elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
+                $personData[$name] = $value; // при необходимости можно нормализовать
+            }
+
+            // ВСЁ ОСТАЛЬНОЕ (varchar, text)
+            else {
+                $personData[$name] = $value;
+            }
         }
 
         if ($person) {

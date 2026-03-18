@@ -54,11 +54,11 @@ class PersonsColumnsController extends Controller
                 $name = $data['column_name'];
 
                 $column = match ($type) {
-                    'integer' => $table->integer($name),
-                    'decimal' => $table->decimal($name, 3, 2),
-                    'string' => $table->string($name),
-                    'text' => $table->text($name),
-                    'json' => $table->json($name)->nullable(),
+                    'integer' => $table->integer($name)->nullable(),
+                    'decimal' => $table->decimal($name, 3, 2)->nullable(),
+                    'string' => $table->string($name)->nullable(),
+                    'text' => $table->text($name)->nullable(),
+                    'json' => $table->longText($name)->nullable(),
                     'date' => $table->date($name)->nullable(),
                     'datetime' => $table->dateTime($name)->nullable(),
                     'blob' => $table->binary($name)->nullable(),
@@ -74,6 +74,11 @@ class PersonsColumnsController extends Controller
                     $column->comment($data['comment_ru']);
                 }
             });
+
+              // После создания колонки, если это blob, меняем тип
+    if ($data['column_type'] === 'blob') {
+        DB::statement("ALTER TABLE `persons` MODIFY `{$data['column_name']}` LONGBLOB NULL");
+    }
 
             PersonColumn::create([
                 'column_name' => $columnName,
@@ -202,13 +207,24 @@ class PersonsColumnsController extends Controller
         $columnName = $id;
 
         try {
+            // 1. Проверяем, существует ли колонка в таблице persons
             if (! Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception("Колонка «{$columnName}» не найдена в таблице persons.");
             }
 
+            // 2. Проверяем, существует ли запись в person_columns
+            $columnRecord = PersonColumn::where('column_name', $columnName)->first();
+            if (! $columnRecord) {
+                throw new \Exception("Запись о колонке «{$columnName}» не найдена в справочнике.");
+            }
+
+            // 3. Удаляем колонку из таблицы persons
             Schema::table('persons', function (Blueprint $table) use ($columnName) {
                 $table->dropColumn($columnName);
             });
+
+            // 4. Удаляем ЗАПИСЬ из таблицы person_columns (не колонку!)
+            $columnRecord->delete();
 
             $backUrl = $request->get('backUrl', route('persons-columns.index'));
 

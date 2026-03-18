@@ -8,19 +8,7 @@ class Person extends Model
 {
     protected $table = 'persons';
 
-    protected $fillable = [
-        'first_name',
-        'last_name',
-        'patronymic',
-        'phones',
-        'emails',
-        'photo',
-    ];
-
-    protected $casts = [
-        'phones' => 'array',
-        'emails' => 'array',
-    ];
+    protected $guarded = [];
 
     public function employee()
     {
