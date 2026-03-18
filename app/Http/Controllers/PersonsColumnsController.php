@@ -58,9 +58,9 @@ class PersonsColumnsController extends Controller
                     'decimal' => $table->decimal($name, 3, 2),
                     'string' => $table->string($name),
                     'text' => $table->text($name),
-                    'json' => $table->json($name),
-                    'date' => $table->date($name),
-                    'datetime' => $table->dateTime($name),
+                    'json' => $table->json($name)->nullable(),
+                    'date' => $table->date($name)->nullable(),
+                    'datetime' => $table->dateTime($name)->nullable(),
                     'blob' => $table->binary($name)->nullable(),
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };

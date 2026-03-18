@@ -8,6 +8,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Person;
+use App\Models\PersonColumn;
 use App\Models\Position;
 use App\Models\PositionType;
 use App\Models\Role;
@@ -28,14 +29,13 @@ class EmployeesController extends Controller
     {
         $query = Employee::query();
 
-
         // -------------------------
         // Фильтр по статусу
         // -------------------------
 
         $selectedStatuses = (array) $request->get('sort_status', []);
 
-        if (!empty($selectedStatuses)) {
+        if (! empty($selectedStatuses)) {
             $query->whereHas('workStatus', function ($q) use ($selectedStatuses) {
                 $q->whereIn('name', $selectedStatuses);
             });
@@ -53,51 +53,45 @@ class EmployeesController extends Controller
         $sortRates = (array) $request->get('sort_rate', []);
         $isIndependent = $request->get('is_independent');
 
-        if (!empty($sortCommissariats)) {
+        if (! empty($sortCommissariats)) {
             $query->whereHas(
                 'employeePositions',
-                fn($q) =>
-                $q->whereIn('commissariat_id', $sortCommissariats)
+                fn ($q) => $q->whereIn('commissariat_id', $sortCommissariats)
             );
         }
 
-        if (!empty($sortDepartments)) {
+        if (! empty($sortDepartments)) {
             $query->whereHas(
                 'employeePositions',
-                fn($q) =>
-                $q->whereIn('department_id', $sortDepartments)
+                fn ($q) => $q->whereIn('department_id', $sortDepartments)
             );
         }
 
-        if (!empty($sortDivisions)) {
+        if (! empty($sortDivisions)) {
             $query->whereHas(
                 'employeePositions',
-                fn($q) =>
-                $q->whereIn('division_id', $sortDivisions)
+                fn ($q) => $q->whereIn('division_id', $sortDivisions)
             );
         }
 
-        if (!empty($sortPositions)) {
+        if (! empty($sortPositions)) {
             $query->whereHas(
                 'employeePositions',
-                fn($q) =>
-                $q->whereIn('position_id', $sortPositions)
+                fn ($q) => $q->whereIn('position_id', $sortPositions)
             );
         }
 
-        if (!empty($sortTypes)) {
+        if (! empty($sortTypes)) {
             $query->whereHas(
                 'employeePositions.position',
-                fn($q) =>
-                $q->whereIn('position_type_id', $sortTypes)
+                fn ($q) => $q->whereIn('position_type_id', $sortTypes)
             );
         }
 
-        if (!empty($sortRates)) {
+        if (! empty($sortRates)) {
             $query->whereHas(
                 'employeePositions',
-                fn($q) =>
-                $q->whereIn('rate', $sortRates)
+                fn ($q) => $q->whereIn('rate', $sortRates)
             );
         }
 
@@ -112,7 +106,7 @@ class EmployeesController extends Controller
 
         $sortOptions = (array) $request->get('sort_id', []);
 
-        if (!empty($sortOptions)) {
+        if (! empty($sortOptions)) {
             $query->orderBy('id', $sortOptions[0]);
         } else {
             $query->orderBy('id', 'desc');
@@ -157,7 +151,7 @@ class EmployeesController extends Controller
         preg_match_all("/'([^']+)'/", $column->Type, $matches);
         $rates = $matches[1];
 
-        return view("admin.employees.index", compact(
+        return view('admin.employees.index', compact(
             'employees',
             'statuses',
             'positions',
@@ -177,7 +171,7 @@ class EmployeesController extends Controller
                 'user.role',
                 'person',
                 'workStatus',
-                'positions.position.positionType'
+                'positions.position.positionType',
             ]);
 
         if ($search = trim($request->search)) {
@@ -228,7 +222,7 @@ class EmployeesController extends Controller
         $roles = Role::all();
         $statuses = WorkStatus::all();
 
-        $backUrl = $request->input("back_url");
+        $backUrl = $request->input('back_url');
         $commissariatId = $request->get('commissariat_id');
         $commissariat = $commissariatId
             ? Commissariat::find($commissariatId)
@@ -241,8 +235,7 @@ class EmployeesController extends Controller
         $division = $divisionId
             ? Division::find($divisionId)
             : null;
-        $isIndependent = $request->get("is_independent", null);
-
+        $isIndependent = $request->get('is_independent', null);
 
         $positions = Position::all();
         $commissariats = Commissariat::all();
@@ -253,16 +246,14 @@ class EmployeesController extends Controller
         preg_match_all("/'([^']+)'/", $type, $matches);
         $rates = $matches[1];
 
-
-        $columns = Person::getTableColumns();
-        
+        $columns = PersonColumn::getTableColumns();
 
         return view('admin.employees.create')->with([
-            "users" => $users,
-            "persons" => $persons,
-            "roles" => $roles,
-            "statuses" => $statuses,
-            "backUrl" => $backUrl,
+            'users' => $users,
+            'persons' => $persons,
+            'roles' => $roles,
+            'statuses' => $statuses,
+            'backUrl' => $backUrl,
             'positions' => $positions,
             'commissariats' => $commissariats,
             'departments' => $departments,
@@ -271,93 +262,91 @@ class EmployeesController extends Controller
             'commissariat' => $commissariat,
             'department' => $department,
             'division' => $division,
-            "isIndependent"=>$isIndependent,
-            'columns'=>$columns
+            'isIndependent' => $isIndependent,
+            'columns' => $columns,
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            "work_status" => "required|integer|exists:work_statuses,id",
-            "last_name" => "required|string|min:2",
-            "first_name" => "required|string|min:2",
-            "patronymic" => "nullable|string|min:2",
-            "emails" => "nullable|array",
+            'work_status' => 'required|integer|exists:work_statuses,id',
+            'last_name' => 'required|string|min:2',
+            'first_name' => 'required|string|min:2',
+            'patronymic' => 'nullable|string|min:2',
+            'emails' => 'nullable|array',
             'emails.*' => [
                 'required',
-                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/',
             ],
-            "phones" => "nullable|array",
+            'phones' => 'nullable|array',
             'phones.*' => [
                 'required',
-                'regex:/^\+?[1-9]\d{9,14}$/'
+                'regex:/^\+?[1-9]\d{9,14}$/',
             ],
-            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
-
-            "login" => [
-                "required",
-                "min:5",
-                "max:255",
-                "unique:users",
+            'login' => [
+                'required',
+                'min:5',
+                'max:255',
+                'unique:users',
             ],
-            "password" => [
-                "required",
-                "min:5",
-                "max:255"
+            'password' => [
+                'required',
+                'min:5',
+                'max:255',
             ],
-            "role" => "required|exists:roles,id",
-
+            'role' => 'required|exists:roles,id',
 
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric|min:0.25|max:2.0',
-            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => [
-                "nullable",
-                "sometimes",
+            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
+            'department_id' => [
+                'nullable',
+                'sometimes',
                 Rule::exists('departments', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            "division_id" => [
-                "nullable",
-                "sometimes",
+            'division_id' => [
+                'nullable',
+                'sometimes',
                 Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            "is_independent" => "required|integer|in:1,0",
+            'is_independent' => 'required|integer|in:1,0',
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
 
-            "last_name.required" => "Поле Фамилия обязательно для заполнения",
-            "last_name.min" => "Поле Фамилия минимум 2 символа",
-            "first_name.required" => "Поле Имя обязательно для заполнения",
-            "first_name.min" => "Поле Имя минимум 2 символа",
-            "patronymic.required" => "Поле Отчество обязательно для заполнения",
-            "patronymic.min" => "Поле Отчество минимум 2 символа",
-            "email.email" => "Поле Почта должно быть действительным электронным адресом",
-            "email.unique" => "Такой адрес Почты уже зарегистрирован",
-            "phone.min" => "Поле Телефон минимум 10 символов",
-            "phone.unique" => "Такой номер Телефона уже зарегистрирован",
-            "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
-            "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            'last_name.required' => 'Поле Фамилия обязательно для заполнения',
+            'last_name.min' => 'Поле Фамилия минимум 2 символа',
+            'first_name.required' => 'Поле Имя обязательно для заполнения',
+            'first_name.min' => 'Поле Имя минимум 2 символа',
+            'patronymic.required' => 'Поле Отчество обязательно для заполнения',
+            'patronymic.min' => 'Поле Отчество минимум 2 символа',
+            'email.email' => 'Поле Почта должно быть действительным электронным адресом',
+            'email.unique' => 'Такой адрес Почты уже зарегистрирован',
+            'phone.min' => 'Поле Телефон минимум 10 символов',
+            'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
+            'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
+            'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
             'emails.*.regex' => 'Некорректный формат email',
             'emails.*.required' => 'Не заполнен email',
             'phones.*.regex' => 'Некорректный формат телефона',
             'phones.*.required' => 'Не заполнен телефон',
 
-            "login.required" => "Логин обязателен",
-            "login.min" => "Логин минимум 5 символов",
-            "login.max" => "Логин максимум 255 символов",
-            "login.unique" => "Логин уже занят",
-            "password.required" => "Пароль обязателен",
-            "password.min" => "Пароль минимум 5 символов",
-            "password.max" => "Пароль максимум 255 символов",
-            "role.required" => "Роль обязательна",
-            "role.exists" => "Недопустимое значение для роли",
+            'login.required' => 'Логин обязателен',
+            'login.min' => 'Логин минимум 5 символов',
+            'login.max' => 'Логин максимум 255 символов',
+            'login.unique' => 'Логин уже занят',
+            'password.required' => 'Пароль обязателен',
+            'password.min' => 'Пароль минимум 5 символов',
+            'password.max' => 'Пароль максимум 255 символов',
+            'role.required' => 'Роль обязательна',
+            'role.exists' => 'Недопустимое значение для роли',
 
             'position_id.required' => 'Поле должность обязательно для заполнения.',
             'position_id.integer' => 'Поле должность должно быть целым числом.',
@@ -366,11 +355,11 @@ class EmployeesController extends Controller
             'rate.numeric' => 'Поле ставка должно быть числом.',
             'rate.min' => 'Минимальное значение ставки 0.25.',
             'rate.max' => 'Максимальное значение ставки 2.0.',
-            "commissariat_id.required" => "Выберите комиссариат",
-            "commissariat_id.exists" => "Несуществующий комиссариат",
-            "department_id.exists" => "Несуществующий отдел",
-            "division_id.exists" => "Несуществующий отдел",
-            "is_independent.required" => "Выберите тип должность самостоятельная/нет",
+            'commissariat_id.required' => 'Выберите комиссариат',
+            'commissariat_id.exists' => 'Несуществующий комиссариат',
+            'department_id.exists' => 'Несуществующий отдел',
+            'division_id.exists' => 'Несуществующий отдел',
+            'is_independent.required' => 'Выберите тип должность самостоятельная/нет',
         ]);
 
         // person
@@ -388,17 +377,16 @@ class EmployeesController extends Controller
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
 
-            $manager = new ImageManager(new Driver());
+            // Ресайзим и конвертируем в WebP (как и раньше)
+            $manager = new ImageManager(new Driver);
             $image = $manager->read($file);
             $image->scale(width: 150);
 
-            $filename = time() . '.webp';
-            $path = 'photos/' . $filename;
-
+            // Кодируем в WebP, но НЕ СОХРАНЯЕМ на диск
             $webp = $image->encode(new WebpEncoder(quality: 75));
-            Storage::disk('public')->put($path, $webp);
 
-            $personData['photo'] = $path;
+            // Сохраняем бинарные данные прямо в БД
+            $personData['photo'] = $webp->toString(); // или $webp->getString()
         }
 
         $person = Person::create($personData);
@@ -418,20 +406,19 @@ class EmployeesController extends Controller
         $employee->person_id = $person->id;
         $employee->save();
 
-
         // employeePosition
         EmployeePosition::create([
-            "employee_id" => $employee->id,
-            "commissariat_id" => $data["commissariat_id"],
-            "department_id" => $data["department_id"],
-            "division_id" => $data["division_id"],
-            "position_id" => $data['position_id'],
-            "rate" => $data['rate'],
-            "is_independent" => $data["is_independent"]
+            'employee_id' => $employee->id,
+            'commissariat_id' => $data['commissariat_id'],
+            'department_id' => $data['department_id'],
+            'division_id' => $data['division_id'],
+            'position_id' => $data['position_id'],
+            'rate' => $data['rate'],
+            'is_independent' => $data['is_independent'],
         ]);
 
-
         $backUrl = $request->get('backUrl', route('employees.index'));
+
         return redirect()->to($backUrl)
             ->with('success', 'Сотрудник успешно создан!');
     }
@@ -451,92 +438,89 @@ class EmployeesController extends Controller
         $roles = Role::all();
         $statuses = WorkStatus::all();
 
-
-
-        $backUrl = $request->input("back_url");
+        $backUrl = $request->input('back_url');
 
         return view('admin.employees.edit')->with([
-            "employee" => $employee,
-            "users" => $users,
-            "persons" => $persons,
-            "roles" => $roles,
-            "statuses" => $statuses,
-            "backUrl" => $backUrl
+            'employee' => $employee,
+            'users' => $users,
+            'persons' => $persons,
+            'roles' => $roles,
+            'statuses' => $statuses,
+            'backUrl' => $backUrl,
         ]);
     }
 
     public function update(Request $request, $id)
     {
         $employee = Employee::with(['person', 'user'])->findOrFail($id);
-        $isCreatingUser = !$employee->user;
-
+        $isCreatingUser = ! $employee->user;
 
         $data = $request->validate([
-            "work_status" => "required|integer|exists:work_statuses,id",
+            'work_status' => 'required|integer|exists:work_statuses,id',
 
-            "last_name" => "required|string|min:2",
-            "first_name" => "required|string|min:2",
-            "patronymic" => "nullable|string|min:2",
+            'last_name' => 'required|string|min:2',
+            'first_name' => 'required|string|min:2',
+            'patronymic' => 'nullable|string|min:2',
 
-            "emails" => "nullable|array",
+            'emails' => 'nullable|array',
             'emails.*' => [
                 'required',
-                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/'
+                'regex:/^(?=.{6,254}$)(?=.{1,64}@)[A-Za-z0-9]+([._%+-]?[A-Za-z0-9]+)*@[A-Za-z0-9-]+(\.[A-Za-z]{2,})+$/',
             ],
 
-            "phones" => "nullable|array",
+            'phones' => 'nullable|array',
             'phones.*' => [
                 'required',
-                'regex:/^\+?[1-9]\d{9,14}$/'
+                'regex:/^\+?[1-9]\d{9,14}$/',
             ],
 
-            "photo" => "nullable|mimes:jpeg,png,jpg,gif|max:8192",
+            'photo' => 'nullable|mimes:jpeg,png,jpg,gif|max:8192',
 
-            "login" => [
-                "required",
-                "min:5",
-                "max:255",
+            'login' => [
+                'required',
+                'min:5',
+                'max:255',
                 Rule::unique('users', 'login')->ignore($employee->user?->id),
             ],
 
-            "password" => [
-                $isCreatingUser ? "required" : "nullable",
-                "min:5",
-                "max:255"
+            'password' => [
+                $isCreatingUser ? 'required' : 'nullable',
+                'min:5',
+                'max:255',
             ],
 
-            "role" => "required|exists:roles,id",
+            'role' => 'required|exists:roles,id',
 
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
 
-            "last_name.required" => "Поле Фамилия обязательно для заполнения",
-            "last_name.min" => "Поле Фамилия минимум 2 символа",
-            "first_name.required" => "Поле Имя обязательно для заполнения",
-            "first_name.min" => "Поле Имя минимум 2 символа",
-            "patronymic.required" => "Поле Отчество обязательно для заполнения",
-            "patronymic.min" => "Поле Отчество минимум 2 символа",
-            "email.email" => "Поле Почта должно быть действительным электронным адресом",
-            "email.unique" => "Такой адрес Почты уже зарегистрирован",
-            "phone.min" => "Поле Телефон минимум 10 символов",
-            "phone.unique" => "Такой номер Телефона уже зарегистрирован",
-            "photo.mimes" => "Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif",
-            "photo.max" => "Файл Фото не должен превышать размер 8 МБ",
+            'last_name.required' => 'Поле Фамилия обязательно для заполнения',
+            'last_name.min' => 'Поле Фамилия минимум 2 символа',
+            'first_name.required' => 'Поле Имя обязательно для заполнения',
+            'first_name.min' => 'Поле Имя минимум 2 символа',
+            'patronymic.required' => 'Поле Отчество обязательно для заполнения',
+            'patronymic.min' => 'Поле Отчество минимум 2 символа',
+            'email.email' => 'Поле Почта должно быть действительным электронным адресом',
+            'email.unique' => 'Такой адрес Почты уже зарегистрирован',
+            'phone.min' => 'Поле Телефон минимум 10 символов',
+            'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
+            'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
+            'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
             'emails.*.regex' => 'Некорректный формат email',
             'emails.*.required' => 'Не заполнен email',
             'phones.*.regex' => 'Некорректный формат телефона',
             'phones.*.required' => 'Не заполнен телефон',
 
-            "login.required" => "Логин обязателен",
-            "login.min" => "Логин минимум 5 символов",
-            "login.max" => "Логин максимум 255 символов",
-            "login.unique" => "Логин уже занят",
-            "password.required" => "Пароль обязателен",
-            "password.min" => "Пароль минимум 5 символов",
-            "password.max" => "Пароль максимум 255 символов",
-            "role.required" => "Роль обязательна",
-            "role.exists" => "Недопустимое значение для роли",
+            'login.required' => 'Логин обязателен',
+            'login.min' => 'Логин минимум 5 символов',
+            'login.max' => 'Логин максимум 255 символов',
+            'login.unique' => 'Логин уже занят',
+            'password.required' => 'Пароль обязателен',
+            'password.min' => 'Пароль минимум 5 символов',
+            'password.max' => 'Пароль максимум 255 символов',
+            'role.required' => 'Роль обязательна',
+            'role.exists' => 'Недопустимое значение для роли',
         ]);
 
         // person
@@ -553,27 +537,25 @@ class EmployeesController extends Controller
             'phones' => $phones ?: null,
         ];
 
-
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
 
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             $image = $manager->read($file);
             $image->scale(width: 150);
 
-            $filename = time() . '.webp';
-            $path = 'photos/' . $filename;
+            $filename = time().'.webp';
+            $path = 'photos/'.$filename;
 
             $webp = $image->encode(new WebpEncoder(quality: 75));
             Storage::disk('public')->put($path, $webp);
 
-            if ($person && !empty($person->photo)) {
+            if ($person && ! empty($person->photo)) {
                 Storage::disk('public')->delete($person->photo);
             }
 
             $personData['photo'] = $path;
         }
-
 
         if ($person) {
             $person->update($personData);
@@ -583,16 +565,12 @@ class EmployeesController extends Controller
             $employee->save();
         }
 
-
-
-
-
         // user
         $userData = [
             'login' => $data['login'],
             'role_id' => $data['role'],
         ];
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $userData['password_hash'] = Hash::make($data['password']);
         }
 
@@ -604,14 +582,12 @@ class EmployeesController extends Controller
             $employee->user_id = $user->id;
         }
 
-
         // workStatus
         $employee->work_status_id = $data['work_status'];
         $employee->save();
 
-
-
         $backUrl = $request->get('backUrl', route('employees.index'));
+
         return redirect()->to($backUrl)
             ->with('success', 'Сотрудник успешно обновлен!');
 
@@ -631,4 +607,3 @@ class EmployeesController extends Controller
             ->with('error', 'Не удалось удалить сотрудника');
     }
 }
-

@@ -17,7 +17,8 @@ return new class extends Migration {
             $table->string("patronymic", 255)->nullable();
             $table->json('phones')->nullable();
             $table->json('emails')->nullable();
-            $table->string("photo", 255)->nullable();
+            // $table->string("photo", 255)->nullable();
+             $table->binary('photo')->nullable();
             $table->timestamps();
         });
     }

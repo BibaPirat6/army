@@ -10,6 +10,378 @@
     @endif
 
 
+
+    <div class="w-full p-6 mx-auto">
+   <!-- Заголовок и ссылка назад -->
+        <div class="mb-8">
+            <div class="flex items-center mb-4">
+                <a href="{{ $backUrl ?? route('employees.index') }}"
+                    class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Назад
+                </a>
+            </div>
+            <h1 class="text-2xl font-bold text-[#060606]">Создание сотрудника</h1>
+            <p class="text-[#565A5B] mt-1">Создание данных сотрудника</p>
+        </div>
+
+
+        <!-- Заголовок и ссылка назад -->
+        <div class="mb-8">
+             <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
+            <div class="p-6 md:p-8">
+ <form method="POST" action="{{ route('persons.store') }}" enctype="multipart/form-data" class="space-y-4">
+    @csrf
+
+    <div class="grid grid-cols-4 gap-4">
+        @foreach ($columns as $column)
+            @php
+                $name = $column['name'];
+                $type = $column['type'];
+                $nullable = $column['nullable'] ?? false;
+
+                $label = $column['comment'] ?: ucfirst(str_replace('_', ' ', $name));
+
+                // значение: old → default → пусто
+                $value = old($name) 
+                    ?? ($column['default'] !== null ? $column['default'] : '');
+
+                // Определяем input type
+                $inputType = match(true) {
+                    str_contains($type, 'int') => 'number',
+                    str_contains($type, 'decimal') => 'number',
+                    str_contains($type, 'varchar') => 'text',
+                    str_contains($type, 'text') => 'textarea',
+                    str_contains($type, 'json') => 'textarea',
+                    str_contains($type, 'date') && !str_contains($type, 'time') => 'date',
+                    str_contains($type, 'datetime'),
+                    str_contains($type, 'timestamp') => 'datetime-local',
+                    str_contains($type, 'blob') => 'file',
+                    default => 'text',
+                };
+
+                $isTextarea = in_array($inputType, ['textarea']);
+                $step = str_contains($type, 'decimal') ? 'step=0.01' : null;
+            @endphp
+
+            <div class="flex flex-col">
+                <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
+                    {{ $label }}
+                </label>
+
+                @if ($isTextarea)
+                    <textarea
+                        id="{{ $name }}"
+                        name="{{ $name }}"
+                        rows="3"
+                        placeholder="{{ $label }}"
+                        class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
+                    >{{ $value }}</textarea>
+                @else
+                    <input
+                        id="{{ $name }}"
+                        name="{{ $name }}"
+                        type="{{ $inputType }}"
+                        value="{{ $inputType !== 'file' ? $value : '' }}"
+                        placeholder="{{ $label }}"
+                        {{ $step }}
+                        class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
+                        {{ $nullable ? '' : 'required' }}
+                    >
+                @endif
+
+                @error($name)
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        @endforeach
+    </div>
+
+
+      <div class="grid grid-cols-4 gap-4">
+ {{-- user --}}
+              
+                        <!-- Логин -->
+                        <div>
+                            <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Логин *
+                            </label>
+                            <input type="text" name="login" id="login" placeholder="Введите логин"
+                                value="{{ old('login') }}" required
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                        </div>
+
+
+                        <!-- Пароль -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Пароль *
+                            </label>
+                            <input type="password" name="password" id="password" required placeholder="Введите пароль"
+                                value=""
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                        </div>
+
+                        <!-- Роль -->
+                        <div>
+                            <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Роль
+                            </label>
+                            <select name="role" id="role"
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                @foreach ($roles as $role)
+                                    <option value="{{ $role->id }}">
+                                        {{ $role->description }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                   
+
+
+                    <!-- Рабочий статус -->
+                    <div>
+                        <label for="work_status" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Рабочий статус *
+                        </label>
+                        <select name="work_status" id="work_status" required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($statuses as $status)
+                                <option value="{{ $status->id }}">
+                                    {{ $status->description }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
+
+
+
+                    {{-- Должность --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Должность *
+                        </label>
+
+                        {{-- Видимое поле --}}
+                        <input required type="text" id="position_search" placeholder="Выберите должность"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                  outline-none transition-colors text-[#060606]"
+                            autocomplete="off"
+                            value="{{ old('position_id') ? $positions->find(old('position_id'))->name ?? '' : '' }}">
+
+                        {{-- Скрытое поле --}}
+                        <input type="hidden" name="position_id" id="position_id" value="{{ old('position_id') }}">
+
+                        {{-- Dropdown --}}
+                        <ul id="position_list"
+                            class="absolute z-20 mt-1 w-full bg-white border border-[#BFBFBF]
+               rounded-lg max-h-72 overflow-auto hidden">
+                            {{-- Кнопка очистить --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
+                                Очистить
+                            </li>
+
+                            {{-- Список должностей (кроме начальников) --}}
+                            @foreach ($positions as $pos)
+                                @if (
+                                    $pos->name !== 'Начальник комиссариата' &&
+                                        $pos->name !== 'Начальник отдела' &&
+                                        $pos->name !== 'Начальник отделения')
+                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $pos->id }}"
+                                        data-name="{{ $pos->name }}">
+                                        {{ $pos->name }}
+                                        <span class="text-gray-400">(ID: {{ $pos->id }})</span>
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    </div>
+
+
+
+
+
+
+                    <!-- Ставка -->
+                    <div>
+                        <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Ставка *
+                        </label>
+                        <select name="rate" id="rate"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
+                            required>
+                            @foreach ($rates as $rate)
+                                <option value="{{ $rate }}" {{ old('rate', $rate) == 1 ? 'selected' : '' }}>
+                                    {{ $rate }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
+                    {{-- комиссариат --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Комиссариат *
+                        </label>
+
+                        {{-- visible input --}}
+                        <input required type="text" id="commissariat_search" placeholder="Выберите комиссариат"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                  outline-none transition-colors text-[#060606]"
+                            autocomplete="off" value="{{ $commissariat ? $commissariat->name : '' }}">
+
+                        {{-- hidden value --}}
+                        <input type="hidden" name="commissariat_id" id="commissariat_id"
+                            value="{{ $commissariat ? $commissariat->id : '' }}">
+
+                        {{-- dropdown --}}
+                        <ul id="commissariat_list"
+                            class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+               rounded-lg max-h-72 overflow-auto hidden">
+
+                            {{-- очистить --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
+                                Очистить
+                            </li>
+
+                            @foreach ($commissariats as $commissariat)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $commissariat->id }}"
+                                    data-name="{{ $commissariat->name }}">
+                                    {{ $commissariat->name }}
+                                    <span class="text-gray-400">(ID: {{ $commissariat->id }})</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    {{-- отдел --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Отдел
+                        </label>
+
+                        {{-- visible input --}}
+                        <input type="text" id="department_search" placeholder="Выберите отдел"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                  outline-none transition-colors text-[#060606]"
+                            autocomplete="off" value="{{ $department ? $department->name : '' }}">
+
+                        {{-- hidden value --}}
+                        <input type="hidden" name="department_id" id="department_id"
+                            value="{{ $department ? $department->id : '' }}">
+
+                        {{-- dropdown --}}
+                        <ul id="department_list"
+                            class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+               rounded-lg max-h-72 overflow-auto hidden">
+
+                            {{-- не выбирать --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
+                                Не выбирать (самостоятельное отделение)
+                            </li>
+
+                            @foreach ($departments as $department)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $department->id }}"
+                                    data-name="{{ $department->name }}"
+                                    data-commissariat-id="{{ $department->commissariat->id }}"
+                                    data-commissariat-name="{{ $department->commissariat->name }}">
+                                    {{ $department->name }}
+                                    <span class="text-gray-400">(ID: {{ $department->id }})</span>
+                                    < {{ $department->commissariat->name }} </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    {{-- отделение --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Отделение
+                        </label>
+
+                        {{-- видимое поле --}}
+                        <input type="text" id="division_search" placeholder="Выберите отделение"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+               outline-none transition-colors text-[#060606]"
+                            autocomplete="off" value="{{ $division ? $division->name : '' }}">
+
+                        <input type="hidden" name="division_id" id="division_id"
+                            value="{{ $division ? $division->id : '' }}">
+
+                        {{-- выпадающий список --}}
+                        <ul id="division_list"
+                            class="absolute z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden">
+
+                            {{-- кнопка очистить --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
+                                Не выбирать
+                            </li>
+
+                            {{-- список отделений --}}
+                            @foreach ($divisions as $division)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $division->id }}"
+                                    data-name="{{ $division->name }}"
+                                    data-department-id="{{ $division?->department?->id }}"
+                                    data-department-name="{{ $division?->department?->name }}"
+                                    data-commissariat-id="{{ $division->commissariat->id }}"
+                                    data-commissariat-name="{{ $division->commissariat->name }}">
+                                    {{ $division->name }}
+                                    @if ($division->department_id === null)
+                                        (Самостоятельное отделение)
+                                    @else
+                                        < {{ $division?->department?->name }} @endif
+                                            < {{ $division->commissariat->name }} </li>
+                                    @endforeach
+                        </ul>
+                    </div>
+
+
+
+                    <!-- самостоятельный -->
+                    <div>
+                        <label for="is_independent" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Самостоятельная должность *
+                        </label>
+                        <select name="is_independent" id="is_independent"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            <option value="0" {{ $isIndependent ? '' : 'selected' }}>Нет</option>
+                            <option value="1" {{ $isIndependent ? 'selected' : '' }}>Да</option>
+                        </select>
+                    </div>
+      </div>
+
+
+
+     
+
+    <div class="flex justify-end mt-6">
+        <button type="submit"
+                class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
+            Создать сотрудника
+        </button>
+    </div>
+</form>
+            </div>
+        </div>
+        </div>
+        </div>
+
+
     <div class="max-w-2xl p-6 mx-auto">
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
@@ -396,68 +768,10 @@
     </div>
 
 
-    <div class="w-full mx-auto p-4 sm:p-6">
-    <form method="POST" action="{{ route('persons.store') }}" enctype="multipart/form-data" class="space-y-4">
-        @csrf
+     
+    
 
-        @foreach ($columns as $column)
-            @php
-                $name = $column['name'];
-                $type = $column['type'];
-                $nullable = $column['nullable'] ?? false;
-                $value = old($name) ?? ($person->{$name} ?? '');
-                
-                $inputType = match(true) {
-                    str_contains($type, 'int') => 'number',
-                    str_contains($type, 'decimal') => 'number',
-                    str_contains($type, 'varchar') && $name !== 'photo' => 'text',
-                    $name === 'photo' || str_contains($type, 'file') => 'file',
-                    str_contains($type, 'json') => 'textarea',
-                    str_contains($type, 'date') && !str_contains($type, 'time') => 'date',
-                    str_contains($type, 'datetime') || str_contains($type, 'timestamp') => 'datetime-local',
-                    str_contains($type, 'text') || str_contains($type, 'longtext') => 'textarea',
-                    default => 'text',
-                };
-                
-                $isTextarea = in_array($inputType, ['textarea']);
-                $step = str_contains($type, 'decimal') ? ' step="0.01"' : '';
-            @endphp
 
-            @if (!in_array($name, ['id', 'created_at', 'updated_at'])) {{-- Игнорируем авто-поля --}}
-                <div class="flex flex-col">
-                    <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
-                        {{ ucfirst(str_replace('_', ' ', $name)) }} {{ $nullable ? '(опционально)' : '' }}
-                    </label>
-                    
-                    @if ($isTextarea)
-                        <textarea id="{{ $name }}" name="{{ $name }}" rows="3"
-                                  class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm text-[#060606] focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644] transition-colors"
-                                  placeholder="Введите {{ strtolower($name) }}">{{ $value }}</textarea>
-                    @else
-                        <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}"{{ $step }}
-                               value="{{ $value }}"
-                               class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm text-[#060606] focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644] transition-colors"
-                               placeholder="Введите {{ strtolower($name) }}" {{ $nullable ? '' : 'required' }}>
-                    @endif
-                    
-                    @error($name)
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-            @endif
-        @endforeach
-
-        <div class="flex justify-end mt-6">
-            <button type="submit"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/85 transition-colors shadow-sm hover:shadow active:scale-95">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                Сохранить
-            </button>
-        </div>
-    </form>
-</div>
 @endsection
 
 
