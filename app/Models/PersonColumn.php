@@ -33,10 +33,11 @@ class PersonColumn extends Model
                 "SHOW COLUMNS FROM `$table` WHERE Field = ?",
                 [$name]
             );
-
+            
             $result[$name] = [
                 'name' => $name,
                 'type' => $info->Type ?? 'unknown',
+                'nullable' => $info->Null === 'YES',
                 'default' => $info->Default,
             ];
         }
@@ -84,6 +85,7 @@ class PersonColumn extends Model
 
         $item = [];
 
+        // Заполняем только те поля, которые запросили в $fields
         foreach ($fields as $field) {
             $key = $field === 'name' ? 'name' : $field;
 
@@ -98,6 +100,7 @@ class PersonColumn extends Model
             };
         }
 
+        // Дополнительно всегда добавляем чистый тип и collation (если нужно)
         $item['data_type'] = $info->data_type;
         $item['collation'] = $info->collation ?? null;
 

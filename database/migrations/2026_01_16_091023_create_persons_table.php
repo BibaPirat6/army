@@ -14,11 +14,9 @@ return new class extends Migration
     {
         Schema::create('persons', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name', 255);
-            $table->string('last_name', 255);
-            $table->string('patronymic', 255)->nullable();
-            // $table->string("photo", 255)->nullable();
-            $table->binary('photo')->nullable();
+            $table->text('first_name');
+            $table->text('last_name');
+            $table->text('patronymic')->nullable();
             $table->timestamps();
         });
         // Меняем тип на LONGBLOB

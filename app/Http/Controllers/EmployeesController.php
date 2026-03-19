@@ -230,28 +230,6 @@ class EmployeesController extends Controller
         $statuses = WorkStatus::all();
 
         $backUrl = $request->input('back_url');
-        $commissariatId = $request->get('commissariat_id');
-        $commissariat = $commissariatId
-            ? Commissariat::find($commissariatId)
-            : null;
-        $departmentId = $request->get('department_id');
-        $department = $departmentId
-            ? Department::find($departmentId)
-            : null;
-        $divisionId = $request->get('division_id');
-        $division = $divisionId
-            ? Division::find($divisionId)
-            : null;
-        $isIndependent = $request->get('is_independent', null);
-
-        $positions = Position::all();
-        $commissariats = Commissariat::all();
-        $departments = Department::all();
-        $divisions = Division::all();
-        $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
-        $type = $column->Type;
-        preg_match_all("/'([^']+)'/", $type, $matches);
-        $rates = $matches[1];
 
         $columns = PersonColumn::getTableColumns();
 
@@ -261,15 +239,6 @@ class EmployeesController extends Controller
             'roles' => $roles,
             'statuses' => $statuses,
             'backUrl' => $backUrl,
-            'positions' => $positions,
-            'commissariats' => $commissariats,
-            'departments' => $departments,
-            'divisions' => $divisions,
-            'rates' => $rates,
-            'commissariat' => $commissariat,
-            'department' => $department,
-            'division' => $division,
-            'isIndependent' => $isIndependent,
             'columns' => $columns,
         ]);
     }
@@ -282,7 +251,6 @@ class EmployeesController extends Controller
             'last_name' => 'required|string|min:2',
             'first_name' => 'required|string|min:2',
             'patronymic' => 'nullable|string|min:2',
-            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
             'login' => [
                 'required',
@@ -296,25 +264,6 @@ class EmployeesController extends Controller
                 'max:255',
             ],
             'role' => 'required|exists:roles,id',
-
-            'position_id' => 'required|integer|exists:positions,id',
-            'rate' => 'required|numeric|min:0.25|max:2.0',
-            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
-            'department_id' => [
-                'nullable',
-                'sometimes',
-                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
-                    return $query->where('commissariat_id', $request->commissariat_id);
-                }),
-            ],
-            'division_id' => [
-                'nullable',
-                'sometimes',
-                Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
-                    return $query->where('commissariat_id', $request->commissariat_id);
-                }),
-            ],
-            'is_independent' => 'required|integer|in:1,0',
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
@@ -325,12 +274,6 @@ class EmployeesController extends Controller
             'first_name.min' => 'Поле Имя минимум 2 символа',
             'patronymic.required' => 'Поле Отчество обязательно для заполнения',
             'patronymic.min' => 'Поле Отчество минимум 2 символа',
-            'email.email' => 'Поле Почта должно быть действительным электронным адресом',
-            'email.unique' => 'Такой адрес Почты уже зарегистрирован',
-            'phone.min' => 'Поле Телефон минимум 10 символов',
-            'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
-            'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
-            'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
 
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
@@ -341,19 +284,6 @@ class EmployeesController extends Controller
             'password.max' => 'Пароль максимум 255 символов',
             'role.required' => 'Роль обязательна',
             'role.exists' => 'Недопустимое значение для роли',
-
-            'position_id.required' => 'Поле должность обязательно для заполнения.',
-            'position_id.integer' => 'Поле должность должно быть целым числом.',
-            'position_id.exists' => 'Выбранная должность не существует.',
-            'rate.required' => 'Поле ставка обязательно для заполнения.',
-            'rate.numeric' => 'Поле ставка должно быть числом.',
-            'rate.min' => 'Минимальное значение ставки 0.25.',
-            'rate.max' => 'Максимальное значение ставки 2.0.',
-            'commissariat_id.required' => 'Выберите комиссариат',
-            'commissariat_id.exists' => 'Несуществующий комиссариат',
-            'department_id.exists' => 'Несуществующий отдел',
-            'division_id.exists' => 'Несуществующий отдел',
-            'is_independent.required' => 'Выберите тип должность самостоятельная/нет',
         ]);
 
         $columns = PersonColumn::getTableColumns();
