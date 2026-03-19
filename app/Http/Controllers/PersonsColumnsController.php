@@ -41,7 +41,12 @@ class PersonsColumnsController extends Controller
             $columnName = $data['column_name'];
 
             if (Schema::hasColumn('persons', $columnName)) {
-                throw new \Exception('колонка уже существует');
+                throw new \Exception('колонка уже существует в persons');
+            }
+
+            $existingMeta = PersonColumn::where('column_name', $columnName)->first();
+            if ($existingMeta) {
+                throw new \Exception("Колонка с именем '{$columnName}' уже существует в справочнике в persons_columns");
             }
 
             if (in_array($data['column_type'], ['json', 'file']) && ! empty($data['default'])) {
@@ -125,11 +130,15 @@ class PersonsColumnsController extends Controller
         $newName = $data['column_name'];
 
         try {
-            if ($oldName !== $newName) {
-                Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
-                    $table->renameColumn($oldName, $newName);
-                });
-            }
+
+        if ($oldName !== $newName) {
+            Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
+                $table->renameColumn($oldName, $newName);
+            });
+
+            PersonColumn::where('column_name', $oldName)
+                ->update(['column_name' => $newName]);
+        }
 
             $column = DB::selectOne('
             SELECT COLUMN_TYPE, DATA_TYPE
@@ -167,13 +176,20 @@ class PersonsColumnsController extends Controller
             MODIFY `$newName` $type $defaultSql
         ");
 
+           $personColumn = PersonColumn::where('column_name', $newName)->first();
+        if ($personColumn) {
+            $personColumn->default = $data['default'] ?? null;
+            $personColumn->save();
+        }
+
+
             $backUrl = $request->input('backUrl');
 
             return redirect($backUrl ?? route('persons-columns.index'))
                 ->with('success', 'Колонка успешно обновлена.');
 
         } catch (\Throwable $e) {
-            DB::rollBack();
+            // DB::rollBack();
 
             return redirect()->route('persons-columns.index')
                 ->withErrors(['error' => 'Ошибка: '.$e->getMessage()]);

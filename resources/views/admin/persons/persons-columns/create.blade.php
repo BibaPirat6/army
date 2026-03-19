@@ -49,7 +49,7 @@
                                 <label for="column_name" class="block text-sm font-medium text-[#565A5B] mb-2">
                                     Имя колонки *
                                 </label>
-                                <input type="text" name="column_name" id="column_name" required pattern="[a-z0-9_]+"
+                                <input type="text" name="column_name" id="column_name" required
                                     title="Только латинские буквы, цифры и подчёркивание"
                                     placeholder="Пол, возраст, паспорт" value="{{ old('column_name') }}"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
