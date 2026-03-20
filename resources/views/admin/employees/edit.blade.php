@@ -38,30 +38,20 @@
     @method("PUT")
 
     <div class="grid grid-cols-4 gap-4">
-        @foreach ($columns as $column)
+       @foreach ($columns as $column)
             @php
                 $name = $column['name'];
                 $type = $column['type'];
-                $nullable = $column['nullable'] ?? false;
-
-                $label = $column['comment'] ?: ucfirst(str_replace('_', ' ', $name));
-
-                // значение: old → default → пусто
-                $value = old($name) 
-                    ?? ($column['default'] !== null ? $column['default'] : '');
-
+                $value = $employee->person->$name;
                 // Определяем input type
                 $inputType = match(true) {
                     str_contains($type, 'int') => 'number',
                     str_contains($type, 'decimal') => 'number',
-                    str_contains($type, 'varchar') => 'text',
-                    str_contains($type, 'text') => 'textarea',
-                    str_contains($type, 'json') => 'textarea',
-                    str_contains($type, 'date') && !str_contains($type, 'time') => 'date',
-                    str_contains($type, 'datetime'),
-                    str_contains($type, 'timestamp') => 'datetime-local',
-                    str_contains($type, 'blob') => 'file',
-                    default => 'text',
+                    str_contains($type, 'longtext') => 'textarea',
+                    str_contains($type, 'text') => 'text',
+                    str_contains($type, 'date') => 'date',
+                    str_contains($type, 'varchar') => 'file',
+                      default => 'text',
                 };
 
                 $isTextarea = in_array($inputType, ['textarea']);
@@ -70,7 +60,7 @@
 
             <div class="flex flex-col">
                 <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
-                    {{ $label }}
+                    {{ $name }}
                 </label>
 
                 @if ($isTextarea)
@@ -78,29 +68,27 @@
                         id="{{ $name }}"
                         name="{{ $name }}"
                         rows="3"
-                        placeholder="{{ $label }}"
+                        placeholder="Введите {{ $name }}"
                         class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
-                    >{{ old($name, format_for_textarea($employee->person->$name)) }}</textarea>
+                    >{{ format_for_textarea($value) }}</textarea>
                 @else
                     <input
                         id="{{ $name }}"
                         name="{{ $name }}"
                         type="{{ $inputType }}"
-                        value="{{ $inputType !== 'file' ? $employee->person->$name : '' }}"
-                        placeholder="{{ $label }}"
+                        value="{{ $inputType !== 'file' ? $value : '' }}"
+                        placeholder="Введите {{ $name }}"
                         {{ $step }}
+                        {{ !$column["nullable"] ? "required" : "" }}
                         class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
                     >
                 @endif
 
-                {{-- Отображаем картинку для blob полей --}}
-  @if(str_contains($type, 'blob') && !empty($employee->person->$name))
-    <div class="mt-3">
-        <img 
-            src="data:image/jpeg;base64,{{ base64_encode($employee->person->$name) }}" 
-            class="max-w-[150px] border rounded"
-            onerror="this.style.display='none'"
-        >
+                {{-- img --}}
+            @if(str_contains($type, 'varchar') && !empty($employee->person->$name))
+    <div class="mt-2">
+        <img src="{{ asset('storage/' . $employee->person->$name) }}" 
+             class="max-w-[150px] max-h-[150px] object-cover border rounded">
     </div>
 @endif
             </div>
@@ -111,76 +99,69 @@
 
 
       <div class="grid grid-cols-4 gap-4">
- {{-- user --}}
-              
-                        <!-- Логин -->
-                        <div>
-                            <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Логин *
-                            </label>
-                            <input type="text" name="login" id="login" placeholder="Введите логин"
-                                value="{{ old('login', $employee->user->login) }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                <!-- Логин -->
+                <div>
+                    <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
+                        Логин *
+                    </label>
+                    <input type="text" name="login" id="login" placeholder="Введите логин"
+                        value="{{ old('login', $employee->user->login) }}" required
+                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
-                        </div>
+                </div>
 
 
-                        <!-- Пароль -->
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Пароль *
-                            </label>
-                            <input type="password" name="password" id="password" {{ !empty($employee->user->id) ? "" : "required" }}  placeholder="Введите пароль"
-                                value=""
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                <!-- Пароль -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
+                        Пароль *
+                    </label>
+                    <input type="password" name="password" id="password" {{ !empty($employee->user->id) ? "" : "required" }}  placeholder="Введите пароль"
+                        value=""
+                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
-                        </div>
+                </div>
 
-                        <!-- Роль -->
-                        <div>
-                            <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Роль
-                            </label>
-                            <select name="role" id="role"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->id }}" {{ $employee->user->role->name === $role->name ?  "selected" :  "" }}>
-                                        {{ $role->description }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                   
+                <!-- Роль -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
+                        Роль
+                    </label>
+                    <select name="role" id="role"
+                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}" {{ $employee->user->role->name === $role->name ?  "selected" :  "" }}>
+                                {{ $role->description }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            
 
 
-                    <!-- Рабочий статус -->
-                    <div>
-                        <label for="work_status" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Рабочий статус *
-                        </label>
-                        <select name="work_status" id="work_status" required
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @foreach ($statuses as $status)
-                                <option value="{{ $status->id }}" {{ $employee->work_status_id == $status->id ? "selected" : "" }}>
-                                    {{ $status->description }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
+            <!-- Рабочий статус -->
+            <div>
+                <label for="work_status" class="block text-sm font-medium text-[#565A5B] mb-2">
+                    Рабочий статус *
+                </label>
+                <select name="work_status" id="work_status" required
+                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                    @foreach ($statuses as $status)
+                        <option value="{{ $status->id }}" {{ $employee->work_status_id == $status->id ? "selected" : "" }}>
+                            {{ $status->description }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
       </div>
 
-
-
-     
-
-    <div class="flex justify-end mt-6">
-        <button type="submit"
-                class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
-            Редактировать сотрудника
-        </button>
-    </div>
-</form>
+        <div class="flex justify-end mt-6">
+            <button type="submit"
+                    class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
+                Редактировать сотрудника
+            </button>
+        </div>
+    </form>
             </div>
         </div>
         </div>

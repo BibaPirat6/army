@@ -313,7 +313,6 @@ class EmployeesController extends Controller
                 continue;
             }
 
-
             if (
                 str_contains($type, 'longtext')
             ) {
@@ -430,21 +429,19 @@ class EmployeesController extends Controller
             'last_name' => 'required|string|min:2',
             'first_name' => 'required|string|min:2',
             'patronymic' => 'nullable|string|min:2',
-            'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
             'login' => [
                 'required',
                 'min:5',
                 'max:255',
-                'unique:users,login,'.$employee->user->id,
+                'unique:users',
             ],
             'password' => [
-                'nullable',
+                'required',
                 'min:5',
                 'max:255',
             ],
             'role' => 'required|exists:roles,id',
-
         ], [
             'work_status.required' => 'Рабочий статус обязателен',
             'work_status.exists' => 'Выбранный статус работы не существует',
@@ -455,12 +452,6 @@ class EmployeesController extends Controller
             'first_name.min' => 'Поле Имя минимум 2 символа',
             'patronymic.required' => 'Поле Отчество обязательно для заполнения',
             'patronymic.min' => 'Поле Отчество минимум 2 символа',
-            'email.email' => 'Поле Почта должно быть действительным электронным адресом',
-            'email.unique' => 'Такой адрес Почты уже зарегистрирован',
-            'phone.min' => 'Поле Телефон минимум 10 символов',
-            'phone.unique' => 'Такой номер Телефона уже зарегистрирован',
-            'photo.mimes' => 'Файл Фото должен быть одного из следующих типов: jpeg, png, jpg, gif',
-            'photo.max' => 'Файл Фото не должен превышать размер 8 МБ',
 
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
@@ -471,7 +462,6 @@ class EmployeesController extends Controller
             'password.max' => 'Пароль максимум 255 символов',
             'role.required' => 'Роль обязательна',
             'role.exists' => 'Недопустимое значение для роли',
-
         ]);
 
         // person
