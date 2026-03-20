@@ -12,10 +12,12 @@ class PersonColumn extends Model
         'column_name',
         'type',
         'default',
+        'comment',
     ];
 
     protected $table = 'person_columns';
 
+    // удалить все с persons
     // получение колонок
     public static function getTableColumns(
         string $table = 'persons',
@@ -23,6 +25,7 @@ class PersonColumn extends Model
     ): array {
         $columns = Schema::getColumnListing($table);
         $result = [];
+        $personColumns = DB::table('person_columns')->get()->keyBy('column_name');
 
         foreach ($columns as $name) {
             if (in_array($name, $exclude)) {
@@ -33,12 +36,16 @@ class PersonColumn extends Model
                 "SHOW COLUMNS FROM `$table` WHERE Field = ?",
                 [$name]
             );
-            
+
+            // Получаем данные из person_columns
+            $meta = $personColumns->get($name);
+
             $result[$name] = [
                 'name' => $name,
                 'type' => $info->Type ?? 'unknown',
                 'nullable' => $info->Null === 'YES',
                 'default' => $info->Default,
+                'comment' => $meta->comment ?? null, 
             ];
         }
 

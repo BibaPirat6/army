@@ -30,7 +30,7 @@ class PersonsColumnsController extends Controller
     {
         $data = $request->validate([
             'column_name' => 'required|string',
-            'column_type' => 'required|string|in:integer,decimal,text,json,date,file',
+            'column_type' => 'required|string',
             'default' => 'nullable|string',
         ], [
             'column_name.required' => 'Поле "Имя колонки" обязательно для заполнения.',
@@ -53,29 +53,34 @@ class PersonsColumnsController extends Controller
                 throw new \Exception('Для полей типа JSON и FILE нельзя указать значение по умолчанию');
             }
 
-            Schema::table('persons', function (Blueprint $table) use ($data) {
+            // 1
+            $commentValue = match ($data['column_type']) {
+                'json' => 'json',
+                'file' => 'file',
+                default => null,
+            };
+
+            Schema::table('persons', function (Blueprint $table) use ($data, $commentValue) {
                 $type = $data['column_type'];
                 $name = $data['column_name'];
 
                 $column = match ($type) {
                     'integer' => $table->integer($name)->nullable(),
                     'decimal' => $table->decimal($name, 4, 2)->nullable(),
-                    'text' => $table->text($name)->nullable(),
+                    'varchar' => $table->string($name)->nullable(),
                     'json' => $table->longText($name)->nullable(),
                     'date' => $table->date($name)->nullable(),
-                    'file' => $table->string($name)->nullable(),
+                    'file' => $table->longText($name)->nullable(),
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
+                if ($commentValue) {
+                    $column->comment($commentValue);
+                }
+
                 if (array_key_exists('default', $data) && $data['default'] !== null && $data['default'] !== '') {
                     $def = trim($data['default']);
-
-                    if ($type === 'text') {
-                        $def = str_replace("'", "\\'", $def);
-                        $column->default(DB::raw("'{$def}'"));
-                    } else {
-                        $column->default($def);
-                    }
+                    $column->default($def);
                 }
             });
 
@@ -83,6 +88,7 @@ class PersonsColumnsController extends Controller
                 'column_name' => $columnName,
                 'type' => $data['column_type'],
                 'default' => $data['default'] ?? null,
+                'comment' => $commentValue,
             ]);
 
             $backUrl = $request->input('backUrl');
@@ -103,6 +109,7 @@ class PersonsColumnsController extends Controller
         $columnName = $id;
 
         $column = PersonColumn::getColumnInfo('persons', $columnName);
+
 
         if (! $column) {
             return redirect()->back()->withErrors(['error' => "Колонка «{$columnName}» не найдена"]);
@@ -131,14 +138,14 @@ class PersonsColumnsController extends Controller
 
         try {
 
-        if ($oldName !== $newName) {
-            Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
-                $table->renameColumn($oldName, $newName);
-            });
+            if ($oldName !== $newName) {
+                Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
+                    $table->renameColumn($oldName, $newName);
+                });
 
-            PersonColumn::where('column_name', $oldName)
-                ->update(['column_name' => $newName]);
-        }
+                PersonColumn::where('column_name', $oldName)
+                    ->update(['column_name' => $newName]);
+            }
 
             $column = DB::selectOne('
             SELECT COLUMN_TYPE, DATA_TYPE
@@ -160,7 +167,7 @@ class PersonsColumnsController extends Controller
             $defaultSql = '';
 
             if ($value !== null && $value !== '') {
-                if (in_array($dataType, ['date', 'datetime', 'timestamp']) && strtoupper($value) === 'CURRENT_TIMESTAMP') {
+                if (in_array($dataType, ['date', 'timestamp']) && strtoupper($value) === 'CURRENT_TIMESTAMP') {
                     $defaultSql = 'DEFAULT CURRENT_TIMESTAMP';
                 } elseif ($dataType === 'json') {
                     $defaultSql = '';
@@ -176,12 +183,11 @@ class PersonsColumnsController extends Controller
             MODIFY `$newName` $type $defaultSql
         ");
 
-           $personColumn = PersonColumn::where('column_name', $newName)->first();
-        if ($personColumn) {
-            $personColumn->default = $data['default'] ?? null;
-            $personColumn->save();
-        }
-
+            $personColumn = PersonColumn::where('column_name', $newName)->first();
+            if ($personColumn) {
+                $personColumn->default = $data['default'] ?? null;
+                $personColumn->save();
+            }
 
             $backUrl = $request->input('backUrl');
 

@@ -219,6 +219,7 @@ class EmployeesController extends Controller
 
     public function create(Request $request)
     {
+
         $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
         $users = User::whereNotIn('id', $usedUserIds)
             ->get();
@@ -270,7 +271,6 @@ class EmployeesController extends Controller
             'last_name.min' => 'Поле Фамилия минимум 2 символа',
             'first_name.required' => 'Поле Имя обязательно для заполнения',
             'first_name.min' => 'Поле Имя минимум 2 символа',
-            'patronymic.required' => 'Поле Отчество обязательно для заполнения',
             'patronymic.min' => 'Поле Отчество минимум 2 символа',
 
             'login.required' => 'Логин обязателен',
@@ -298,20 +298,37 @@ class EmployeesController extends Controller
                 continue;
             }
 
-            if (str_contains($type, 'varchar')) {
-                if ($request->hasFile($name)) {
-                    $file = $request->file($name);
+            // Получаем индексы удаленных файлов
+            $removedIndexes = $request->input("removed_{$name}_indexes", []);
 
-                    $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                    $path = $file->storeAs("uploads/{$name}", $filename, 'public');
-
-                    $personData[$name] = $path;
-                } else {
-                    $personData[$name] = null;
+            // Обрабатываем только те файлы, которые не были удалены
+            $uploadedFiles = [];
+            if ($request->hasFile($name)) {
+                foreach ($request->file($name) as $index => $file) {
+                    if (! in_array($index, $removedIndexes) && $file->isValid()) {
+                        $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+                        $path = $file->storeAs("uploads/{$name}", $filename, 'public');
+                        $uploadedFiles[] = $path;
+                    }
                 }
 
-                continue;
+                $personData[$name]=$uploadedFiles;
             }
+
+            // if (str_contains($type, 'varchar')) {
+            //     if ($request->hasFile($name)) {
+            //         $file = $request->file($name);
+
+            //         $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            //         $path = $file->storeAs("uploads/{$name}", $filename, 'public');
+
+            //         $personData[$name] = $path;
+            //     } else {
+            //         $personData[$name] = null;
+            //     }
+
+            //     continue;
+            // }
 
             if (
                 str_contains($type, 'longtext')

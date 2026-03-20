@@ -34,6 +34,7 @@
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Колонка</th>
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Тип</th>
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Значение по умолчанию</th>
+                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Комментарий</th>
                             <th class="px-2 py-2.5 text-right text-xs font-semibold text-[#e7e1e1] w-28">Действия</th>
                         </tr>
                     </thead>
@@ -48,6 +49,9 @@
                                 </td>
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
                                     {{ $col["default"] }}
+                                </td>
+                                <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
+                                    {{ $col["comment"] }}
                                 </td>
                                 <td class="px-2 py-2.5">
                                     <div class="flex gap-1 justify-end">

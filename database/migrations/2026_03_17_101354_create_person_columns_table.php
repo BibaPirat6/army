@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('column_name')->unique();
             $table->string('type');
             $table->string('default')->nullable();
+            $table->string('comment')->nullable();
             $table->timestamps();
         });
     }

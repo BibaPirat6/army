@@ -44,7 +44,7 @@
                             Настройки колонки
                         </h3>
 
-                        <h3>Тип: {{ $column["data_type"] }}</h3>
+                        <h3>Тип: {{ $column["data_type"] }} {{ $column["comment"] ?? null }}</h3>
 
                         <div class="grid gap-6">
 
@@ -63,7 +63,7 @@
 
 
                             <!-- Default -->
-                            @if (!in_array($column["data_type"], ['varchar', 'longtext']))
+                            @if (!in_array($column["comment"], ['json', 'file']))
                                 <div>
                                     <label for="default" class="block text-sm font-medium text-[#565A5B] mb-2">
                                         Значение по умолчанию

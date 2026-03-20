@@ -12,7 +12,7 @@
 
 
     <div class="w-full p-6 mx-auto">
-   <!-- Заголовок и ссылка назад -->
+        <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
                 <a href="{{ $backUrl ?? route('employees.index') }}"
@@ -31,104 +31,106 @@
 
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
- <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data" class="space-y-4">
-    @csrf
+            <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data" class="space-y-4">
+                @csrf
 
-    <div class="grid grid-cols-4 gap-4">
-        @foreach ($columns as $column)
-            @php
-                $name = $column['name'];
-                $type = $column['type'];
-                $value = old($name) 
-                    ?? ($column['default'] !== null ? $column['default'] : '');
+                <div class="grid grid-cols-4 gap-4">
+                    @foreach ($columns as $column)
+                        @php
+                            $name = $column['name'];
+                            $type = $column['type'];
+                            $value = old($name)
+                                ?? ($column['default'] !== null ? $column['default'] : '');
 
-                // Определяем input type
-                $inputType = match(true) {
-                    str_contains($type, 'int') => 'number',
-                    str_contains($type, 'decimal') => 'number',
-                    str_contains($type, 'longtext') => 'textarea',
-                    str_contains($type, 'text') => 'text',
-                    str_contains($type, 'date') => 'date',
-                    str_contains($type, 'varchar') => 'file',
-                      default => 'text',
-                };
+                            // Определяем input type
+                            $inputType = match (true) {
+                                str_contains($type, 'int') => 'number',
+                                str_contains($type, 'decimal') => 'number',
+                                str_contains($type, 'longtext') => 'textarea',
+                                str_contains($type, 'text') => 'text',
+                                str_contains($type, 'date') => 'date',
+                                str_contains($type, 'varchar') => 'file',
+                                default => 'text',
+                            };
 
-                $isTextarea = in_array($inputType, ['textarea']);
-                $step = str_contains($type, 'decimal') ? 'step=0.01' : null;
-            @endphp
+                            $isTextarea = in_array($inputType, ['textarea']);
+                            $step = str_contains($type, 'decimal') ? 'step=0.01' : null;
+                        @endphp
 
-            <div class="flex flex-col">
-                <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
-                    {{ $name }}
-                </label>
-
-                @if ($isTextarea)
-                    <textarea
-                        id="{{ $name }}"
-                        name="{{ $name }}"
-                        rows="3"
-                        placeholder="Введите {{ $name }}"
-                        class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
-                    >{{ $value }}</textarea>
-                @else
-                    <input
-                        id="{{ $name }}"
-                        name="{{ $name }}"
-                        type="{{ $inputType }}"
-                        value="{{ $inputType !== 'file' ? $value : '' }}"
-                        placeholder="Введите {{ $name }}"
-                        {{ $step }}
-                        {{ !$column["nullable"] ? "required" : "" }}
-                        class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]"
-                    >
-                @endif
-            </div>
-        @endforeach
-    </div>
-
-    <hr>
-
-
-      <div class="grid grid-cols-4 gap-4">
-            
-                        <!-- Логин -->
-                        <div>
-                            <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Логин *
+                        <div class="flex flex-col">
+                            <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
+                                {{ $name }}
                             </label>
-                            <input type="text" name="login" id="login" placeholder="Введите логин"
-                                value="{{ old('login') }}" required
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
+                            @if ($isTextarea)
+                                <textarea id="{{ $name }}" name="{{ $name }}" rows="3" placeholder="Введите {{ $name }}"
+                                    class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">{{ $value }}</textarea>
+                            @elseif ($inputType === 'file')
+                                {{-- Поле для загрузки нескольких фото --}}
+                                <div id="file-container-{{ $name }}" class="space-y-2">
+                                    <div class="flex column gap-2">
+                                        <input type="file" name="{{ $name }}[]" multiple
+                                            class="flex-1 px-3 py-2 border rounded-lg"
+                                            onchange="previewMultipleFiles(this, '{{ $name }}')">
+                                    </div>
+                                </div>
+
+                                {{-- Контейнер для превью --}}
+                                <div id="preview-{{ $name }}" class="mt-2 flex flex-wrap gap-2"></div>
+
+                            @else
+                                <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}" value="{{ $value }}"
+                                    placeholder="Введите {{ $name }}" {{ $step }} {{ !$column["nullable"] ? "required" : "" }}
+                                    class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm">
+                            @endif
+
+                            {{-- images --}}
                         </div>
+                    @endforeach
+                </div>
+
+                <hr>
 
 
-                        <!-- Пароль -->
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Пароль *
-                            </label>
-                            <input type="password" name="password" id="password" required placeholder="Введите пароль"
-                                value=""
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                <div class="grid grid-cols-4 gap-4">
 
-                        </div>
+                    <!-- Логин -->
+                    <div>
+                        <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Логин *
+                        </label>
+                        <input type="text" name="login" id="login" placeholder="Введите логин" value="{{ old('login') }}"
+                            required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
-                        <!-- Роль -->
-                        <div>
-                            <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Роль
-                            </label>
-                            <select name="role" id="role"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                @foreach ($roles as $role)
-                                    <option value="{{ $role->id }}">
-                                        {{ $role->description }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                   
+                    </div>
+
+
+                    <!-- Пароль -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Пароль *
+                        </label>
+                        <input type="password" name="password" id="password" required placeholder="Введите пароль" value=""
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                    </div>
+
+                    <!-- Роль -->
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Роль
+                        </label>
+                        <select name="role" id="role"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            @foreach ($roles as $role)
+                                <option value="{{ $role->id }}">
+                                    {{ $role->description }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
 
 
                     <!-- Рабочий статус -->
@@ -145,54 +147,62 @@
                             @endforeach
                         </select>
                     </div>
-      </div>
+                </div>
 
 
 
-     
 
-                    <div class="flex justify-end mt-6">
-                        <button type="submit"
-                                class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
-                            Создать сотрудника
-                        </button>
-                    </div>
-                </form>
-            </div>
+
+                <div class="flex justify-end mt-6">
+                    <button type="submit"
+                        class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
+                        Создать сотрудника
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
 @endsection
 
 
-{{--  телефоны и почта --}}
 <script>
-    function addEmail() {
-        const wrapper = document.getElementById('emails-wrapper');
-        wrapper.appendChild(createRow('email', 'emails[]', 'Введите почту'));
-    }
+function previewMultipleFiles(input, columnName) {
+    const previewContainer = document.getElementById(`preview-${columnName}`);
+    previewContainer.innerHTML = '';
+    
+    if (!input.files) return;
+    
+    Array.from(input.files).forEach((file, index) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'relative group w-fit';
+            div.setAttribute('data-index', index);
+            div.innerHTML = `
+                <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded">
+                <button type="button" 
+                    onclick="removeFilePreview(this, '${columnName}', ${index})" 
+                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100">
+                    ✕
+                </button>
+            `;
+            previewContainer.appendChild(div);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
 
-    function addPhone() {
-        const wrapper = document.getElementById('phones-wrapper');
-        wrapper.appendChild(createRow('tel', 'phones[]', 'Введите телефон'));
-    }
-
-    function createRow(type, name, placeholder) {
-        const div = document.createElement('div');
-        div.className = 'flex gap-2 items-center';
-
-        div.innerHTML = `
-        <input type="${type}" name="${name}" placeholder="${placeholder}"
-            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
-        <button type="button" onclick="removeRow(this)"
-            class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-            ✕
-        </button>
-    `;
-
-        return div;
-    }
-
-    function removeRow(button) {
-        button.parentElement.remove();
-    }
+function removeFilePreview(button, columnName, index) {
+    // Удаляем превью
+    button.parentElement.remove();
+    
+    // Добавляем скрытое поле для удаления
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = `removed_${columnName}_indexes[]`;
+    hiddenInput.value = index;
+    document.getElementById(`file-container-${columnName}`).appendChild(hiddenInput);
+}
 </script>
-

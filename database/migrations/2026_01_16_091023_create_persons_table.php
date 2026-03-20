@@ -14,13 +14,11 @@ return new class extends Migration
     {
         Schema::create('persons', function (Blueprint $table) {
             $table->id();
-            $table->text('first_name');
-            $table->text('last_name');
-            $table->text('patronymic')->nullable();
+            // $table->text('first_name');
+            // $table->text('last_name');
+            // $table->text('patronymic')->nullable();
             $table->timestamps();
         });
-        // Меняем тип на LONGBLOB
-        DB::statement('ALTER TABLE `persons` MODIFY `photo` LONGBLOB NULL');
     }
 
     /**
