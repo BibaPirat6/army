@@ -18,7 +18,6 @@ use App\Services\JsonColumnService;
 use DB;
 use Hash;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 // сервисы
 
@@ -245,7 +244,6 @@ class EmployeesController extends Controller
 
     public function store(Request $request)
     {
-
         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
             'last_name' => 'required|string|min:2',
@@ -293,19 +291,21 @@ class EmployeesController extends Controller
         foreach ($columns as $column) {
             $name = $column['name'];
             $type = $column['type'];
+            $value = $request->input($name);
 
             // исключаем системные поля
             if (in_array($name, ['id', 'created_at', 'updated_at'])) {
                 continue;
             }
-// тут путем храним
-            // FILE (BLOB) — обрабатываем отдельно
-            if (str_contains($type, 'blob')) {
+
+            if (str_contains($type, 'varchar')) {
                 if ($request->hasFile($name)) {
                     $file = $request->file($name);
 
-                    // Просто читаем файл и сохраняем как есть
-                    $personData[$name] = file_get_contents($file->getRealPath());
+                    $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+                    $path = $file->storeAs("uploads/{$name}", $filename, 'public');
+
+                    $personData[$name] = $path;
                 } else {
                     $personData[$name] = null;
                 }
@@ -314,14 +314,8 @@ class EmployeesController extends Controller
             }
 
 
-
-
-            $value = $request->input($name);
-
-            // 🔴 сначала JSON
             if (
-                str_contains($type, 'json') ||
-                (str_contains($type, 'longtext') && preg_match('/^a\d+$/', $name))
+                str_contains($type, 'longtext')
             ) {
 
                 if ($value === null || trim((string) $value) === '') {
@@ -336,7 +330,6 @@ class EmployeesController extends Controller
                 continue;
             }
 
-            // пустые значения → NULL
             $nullable = $column['nullable'];
             $default = $column['default'];
 
@@ -356,43 +349,29 @@ class EmployeesController extends Controller
                 else {
                     if (str_contains($type, 'int')) {
                         $personData[$name] = 0;
-                    } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                    } elseif (str_contains($type, 'decimal')) {
                         $personData[$name] = 0;
-                    } elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
-                        $personData[$name] = now(); // или null если хочешь падать
+                    } elseif (str_contains($type, 'date')) {
+                        $personData[$name] = now();
                     } else {
-                        $personData[$name] = ''; // varchar/text
+                        $personData[$name] = '';
                     }
                 }
 
                 continue;
-            }
-
-            // INT
-            elseif (str_contains($type, 'int')) {
+            } elseif (str_contains($type, 'int')) {
                 $personData[$name] = (int) $value;
-            }
-
-            // DECIMAL / FLOAT
-            elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+            } elseif (str_contains($type, 'decimal')) {
                 $personData[$name] = (float) $value;
-            }
-
-            // DATE / DATETIME
-            elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
-                $personData[$name] = $value; // при необходимости можно нормализовать
-            }
-
-            // ВСЁ ОСТАЛЬНОЕ (varchar, text)
-            else {
+            } elseif (str_contains($type, 'date')) {
+                $personData[$name] = $value;
+            } else {
                 $personData[$name] = $value;
             }
         }
 
-        // сохранение
         $person = Person::create($personData);
 
-        // user
         $userData = [
             'login' => $data['login'],
             'role_id' => $data['role'],
@@ -400,23 +379,11 @@ class EmployeesController extends Controller
         $userData['password_hash'] = Hash::make($data['password']);
         $user = User::create($userData);
 
-        // workStatus
         $employee = Employee::create();
         $employee->work_status_id = $data['work_status'];
         $employee->user_id = $user->id;
         $employee->person_id = $person->id;
         $employee->save();
-
-        // employeePosition
-        EmployeePosition::create([
-            'employee_id' => $employee->id,
-            'commissariat_id' => $data['commissariat_id'],
-            'department_id' => $data['department_id'],
-            'division_id' => $data['division_id'],
-            'position_id' => $data['position_id'],
-            'rate' => $data['rate'],
-            'is_independent' => $data['is_independent'],
-        ]);
 
         $backUrl = $request->get('backUrl', route('employees.index'));
 
@@ -458,24 +425,24 @@ class EmployeesController extends Controller
     {
         $employee = Employee::with(['person', 'user'])->findOrFail($id);
 
-         $data = $request->validate([
+        $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
             'last_name' => 'required|string|min:2',
             'first_name' => 'required|string|min:2',
             'patronymic' => 'nullable|string|min:2',
             'photo' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:8192',
 
-          'login' => [
-    'required',
-    'min:5',
-    'max:255',
-    'unique:users,login,' . $employee->user->id, // Исключаем текущего пользователя
-],
-'password' => [
-    'nullable',           // Можно не заполнять
-    'min:5',
-    'max:255',
-],
+            'login' => [
+                'required',
+                'min:5',
+                'max:255',
+                'unique:users,login,'.$employee->user->id,
+            ],
+            'password' => [
+                'nullable',
+                'min:5',
+                'max:255',
+            ],
             'role' => 'required|exists:roles,id',
 
         ], [
@@ -524,26 +491,26 @@ class EmployeesController extends Controller
             }
 
             // FILE (BLOB) — обрабатываем отдельно
-            
-// FILE (BLOB) — обрабатываем отдельно
-if (str_contains($type, 'blob')) {
-    if ($request->hasFile($name)) {
-        // 1. Если загружен новый файл
-        $file = $request->file($name);
-        
-        // Читаем новый файл
-        $personData[$name] = file_get_contents($file->getRealPath());
-        
-    } else {
-        // 2. Если новый файл НЕ загружен — оставляем старый
-        // НЕ передаем поле в $personData, чтобы Laravel не перезаписал его NULL
-        // Просто пропускаем — continue без сохранения
-        continue;
-    }
-    
-    // ВАЖНО: continue должен быть ПОСЛЕ обработки обоих случаев
-    continue;
-}
+
+            // FILE (BLOB) — обрабатываем отдельно
+            if (str_contains($type, 'blob')) {
+                if ($request->hasFile($name)) {
+                    // 1. Если загружен новый файл
+                    $file = $request->file($name);
+
+                    // Читаем новый файл
+                    $personData[$name] = file_get_contents($file->getRealPath());
+
+                } else {
+                    // 2. Если новый файл НЕ загружен — оставляем старый
+                    // НЕ передаем поле в $personData, чтобы Laravel не перезаписал его NULL
+                    // Просто пропускаем — continue без сохранения
+                    continue;
+                }
+
+                // ВАЖНО: continue должен быть ПОСЛЕ обработки обоих случаев
+                continue;
+            }
             $value = $request->input($name);
 
             // 🔴 сначала JSON
