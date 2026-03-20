@@ -298,7 +298,7 @@ class EmployeesController extends Controller
             if (in_array($name, ['id', 'created_at', 'updated_at'])) {
                 continue;
             }
-
+// тут путем храним
             // FILE (BLOB) — обрабатываем отдельно
             if (str_contains($type, 'blob')) {
                 if ($request->hasFile($name)) {
@@ -312,6 +312,9 @@ class EmployeesController extends Controller
 
                 continue;
             }
+
+
+
 
             $value = $request->input($name);
 
