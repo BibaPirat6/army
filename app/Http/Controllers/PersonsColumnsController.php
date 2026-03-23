@@ -131,8 +131,8 @@ class PersonsColumnsController extends Controller
         $data = $request->validate(
             [
                 'column_name' => 'required|string',
-                'label' => 'sometimes|nullable|string',
-                'default' => 'sometimes|nullable',
+                'default' => 'nullable',
+                'nullable' => 'nullable|sometimes|in:1',
             ],
             [
                 'column_name.required' => 'Имя колонки обязательно.',
@@ -143,9 +143,9 @@ class PersonsColumnsController extends Controller
         $table = 'persons';
         $oldName = $id;
         $newName = $data['column_name'];
+        $isNullable = $request->has('nullable');
 
         try {
-
             if ($oldName !== $newName) {
                 Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
                     $table->renameColumn($oldName, $newName);
@@ -155,58 +155,40 @@ class PersonsColumnsController extends Controller
                     ->update(['column_name' => $newName]);
             }
 
-            $column = DB::selectOne('
-            SELECT COLUMN_TYPE, DATA_TYPE
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = DATABASE()
-            AND TABLE_NAME = ?
-            AND COLUMN_NAME = ?
-        ', [$table, $newName]);
+            $column = PersonColumn::getColumnInfo($table, $newName);
 
             if (! $column) {
-                throw new \Exception('Колонка не найдена в базе данных');
+                throw new \Exception('Колонка не найдена');
             }
 
-            $type = $column->COLUMN_TYPE;
-            $dataType = $column->DATA_TYPE;
+            $type = $column['type'];
+            $default = $data['default'] ?? null;
 
-            $value = $data['default'] ?? null;
+            $nullableSql = $isNullable ? 'NULL' : 'NOT NULL';
 
             $defaultSql = '';
-
-            if ($value !== null && $value !== '') {
-                if (in_array($dataType, ['date', 'timestamp']) && strtoupper($value) === 'CURRENT_TIMESTAMP') {
-                    $defaultSql = 'DEFAULT CURRENT_TIMESTAMP';
-                } elseif ($dataType === 'json') {
-                    $defaultSql = '';
-                } else {
-                    $defaultSql = "DEFAULT '".addslashes($value)."'";
-                }
-            } else {
-                $defaultSql = '';
+            if ($default !== null && $default !== '') {
+                $defaultSql = "DEFAULT '".addslashes($default)."'";
             }
 
             DB::statement("
             ALTER TABLE `$table`
-            MODIFY `$newName` $type $defaultSql
+            MODIFY `$newName` $type $nullableSql $defaultSql
         ");
 
-            $personColumn = PersonColumn::where('column_name', $newName)->first();
-            if ($personColumn) {
-                $personColumn->default = $data['default'] ?? null;
-                $personColumn->save();
-            }
+            PersonColumn::where('column_name', $newName)->update([
+                'default' => $default,
+                'nullable' => $isNullable,
+                'column_name' => $data['column_name'] ?? null,
+            ]);
 
-            $backUrl = $request->input('backUrl');
-
-            return redirect($backUrl ?? route('persons-columns.index'))
-                ->with('success', 'Колонка успешно обновлена.');
+            return redirect($request->input('backUrl') ?? route('persons-columns.index'))
+                ->with('success', 'Колонка обновлена');
 
         } catch (\Throwable $e) {
-            // DB::rollBack();
-
-            return redirect()->route('persons-columns.index')
-                ->withErrors(['error' => 'Ошибка: '.$e->getMessage()]);
+            return back()->withErrors([
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
