@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PersonColumn;
+use App\Models\Person;
 use DB;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ class PersonsColumnsController extends Controller
     {
         $backUrl = $request->input('back_url');
 
-        $columns = PersonColumn::getTableColumns('persons');
+        $columns = Person::getTableColumns('persons');
 
         return view('admin.persons.persons-columns.index', compact('backUrl', 'columns'));
     }
@@ -43,11 +43,6 @@ class PersonsColumnsController extends Controller
 
             if (Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception('колонка уже существует в persons');
-            }
-
-            $existingMeta = PersonColumn::where('column_name', $columnName)->first();
-            if ($existingMeta) {
-                throw new \Exception("Колонка с именем '{$columnName}' уже существует в справочнике в persons_columns");
             }
 
             if (in_array($data['column_type'], ['json', 'file']) && ! empty($data['default'])) {
@@ -92,14 +87,6 @@ class PersonsColumnsController extends Controller
                 }
             });
 
-            PersonColumn::create([
-                'column_name' => $columnName,
-                'type' => $data['column_type'],
-                'default' => $data['default'] ?? null,
-                'comment' => $commentValue,
-                'nullable' => $isNullable,
-            ]);
-
             $backUrl = $request->input('backUrl');
 
             return redirect($backUrl ?? route('persons-columns.index'))
@@ -117,7 +104,7 @@ class PersonsColumnsController extends Controller
         $backUrl = $request->input('back_url');
         $columnName = $id;
 
-        $column = PersonColumn::getColumnInfo('persons', $columnName);
+        $column = Person::getColumnInfo('persons', $columnName);
 
         if (! $column) {
             return redirect()->back()->withErrors(['error' => "Колонка «{$columnName}» не найдена"]);
@@ -150,12 +137,9 @@ class PersonsColumnsController extends Controller
                 Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
                     $table->renameColumn($oldName, $newName);
                 });
-
-                PersonColumn::where('column_name', $oldName)
-                    ->update(['column_name' => $newName]);
             }
 
-            $column = PersonColumn::getColumnInfo($table, $newName);
+            $column = Person::getColumnInfo($table, $newName);
 
             if (! $column) {
                 throw new \Exception('Колонка не найдена');
@@ -176,12 +160,6 @@ class PersonsColumnsController extends Controller
             MODIFY `$newName` $type $nullableSql $defaultSql
         ");
 
-            PersonColumn::where('column_name', $newName)->update([
-                'default' => $default,
-                'nullable' => $isNullable,
-                'column_name' => $data['column_name'] ?? null,
-            ]);
-
             return redirect($request->input('backUrl') ?? route('persons-columns.index'))
                 ->with('success', 'Колонка обновлена');
 
@@ -197,24 +175,13 @@ class PersonsColumnsController extends Controller
         $columnName = $id;
 
         try {
-            // 1. Проверяем, существует ли колонка в таблице persons
             if (! Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception("Колонка «{$columnName}» не найдена в таблице persons.");
             }
 
-            // 2. Проверяем, существует ли запись в person_columns
-            $columnRecord = PersonColumn::where('column_name', $columnName)->first();
-            if (! $columnRecord) {
-                throw new \Exception("Запись о колонке «{$columnName}» не найдена в справочнике.");
-            }
-
-            // 3. Удаляем колонку из таблицы persons
             Schema::table('persons', function (Blueprint $table) use ($columnName) {
                 $table->dropColumn($columnName);
             });
-
-            // 4. Удаляем ЗАПИСЬ из таблицы person_columns (не колонку!)
-            $columnRecord->delete();
 
             $backUrl = $request->get('backUrl', route('persons-columns.index'));
 
