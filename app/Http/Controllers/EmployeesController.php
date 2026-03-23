@@ -245,6 +245,7 @@ class EmployeesController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
             'last_name' => 'required|string|min:2',

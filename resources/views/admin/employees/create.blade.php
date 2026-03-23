@@ -39,18 +39,21 @@
                         @php
                             $name = $column['name'];
                             $type = $column['type'];
+                            $comment = $column["comment"] ?? null;
                             $value = old($name)
                                 ?? ($column['default'] !== null ? $column['default'] : '');
 
                             // Определяем input type
-                            $inputType = match (true) {
-                                str_contains($type, 'int') => 'number',
-                                str_contains($type, 'decimal') => 'number',
-                                str_contains($type, 'longtext') => 'textarea',
-                                str_contains($type, 'text') => 'text',
-                                str_contains($type, 'date') => 'date',
-                                str_contains($type, 'varchar') => 'file',
-                                default => 'text',
+                            $inputType = match ($comment) {
+                                'json' => 'textarea',
+                                'file' => 'file',
+                                default => match (true) {
+                                        str_contains($type, 'int') => 'number',
+                                        str_contains($type, 'decimal') => 'number',
+                                        str_contains($type, 'varchar') => 'text',
+                                        str_contains($type, 'date') => 'date',
+                                        default => 'text',
+                                    }
                             };
 
                             $isTextarea = in_array($inputType, ['textarea']);
@@ -59,7 +62,7 @@
 
                         <div class="flex flex-col">
                             <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
-                                {{ $name }}
+                                {{ $name }} {{ $comment }}
                             </label>
 
                             @if ($isTextarea)
@@ -69,8 +72,7 @@
                                 {{-- Поле для загрузки нескольких фото --}}
                                 <div id="file-container-{{ $name }}" class="space-y-2">
                                     <div class="flex column gap-2">
-                                        <input type="file" name="{{ $name }}[]" multiple
-                                            class="flex-1 px-3 py-2 border rounded-lg"
+                                        <input type="file" name="{{ $name }}[]" multiple class="flex-1 px-3 py-2 border rounded-lg"
                                             onchange="previewMultipleFiles(this, '{{ $name }}')">
                                     </div>
                                 </div>
@@ -83,8 +85,6 @@
                                     placeholder="Введите {{ $name }}" {{ $step }} {{ !$column["nullable"] ? "required" : "" }}
                                     class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm">
                             @endif
-
-                            {{-- images --}}
                         </div>
                     @endforeach
                 </div>
@@ -166,20 +166,20 @@
 
 
 <script>
-function previewMultipleFiles(input, columnName) {
-    const previewContainer = document.getElementById(`preview-${columnName}`);
-    previewContainer.innerHTML = '';
-    
-    if (!input.files) return;
-    
-    Array.from(input.files).forEach((file, index) => {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            const div = document.createElement('div');
-            div.className = 'relative group w-fit';
-            div.setAttribute('data-index', index);
-            div.innerHTML = `
+    function previewMultipleFiles(input, columnName) {
+        const previewContainer = document.getElementById(`preview-${columnName}`);
+        previewContainer.innerHTML = '';
+
+        if (!input.files) return;
+
+        Array.from(input.files).forEach((file, index) => {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const div = document.createElement('div');
+                div.className = 'relative group w-fit';
+                div.setAttribute('data-index', index);
+                div.innerHTML = `
                 <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded">
                 <button type="button" 
                     onclick="removeFilePreview(this, '${columnName}', ${index})" 
@@ -187,22 +187,22 @@ function previewMultipleFiles(input, columnName) {
                     ✕
                 </button>
             `;
-            previewContainer.appendChild(div);
-        };
-        
-        reader.readAsDataURL(file);
-    });
-}
+                previewContainer.appendChild(div);
+            };
 
-function removeFilePreview(button, columnName, index) {
-    // Удаляем превью
-    button.parentElement.remove();
-    
-    // Добавляем скрытое поле для удаления
-    const hiddenInput = document.createElement('input');
-    hiddenInput.type = 'hidden';
-    hiddenInput.name = `removed_${columnName}_indexes[]`;
-    hiddenInput.value = index;
-    document.getElementById(`file-container-${columnName}`).appendChild(hiddenInput);
-}
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removeFilePreview(button, columnName, index) {
+        // Удаляем превью
+        button.parentElement.remove();
+
+        // Добавляем скрытое поле для удаления
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `removed_${columnName}_indexes[]`;
+        hiddenInput.value = index;
+        document.getElementById(`file-container-${columnName}`).appendChild(hiddenInput);
+    }
 </script>

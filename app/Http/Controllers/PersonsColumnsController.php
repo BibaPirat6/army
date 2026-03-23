@@ -32,6 +32,7 @@ class PersonsColumnsController extends Controller
             'column_name' => 'required|string',
             'column_type' => 'required|string',
             'default' => 'nullable|string',
+            'nullable' => 'nullable|sometimes|in:1',
         ], [
             'column_name.required' => 'Поле "Имя колонки" обязательно для заполнения.',
             'column_type.required' => 'Поле "Тип колонки" обязательно для заполнения.',
@@ -53,14 +54,15 @@ class PersonsColumnsController extends Controller
                 throw new \Exception('Для полей типа JSON и FILE нельзя указать значение по умолчанию');
             }
 
-            // 1
+            $isNullable = $request->has('nullable');
+
             $commentValue = match ($data['column_type']) {
                 'json' => 'json',
                 'file' => 'file',
                 default => null,
             };
 
-            Schema::table('persons', function (Blueprint $table) use ($data, $commentValue) {
+            Schema::table('persons', function (Blueprint $table) use ($data, $commentValue, $isNullable) {
                 $type = $data['column_type'];
                 $name = $data['column_name'];
 
@@ -73,6 +75,12 @@ class PersonsColumnsController extends Controller
                     'file' => $table->longText($name)->nullable(),
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
+
+                if ($isNullable) {
+                    $column->nullable();
+                } else {
+                    $column->nullable(false);
+                }
 
                 if ($commentValue) {
                     $column->comment($commentValue);
@@ -89,6 +97,7 @@ class PersonsColumnsController extends Controller
                 'type' => $data['column_type'],
                 'default' => $data['default'] ?? null,
                 'comment' => $commentValue,
+                'nullable' => $isNullable,
             ]);
 
             $backUrl = $request->input('backUrl');
@@ -109,7 +118,6 @@ class PersonsColumnsController extends Controller
         $columnName = $id;
 
         $column = PersonColumn::getColumnInfo('persons', $columnName);
-
 
         if (! $column) {
             return redirect()->back()->withErrors(['error' => "Колонка «{$columnName}» не найдена"]);

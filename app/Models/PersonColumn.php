@@ -13,6 +13,11 @@ class PersonColumn extends Model
         'type',
         'default',
         'comment',
+        'nullable',
+    ];
+
+    protected $casts = [
+        'nullable' => 'boolean',
     ];
 
     protected $table = 'person_columns';
@@ -45,7 +50,7 @@ class PersonColumn extends Model
                 'type' => $info->Type ?? 'unknown',
                 'nullable' => $info->Null === 'YES',
                 'default' => $info->Default,
-                'comment' => $meta->comment ?? null, 
+                'comment' => $meta->comment ?? null,
             ];
         }
 

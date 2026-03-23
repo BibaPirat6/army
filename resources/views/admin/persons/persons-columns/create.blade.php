@@ -53,8 +53,8 @@
                                     title="Только латинские буквы, цифры и подчёркивание"
                                     placeholder="Пол, возраст, паспорт" value="{{ old('column_name') }}"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
-                                                                                                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
-                                                                                                                                  outline-none transition-colors text-[#060606]">
+                                                                                                                                          focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
+                                                                                                                                          outline-none transition-colors text-[#060606]">
                             </div>
 
                             {{-- типы --}}
@@ -64,8 +64,8 @@
                                 </label>
                                 <select name="column_type" id="column_type" required onchange="toggleDefaultField(this)"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
-                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
-                       outline-none transition-colors text-[#060606]">
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
+                               outline-none transition-colors text-[#060606]">
                                     <option value="" disabled selected>— Выберите тип —</option>
 
                                     <option value="integer" @selected(old('column_type') === 'integer')>int (целые)
@@ -93,17 +93,35 @@
                                 </label>
                                 <input type="text" name="default" id="default" placeholder="мужской пол, 0, 2026-01-01"
                                     value="{{ old('default') }}" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
-                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
-                       outline-none transition-colors text-[#060606]">
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
+                               outline-none transition-colors text-[#060606]">
                             </div>
+
+
+                            {{-- nullable --}}
+                            <div class="mb-4">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" name="nullable" value="1" {{ old('nullable') ? 'checked' : '' }}
+                                        class="w-4 h-4 text-[#A60644] bg-white border-[#BFBFBF] rounded 
+                          focus:ring-[#A60644] focus:ring-2">
+                                    <span class="ml-2 text-sm font-medium text-[#565A5B]">
+                                        Разрешить NULL (пустое значение)
+                                    </span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Если отмечено — поле может быть пустым. Если не отмечено — поле обязательно для
+                                    заполнения.
+                                </p>
+                            </div>
+
                         </div>
                     </div>
 
                     <div class="pt-8 flex justify-end">
                         <button type="submit"
                             class="group inline-flex items-center px-10 py-3.5 bg-[#A60644] text-white font-medium rounded-lg 
-                                                                                                                                       transition-all duration-200 hover:bg-[#8E0538] active:bg-[#7A0430] active:scale-[0.98] 
-                                                                                                                                       shadow-md hover:shadow-lg">
+                                                                                                                                               transition-all duration-200 hover:bg-[#8E0538] active:bg-[#7A0430] active:scale-[0.98] 
+                                                                                                                                               shadow-md hover:shadow-lg">
                             <svg class="w-5 h-5 mr-2.5 transition-transform group-hover:scale-110" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

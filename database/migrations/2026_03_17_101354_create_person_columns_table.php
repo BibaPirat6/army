@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('default')->nullable();
             $table->string('comment')->nullable();
+            $table->boolean('nullable')->default(true);
             $table->timestamps();
         });
     }
