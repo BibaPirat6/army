@@ -31,7 +31,8 @@
 
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
-            <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data" class="space-y-4">
+            <form id="employee-form" method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data"
+                class="space-y-4">
                 @csrf
 
                 <div class="grid grid-cols-4 gap-4">
@@ -42,6 +43,7 @@
                             $comment = $column["comment"] ?? null;
                             $value = old($name)
                                 ?? ($column['default'] !== null ? $column['default'] : '');
+                            $isNullable = $column["nullable"];
 
                             // Определяем input type
                             $inputType = match ($comment) {
@@ -62,38 +64,31 @@
 
                         <div class="flex flex-col">
                             <label for="{{ $name }}" class="mb-1 text-sm font-medium text-[#060606]">
-                                {{ $name }} {{ $comment }}
+                                {{ $name }} {{ $isNullable ? "" : "*" }}
                             </label>
 
                             @if ($isTextarea)
-                                <textarea id="{{ $name }}" name="{{ $name }}" rows="3" placeholder="Введите {{ $name }}"
+                                <textarea id="{{ $name }}" name="{{ $name }}" rows="3" placeholder="Введите {{ $name }}" {{ $isNullable ? "" : "required" }}
                                     class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">{{ $value }}</textarea>
+                                {{-- фото --}}
                             @elseif ($inputType === 'file')
-                                {{-- Поле для загрузки нескольких фото --}}
                                 <div id="file-container-{{ $name }}" class="space-y-2">
                                     <div class="flex column gap-2">
                                         <input type="file" name="{{ $name }}[]" multiple class="flex-1 px-3 py-2 border rounded-lg"
-                                            onchange="previewMultipleFiles(this, '{{ $name }}')">
+                                            onchange="previewMultipleFiles(this, '{{ $name }}')" {{ $isNullable ? "" : "required" }}>
                                     </div>
                                 </div>
-
-                                {{-- Контейнер для превью --}}
                                 <div id="preview-{{ $name }}" class="mt-2 flex flex-wrap gap-2"></div>
-
                             @else
-                                <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}" value="{{ $value }}"
-                                    placeholder="Введите {{ $name }}" {{ $step }} {{ !$column["nullable"] ? "required" : "" }}
+                                <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}" value="{{ safe_value($value) }}"
+                                    placeholder="Введите {{ $name }}" {{ $step }} {{ $isNullable ? "" : "required" }}
                                     class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm">
                             @endif
                         </div>
                     @endforeach
                 </div>
-
                 <hr>
-
-
                 <div class="grid grid-cols-4 gap-4">
-
                     <!-- Логин -->
                     <div>
                         <label for="login" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -104,8 +99,6 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
                     </div>
-
-
                     <!-- Пароль -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -115,7 +108,6 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
 
                     </div>
-
                     <!-- Роль -->
                     <div>
                         <label for="role" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -130,9 +122,6 @@
                             @endforeach
                         </select>
                     </div>
-
-
-
                     <!-- Рабочий статус -->
                     <div>
                         <label for="work_status" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -148,11 +137,6 @@
                         </select>
                     </div>
                 </div>
-
-
-
-
-
                 <div class="flex justify-end mt-6">
                     <button type="submit"
                         class="px-4 py-2 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/85">
@@ -166,43 +150,121 @@
 
 
 <script>
+    // Хранилище для файлов по каждой колонке
+    let selectedFiles = {};
+
     function previewMultipleFiles(input, columnName) {
+
+    if (!selectedFiles[columnName]) {
+        selectedFiles[columnName] = [];
+    }
+
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const exists = selectedFiles[columnName].some(f =>
+                f.name === file.name &&
+                f.size === file.size &&
+                f.lastModified === file.lastModified
+            );
+
+            if (!exists) {
+                selectedFiles[columnName].push(file);
+            }
+        });
+    }
+
+    // сначала обновляем превью (использует selectedFiles)
+    updatePreview(columnName);
+
+    // очищаем чтобы можно было выбрать те же файлы
+    input.value = '';
+
+    // ✅ СИНХРОНИЗАЦИЯ С INPUT — выполняем после очистки value, чтобы переустановить файлы
+    syncInputFiles(columnName);
+}
+
+    function updatePreview(columnName) {
         const previewContainer = document.getElementById(`preview-${columnName}`);
         previewContainer.innerHTML = '';
 
-        if (!input.files) return;
+        if (!selectedFiles[columnName] || selectedFiles[columnName].length === 0) {
+            return;
+        }
 
-        Array.from(input.files).forEach((file, index) => {
+        selectedFiles[columnName].forEach((file, index) => {
             const reader = new FileReader();
-
             reader.onload = function (e) {
                 const div = document.createElement('div');
                 div.className = 'relative group w-fit';
-                div.setAttribute('data-index', index);
+                div.setAttribute('data-file-index', index);
                 div.innerHTML = `
-                <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded">
+                <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded" title="${file.name}">
                 <button type="button" 
-                    onclick="removeFilePreview(this, '${columnName}', ${index})" 
+                    onclick="removeFileFromSelection('${columnName}', ${index})" 
                     class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100">
                     ✕
                 </button>
             `;
                 previewContainer.appendChild(div);
             };
-
             reader.readAsDataURL(file);
         });
     }
 
-    function removeFilePreview(button, columnName, index) {
-        // Удаляем превью
-        button.parentElement.remove();
+   function removeFileFromSelection(columnName, index) {
+    if (selectedFiles[columnName]) {
+        selectedFiles[columnName].splice(index, 1);
 
-        // Добавляем скрытое поле для удаления
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = `removed_${columnName}_indexes[]`;
-        hiddenInput.value = index;
-        document.getElementById(`file-container-${columnName}`).appendChild(hiddenInput);
+        syncInputFiles(columnName); // ✅ важно
+
+        updatePreview(columnName);
     }
+}
+
+    // Функция для отправки формы — создаём правильный FormData
+    function submitForm(columnName) {
+        const form = document.getElementById('employee-form');
+        const formData = new FormData(form);
+
+        // Удаляем старые файловые поля
+        formData.delete(`${columnName}[]`);
+
+        // Добавляем все сохранённые файлы
+        if (selectedFiles[columnName]) {
+            selectedFiles[columnName].forEach(file => {
+                formData.append(`${columnName}[]`, file);
+            });
+        }
+
+        // Отправляем форму
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        }).then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        });
+
+        return false;
+    }
+
+
+   function syncInputFiles(columnName) {
+    const input = document.querySelector(`#file-container-${columnName} input[name="${columnName}[]"]`);
+    if (!input) return;
+
+    const dt = new DataTransfer();
+
+    if (selectedFiles[columnName]) {
+        selectedFiles[columnName].forEach(file => {
+            dt.items.add(file);
+        });
+    }
+
+    input.files = dt.files;
+}
 </script>

@@ -62,19 +62,17 @@ class PersonsColumnsController extends Controller
                 $name = $data['column_name'];
 
                 $column = match ($type) {
-                    'integer' => $table->integer($name)->nullable(),
-                    'decimal' => $table->decimal($name, 4, 2)->nullable(),
-                    'varchar' => $table->string($name)->nullable(),
-                    'json' => $table->longText($name)->nullable(),
-                    'date' => $table->date($name)->nullable(),
-                    'file' => $table->longText($name)->nullable(),
+                    'integer' => $table->integer($name),
+                    'decimal' => $table->decimal($name, 4, 2),
+                    'varchar' => $table->string($name),
+                    'json' => $table->longText($name),
+                    'date' => $table->date($name),
+                    'file' => $table->longText($name),
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
                 if ($isNullable) {
                     $column->nullable();
-                } else {
-                    $column->nullable(false);
                 }
 
                 if ($commentValue) {
@@ -147,6 +145,7 @@ class PersonsColumnsController extends Controller
 
             $type = $column['type'];
             $default = $data['default'] ?? null;
+            $comment = $column['comment'] ?? null;
 
             $nullableSql = $isNullable ? 'NULL' : 'NOT NULL';
 
@@ -155,9 +154,14 @@ class PersonsColumnsController extends Controller
                 $defaultSql = "DEFAULT '".addslashes($default)."'";
             }
 
+            $commentSql = '';
+            if ($comment) {
+                $commentSql = "COMMENT '".addslashes($comment)."'";
+            }
+
             DB::statement("
             ALTER TABLE `$table`
-            MODIFY `$newName` $type $nullableSql $defaultSql
+            MODIFY `$newName` $type $nullableSql $defaultSql $commentSql
         ");
 
             return redirect($request->input('backUrl') ?? route('persons-columns.index'))

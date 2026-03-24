@@ -27,3 +27,18 @@ if (!function_exists('format_for_textarea')) {
         return (string) $value;
     }
 }
+
+if (!function_exists('safe_value')) {
+    /**
+     * Безопасно возвращает значение для поля формы
+     * Если значение null или 'NULL' — возвращает пустую строку
+     */
+    function safe_value($value, $default = '')
+    {
+        if ($value === null || $value === 'NULL') {
+            return $default;
+        }
+        
+        return $value;
+    }
+}

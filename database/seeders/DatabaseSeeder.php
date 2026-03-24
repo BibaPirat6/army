@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             WorkStatusSeeder::class,
             UserSeeder::class,
+            PersonSeeder::class,
+            EmployeeSeeder::class,
             PositionTypeSeeder::class,
             PositionSeeder::class,
         ]);

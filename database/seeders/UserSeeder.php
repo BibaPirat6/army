@@ -14,7 +14,6 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $adminRole = DB::table('roles')->where('name', 'admin')->first();
-        $userRole = DB::table('roles')->where('name', 'user')->first();
 
         DB::table('users')->insert([
             [
@@ -22,21 +21,7 @@ class UserSeeder extends Seeder
                 'password_hash' => Hash::make('admin123'),
                 'role_id' => $adminRole->id,
                 'created_at' => now(),
-            ],
-            [
-                'login' => 'user1',
-                'password_hash' => Hash::make('user123'),
-                'role_id' => $userRole->id,
-                'created_at' => now(),
-            ],
-            [
-                'login' => 'user2',
-                'password_hash' => Hash::make('user123'),
-                'role_id' => $userRole->id,
-                'created_at' => now(),
-            ],
-
-        
+            ]
         ]);
     }
 }

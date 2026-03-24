@@ -20,6 +20,23 @@ class JsonColumnService
         return $lines;
     }
 
-   
-  
+    // app/Services/JsonService.php
+    public function handleFiles($files, string $fieldName, array $removedIndexes = []): ?array
+    {
+        if (empty($files)) {
+            return null;
+        }
+
+        $uploadedFiles = [];
+
+        foreach ($files as $index => $file) {
+            if (! in_array($index, $removedIndexes) && $file->isValid()) {
+                $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+                $path = $file->storeAs("uploads/{$fieldName}", $filename, 'public');
+                $uploadedFiles[] = $path;
+            }
+        }
+
+        return ! empty($uploadedFiles) ? $uploadedFiles : null;
+    }
 }

@@ -55,4 +55,20 @@ class Employee extends Model
     {
         return $this->hasMany(EmployeePosition::class);
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($employee) {
+            $employee->load(['user', 'person']);
+            // При удалении сотрудника — удаляем связанного пользователя
+            if ($employee->user) {
+                $employee->user->delete();
+            }
+
+            // При удалении сотрудника — удаляем связанную персону
+            if ($employee->person) {
+                $employee->person->delete();
+            }
+        });
+    }
 }

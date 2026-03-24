@@ -17,14 +17,18 @@ return new class extends Migration
                 ->unique()
                 ->nullable()
                 ->constrained('users')
-                ->onDelete('cascade');
+                ->onDelete('set null'); 
 
             $table->foreignId('person_id')
                 ->unique()
                 ->nullable()
                 ->constrained('persons')
-                ->onDelete('cascade');
-            $table->foreignId('work_status_id')->nullable()->constrained('work_statuses')->onDelete('set null');
+                ->onDelete('set null'); 
+
+            $table->foreignId('work_status_id')
+                ->nullable()
+                ->constrained('work_statuses')
+                ->onDelete('set null');
             $table->timestamps();
         });
     }
