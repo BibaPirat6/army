@@ -192,22 +192,36 @@
         }
 
         selectedFiles[columnName].forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const div = document.createElement('div');
-                div.className = 'relative group w-fit';
-                div.setAttribute('data-file-index', index);
-                div.innerHTML = `
-                <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded" title="${file.name}">
-                <button type="button" 
-                    onclick="removeFileFromSelection('${columnName}', ${index})" 
-                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100">
-                    ✕
-                </button>
-            `;
-                previewContainer.appendChild(div);
-            };
-            reader.readAsDataURL(file);
+            const item = document.createElement('div');
+            item.className = 'relative group w-fit flex items-center gap-2 p-1';
+            item.setAttribute('data-file-index', index);
+
+            // если изображение — показываем thumbnail, иначе — блок с именем
+            if (file.type && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    item.innerHTML = `
+                        <img src="${e.target.result}" class="w-16 h-16 object-cover border rounded" title="${file.name}">
+                        <button type="button"
+                            onclick="removeFileFromSelection('${columnName}', ${index})"
+                            class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100">✕</button>
+                    `;
+                    previewContainer.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // не-изображения — показываем иконку/имя
+                item.innerHTML = `
+                    <div class="w-16 h-16 flex items-center justify-center bg-[#F3F4F6] border rounded text-xs px-2 py-1"
+                    title="${escapeHtml(file.name)}">
+                        <span class="break-words text-[11px] max-w-[6rem]">${escapeHtml(shortName(file.name))}</span>
+                    </div>
+                    <button type="button"
+                        onclick="removeFileFromSelection('${columnName}', ${index})"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100">✕</button>
+                `;
+                previewContainer.appendChild(item);
+            }
         });
     }
 
@@ -254,7 +268,9 @@
 
 
    function syncInputFiles(columnName) {
-    const input = document.querySelector(`#file-container-${columnName} input[name="${columnName}[]"]`);
+    const container = document.getElementById(`file-container-${columnName}`);
+    if (!container) return;
+    const input = container.querySelector('input[type="file"]');
     if (!input) return;
 
     const dt = new DataTransfer();
@@ -266,5 +282,37 @@
     }
 
     input.files = dt.files;
+}
+
+// --- новый блок: перед отправкой формы синхронизируем все inputs ---
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('employee-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function () {
+        // синхронизируем все поля файлов из selectedFiles
+        Object.keys(selectedFiles).forEach(columnName => {
+            syncInputFiles(columnName);
+        });
+        // далее форма отправится обычным способом, и файлы будут в input'ах
+    });
+});
+
+/* Вспомогательные функции */
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"'`=\/]/g, function (s) {
+        return {
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+            "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+        }[s];
+    });
+}
+
+function shortName(name, len = 20) {
+    if (name.length <= len) return name;
+    const extIndex = name.lastIndexOf('.');
+    const ext = extIndex !== -1 ? name.slice(extIndex) : '';
+    const base = name.slice(0, len - ext.length - 3);
+    return base + '...' + ext;
 }
 </script>
