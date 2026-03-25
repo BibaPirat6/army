@@ -17,6 +17,7 @@ use App\Services\JsonColumnService;
 use DB;
 use Hash;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 // сервисы
 
@@ -408,20 +409,21 @@ class EmployeesController extends Controller
 
     public function update(Request $request, $id)
     {
-        dd($request->all());
         $employee = Employee::with(['person', 'user'])->findOrFail($id);
 
         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
 
+            // логин уникален, но игнорируем текущего пользователя
             'login' => [
                 'required',
                 'min:5',
                 'max:255',
-                'unique:users',
+                'unique:users,login,' . ($employee->user->id ?? 'NULL'),
             ],
+            // пароль теперь необязательный при редактировании
             'password' => [
-                'required',
+                'nullable',
                 'min:5',
                 'max:255',
             ],
@@ -434,7 +436,6 @@ class EmployeesController extends Controller
             'login.min' => 'Логин минимум 5 символов',
             'login.max' => 'Логин максимум 255 символов',
             'login.unique' => 'Логин уже занят',
-            'password.required' => 'Пароль обязателен',
             'password.min' => 'Пароль минимум 5 символов',
             'password.max' => 'Пароль максимум 255 символов',
             'role.required' => 'Роль обязательна',
@@ -459,10 +460,12 @@ class EmployeesController extends Controller
                 continue;
             }
 
-
+            // ========== файлы (редактирование) ==========
             if (str_contains($type, 'longtext') && in_array($comment, ['file', 'multiple', 'single'])) {
 
-                $removedIndexes = $request->input("removed_{$name}_indexes", []);
+                // индексы/пути отмеченных для удаления (формат из шаблона)
+                $removedIndexes = (array) $request->input("removed_{$name}_indexes", []);
+                $removedPaths = (array) $request->input("removed_{$name}_existing_paths", []);
 
                 // текущие файлы из БД
                 $existingFiles = [];
@@ -470,41 +473,67 @@ class EmployeesController extends Controller
                     $existingFiles = json_decode($person->$name, true) ?? [];
                 }
 
-                // обработка новых файлов
+                // сначала обрабатываем удаление отмеченных существующих файлов
+                if (!empty($removedIndexes)) {
+                    // удаляем по индексам (если индекс существует) и по пути (если передан)
+                    foreach ($removedIndexes as $idx) {
+                        if (isset($existingFiles[$idx])) {
+                            // попытка удалить физически (без фатальной ошибки)
+                            try {
+                                if (!empty($existingFiles[$idx])) {
+                                    Storage::disk('public')->delete($existingFiles[$idx]);
+                                }
+                            } catch (\Throwable $e) {
+                                // silent — не ломаем обновление из-за удаления файла
+                            }
+                            unset($existingFiles[$idx]);
+                        }
+                    }
+                    // если также передали пути — пробуем удалить их (дополнительно)
+                    foreach ($removedPaths as $p) {
+                        try {
+                            if (!empty($p)) Storage::disk('public')->delete($p);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    // переиндексируем массив существующих файлов
+                    $existingFiles = array_values($existingFiles);
+                }
+
+                // обработка новых загруженных файлов (если есть поле в запросе)
                 $newFiles = $this->jsonService->handleFiles(
                     $request->file($name),
-                    $name,
-                    $removedIndexes
+                    $name
                 );
 
-                // если ничего не пришло вообще → оставляем старое
-                if ($newFiles === null) {
+                // Если поле с файлами вообще отсутствует в запросе -> newFiles === null (ничего менять)
+                // Если newFiles === null и не было removals → ничего не меняем (оставляем старое значение)
+                if ($newFiles === null && empty($removedIndexes)) {
                     continue;
                 }
 
-                // объединяем:
-                // 1. удаляем выбранные старые
-                foreach ($removedIndexes as $index) {
-                    unset($existingFiles[$index]);
-                }
+                // Нормализуем newFiles к массиву (если null -> пустой массив)
+                $newFiles = $newFiles === null ? [] : (is_array($newFiles) ? $newFiles : []);
 
-                $existingFiles = array_values($existingFiles);
-
-                // 2. добавляем новые
+                // объединяем оставшиеся существующие и новые
                 $finalFiles = array_merge($existingFiles, $newFiles);
 
-                $personData[$name] = ! empty($finalFiles)
-                    ? json_encode($finalFiles, JSON_UNESCAPED_SLASHES)
-                    : null;
+                if (!empty($finalFiles)) {
+                    $personData[$name] = json_encode($finalFiles, JSON_UNESCAPED_SLASHES);
+                } else {
+                    // если итог пустой — смотрим nullable колонки
+                    $personData[$name] = $column['nullable'] ? null : json_encode([], JSON_UNESCAPED_SLASHES);
+                }
 
                 continue;
             }
 
-
+            // ========== json-списки ==========
             if (str_contains($type, 'longtext') && $comment === 'json') {
 
                 if ($value === null || trim((string) $value) === '') {
-                    $personData[$name] = null;
+                    $personData[$name] = $column['nullable'] ? null : json_encode([], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 } else {
                     $personData[$name] = json_encode(
                         $this->jsonService->parseLines($value),
@@ -515,7 +544,7 @@ class EmployeesController extends Controller
                 continue;
             }
 
-
+            // обычные поля — стандартная логика
             $nullable = $column['nullable'];
             $default = $column['default'];
 
@@ -585,7 +614,6 @@ class EmployeesController extends Controller
 
         return redirect()->to($backUrl)
             ->with('success', 'Сотрудник успешно обновлен!');
-
     }
 
     public function delete($id)
