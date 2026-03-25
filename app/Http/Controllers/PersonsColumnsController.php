@@ -39,7 +39,7 @@ class PersonsColumnsController extends Controller
         ]);
 
         try {
-            $columnName = $data['column_name'];
+            $columnName = $this->normalizeFieldName($data['column_name']);
 
             if (Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception('колонка уже существует в persons');
@@ -59,7 +59,7 @@ class PersonsColumnsController extends Controller
 
             Schema::table('persons', function (Blueprint $table) use ($data, $commentValue, $isNullable) {
                 $type = $data['column_type'];
-                $name = $data['column_name'];
+                $name = $this->normalizeFieldName($data['column_name']);
 
                 $column = match ($type) {
                     'integer' => $table->integer($name),
@@ -127,7 +127,7 @@ class PersonsColumnsController extends Controller
 
         $table = 'persons';
         $oldName = $id;
-        $newName = $data['column_name'];
+        $newName = $this->normalizeFieldName($data['column_name']) ;
         $isNullable = $request->has('nullable');
 
         try {
@@ -215,5 +215,12 @@ class PersonsColumnsController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => $e->getMessage()]);
         }
+    }
+
+    public function normalizeFieldName(string $name): string
+    {
+        return mb_strtolower(
+            preg_replace('/\s+/', '_', trim($name))
+        );
     }
 }

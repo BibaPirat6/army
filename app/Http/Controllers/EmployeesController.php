@@ -243,7 +243,6 @@ class EmployeesController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         $data = $request->validate([
             'work_status' => 'required|integer|exists:work_statuses,id',
             'login' => [
@@ -288,13 +287,10 @@ class EmployeesController extends Controller
             }
 
             if (str_contains($type, 'longtext') && in_array($comment, ['file', 'multiple', 'single'])) {
-                $removedIndexes = $request->input("removed_{$name}_indexes", []);
-
                 // Используем сервис для обработки файлов
                 $uploadedFiles = $this->jsonService->handleFiles(
                     $request->file($name),
-                    $name,
-                    $removedIndexes
+                    $name
                 );
 
                 // Сохраняем как JSON массив
@@ -340,7 +336,7 @@ class EmployeesController extends Controller
                         $personData[$name] = 0;
                     } elseif (str_contains($type, 'decimal')) {
                         $personData[$name] = 0;
-                    } elseif (str_contains($type, 'date')) {
+                    } elseif (str_contains($type, 'date')) {    
                         $personData[$name] = now();
                     } else {
                         $personData[$name] = '';
