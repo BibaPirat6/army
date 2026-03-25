@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -20,9 +21,16 @@ return new class extends Migration {
             $table->id();
             $table->string('name', 255);
             $table->foreignId('position_type_id')->nullable()->constrained('position_types')->nullOnDelete();
+            $table->enum('chief_type', ['commissariat', 'department', 'division', 'none'])
+            ->default('none')
+            ->comment('Тип начальственной должности: commissariat - начальник комиссариата, department - начальник отдела, division - начальник отделения, none - не начальственная');
+            
+            $table->foreignId('position_type_id')->nullable()->constrained('position_types')->nullOnDelete();
+
             $table->timestamps();
 
             $table->unique(['name', 'position_type_id']);
+            $table->index('chief_type');
         });
 
         Schema::create('commissariats', function (Blueprint $table) {
@@ -51,7 +59,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-
         Schema::create('divisions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
@@ -72,7 +79,6 @@ return new class extends Migration {
 
             $table->timestamps();
         });
-
 
         Schema::create('employee_positions', function (Blueprint $table) {
             $table->id();
@@ -96,17 +102,15 @@ return new class extends Migration {
                 '1.25',
                 '1.50',
                 '1.75',
-                '2.00'
+                '2.00',
             ])->default('1.00');
-
 
             $table->timestamps();
 
             $table->unique(
-                ['employee_id', 'position_id', 'commissariat_id', 'department_id', "division_id"],
+                ['employee_id', 'position_id', 'commissariat_id', 'department_id', 'division_id'],
                 'employee_pos_comm_dept_divis_unique'
             );
-
 
         });
     }
