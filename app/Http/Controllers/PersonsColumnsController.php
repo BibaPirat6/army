@@ -147,10 +147,29 @@ class PersonsColumnsController extends Controller
             $default = $data['default'] ?? null;
             $comment = $column['comment'] ?? null;
 
-            $nullableSql = $isNullable ? 'NULL' : 'NOT NULL';
+            $currentNullable = $column['nullable'];
+            $newNullable = $isNullable;
+
+            if ($currentNullable && ! $newNullable) {
+
+                $nullCount = DB::table($table)->whereNull($newName)->count();
+
+                if ($nullCount > 0) {
+
+                    if ($default === null || $default === '') {
+                        throw new \Exception('Укажите значение по умолчанию перед отключением NULL');
+                    }
+
+                    DB::table($table)
+                        ->whereNull($newName)
+                        ->update([$newName => $default]);
+                }
+            }
+
+            $nullableSql = $newNullable ? 'NULL' : 'NOT NULL';
 
             $defaultSql = '';
-            if ($default !== null && $default !== '') {
+            if (! $newNullable && $default !== null && $default !== '') {
                 $defaultSql = "DEFAULT '".addslashes($default)."'";
             }
 

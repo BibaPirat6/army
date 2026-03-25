@@ -36,7 +36,7 @@
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Значение по умолчанию
                             </th>
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">ТИП ФАКТ(комментарий)</th>
-                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">nullable</th>
+                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">nullable(необязательное)</th>
                             <th class="px-2 py-2.5 text-right text-xs font-semibold text-[#e7e1e1] w-28">Действия</th>
                         </tr>
                     </thead>
