@@ -19,23 +19,21 @@ return new class extends Migration
 
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name', 255)->unique();
+            // типы
             $table->foreignId('position_type_id')->nullable()->constrained('position_types')->nullOnDelete();
-            $table->enum('chief_type', ['commissariat', 'department', 'division', 'none'])
-            ->default('none')
-            ->comment('Тип начальственной должности: commissariat - начальник комиссариата, department - начальник отдела, division - начальник отделения, none - не начальственная');
-            
-            $table->foreignId('position_type_id')->nullable()->constrained('position_types')->nullOnDelete();
-
+            $table->enum('chief_type', ['начальник_вк', 'начальник_отдела', 'начальник_отделения', 'работник'])
+                ->default('работник');
+            // статусы
+            $table->enum('status', ['занята', 'временно_свободна', 'вакант', 'декрет'])
+                ->default('вакант');
+            $table->text('status_comment')->nullable();
             $table->timestamps();
-
-            $table->unique(['name', 'position_type_id']);
-            $table->index('chief_type');
         });
 
         Schema::create('commissariats', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
+            $table->string('name', 255)->unique();
             $table->foreignId('chief_employee_id')->nullable()->constrained('employees')->nullOnDelete();
 
             $table->integer('longitude')->nullable();
@@ -105,14 +103,12 @@ return new class extends Migration
                 '2.00',
             ])->default('1.00');
 
-            $table->timestamps();
-
             $table->unique(
                 ['employee_id', 'position_id', 'commissariat_id', 'department_id', 'division_id'],
                 'employee_pos_comm_dept_divis_unique'
             );
-
         });
+
     }
 
     /**
