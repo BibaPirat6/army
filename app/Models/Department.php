@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Department extends Model
 {
@@ -18,13 +18,23 @@ class Department extends Model
     ];
 
     // получить начальника
-    public function chiefEmployeePosition(): HasOne
+    public function chiefEmployeePosition(): HasOneThrough
     {
-        return $this->hasOne(EmployeePosition::class, 'commissariat_id')
-            ->whereHas('position.chiefType', function ($query) {
-                $query->where('name', 'начальник отдела');
-            })
-            ->with('employee.person');
+        // найти EmployeePosition через CommissariatPosition, где department_id = $this->id
+        return $this->hasOneThrough(
+            EmployeePosition::class,
+            CommissariatPosition::class,
+            'department_id',            // foreign key on commissariat_positions -> departments.id
+            'commissariat_position_id', // foreign key on employee_positions -> commissariats_positions.id
+            'id',
+            'id'
+        )
+        ->whereHas('position.chiefType', function ($query) {
+            $query->where('name', 'начальник отдела');
+        })
+        // ограничить также по commissariat, чтобы не цеплялись позиции из других комиссариатов
+        ->where('commissariat_positions.commissariat_id', $this->commissariat_id)
+        ->with('employee.person');
     }
 
     /**
@@ -44,25 +54,6 @@ class Department extends Model
     }
 
     /**
-     * Получить начальника отдела
-     */
-    // public function chiefEmployee(): BelongsTo
-    // {
-    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
-    // }
-
-    // public function chiefEmployeePosition(): HasOne
-    // {
-    //     return $this->hasOne(EmployeePosition::class, 'employee_id', 'chief_employee_id')
-    //         ->where('commissariat_id', $this->commissariat_id)
-    //         ->where('department_id', $this->id)
-    //         ->whereHas('position', function ($query) {
-    //             $query->where('name', 'Начальник отдела');
-    //         })
-    //         ->with('employee.person');
-    // }
-
-    /**
      * Получить все отделения отдела
      */
     public function divisions(): HasMany
@@ -75,8 +66,10 @@ class Department extends Model
      */
     public function employees()
     {
-        return Employee::whereHas('positions', function ($query) {
-            $query->where('department_id', $this->id);
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->whereHas('commissariatPosition', function ($q2) {
+                $q2->where('department_id', $this->id);
+            });
         })->get();
     }
 }

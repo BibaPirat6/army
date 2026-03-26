@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Commissariat extends Model
 {
@@ -25,32 +26,23 @@ class Commissariat extends Model
         return $this->hasMany(CommissariatPosition::class);
     }
 
-    /**
-     * Получить начальника комиссариата
-     */
-    // public function chiefEmployee(): BelongsTo
-    // {
-    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
-    // }
-
-    // вывод с EmployeePosition начальника комиссариата для того чтобы если мы сняли с должности начальника то в таблице комиссариатов выводилос что нет начальника
-
-    // public function chiefEmployeePosition(): HasOne
-    // {
-    //     return $this->hasOne(EmployeePosition::class, 'commissariat_id')
-    //         ->whereHas('position', function ($query) {
-    //             $query->where('name', 'Начальник комиссариата');
-    //         })
-    //         ->with('employee.person');
-    // }
-
-    public function chiefEmployeePosition(): HasOne
+    // получить начальника
+    public function chiefEmployeePosition(): HasOneThrough
     {
-        return $this->hasOne(EmployeePosition::class, 'commissariat_id')
-            ->whereHas('position.chiefType', function ($query) {
-                $query->where('name', 'начальник комиссариата');
-            })
-            ->with('employee.person');
+        // найти одну запись EmployeePosition через CommissariatPosition,
+        // где commissariat_positions.commissariat_id = $this->id
+        // и должность имеет chiefType 'начальник комиссариата'
+        return $this->hasOneThrough(
+            EmployeePosition::class,
+            CommissariatPosition::class,
+            'commissariat_id',           // foreign key on commissariat_positions -> commissariats.id
+            'commissariat_position_id',  // foreign key on employee_positions -> commissariats_positions.id
+            'id', 'id'
+        )
+        ->whereHas('position.chiefType', function ($query) {
+            $query->where('name', 'начальник комиссариата');
+        })
+        ->with('employee.person');
     }
 
     /**
@@ -69,56 +61,76 @@ class Commissariat extends Model
         return $this->hasMany(Division::class);
     }
 
+
+        // получаем все назначения должностей в нашем комиссиарате
+    public function employeePositions(): HasManyThrough
+    {
+        // все назначения должностей в нашем комиссариате: через commissariat_positions
+        return $this->hasManyThrough(
+            EmployeePosition::class,
+            CommissariatPosition::class,
+            'commissariat_id',          // foreign key on commissariat_positions -> commissariats.id
+            'commissariat_position_id', // foreign key on employee_positions -> commissariats_positions.id
+            'id',
+            'id'
+        );
+    }
+
+
     /**
      * Получить всех сотрудников комиссариата через должности
      */
     public function employees()
     {
-        return Employee::whereHas('positions', function ($query) {
-            $query->where('commissariat_id', $this->id);
+        // возвращаем сотрудников, у которых есть EmployeePosition,
+        // связанная с CommissariatPosition этого комиссариата
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->whereHas('commissariatPosition', function ($q2) {
+                $q2->where('commissariat_id', $this->id);
+            });
         })->get();
     }
 
     // сотрудники прямо зависящие от комиссариата
     public function employeesNotIndependent()
     {
-        return Employee::whereHas('employeePositions', function ($query) {
-            $query->where('commissariat_id', $this->id)
-                ->where('is_independent', 0)
-                ->whereNull('department_id')
-                ->whereNull('division_id');
-        })
-            ->with([
-                'employeePositions' => function ($query) {
-                    $query->where('commissariat_id', $this->id)
-                        ->where('is_independent', 0)
+        // сотрудники, назначенные на позиции данного комиссариата,
+        // где позиция в commissariats_positions без department/division и is_independent = 0
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->where('is_independent', 0)
+                ->whereHas('commissariatPosition', function ($q2) {
+                    $q2->where('commissariat_id', $this->id)
                         ->whereNull('department_id')
-                        ->whereNull('division_id')
-                        ->with('position');
-                },
-            ])
-            ->get();
+                        ->whereNull('division_id');
+                });
+        })->with(['employeePositions' => function ($q) {
+            $q->where('is_independent', 0)
+                ->whereHas('commissariatPosition', function ($q2) {
+                    $q2->where('commissariat_id', $this->id)
+                        ->whereNull('department_id')
+                        ->whereNull('division_id');
+                })->with('position');
+        }])->get();
     }
 
     // сотрудники самостоятельные
     public function employeesIndependent()
     {
-        return Employee::whereHas('employeePositions', function ($query) {
-            $query->where('commissariat_id', $this->id)
-                ->where('is_independent', 1)
-                ->whereNull('department_id')
-                ->whereNull('division_id');
-        })
-            ->with([
-                'employeePositions' => function ($query) {
-                    $query->where('commissariat_id', $this->id)
-                        ->where('is_independent', 1)
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->where('is_independent', 1)
+                ->whereHas('commissariatPosition', function ($q2) {
+                    $q2->where('commissariat_id', $this->id)
                         ->whereNull('department_id')
-                        ->whereNull('division_id')
-                        ->with('position');
-                },
-            ])
-            ->get();
+                        ->whereNull('division_id');
+                });
+        })->with(['employeePositions' => function ($q) {
+            $q->where('is_independent', 1)
+                ->whereHas('commissariatPosition', function ($q2) {
+                    $q2->where('commissariat_id', $this->id)
+                        ->whereNull('department_id')
+                        ->whereNull('division_id');
+                })->with('position');
+        }])->get();
     }
 
     // самостоятельные отделения
@@ -127,11 +139,6 @@ class Commissariat extends Model
         return $this->divisions()->whereNull('department_id')->get();
     }
 
-    // получаем все назначения должностей в нашем комисариате
-    public function employeePositions(): HasMany
-    {
-        return $this->hasMany(EmployeePosition::class, 'commissariat_id');
-    }
 
     // вывод сколько каких должностей в каждом комиссариате
     public function positionsCommissariat()
