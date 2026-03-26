@@ -85,22 +85,29 @@ return new class extends Migration
         Schema::create('commissariats_positions', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('commissariat_id')
-                ->constrained('commissariats')
+            $table->foreignId('commissariat_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('department_id')
+                ->nullable()
+                ->constrained()
                 ->cascadeOnDelete();
 
-            $table->foreignId('position_id')
-                ->constrained('positions')
+            $table->foreignId('division_id')
+                ->nullable()
+                ->constrained()
                 ->cascadeOnDelete();
 
-            // вместимость должности (например 1.00 или 2.00)
+            $table->foreignId('position_id')->constrained()->cascadeOnDelete();
+
+            // вместимость
             $table->decimal('rate_total', 3, 2)->default(1.00);
 
             $table->timestamps();
 
-            // уникальность должности в рамках структуры
             $table->unique([
                 'commissariat_id',
+                'department_id',
+                'division_id',
                 'position_id',
             ], 'unique_position_structure');
         });
@@ -114,31 +121,27 @@ return new class extends Migration
         Schema::create('employee_positions', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('employee_id')
-                ->constrained('employees')
-                ->cascadeOnDelete();
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
 
             $table->foreignId('commissariat_position_id')
                 ->constrained('commissariats_positions')
                 ->cascadeOnDelete();
-
-            // доля ставки
+            
             $table->decimal('rate', 3, 2)->default(1.00);
 
             $table->boolean('is_independent')->default(false);
 
             $table->foreignId('employee_position_status_id')
                 ->nullable()
-                ->constrained('employee_position_statuses')
+                ->constrained()
                 ->nullOnDelete();
 
             $table->timestamps();
 
-            // запрет дублирования одного сотрудника на одну должность
             $table->unique([
                 'employee_id',
                 'commissariat_position_id',
-            ], 'employee_position_unique');
+            ]);
         });
 
     }
