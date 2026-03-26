@@ -32,15 +32,6 @@ Route::middleware(['auth'])->group(function () {
 
 // админ
 Route::middleware(['auth', 'admin'])->group(function () {
-    // users
-    Route::get('/users', [UsersController::class, 'index'])->name('users.index');
-    Route::get('/users/create', [UsersController::class, 'create'])->name('users.create');
-    Route::get('/users/{id}', [UsersController::class, 'show'])->name('users.show');
-    Route::post('/users', [UsersController::class, 'store'])->name('users.store');
-    Route::get('/users/{id}/edit', [UsersController::class, 'edit'])->name('users.edit');
-    Route::put('/users/{id}', [UsersController::class, 'update'])->name('users.update');
-    Route::delete('/users/{id}', [UsersController::class, 'delete'])->name('users.delete');
-
     // employess
     Route::get('/employees', [EmployeesController::class, 'index'])->name('employees.index');
     Route::get('/employees/create', [EmployeesController::class, 'create'])->name('employees.create');
@@ -48,18 +39,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/employees/{id}/edit', [EmployeesController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{id}', [EmployeesController::class, 'delete'])->name('employees.delete');
-
     Route::get('/employees/live-search', [EmployeesController::class, 'liveSearch'])
         ->name('employees.live-search');
 
-    // persons
-    Route::get('/persons', [PersonsController::class, 'index'])->name('persons.index');
-    Route::get('/persons/create', [PersonsController::class, 'create'])->name('persons.create');
-    Route::get('/persons/{id}', [PersonsController::class, 'show'])->name('persons.show');
-    Route::post('/persons', [PersonsController::class, 'store'])->name('persons.store');
-    Route::get('/persons/{id}/edit', [PersonsController::class, 'edit'])->name('persons.edit');
-    Route::put('/persons/{id}', [PersonsController::class, 'update'])->name('persons.update');
-    Route::delete('/persons/{id}', [PersonsController::class, 'delete'])->name('persons.delete');
+
     // persons columns
     Route::get('/persons-columns', [PersonsColumnsController::class, 'index'])->name('persons-columns.index');
     Route::get('/persons-columns/create', [PersonsColumnsController::class, 'create'])->name('persons-columns.create');
@@ -67,16 +50,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/persons-columns/{id}/edit', [PersonsColumnsController::class, 'edit'])->name('persons-columns.edit');
     Route::put('/persons-columns/{id}', [PersonsColumnsController::class, 'update'])->name('persons-columns.update');
     Route::delete('/persons-columns/{id}', [PersonsColumnsController::class, 'delete'])->name('persons-columns.delete');
-
-
-    
-    // work statuses
-    Route::get('/work-statuses', [WorkStatusesController::class, 'index'])->name('work-statuses.index');
-    Route::get('/work-statuses/create', [WorkStatusesController::class, 'create'])->name('work-statuses.create');
-    Route::post('/work-statuses', [WorkStatusesController::class, 'store'])->name('work-statuses.store');
-    Route::get('/work-statuses/{id}/edit', [WorkStatusesController::class, 'edit'])->name('work-statuses.edit');
-    Route::put('/work-statuses/{id}', [WorkStatusesController::class, 'update'])->name('work-statuses.update');
-    Route::delete('/work-statuses/{id}', [WorkStatusesController::class, 'delete'])->name('work-statuses.delete');
 
     // типы должностей
     Route::get('/position-types', [PositionTypesController::class, 'index'])->name('position-types.index');

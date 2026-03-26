@@ -11,17 +11,14 @@ class EmployeePosition extends Model
 
     protected $fillable = [
         'employee_id',
-        'position_id',
-        'commissariat_id',
-        'department_id',
-        'division_id',
-        "is_independent",
+        'commissariat_position_id',
+        'employee_position_status_id',
+        'is_independent',
         'rate',
     ];
 
     protected $casts = [
-        "is_independent" => "boolean",
-        'rate' => 'string',
+        'is_independent' => 'boolean',
     ];
 
     /**
@@ -33,46 +30,18 @@ class EmployeePosition extends Model
     }
 
     /**
-     * Получить должность
+     * Получить комиссариат-должность
      */
-    public function position(): BelongsTo
+    public function commissariatPosition(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
-    }
-
-    public function positionType()
-    {
-        return $this->hasOneThrough(
-            PositionType::class,
-            Position::class,
-            'id',
-            'id',
-            'position_id',
-            'position_type_id'
-        );
+        return $this->belongsTo(CommissariatPosition::class);
     }
 
     /**
-     * Получить комиссариат
+     * Получить статус должности сотрудника
      */
-    public function commissariat(): BelongsTo
+    public function employeePositionStatus(): BelongsTo
     {
-        return $this->belongsTo(Commissariat::class);
-    }
-
-    /**
-     * Получить отдел
-     */
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
-    /**
-     * Получить отделение
-     */
-    public function division(): BelongsTo
-    {
-        return $this->belongsTo(Division::class);
+        return $this->belongsTo(EmployeePositionStatus::class);
     }
 }

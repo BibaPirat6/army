@@ -48,14 +48,6 @@ class Employee extends Model
         return $this->hasMany(EmployeePosition::class);
     }
 
-    /**
-     * Получить должности с позициями
-     */
-    public function employeePositions(): HasMany
-    {
-        return $this->hasMany(EmployeePosition::class);
-    }
-
     protected static function booted()
     {
         static::deleting(function ($employee) {

@@ -24,17 +24,24 @@ class Position extends Model
         return $this->belongsTo(ChiefType::class, 'chief_type_id');
     }
 
-    public function employeePositions()
+    public function commissariatPositions()
     {
-        return $this->hasMany(EmployeePosition::class, 'position_id');
+        return $this->hasMany(CommissariatPosition::class, 'position_id');
     }
 
-    public function employees()
-    {
-        return $this->belongsToMany(Employee::class, 'employee_positions')
-            ->withPivot('rate')
-            ->withTimestamps();
-    }
+    
+
+    // public function employeePositions()
+    // {
+    //     return $this->hasMany(EmployeePosition::class, 'position_id');
+    // }
+
+    // public function employees()
+    // {
+    //     return $this->belongsToMany(Employee::class, 'employee_positions')
+    //         ->withPivot('rate')
+    //         ->withTimestamps();
+    // }
 
     // Аксессор: имя chief_type через связь
     public function getChiefTypeNameAttribute(): string

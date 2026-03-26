@@ -89,16 +89,6 @@ return new class extends Migration
                 ->constrained('commissariats')
                 ->cascadeOnDelete();
 
-            $table->foreignId('department_id')
-                ->nullable()
-                ->constrained('departments')
-                ->cascadeOnDelete();
-
-            $table->foreignId('division_id')
-                ->nullable()
-                ->constrained('divisions')
-                ->cascadeOnDelete();
-
             $table->foreignId('position_id')
                 ->constrained('positions')
                 ->cascadeOnDelete();
@@ -111,8 +101,6 @@ return new class extends Migration
             // уникальность должности в рамках структуры
             $table->unique([
                 'commissariat_id',
-                'department_id',
-                'division_id',
                 'position_id',
             ], 'unique_position_structure');
         });
