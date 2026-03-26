@@ -12,6 +12,7 @@ class PositionsController extends Controller
 {
     public function index(Request $request)
     {
+        // фильтр
         $query = Position::query();
 
         if ($request->filled('sort_commissariat')) {
@@ -23,6 +24,7 @@ class PositionsController extends Controller
 
             $query->whereIn('id', $positionIds);
         }
+        //
 
         $positions = $query
             ->paginate(10)

@@ -105,7 +105,7 @@
                     <th class="px-6 py-4 text-left text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">ID</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">Название</th>
                     <th class="px-6 py-4 text-left text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">Тип должности</th>
-                    <th class="px-6 py-4 text-left text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">Тип начальства</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">Тип начальства</th>                    
                     <th class="px-6 py-4 text-right text-xs font-bold text-[#e7e1e1] uppercase tracking-wider">Действия</th>
                 </tr>
             </thead>
@@ -126,8 +126,12 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                            <span class="text-sm text-[#565A5B]">Стандартное</span>
-                        </td>
+                            <span class="text-sm text-[#565A5B]"> {{ $position->chief_type }}</span>
+      
+
+
+
+
                         <td class="px-6 py-4 group-hover:bg-[#A60644]/5 transition-colors duration-200">
                             <div class="flex items-center justify-end gap-2">
                                 <!-- Подробнее -->
