@@ -51,24 +51,22 @@
                         </label>
 
                         {{-- visible input --}}
-                        <input type="text" id="position_type_search" placeholder="Выберите тип должности"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-               outline-none transition-colors text-[#060606]"
-                            autocomplete="off" value="{{ old('position_type_name') }}">
+                        <input type="text" id="position_type_search" placeholder="Выберите тип должности" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                               outline-none transition-colors text-[#060606]" autocomplete="off"
+                            value="{{ old('position_type_name', $position->getPositionTypeNameAttribute()) }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="position_type_id" id="position_type_id"
-                            value="{{ old('position_type_id') }}">
+                            value="{{ old('position_type_id', $position->positionType->id) }}">
 
                         {{-- dropdown --}}
-                        <ul id="position_type_list"
-                            class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
-               rounded-lg max-h-72 overflow-auto hidden">
+                        <ul id="position_type_list" class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
+                               rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- не выбирать --}}
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="" data-static="true">
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
+                                data-static="true">
                                 Не выбирать
                             </li>
 
@@ -76,12 +74,36 @@
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $type->id }}"
                                     data-name="{{ $type->name }}">
                                     {{ $type->name }}
-                                    <span class="text-gray-400">(ID: {{ $type->id }})</span>
                                 </li>
                             @endforeach
 
                         </ul>
                     </div>
+
+
+
+
+                    <div>
+                        <label for="chief_type" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Тип начальника *
+                        </label>
+
+                        <select name="chief_type_id" id="chief_type" required
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+
+                            <option value="" selected disabled class="text-[#565A5B]">
+                                — Выберите тип —
+                            </option>
+
+                            @foreach ($chiefTypes as $type)
+                                <option value="{{ $type->id }}" @selected(old('chief_type_id', $position->chief_type_id ?? '') == $type->id)>
+                                    {{ $type->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
 
                     <!-- Кнопка отправки -->
                     <div class="flex justify-end pt-6">

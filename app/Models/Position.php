@@ -11,11 +11,17 @@ class Position extends Model
     protected $fillable = [
         'name',
         'position_type_id',
+        'chief_type_id'
     ];
 
     public function positionType()
     {
         return $this->belongsTo(PositionType::class, 'position_type_id');
+    }
+
+    public function ChiefType()
+    {
+        return $this->belongsTo(ChiefType::class, 'chief_type_id');
     }
 
     public function employeePositions()
@@ -28,5 +34,16 @@ class Position extends Model
         return $this->belongsToMany(Employee::class, 'employee_positions')
             ->withPivot('rate')
             ->withTimestamps();
+    }
+
+    // Аксессор: имя chief_type через связь
+    public function getChiefTypeNameAttribute(): string
+    {
+        return $this->chiefType?->name ?? '❌';
+    }
+    // Аксессор: имя positionType через связь
+    public function getPositionTypeNameAttribute(): string
+    {
+        return $this->positionType?->name ?? '❌';
     }
 }

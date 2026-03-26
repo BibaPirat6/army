@@ -115,23 +115,11 @@
                         <td class="px-6 py-4 text-[#060606] font-medium group-hover:bg-[#A60644]/5 transition-colors duration-200">{{ $position->id }}</td>
                         <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">{{ $position->name }}</td>
                         <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                            @if (isset($position->positionType->name))
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                    {{ $position->positionType->name }}
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Нет
-                                </span>
-                            @endif
+                            <span class="text-sm text-[#565A5B]">{{ $position->getPositionTypeNameAttribute() }}</span>
                         </td>
                         <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                            <span class="text-sm text-[#565A5B]"> {{ $position->chief_type }}</span>
-      
-
-
-
-
+                            <span class="text-sm text-[#565A5B]"> {{ $position->getChiefTypeNameAttribute() }}</span>
+                        </td>
                         <td class="px-6 py-4 group-hover:bg-[#A60644]/5 transition-colors duration-200">
                             <div class="flex items-center justify-end gap-2">
                                 <!-- Подробнее -->

@@ -31,11 +31,11 @@
                     </div>
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Тип должности</span>
-                        <span class="text-[#060606]">{{ $position['positionType']['name'] }}</span>
+                        <span class="text-[#060606]">{{ $position->getPositionTypeNameAttribute() }}</span>
                     </div>
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Тип начальства</span>
-                        <span class="text-[#060606]">{{ $position['chief_type'] }}</span>
+                        <span class="text-[#060606]">{{ $position->getChiefTypeNameAttribute() }}</span>
                     </div>
 
 
