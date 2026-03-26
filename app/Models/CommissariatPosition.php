@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CommissariatPosition extends Model
 {
@@ -44,11 +45,17 @@ class CommissariatPosition extends Model
         return $this->belongsTo(Division::class);
     }
 
-       /**
+    /**
      * Тип должности (например, "Менеджер", "Начальник отдела")
      */
     public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
+    }
+
+    // ✅ обратная СВЯЗЬ: все назначения сотрудников на эту должность
+    public function employeePositions(): HasMany
+    {
+        return $this->hasMany(EmployeePosition::class);
     }
 }

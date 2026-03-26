@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Department extends Model
@@ -17,6 +17,24 @@ class Department extends Model
         'chief_employee_id',
     ];
 
+    // получить начальника
+    public function chiefEmployeePosition(): HasOne
+    {
+        return $this->hasOne(EmployeePosition::class, 'commissariat_id')
+            ->whereHas('position.chiefType', function ($query) {
+                $query->where('name', 'начальник отдела');
+            })
+            ->with('employee.person');
+    }
+
+    /**
+     *  Все должности в этом отделе (в рамках комиссариата)
+     */
+    public function commissariatPositions(): HasMany
+    {
+        return $this->hasMany(CommissariatPosition::class);
+    }
+
     /**
      * Получить комиссариат, к которому относится отдел
      */
@@ -28,25 +46,21 @@ class Department extends Model
     /**
      * Получить начальника отдела
      */
-    public function chiefEmployee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class, 'chief_employee_id');
-    }
+    // public function chiefEmployee(): BelongsTo
+    // {
+    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
+    // }
 
-
-
-    public function chiefEmployeePosition(): HasOne
-    {
-        return $this->hasOne(EmployeePosition::class, 'employee_id', 'chief_employee_id')
-            ->where('commissariat_id', $this->commissariat_id)
-            ->where('department_id', $this->id)
-            ->whereHas('position', function ($query) {
-                $query->where('name', 'Начальник отдела');
-            })
-            ->with('employee.person');
-    }
-
-
+    // public function chiefEmployeePosition(): HasOne
+    // {
+    //     return $this->hasOne(EmployeePosition::class, 'employee_id', 'chief_employee_id')
+    //         ->where('commissariat_id', $this->commissariat_id)
+    //         ->where('department_id', $this->id)
+    //         ->whereHas('position', function ($query) {
+    //             $query->where('name', 'Начальник отдела');
+    //         })
+    //         ->with('employee.person');
+    // }
 
     /**
      * Получить все отделения отдела

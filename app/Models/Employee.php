@@ -40,13 +40,16 @@ class Employee extends Model
         return $this->belongsTo(WorkStatus::class, 'work_status_id');
     }
 
-    /**
+    /** обратная связь
      * Получить все должности сотрудника
      */
-    public function positions(): HasMany
+    public function employeePositions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);
     }
+
+
+
 
     protected static function booted()
     {
