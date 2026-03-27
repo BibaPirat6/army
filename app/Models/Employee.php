@@ -48,9 +48,6 @@ class Employee extends Model
         return $this->hasMany(EmployeePosition::class);
     }
 
-
-
-
     protected static function booted()
     {
         static::deleting(function ($employee) {
@@ -65,5 +62,22 @@ class Employee extends Model
                 $employee->person->delete();
             }
         });
+    }
+
+    /**
+     * Аксессор: полное ФИО сотрудника
+     * Возвращает: "Иванов Иван Иванович"
+     */
+    public function getFullNameAttribute(): string
+    {
+        if (! $this->person) {
+            return 'Без ФИО';
+        }
+
+        return collect([
+            $this->person->last_name,
+            $this->person->first_name,
+            $this->person->patronymic,
+        ])->filter()->implode(' ') ?: 'Без ФИО';
     }
 }

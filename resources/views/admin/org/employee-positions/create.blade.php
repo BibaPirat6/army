@@ -72,13 +72,14 @@
                                     <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $pos->id }}"
                                         data-name="{{ $pos->name }}">
                                         {{ $pos->name }}
-                                        <span class="text-gray-400">(ID: {{ $pos->id }})</span>
                                     </li>
                                 @endif
                             @endforeach
                         </ul>
                     </div>
 
+
+                    {{--  --}}
 
 
 
@@ -92,11 +93,14 @@
                         <select name="rate" id="rate"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
                             required>
-                            @foreach ($rates as $rate)
-                                <option value="{{ $rate }}" {{ old('rate', $rate) == 1 ? 'selected' : '' }}>
-                                    {{ $rate }}
-                                </option>
-                            @endforeach
+                            <option value="0.25">0.25</option>
+                            <option value="0.5">0.5</option>
+                            <option value="0.75">0.75</option>
+                            <option value="1" selected>1</option>
+                            <option value="1.25">1.25</option>
+                            <option value="1.5">1.5</option>
+                            <option value="1.75">1.75</option>
+                            <option value="2">2</option>
                         </select>
                     </div>
 

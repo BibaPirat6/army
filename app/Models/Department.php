@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Department extends Model
 {
@@ -17,24 +16,10 @@ class Department extends Model
         'chief_employee_id',
     ];
 
-    // получить начальника
-    public function chiefEmployeePosition(): HasOneThrough
+    // получить начальника через поле chief_employee_id
+    public function chiefEmployee()
     {
-        // найти EmployeePosition через CommissariatPosition, где department_id = $this->id
-        return $this->hasOneThrough(
-            EmployeePosition::class,
-            CommissariatPosition::class,
-            'department_id',            // foreign key on commissariat_positions -> departments.id
-            'commissariat_position_id', // foreign key on employee_positions -> commissariats_positions.id
-            'id',
-            'id'
-        )
-        ->whereHas('position.chiefType', function ($query) {
-            $query->where('name', 'начальник отдела');
-        })
-        // ограничить также по commissariat, чтобы не цеплялись позиции из других комиссариатов
-        ->where('commissariat_positions.commissariat_id', $this->commissariat_id)
-        ->with('employee.person');
+        return $this->belongsTo(Employee::class, 'chief_employee_id');
     }
 
     /**

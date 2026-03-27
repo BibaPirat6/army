@@ -6,62 +6,29 @@
             <td class="px-4 py-3 align-top">
                 <div class="font-bold">ID: {{ $employee->id }}</div>
                 <div class="text-[#565A5B] text-xs mt-1">
-                    Статус: {{ $employee->workStatus?->description ?? '—' }}
+                    Статус: {{ $employee->workStatus?->description ?? '' }}
                 </div>
             </td>
 
             <!-- Пользователь -->
             <td class="px-4 py-3 align-top">
-                @if ($employee->user)
                     <div class="font-medium">{{ $employee->user->login }}</div>
                     <div class="text-[#565A5B] text-xs">ID: {{ $employee->user->id }}</div>
                     <div class="text-[#565A5B] text-xs">
-                        Роль: {{ $employee->user->role?->description ?? '—' }}
+                        Роль: {{ $employee->user->role?->description ?? '' }}
                     </div>
-                @else
-                    <span class="text-[#A60644] italic text-xs"><a
-                            href="{{ route('users.create', ['employee_id' => $employee->id, 'back_url' => url()->full()]) }}">Не
-                            привязан</a></span>
-                @endif
             </td>
 
             <!-- Персона -->
             <td class="px-4 py-3 align-top">
-                @if ($employee->person)
-                        <div class="font-medium">
-                            {{ trim(
-                        implode(' ', [
-                            $employee->person->last_name ?? '',
-                            $employee->person->first_name ?? '',
-                            $employee->person->patronymic ?? '',
-                        ]),
-                    ) ?:
-                        '—' }}
-                        </div>
-                        {{-- <div class="text-[#565A5B] text-xs">ID: {{ $employee->person->id }}</div>
-                        @if ($employee->person->phones && count($employee->person->phones))
-                            <div class="text-[#565A5B] text-xs mt-1">
-                                Телефоны:
-                                {{ implode(', ', array_map(fn($p) => '+' . $p, $employee->person->phones)) }}
-                            </div>
-                        @endif
-                        @if ($employee->person->emails && count($employee->person->emails))
-                            <div class="text-[#565A5B] text-xs mt-1">
-                                Email: {{ implode(', ', $employee->person->emails) }}
-                            </div>
-                        @endif --}}
-                @else
-                    <span class="text-[#A60644] italic text-xs"><a
-                            href="{{ route('persons.create', ['employee_id' => $employee->id, 'back_url' => url()->full()]) }}">Не
-                            привязан</a></span>
-                @endif
+                {{ $employee->getFullNameAttribute() }}
             </td>
 
             <!-- Должности -->
             <td class="px-4 py-3 align-top">
-                @if ($employee->positions->count() > 0)
+                @if ($employee->employeePositions->count() > 0)
                     <ul class="text-[#565A5B] text-xs space-y-1">
-                        @foreach ($employee->positions as $ep)
+                        @foreach ($employee->employeePositions as $ep)
                             <li>ID: {{ $ep->id }} | {{ $ep->position->name }} (ставка:
                                 {{ number_format($ep->rate, 2, ',', '') }})
                                 <br>

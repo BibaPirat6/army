@@ -59,39 +59,46 @@ class EmployeesController extends Controller
         $sortRates = (array) $request->get('sort_rate', []);
         $isIndependent = $request->get('is_independent');
 
+        // NOTE: employee_positions не содержит commissariat_id/department_id/division_id напрямую.
+        // Эти поля находятся в таблице commissariats_positions, EmployeePosition имеет commissariat_position_id.
         if (! empty($sortCommissariats)) {
-            $query->whereHas(
-                'employeePositions',
-                fn ($q) => $q->whereIn('commissariat_id', $sortCommissariats)
-            );
+            $query->whereHas('employeePositions', function ($q) use ($sortCommissariats) {
+                $q->whereHas('commissariatPosition', function ($q2) use ($sortCommissariats) {
+                    $q2->whereIn('commissariat_id', $sortCommissariats);
+                });
+            });
         }
 
         if (! empty($sortDepartments)) {
-            $query->whereHas(
-                'employeePositions',
-                fn ($q) => $q->whereIn('department_id', $sortDepartments)
-            );
+            $query->whereHas('employeePositions', function ($q) use ($sortDepartments) {
+                $q->whereHas('commissariatPosition', function ($q2) use ($sortDepartments) {
+                    $q2->whereIn('department_id', $sortDepartments);
+                });
+            });
         }
 
         if (! empty($sortDivisions)) {
-            $query->whereHas(
-                'employeePositions',
-                fn ($q) => $q->whereIn('division_id', $sortDivisions)
-            );
+            $query->whereHas('employeePositions', function ($q) use ($sortDivisions) {
+                $q->whereHas('commissariatPosition', function ($q2) use ($sortDivisions) {
+                    $q2->whereIn('division_id', $sortDivisions);
+                });
+            });
         }
 
         if (! empty($sortPositions)) {
-            $query->whereHas(
-                'employeePositions',
-                fn ($q) => $q->whereIn('position_id', $sortPositions)
-            );
+            $query->whereHas('employeePositions', function ($q) use ($sortPositions) {
+                $q->whereHas('commissariatPosition', function ($q2) use ($sortPositions) {
+                    $q2->whereIn('position_id', $sortPositions);
+                });
+            });
         }
 
         if (! empty($sortTypes)) {
-            $query->whereHas(
-                'employeePositions.position',
-                fn ($q) => $q->whereIn('position_type_id', $sortTypes)
-            );
+            $query->whereHas('employeePositions', function ($q) use ($sortTypes) {
+                $q->whereHas('commissariatPosition.position', function ($q2) use ($sortTypes) {
+                    $q2->whereIn('position_type_id', $sortTypes);
+                });
+            });
         }
 
         if (! empty($sortRates)) {
@@ -132,25 +139,30 @@ class EmployeesController extends Controller
         $positions = Position::all();
         $positionTypes = PositionType::has('positions')->get();
 
+        // Получаем commissariats / departments / divisions через commissariats_positions JOIN employee_positions,
+        // потому что именно там хранятся соответствующие поля.
         $commissariats = Commissariat::whereIn('id', function ($query) {
-            $query->select('commissariat_id')
-                ->from('employee_positions')
-                ->distinct()
-                ->whereNotNull('employee_id');
+            $query->select('commissariats_positions.commissariat_id')
+                ->from('commissariats_positions')
+                ->join('employee_positions', 'commissariats_positions.id', '=', 'employee_positions.commissariat_position_id')
+                ->whereNotNull('employee_positions.employee_id')
+                ->distinct();
         })->get();
 
         $departments = Department::whereIn('id', function ($query) {
-            $query->select('department_id')
-                ->from('employee_positions')
-                ->distinct()
-                ->whereNotNull('employee_id');
+            $query->select('commissariats_positions.department_id')
+                ->from('commissariats_positions')
+                ->join('employee_positions', 'commissariats_positions.id', '=', 'employee_positions.commissariat_position_id')
+                ->whereNotNull('employee_positions.employee_id')
+                ->distinct();
         })->get();
 
         $divisions = Division::whereIn('id', function ($query) {
-            $query->select('division_id')
-                ->from('employee_positions')
-                ->distinct()
-                ->whereNotNull('employee_id');
+            $query->select('commissariats_positions.division_id')
+                ->from('commissariats_positions')
+                ->join('employee_positions', 'commissariats_positions.id', '=', 'employee_positions.commissariat_position_id')
+                ->whereNotNull('employee_positions.employee_id')
+                ->distinct();
         })->get();
 
         $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];

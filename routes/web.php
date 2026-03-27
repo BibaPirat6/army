@@ -7,13 +7,10 @@ use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsColumnsController;
-use App\Http\Controllers\PersonsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
-use App\Http\Controllers\UsersController;
-use App\Http\Controllers\WorkStatusesController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна

@@ -26,23 +26,10 @@ class Commissariat extends Model
         return $this->hasMany(CommissariatPosition::class);
     }
 
-    // получить начальника
-    public function chiefEmployeePosition(): HasOneThrough
+    // получить начальника через поле chief_employee_id
+    public function chiefEmployee()
     {
-        // найти одну запись EmployeePosition через CommissariatPosition,
-        // где commissariat_positions.commissariat_id = $this->id
-        // и должность имеет chiefType 'начальник комиссариата'
-        return $this->hasOneThrough(
-            EmployeePosition::class,
-            CommissariatPosition::class,
-            'commissariat_id',           // foreign key on commissariat_positions -> commissariats.id
-            'commissariat_position_id',  // foreign key on employee_positions -> commissariats_positions.id
-            'id', 'id'
-        )
-        ->whereHas('position.chiefType', function ($query) {
-            $query->where('name', 'начальник комиссариата');
-        })
-        ->with('employee.person');
+        return $this->belongsTo(Employee::class, 'chief_employee_id');
     }
 
     /**

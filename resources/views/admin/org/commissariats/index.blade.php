@@ -45,28 +45,13 @@
                         @forelse($commissariats as $commissariat)
                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $commissariat->id }}</td>
-                                <td class="px-6 py-4 text-[#060606]">{{ $commissariat->name }}</td>
+                                <td class="px-6 py-4 text-[#060606]">
+                                    <a href="">{{ $commissariat->name }}</a>   
+                                </td>
 
                                 {{-- начальник --}}
                                 <td class="px-6 py-4">
-                                    @if ($commissariat->chiefEmployeePosition !== null)
-                                        @if (isset($commissariat->chiefEmployeePosition->employee->person->id))
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {{ $commissariat->chiefEmployeePosition->employee->person->last_name ?? '*' }}
-                                                {{ $commissariat->chiefEmployeePosition->employee->person->first_name ?? '*' }}
-                                                {{ $commissariat->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
-                                            </span>
-                                        @else
-                                            <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $commissariat->chiefEmployeePosition->employee->id }})</span>
-                                        @endif
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Нет
-                                        </span>
-                                    @endif
+                                    {{ $commissariat->chiefEmployee->getFullNameAttribute() }}
                                 </td>
 
                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}

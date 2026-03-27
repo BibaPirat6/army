@@ -37,25 +37,23 @@
                         </div>
                     @else
                         @if (isset($commissariat?->chiefEmployee))
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <a
-                                    href="{{ route('employees.edit', [
-                                        'id' => $commissariat->chiefEmployee,
-                                        'back_url' => url()->full(),
-                                    ]) }}">
-                                    Нет статуса сотрудника.</a>
-                            </span>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <a href="{{ route('employees.edit', [
+                                'id' => $commissariat->chiefEmployee,
+                                'back_url' => url()->full(),
+                            ]) }}">
+                                            Нет статуса сотрудника.</a>
+                                    </span>
                         @else
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <a
-                                    href="{{ route('commissariats.edit', [
-                                        'id' => $commissariat->id,
-                                        'back_url' => url()->full(),
-                                    ]) }}">
-                                    Не назначен начальник.</a>
-                            </span>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <a href="{{ route('commissariats.edit', [
+                                'id' => $commissariat->id,
+                                'back_url' => url()->full(),
+                            ]) }}">
+                                            Не назначен начальник.</a>
+                                    </span>
                         @endif
                     @endif
                 </div>
@@ -128,9 +126,9 @@
 
                             <div>
                                 <a href="{{ route('commissariats.edit', [
-                                    'id' => $commissariat->id,
-                                    'back_url' => url()->full(),
-                                ]) }}"
+        'id' => $commissariat->id,
+        'back_url' => url()->full(),
+    ]) }}"
                                     class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -169,16 +167,14 @@
                                 <h1 class="text-xl font-bold text-[#060606]">Персональные данные</h1>
                                 <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
                                     </path>
                                 </svg>
                             </summary>
 
                             <!-- Содержимое аккордеона -->
                             <div class="p-4 space-y-3 animate-fadeIn">
-                                <div
-                                    class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">ФИО</span>
                                     <span class="text-[#060606]">
                                         {{ $commissariat->chiefEmployeePosition->employee->person->last_name ?? '' }}
@@ -191,8 +187,9 @@
                                     <span class="font-medium text-[#565A5B]">Телефон</span>
                                     <span class="text-[#060606]">
                                         @if (
-                                            $commissariat->chiefEmployeePosition->employee->person->phones &&
-                                                count($commissariat->chiefEmployeePosition->employee->person->phones) > 0)
+                                                $commissariat->chiefEmployeePosition->employee->person->phones &&
+                                                count($commissariat->chiefEmployeePosition->employee->person->phones) > 0
+                                            )
                                             @foreach ($commissariat->chiefEmployeePosition->employee->person->phones as $phone)
                                                 <div>+{{ $phone }}</div>
                                             @endforeach
@@ -209,8 +206,9 @@
                                     <span class="font-medium text-[#565A5B]">Почта</span>
                                     <span class="text-[#060606]">
                                         @if (
-                                            $commissariat->chiefEmployeePosition->employee->person->emails &&
-                                                count($commissariat->chiefEmployeePosition->employee->person->emails) > 0)
+                                                $commissariat->chiefEmployeePosition->employee->person->emails &&
+                                                count($commissariat->chiefEmployeePosition->employee->person->emails) > 0
+                                            )
                                             @foreach ($commissariat->chiefEmployeePosition->employee->person->emails as $email)
                                                 <div>{{ $email }}</div>
                                             @endforeach
@@ -222,8 +220,7 @@
                                         @endif
                                     </span>
                                 </div>
-                                <div
-                                    class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Фото</span>
                                     <span class="text-[#060606]">
                                         @if ($commissariat->chiefEmployeePosition->employee->person->photo)
@@ -242,65 +239,29 @@
                                     </span>
                                 </div>
 
-                                <div
-                                    class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Создан</span>
                                     <span
                                         class="text-[#060606]">{{ \Carbon\Carbon::parse($commissariat?->chiefEmployeePosition?->employee?->person?->created_at)->format('d.m.Y H:i') }}</span>
                                 </div>
 
-                                <div
-                                    class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Обновлен</span>
                                     <span
                                         class="text-[#060606]">{{ \Carbon\Carbon::parse($commissariat?->chiefEmployeePosition?->employee?->person?->updated_at)->format('d.m.Y H:i') }}</span>
                                 </div>
-
-                                {{-- <div>
-                                    <a href="{{ route('persons.edit', [
-                                        'id' => $commissariat->chiefEmployee->person->id,
-                                        'back_url' => url()->full(),
-                                    ]) }}"
-                                        class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                            </path>
-                                        </svg>
-                                        Редактировать
-                                    </a>
-                                    <form action="{{ route('persons.delete', $commissariat->chiefEmployee->person->id) }}"
-                                        method="POST" class="inline-block mt-0.5"
-                                        onsubmit="return confirm('Вы уверены, что хотите удалить персональные данные?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <input type="hidden" name="backUrl" value="{{ url()->full() }}">
-                                        <button type="submit"
-                                            class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                            Удалить
-                                        </button>
-                                    </form>
-                                </div> --}}
                             </div>
                         </details>
                     @else
                         @if (isset($commissariat?->chiefEmployee))
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <a
-                                    href="{{ route('employees.edit', [
-                                        'id' => $commissariat->chiefEmployee,
-                                        'back_url' => url()->full(),
-                                    ]) }}">
-                                    Нет перс. данных.</a>
-                            </span>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <a href="{{ route('employees.edit', [
+                                'id' => $commissariat->chiefEmployee,
+                                'back_url' => url()->full(),
+                            ]) }}">
+                                            Нет перс. данных.</a>
+                                    </span>
                         @endif
                     @endif
 
@@ -313,37 +274,32 @@
                                 <h1 class="text-xl font-bold text-[#060606]">Пользовательские данные</h1>
                                 <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
                                     </path>
                                 </svg>
                             </summary>
 
                             <!-- Содержимое аккордеона -->
                             <div class="p-4 space-y-3 animate-fadeIn">
-                                <div
-                                    class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Пользователь</span>
                                     <span class="text-[#060606] truncate max-w-[150px]">
                                         {{ $commissariat?->chiefEmployeePosition?->employee?->user?->login ?? '-' }}
                                     </span>
                                 </div>
-                                <div
-                                    class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Роль</span>
                                     <span class="text-[#060606] truncate max-w-[150px]">
                                         {{ $commissariat?->chiefEmployeePosition?->employee?->user?->role?->description ?? '-' }}
                                     </span>
                                 </div>
-                                <div
-                                    class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Создан</span>
                                     <span class="text-[#060606] text-sm">
                                         {{ $commissariat?->chiefEmployeePosition?->employee?->user?->created_at ? \Carbon\Carbon::parse($commissariat?->chiefEmployeePosition?->employee?->user?->created_at)->format('d.m.Y H:i') : '-' }}
                                     </span>
                                 </div>
-                                <div
-                                    class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
+                                <div class="flex items-center justify-between py-2 border-b border-[#BFBFBF] last:border-b-0">
                                     <span class="font-medium text-[#565A5B]">Обновлен</span>
                                     <span class="text-[#060606] text-sm">
                                         {{ $commissariat?->chiefEmployeePosition?->employee?->user?->updated_at ? \Carbon\Carbon::parse($commissariat?->chiefEmployeePosition?->employee?->user?->updated_at)->format('d.m.Y H:i') : '-' }}
@@ -352,12 +308,11 @@
 
                                 {{-- <div>
                                     <a href="{{ route('users.edit', [
-                                        'id' => $commissariat->chiefEmployee->user->id,
-                                        'back_url' => url()->full(),
-                                    ]) }}"
+                                                'id' => $commissariat->chiefEmployee->user->id,
+                                                'back_url' => url()->full(),
+                                            ]) }}"
                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                             </path>
@@ -372,8 +327,7 @@
                                         <input type="hidden" name="backUrl" value="{{ url()->full() }}">
                                         <button type="submit"
                                             class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                                 </path>
@@ -386,149 +340,143 @@
                         </details>
                     @else
                         @if (isset($commissariat?->chiefEmployee))
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <a
-                                    href="{{ route('employees.edit', [
-                                        'id' => $commissariat->chiefEmployee,
-                                        'back_url' => url()->full(),
-                                    ]) }}">
-                                    Нет пользовательских данных.</a>
-                            </span>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <a href="{{ route('employees.edit', [
+                                'id' => $commissariat->chiefEmployee,
+                                'back_url' => url()->full(),
+                            ]) }}">
+                                            Нет пользовательских данных.</a>
+                                    </span>
                         @endif
                     @endif
 
                     {{-- должности --}}
                     @if ($commissariat?->chiefEmployeePosition?->employee?->positions->count() > 0)
-                        <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
-                            <!-- Заголовок аккордеона -->
-                            <summary
-                                class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                                <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
-                                <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7">
-                                    </path>
-                                </svg>
-                            </summary>
+                                    <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
+                                        <!-- Заголовок аккордеона -->
+                                        <summary
+                                            class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
+                                            <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
+                                            <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                                                </path>
+                                            </svg>
+                                        </summary>
 
-                            <!-- Содержимое аккордеона -->
-                            <div class="p-4 space-y-3 animate-fadeIn">
-                                <a href="{{ route('employee-positions.create', [
-                                    'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
-                                    'back_url' => url()->full(),
-                                ]) }}"
-                                    class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    Назначить должность
-                                </a>
-                                @foreach ($commissariat?->chiefEmployeePosition?->employee?->positions as $position)
-                                    <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
-                                        <div class="space-y-2">
-                                            <div class="flex items-center justify-between">
-                                                <span class="font-medium text-[#060606]">Должность</span>
-                                                <span class="text-[#060606]">{{ $position->position->name }}</span>
-                                            </div>
-                                            <div class="flex items-center justify-between">
-                                                <span class="font-medium text-[#060606]">Тип должности</span>
-                                                <span
-                                                    class="text-[#060606]">{{ $position->position->positionType->name }}</span>
-                                            </div>
+                                        <!-- Содержимое аккордеона -->
+                                        <div class="p-4 space-y-3 animate-fadeIn">
+                                            <a href="{{ route('employee-positions.create', [
+                            'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
+                            'back_url' => url()->full(),
+                        ]) }}"
+                                                class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Назначить должность
+                                            </a>
+                                            @foreach ($commissariat?->chiefEmployeePosition?->employee?->positions as $position)
+                                                                <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
+                                                                    <div class="space-y-2">
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="font-medium text-[#060606]">Должность</span>
+                                                                            <span class="text-[#060606]">{{ $position->position->name }}</span>
+                                                                        </div>
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="font-medium text-[#060606]">Тип должности</span>
+                                                                            <span class="text-[#060606]">{{ $position->position->positionType->name }}</span>
+                                                                        </div>
 
-                                            <div class="flex items-center justify-between">
-                                                <span class="font-medium text-[#060606]">Ставка</span>
-                                                <span class="text-[#060606]">{{ $position->rate }}</span>
-                                            </div>
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="font-medium text-[#060606]">Ставка</span>
+                                                                            <span class="text-[#060606]">{{ $position->rate }}</span>
+                                                                        </div>
 
-                                            @if ($position->commissariat_id)
-                                                <div class="flex items-center justify-between">
-                                                    <span class="font-medium text-[#565A5B]">Комиссариат</span>
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->commissariat->name }}</span>
-                                                </div>
-                                            @endif
+                                                                        @if ($position->commissariat_id)
+                                                                            <div class="flex items-center justify-between">
+                                                                                <span class="font-medium text-[#565A5B]">Комиссариат</span>
+                                                                                <span
+                                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->commissariat->name }}</span>
+                                                                            </div>
+                                                                        @endif
 
-                                            @if ($position->department_id)
-                                                <div class="flex items-center justify-between">
-                                                    <span class="font-medium text-[#565A5B]">Отдел</span>
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->department->name }}</span>
-                                                </div>
-                                            @endif
+                                                                        @if ($position->department_id)
+                                                                            <div class="flex items-center justify-between">
+                                                                                <span class="font-medium text-[#565A5B]">Отдел</span>
+                                                                                <span
+                                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->department->name }}</span>
+                                                                            </div>
+                                                                        @endif
 
-                                            @if ($position->division_id)
-                                                <div class="flex items-center justify-between">
-                                                    <span class="font-medium text-[#565A5B]">Отделение</span>
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->division->name }}</span>
-                                                </div>
-                                            @endif
+                                                                        @if ($position->division_id)
+                                                                            <div class="flex items-center justify-between">
+                                                                                <span class="font-medium text-[#565A5B]">Отделение</span>
+                                                                                <span
+                                                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->division->name }}</span>
+                                                                            </div>
+                                                                        @endif
 
-                                            @if ($position->is_independent !== false)
-                                                <i
-                                                    style="color: rgb(17, 183, 17)">({{ $position->is_independent ? 'Самостоятельная должность' : '' }})</i>
-                                            @endif
+                                                                        @if ($position->is_independent !== false)
+                                                                            <i
+                                                                                style="color: rgb(17, 183, 17)">({{ $position->is_independent ? 'Самостоятельная должность' : '' }})</i>
+                                                                        @endif
 
-                                            <div>
-                                                <a href="{{ route('employee-positions.edit', [
+                                                                        <div>
+                                                                            <a href="{{ route('employee-positions.edit', [
                                                     'id' => $commissariat->chiefEmployee->id,
                                                     'back_url' => url()->full(),
                                                 ]) }}"
-                                                    class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                        </path>
-                                                    </svg>
-                                                    Редактировать
-                                                </a>
-                                                <form action="{{ route('employee-positions.delete', $position->id) }}"
-                                                    method="POST" class="inline-block mt-0.5"
-                                                    onsubmit="return confirm('Вы уверены, что хотите удалить должность?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <input type="hidden" name="backUrl" value="{{ url()->full() }}">
-                                                    <button type="submit"
-                                                        class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
-                                                        </svg>
-                                                        Удалить
-                                                    </button>
-                                                </form>
-                                            </div>
+                                                                                class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                                                    </path>
+                                                                                </svg>
+                                                                                Редактировать
+                                                                            </a>
+                                                                            <form action="{{ route('employee-positions.delete', $position->id) }}" method="POST"
+                                                                                class="inline-block mt-0.5"
+                                                                                onsubmit="return confirm('Вы уверены, что хотите удалить должность?');">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <input type="hidden" name="backUrl" value="{{ url()->full() }}">
+                                                                                <button type="submit"
+                                                                                    class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                                                                        viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                                                        </path>
+                                                                                    </svg>
+                                                                                    Удалить
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
 
+                                                                    </div>
+                                                                </div>
+                                            @endforeach
                                         </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </details>
+                                    </details>
                     @endif
 
                     {{-- кнопка создания сотрудника --}}
                     @if (isset($commissariat?->chiefEmployee))
-                        <a href="{{ route('employees.edit', [
-                            'id' => $commissariat?->chiefEmployeePosition?->employee?->id,
+                                    <a href="{{ route('employees.edit', [
+                            'id' => $commissariat->chiefEmployee->id,
                             'back_url' => url()->full(),
                         ]) }}"
-                            class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                </path>
-                            </svg>
-                            Редактировать сотрудника
-                        </a>
+                                        class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                            </path>
+                                        </svg>
+                                        Редактировать сотрудника
+                                    </a>
                     @endif
                 </div>
             </div>
