@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Commissariat extends Model
@@ -17,6 +16,14 @@ class Commissariat extends Model
         'longitude',
         'latitude',
     ];
+
+    // Добавляем виртуальные атрибуты в массив/JSON при необходимости
+    protected $appends = [
+        'rate_total',     // сумма rate_total по всем CommissariatPosition
+        'used_rate',      // суммарные занятые ставки (employee_positions.rate)
+        'available_rate', // остаток ставок
+    ];
+
 
     /**
      * Обратная связь: все должности в этом отделении
@@ -136,5 +143,27 @@ class Commissariat extends Model
             ->pluck('position')
             ->filter()
             ->unique('id');
+    }
+
+
+    // ДОПЫ для ставок
+
+    // Суммарная общая ставка всех позиций в комиссариате
+    public function getRateTotalAttribute()
+    {
+        // суммируем поле rate_total у связанных commissariat_positions
+        return (float) $this->commissariatPositions()->sum('rate_total');
+    }
+
+    // Сумма ставок, уже назначенных сотрудникам (поле rate в employee_positions)
+    public function getUsedRateAttribute()
+    {
+        return (float) $this->employeePositions()->sum('rate');
+    }
+
+    // Доступный остаток ставок (общая ставка минус использованные)
+    public function getAvailableRateAttribute()
+    {
+        return $this->rate_total - $this->used_rate;
     }
 }

@@ -58,4 +58,19 @@ class CommissariatPosition extends Model
     {
         return $this->hasMany(EmployeePosition::class);
     }
+
+
+    // ДОПЫ
+
+    // Сколько ставок уже занято на этой позиции (сумма employee_positions.rate)
+    public function getUsedRateAttribute()
+    {
+        return (float) $this->employeePositions()->sum('rate');
+    }
+
+    // Сколько осталось свободных ставок на этой позиции
+    public function getAvailableRateAttribute()
+    {
+        return (float) $this->rate_total - $this->used_rate;
+    }
 }

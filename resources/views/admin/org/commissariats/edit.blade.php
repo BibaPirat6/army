@@ -46,33 +46,27 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
 
+                
+
 
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник
+                            Начальник *
                         </label>
 
                         {{-- visible input --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-            focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-            outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ $commissariat->chiefEmployeePosition
-        ? trim(
-            ($commissariat->chiefEmployeePosition->employee->person?->last_name ?? '') .
-            ' ' .
-            ($commissariat->chiefEmployeePosition->employee->person?->first_name ?? '') .
-            ' ' .
-            ($commissariat->chiefEmployeePosition->employee->person?->patronymic ?? ''),
-        )
-        : '' }}">
+                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                   outline-none transition-colors text-[#060606]" autocomplete="off"
+                   value="{{ old('chief_employee_id', $commissariat->chiefEmployee ? $commissariat->chiefEmployee->getFullNameAttribute() : '') }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ $commissariat->chief_employee_id ?? '' }}">
-
+                            value="{{ old('chief_employee_id', $commissariat->chiefEmployee ? $commissariat->chiefEmployee->id : '') }}">
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-            rounded-lg max-h-72 overflow-auto hidden">
+                   rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
@@ -80,19 +74,12 @@
                                 Не назначать
                             </li>
 
-                            {{-- существующие сотрудники --}}
                             @foreach ($employees as $employee)
                                                     <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}" data-name="{{ trim(
-                                    ($employee->person?->last_name ?? '') .
-                                    ' ' .
-                                    ($employee->person?->first_name ?? '') .
-                                    ' ' .
-                                    ($employee->person?->patronymic ?? ''),
-                                ) }}">
+                                    $employee->getFullNameAttribute()
+                                ) }}" data-search="{{ $employee->id }}">
                                                         @if ($employee->person)
-                                                            {{ $employee->person->last_name ?? '*' }}
-                                                            {{ $employee->person->first_name ?? '*' }}
-                                                            {{ $employee->person->patronymic ?? '*' }}
+                                                            {{ $employee->getFullNameAttribute()}}
                                                             <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
                                                         @else
                                                             <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
@@ -103,6 +90,7 @@
                     </div>
 
 
+                    
 
                     {{-- общая ставка должности --}}
                     <div>
@@ -111,17 +99,19 @@
                         </label>
                         <select required name="rate_total" id="rate_total"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="0.25">0.25</option>
-                            <option value="0.5">0.5</option>
-                            <option value="0.75">0.75</option>
-                            <option value="1" selected>1</option>
-                            <option value="1.25">1.25</option>
-                            <option value="1.5">1.5</option>
-                            <option value="1.75">1.75</option>
-                            <option value="2">2</option>
+                            <option value="0.25" @selected($commissariat->getRateTotalAttribute() == 0.25)>0.25</option>
+                            <option value="0.5" @selected($commissariat->getRateTotalAttribute() == 0.5)>0.5</option>
+                            <option value="0.75" @selected($commissariat->getRateTotalAttribute() == 0.75)>0.75</option>
+                            <option value="1" @selected($commissariat->getRateTotalAttribute() == 1)>1</option>
+                            <option value="1.25" @selected($commissariat->getRateTotalAttribute() == 1.25)>1.25</option>
+                            <option value="1.5" @selected($commissariat->getRateTotalAttribute() == 1.5)>1.5</option>
+                            <option value="1.75" @selected($commissariat->getRateTotalAttribute() == 1.75)>1.75</option>
+                            <option value="2" @selected($commissariat->getRateTotalAttribute() == 2)>2</option>
                         </select>
                     </div>
 
+
+                    
 
 
 

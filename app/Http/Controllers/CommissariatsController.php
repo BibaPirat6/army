@@ -96,6 +96,12 @@ class CommissariatsController extends Controller
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
         $employees = Employee::all();
 
+
+        $employeePositions = EmployeePosition::whereHas('commissariatPosition', function ($q) use ($commissariat) {
+            $q->where('commissariat_id', $commissariat->id);
+        })->with('employee')->get();
+
+        // это для дивизий и отделов, если будет нужно
         // Подгружаем только позиции, у которых chiefType.name = 'Начальник комиссариата'
         // $positions = Position::whereHas('chiefType', function ($q) {
         //     $q->where('name', 'Начальник комиссариата');
@@ -111,6 +117,7 @@ class CommissariatsController extends Controller
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'nullable|integer|min:1|exists:employees,id',
+            'rate_total' => 'required',
             'longitude' => 'nullable|sometimes|integer',
             'latitude' => 'nullable|sometimes|integer',
         ], [
@@ -123,55 +130,15 @@ class CommissariatsController extends Controller
 
         $commissariat = Commissariat::findOrFail($id);
 
-        // Сохраняем ID старого начальника перед обновлением
-        $oldChiefEmployeeId = $commissariat->chief_employee_id;
 
         // Обновляем комиссариат
         $commissariat->update([
             'name' => $data['name'],
-            'chief_employee_id' => $data['chief_employee_id'], // null или новое значение
+            'chief_employee_id' => $data['chief_employee_id'], 
             'longitude' => $data['longitude'],
             'latitude' => $data['latitude'],
         ]);
 
-        // Получаем ID должности "Начальник комиссариата"
-        $chiefPositionId = Position::where('name', 'Начальник комиссариата')->value('id');
-
-        if (! $chiefPositionId) {
-            return back()->withErrors(['error' => 'Должность "Начальник комиссариата" не найдена']);
-        }
-
-        // Если указан новый начальник
-        if ($data['chief_employee_id'] !== null) {
-            // 1. Удаляем старую запись начальника (если был старый начальник)
-            if ($oldChiefEmployeeId !== null) {
-                EmployeePosition::where([
-                    'employee_id' => $oldChiefEmployeeId,
-                    'position_id' => $chiefPositionId,
-                    'commissariat_id' => $commissariat->id,
-                ])->delete();
-            }
-
-            // 2. Создаем новую запись для нового начальника
-            EmployeePosition::updateOrCreate([
-                'employee_id' => $data['chief_employee_id'],
-                'position_id' => $chiefPositionId,
-                'commissariat_id' => $commissariat->id,
-            ], [
-                'rate' => 1,
-            ]);
-
-        } else {
-            // Если начальник удален (установлен null)
-            // Удаляем запись из EmployeePosition для старого начальника
-            if ($oldChiefEmployeeId !== null) {
-                EmployeePosition::where([
-                    'employee_id' => $oldChiefEmployeeId,
-                    'position_id' => $chiefPositionId,
-                    'commissariat_id' => $commissariat->id,
-                ])->delete();
-            }
-        }
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));
 
