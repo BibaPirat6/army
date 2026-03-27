@@ -54,29 +54,25 @@
                         </label>
 
                         {{-- visible input --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-        focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-        outline-none transition-colors text-[#060606]"
-                            autocomplete="off"
-                            value="{{ $commissariat->chiefEmployeePosition
-                                ? trim(
-                                    ($commissariat->chiefEmployeePosition->employee->person?->last_name ?? '') .
-                                        ' ' .
-                                        ($commissariat->chiefEmployeePosition->employee->person?->first_name ?? '') .
-                                        ' ' .
-                                        ($commissariat->chiefEmployeePosition->employee->person?->patronymic ?? ''),
-                                )
-                                : '' }}">
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+            focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+            outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ $commissariat->chiefEmployeePosition
+        ? trim(
+            ($commissariat->chiefEmployeePosition->employee->person?->last_name ?? '') .
+            ' ' .
+            ($commissariat->chiefEmployeePosition->employee->person?->first_name ?? '') .
+            ' ' .
+            ($commissariat->chiefEmployeePosition->employee->person?->patronymic ?? ''),
+        )
+        : '' }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
                             value="{{ $commissariat->chief_employee_id ?? '' }}">
 
                         {{-- dropdown --}}
-                        <ul id="chief_employee_list"
-                            class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-        rounded-lg max-h-72 overflow-auto hidden">
+                        <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+            rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
@@ -86,26 +82,46 @@
 
                             {{-- существующие сотрудники --}}
                             @foreach ($employees as $employee)
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
-                                    data-name="{{ trim(
-                                        ($employee->person?->last_name ?? '') .
-                                            ' ' .
-                                            ($employee->person?->first_name ?? '') .
-                                            ' ' .
-                                            ($employee->person?->patronymic ?? ''),
-                                    ) }}">
-                                    @if ($employee->person)
-                                        {{ $employee->person->last_name ?? '*' }}
-                                        {{ $employee->person->first_name ?? '*' }}
-                                        {{ $employee->person->patronymic ?? '*' }}
-                                        <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
-                                    @else
-                                        <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
-                                    @endif
-                                </li>
+                                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}" data-name="{{ trim(
+                                    ($employee->person?->last_name ?? '') .
+                                    ' ' .
+                                    ($employee->person?->first_name ?? '') .
+                                    ' ' .
+                                    ($employee->person?->patronymic ?? ''),
+                                ) }}">
+                                                        @if ($employee->person)
+                                                            {{ $employee->person->last_name ?? '*' }}
+                                                            {{ $employee->person->first_name ?? '*' }}
+                                                            {{ $employee->person->patronymic ?? '*' }}
+                                                            <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
+                                                        @else
+                                                            <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
+                                                        @endif
+                                                    </li>
                             @endforeach
                         </ul>
                     </div>
+
+
+
+                    {{-- общая ставка должности --}}
+                    <div>
+                        <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Общая ставка должности
+                        </label>
+                        <select required name="rate_total" id="rate_total"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            <option value="0.25">0.25</option>
+                            <option value="0.5">0.5</option>
+                            <option value="0.75">0.75</option>
+                            <option value="1" selected>1</option>
+                            <option value="1.25">1.25</option>
+                            <option value="1.5">1.5</option>
+                            <option value="1.75">1.75</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+
 
 
 
@@ -114,8 +130,8 @@
                         <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">
                             Координаты по горизонтали
                         </label>
-                        <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="200"
-                            min="1" value="{{ old('longitude', $commissariat->longitude) }}"
+                        <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="200" min="1"
+                            value="{{ old('longitude', $commissariat->longitude) }}"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
 
@@ -124,8 +140,8 @@
                         <label for="latitude" class="block text-sm font-medium text-[#565A5B] mb-2">
                             Координаты по вертикали
                         </label>
-                        <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="120"
-                            min="1" value="{{ old('latitude', $commissariat->latitude) }}"
+                        <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="120" min="1"
+                            value="{{ old('latitude', $commissariat->latitude) }}"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
 

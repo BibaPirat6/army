@@ -238,7 +238,6 @@ class EmployeesController extends Controller
         $persons = Person::whereNotIn('id', $usedPersonIds)
             ->get();
         $roles = Role::all();
-        $statuses = WorkStatus::all();
 
         $backUrl = $request->input('back_url');
 
@@ -248,7 +247,6 @@ class EmployeesController extends Controller
             'users' => $users,
             'persons' => $persons,
             'roles' => $roles,
-            'statuses' => $statuses,
             'backUrl' => $backUrl,
             'columns' => $columns,
         ]);
@@ -257,7 +255,6 @@ class EmployeesController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'work_status' => 'required|integer|exists:work_statuses,id',
             'login' => [
                 'required',
                 'min:5',
@@ -271,8 +268,6 @@ class EmployeesController extends Controller
             ],
             'role' => 'required|exists:roles,id',
         ], [
-            'work_status.required' => 'Рабочий статус обязателен',
-            'work_status.exists' => 'Выбранный статус работы не существует',
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
             'login.max' => 'Логин максимум 255 символов',
@@ -378,7 +373,6 @@ class EmployeesController extends Controller
         $user = User::create($userData);
 
         $employee = Employee::create();
-        $employee->work_status_id = $data['work_status'];
         $employee->user_id = $user->id;
         $employee->person_id = $person->id;
         $employee->save();

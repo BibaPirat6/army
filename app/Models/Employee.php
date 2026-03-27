@@ -32,14 +32,6 @@ class Employee extends Model
         return $this->belongsTo(Person::class);
     }
 
-    /**
-     * Получить статус работы
-     */
-    public function workStatus(): BelongsTo
-    {
-        return $this->belongsTo(WorkStatus::class, 'work_status_id');
-    }
-
     /** обратная связь
      * Получить все должности сотрудника
      */

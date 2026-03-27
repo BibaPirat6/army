@@ -47,7 +47,7 @@
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник
+                            Начальник *
                         </label>
 
                         {{-- visible input --}}
@@ -93,44 +93,28 @@
                         </ul>
                     </div>
 
-                    {{-- должность начальника --}}
-                    <div>
-                        <label for="chief_position_id" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Должность начальника
-                        </label>
-                        <select required name="chief_position_id" id="chief_position_id"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="" selected disabled>{{ old('chief_position_id') ? '' : 'Выберите должность' }}</option>
-                            @foreach($positions as $position)
-                                <option value="{{ $position->id }}" {{ old('chief_position_id') == $position->id ? 'selected' : '' }}>
-                                    {{ $position->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
                     {{-- общая ставка должности --}}
                      <div>
                         <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Общая ставка должности
+                            Общая ставка должности *
                         </label>
                         <select required name="rate_total" id="rate_total"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="0.25">0.25</option>
-                            <option value="0.5">0.5</option>
-                            <option value="0.75">0.75</option>
-                            <option value="1" selected>1</option>
-                            <option value="1.25">1.25</option>
-                            <option value="1.5">1.5</option>
-                            <option value="1.75">1.75</option>
-                            <option value="2">2</option>
+                            <option value="0.25" @selected(old('rate_total', $rate_total ?? '1') == '0.25')>0.25</option>
+                            <option value="0.5"  @selected(old('rate_total', $rate_total ?? '1') == '0.5')>0.5</option>
+                            <option value="0.75" @selected(old('rate_total', $rate_total ?? '1') == '0.75')>0.75</option>
+                            <option value="1"    @selected(old('rate_total', $rate_total ?? '1') == '1')>1</option>
+                            <option value="1.25" @selected(old('rate_total', $rate_total ?? '1') == '1.25')>1.25</option>
+                            <option value="1.5"  @selected(old('rate_total', $rate_total ?? '1') == '1.5')>1.5</option>
+                            <option value="1.75" @selected(old('rate_total', $rate_total ?? '1') == '1.75')>1.75</option>
+                            <option value="2"    @selected(old('rate_total', $rate_total ?? '1') == '2')>2</option>
                         </select>
                     </div>
 
                     <!-- x -->
                     <div>
                         <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Координаты по горизонтали
+                            Координаты по горизонтали *
                         </label>
                         <input required type="number" name="longitude" id="longitude" placeholder="Ось х" max="200"
                             min="1" value="{{ old('longitude', $x) }}"
@@ -140,7 +124,7 @@
                     <!-- y -->
                     <div>
                         <label for="latitude" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Координаты по вертикали
+                            Координаты по вертикали *
                         </label>
                         <input required type="number" name="latitude" id="latitude" placeholder="Ось y" max="120"
                             min="1" value="{{ old('latitude', $y) }}"

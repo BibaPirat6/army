@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Employee;
 use App\Models\Person;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class EmployeeSeeder extends Seeder
@@ -28,7 +27,6 @@ class EmployeeSeeder extends Seeder
             [
                 'user_id' => $adminUser->id,
                 'person_id' => $persons->firstWhere('last_name', 'Иванов')?->id,
-                'work_status_id' => 1, // предполагаем, что статус с id=1 существует
             ],
         ];
 

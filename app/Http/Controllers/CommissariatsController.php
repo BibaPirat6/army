@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChiefType;
 use App\Models\Commissariat;
 use App\Models\CommissariatPosition;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\EmployeePositionStatus;
+use App\Models\Person;
 use App\Models\Position;
 use Illuminate\Http\Request;
 
@@ -22,25 +24,22 @@ class CommissariatsController extends Controller
     public function show(Request $request, $id)
     {
         $commissariat = Commissariat::findOrFail($id);
+        $columns = Person::getTableColumns();
+
         $backUrl = $request->input('back_url');
 
-        return view('admin.org.commissariats.show', compact('commissariat', 'backUrl'));
+        return view('admin.org.commissariats.show', compact('commissariat', 'backUrl', 'columns'));
     }
 
     public function create(Request $request)
     {
         $employees = Employee::all();
 
-        // Подгружаем только позиции, у которых chiefType.name = 'Начальник комиссариата'
-        $positions = Position::whereHas('chiefType', function ($q) {
-            $q->where('name', 'Начальник комиссариата');
-        })->get();
-
         $backUrl = $request->input('back_url');
         $x = $request->input('x');
         $y = $request->input('y');
 
-        return view('admin.org.commissariats.create', compact('employees', 'positions', 'backUrl', 'x', 'y'));
+        return view('admin.org.commissariats.create', compact('employees', 'backUrl', 'x', 'y'));
     }
 
     public function store(Request $request)
@@ -48,8 +47,7 @@ class CommissariatsController extends Controller
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
-            'chief_position_id' => 'required|integer|exists:positions,id',
-            "rate_total"=>"required",
+            'rate_total' => 'required',
             'longitude' => 'required|integer',
             'latitude' => 'required|integer',
         ], [
@@ -58,20 +56,21 @@ class CommissariatsController extends Controller
             'name.min' => 'Название комиссариата должно содержать минимум 2 символа.',
             'name.max' => 'Название комиссариата не должно превышать 255 символов.',
             'chief_employee_id.exists' => 'Несуществующий сотрудник',
-            'chief_position_id.exists' => 'Несуществующая должность',
         ]);
 
         // 1) создаем комиссариат
         $commissariat = Commissariat::create($data);
         $commissariat->refresh();
 
-   
+        $chiefTypeId = ChiefType::where('name', 'начальник комиссариата')->value('id');
+        $positionId = Position::where('chief_type_id', $chiefTypeId)->value('id');
+
         $commissariatPosition = CommissariatPosition::create([
             'commissariat_id' => $commissariat->id,
-            'position_id' => $data['chief_position_id'],
+            'position_id' => $positionId,
             'department_id' => null,
             'division_id' => null,
-            'rate_total' =>  $data['rate_total'],
+            'rate_total' => $data['rate_total'],
         ]);
 
         // 3) назначаем эту должность сотруднику (employee_positions)
@@ -81,12 +80,11 @@ class CommissariatsController extends Controller
                 'commissariat_position_id' => $commissariatPosition->id,
             ],
             [
-                "employee_position_status_id"=>EmployeePositionStatus::where("name", "занят")->value("id"),
+                'employee_position_status_id' => EmployeePositionStatus::where('name', 'занят')->value('id'),
                 'rate' => 1,
                 'is_independent' => 0,
             ]
         );
-        
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));
 
@@ -97,6 +95,11 @@ class CommissariatsController extends Controller
     {
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
         $employees = Employee::all();
+
+        // Подгружаем только позиции, у которых chiefType.name = 'Начальник комиссариата'
+        // $positions = Position::whereHas('chiefType', function ($q) {
+        //     $q->where('name', 'Начальник комиссариата');
+        // })->get();
 
         $backUrl = $request->input('back_url');
 
