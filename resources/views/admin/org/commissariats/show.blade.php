@@ -9,7 +9,6 @@
         @include('includes.success', ['success' => session('success')])
     @endif
 
-
     <div class="max-w-2xl p-6 mx-auto">
         {{-- кнопка назад --}}
         <div class="flex items-center mb-4">
@@ -53,7 +52,7 @@
                                 <span class="text-[#060606]">
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ $commissariat->getChiefAttribute()->getFullNameAttribute() }}
+                                        {{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}
                                     </span>
                                 </span>
                             </div>
@@ -97,153 +96,154 @@
                         </div>
                     </details>
 
-                    {{-- сотрудник --}}
-                    <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden mb-4">
-                        <!-- Заголовок аккордеона -->
-                        <summary
-                            class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                            <h1 class="text-xl font-bold text-[#060606]">Данные сотрудника</h1>
-                            <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                                </path>
-                            </svg>
-                        </summary>
-
-                        <!-- Содержимое аккордеона -->
-                        <div class="p-4 space-y-3 animate-fadeIn">
-
-                            {{-- сюды динамические колонки --}}
-                            @foreach ($columns as $column)
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-[#565A5B]">{{ $column["name"] }}</span>
-                                    <span class="text-[#060606] truncate max-w-[150px]">
-                                        {{ $commissariat->getChiefAttribute()->person->{$column["name"]} }}
-                                    </span>
-                                </div>
-                            @endforeach
-
-
-
-                            {{-- user --}}
-                            <div class="flex items-center justify-between">
-                                <span class="font-medium text-[#565A5B]">Пользователь</span>
-                                <span class="text-[#060606] truncate max-w-[150px]">
-                                    {{ $commissariat->getChiefAttribute()->user->login}}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="font-medium text-[#565A5B]">Роль</span>
-                                <span class="text-[#060606] truncate max-w-[150px]">
-                                    {{ $commissariat->getChiefAttribute()->user->role->description}}
-                                </span>
-                            </div>
-                            {{-- кнопка создания сотрудника --}}
-                            <a href="{{ route('employees.edit', [
-        'id' => $commissariat->getChiefAttribute()->id,
-        'back_url' => url()->full(),
-    ]) }}" class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                    </path>
-                                </svg>
-                                Редактировать сотрудника
-                            </a>
-                        </div>
-
-
-                </div>
-                </details>
-
-
-
-                {{-- должности --}}
-
-                <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
-                    <!-- Заголовок аккордеона -->
-                    <summary
-                        class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                        <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
-                        <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
-                        </svg>
-                    </summary>
-
-                    <!-- Содержимое аккордеона -->
-                    <div class="p-4 space-y-3 animate-fadeIn">
-                        <a href="{{ route('employee-positions.create', [
-        'id' => $commissariat->getChiefAttribute()->id,
-        'back_url' => url()->full(),
-    ]) }}" class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                                </path>
-                            </svg>
-                            Назначить должность
-                        </a>
-
-
-                        @foreach ($commissariat->employeePositions as $position)
-                            <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
-                                <div class="space-y-1.5 text-sm">
-                                    @php
-                                        $info = [
-                                            ['label' => 'Комиссариат', 'value' => $position->commissariat->name],
-                                            ['label' => 'Должность', 'value' => $position->position->name],
-                                            ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
-                                            ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
-                                            ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
-                                            ['label' => 'Самостоятельная', 'value' => $position->is_independent ? 'да' : 'нет'],
-                                            ['label' => 'Статус', 'value' => $position->getStatusNameAttribute()],
-                                        ];
-                                    @endphp
-
-                                    @foreach ($info as $item)
-                                        <div class="flex items-center justify-between">
-                                            <span class="font-medium text-[#060606]">{{ $item['label'] }}</span>
-                                            <span class="text-[#060606]">{{ $item['value'] }}</span>
-                                        </div>
-                                    @endforeach
-
-                                    <div class="flex gap-2 pt-2 mt-2 border-t border-[#BFBFBF]/30">
-                                        <a href="{{ route('employee-positions.edit', ['id' => $commissariat->getChiefAttribute()->id, 'back_url' => url()->full()]) }}"
-                                            class="inline-flex items-center px-3 py-1.5 bg-[#A60644] text-white text-xs font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors shadow-sm">
-                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    {{-- сотрудник и должности --}}
+                    @php
+                        $chief = $commissariat->getChiefAttribute();
+                    @endphp
+                    @if ($chief)
+                                    {{-- сотрудник --}}
+                                    <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden mb-4">
+                                        <!-- Заголовок аккордеона -->
+                                        <summary
+                                            class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
+                                            <h1 class="text-xl font-bold text-[#060606]">Данные сотрудника</h1>
+                                            <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                                                </path>
                                             </svg>
-                                            Редактировать
-                                        </a>
-                                        <form action="{{ route('employee-positions.delete', $position->id) }}" method="POST"
-                                            class="inline-block"
-                                            onsubmit="return confirm('Вы уверены, что хотите удалить должность?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <input type="hidden" name="backUrl" value="{{ url()->full() }}">
-                                            <button type="submit"
-                                                class="inline-flex items-center px-3 py-1.5 bg-[#060606] text-white text-xs font-medium rounded-lg hover:bg-[#060606]/80 transition-colors shadow-sm">
-                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
+                                        </summary>
+
+                                        <!-- Содержимое аккордеона -->
+                                        <div class="p-4 space-y-3 animate-fadeIn">
+
+                                            {{-- сюды динамические колонки --}}
+                                            @foreach ($columns as $column)
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-medium text-[#565A5B]">{{ $column["name"] }}</span>
+                                                    <span class="text-[#060606] truncate max-w-[150px]">
+                                                        {{ $commissariat->getChiefAttribute()->person->{$column["name"]} }}
+                                                    </span>
+                                                </div>
+                                            @endforeach
+
+
+
+                                            {{-- user --}}
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-medium text-[#565A5B]">Пользователь</span>
+                                                <span class="text-[#060606] truncate max-w-[150px]">
+                                                    {{ $commissariat->getChiefAttribute()->user->login}}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-medium text-[#565A5B]">Роль</span>
+                                                <span class="text-[#060606] truncate max-w-[150px]">
+                                                    {{ $commissariat->getChiefAttribute()->user->role->description}}
+                                                </span>
+                                            </div>
+                                            {{-- кнопка создания сотрудника --}}
+                                            <a href="{{ route('employees.edit', [
+                            'id' => $commissariat->getChiefAttribute()->id,
+                            'back_url' => url()->full(),
+                        ]) }}"
+                                                class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                    </path>
                                                 </svg>
-                                                Удалить
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </details>
+                                                Редактировать сотрудника
+                                            </a>
+                                        </div>
+                                    </details>
+
+                                    {{-- должности --}}
+                                    <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
+                                        <!-- Заголовок аккордеона -->
+                                        <summary
+                                            class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
+                                            <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
+                                            <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                                                </path>
+                                            </svg>
+                                        </summary>
+
+                                        <!-- Содержимое аккордеона -->
+                                        <div class="p-4 space-y-3 animate-fadeIn">
+                                            <a href="{{ route('employee-positions.create', [
+                            'id' => $commissariat->getChiefAttribute()->id,
+                            'back_url' => url()->full(),
+                        ]) }}"
+                                                class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+                                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 4v16m8-8H4">
+                                                    </path>
+                                                </svg>
+                                                Назначить должность
+                                            </a>
 
 
+                                            @foreach ($commissariat->getChiefAttribute()->employeePositions as $position)
+                                                <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
+                                                    <div class="space-y-1.5 text-sm">
+                                                        @php
+                                                            $info = [
+                                                                ['label' => 'Комиссариат', 'value' => $position->commissariat->name],
+                                                                ['label' => 'Должность', 'value' => $position->position->name],
+                                                                ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
+                                                                ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
+                                                                ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
+                                                                ['label' => 'Самостоятельная', 'value' => $position->is_independent ? 'да' : 'нет'],
+                                                                ['label' => 'Статус', 'value' => $position->getStatusNameAttribute()],
+                                                            ];
+                                                        @endphp
 
+                                                        @foreach ($info as $item)
+                                                            <div class="flex items-center justify-between">
+                                                                <span class="font-medium text-[#060606]">{{ $item['label'] }}</span>
+                                                                <span class="text-[#060606]">{{ $item['value'] }}</span>
+                                                            </div>
+                                                        @endforeach
+
+                                                        <div class="flex gap-2 pt-2 mt-2 border-t border-[#BFBFBF]/30">
+                                                            <a href="{{ route('employee-positions.edit', ['id' => $commissariat->getChiefAttribute()->id, 'back_url' => url()->full()]) }}"
+                                                                class="inline-flex items-center px-3 py-1.5 bg-[#A60644] text-white text-xs font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors shadow-sm">
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                </svg>
+                                                                Редактировать
+                                                            </a>
+                                                            <form action="{{ route('employee-positions.delete', $position->id) }}" method="POST"
+                                                                class="inline-block"
+                                                                onsubmit="return confirm('Вы уверены, что хотите удалить должность?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <input type="hidden" name="backUrl" value="{{ url()->full() }}">
+                                                                <button type="submit"
+                                                                    class="inline-flex items-center px-3 py-1.5 bg-[#060606] text-white text-xs font-medium rounded-lg hover:bg-[#060606]/80 transition-colors shadow-sm">
+                                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                    Удалить
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </details>
+                    @endif
+                </div>
             </div>
         </div>
-    </div>
     </div>
 @endsection

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commissariat;
-use App\Models\CommissariatPosition;
 use App\Models\Department;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
+use App\Models\EmployeePositionRate;
+use App\Models\EmployeePositionStatus;
 use App\Models\Position;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -38,24 +38,22 @@ class EmployeePositionsController extends Controller
     {
         $employee = Employee::findOrFail($id);
         $positions = Position::all();
-        $commissariatPositions = CommissariatPosition::all();
         $commissariats = Commissariat::all();
         $departments = Department::all();
         $divisions = Division::all();
+        $employeePositionRates = EmployeePositionRate::all();
 
         $backUrl = $request->get('back_url');
         $employeeId = $id;
 
-        return view('admin.org.employee-positions.create', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId',"commissariatPositions"));
+        return view('admin.org.employee-positions.create', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates'));
     }
 
     public function store(Request $request, $id)
     {
-                dd($request->all());
-
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
-            'rate' => 'required|numeric|min:0.25|max:2.0',
+            'rate' => 'required|numeric',
 
             'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
             'department_id' => [
@@ -91,15 +89,14 @@ class EmployeePositionsController extends Controller
             'employeeId.exists' => 'Не существующий id сотрудника',
         ]);
 
-        Employee::findOrFail($id);
 
         EmployeePosition::create([
             'employee_id' => $id,
             'commissariat_id' => $data['commissariat_id'],
             'department_id' => $data['department_id'],
-            'division_id' => $data['division_id'],
+            'division_id' => $data['division_id'],  
             'position_id' => $data['position_id'],
-            'rate' => $data['rate'],
+            'employee_position_rate_id ' => $data['rate'],
             'is_independent' => $data['is_independent'],
         ]);
 
@@ -110,29 +107,26 @@ class EmployeePositionsController extends Controller
 
     public function edit(Request $request, $id)
     {
-        $employee = Employee::with(['user.role', 'workStatus', 'person', 'positions.position.positionType'])->findOrFail($id);
+        $employee = Employee::findOrFail($id);
         $positions = Position::all();
         $commissariats = Commissariat::all();
         $departments = Department::all();
         $divisions = Division::all();
+        $employeePositionRates = EmployeePositionRate::all();
+        $employeePositionStatuses = EmployeePositionStatus::all();
 
         $backUrl = $request->get('back_url');
         $employeeId = $id;
 
-        $column = DB::select("SHOW COLUMNS FROM employee_positions LIKE 'rate'")[0];
-        $type = $column->Type;
-
-        preg_match_all("/'([^']+)'/", $type, $matches);
-        $rates = $matches[1];
-
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'rates'));
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates','employeePositionStatuses'));
     }
 
     public function update(Request $request, $id)
     {
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
-            'rate' => 'required|numeric|min:0.25|max:2.0',
+            'rate' => 'required|numeric',
+            'status'=>'required',
             'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
             'department_id' => [
                 'nullable',
@@ -171,11 +165,13 @@ class EmployeePositionsController extends Controller
 
         $employeePosition->update([
             'position_id' => $data['position_id'],
-            'rate' => $data['rate'],
             'commissariat_id' => $data['commissariat_id'],
             'department_id' => $data['department_id'],
             'division_id' => $data['division_id'],
             'is_independent' => $data['is_independent'],
+
+                'rate' => $data['rate'],
+                'employee_position_status_id'=>$data['status'],
         ]);
 
         $backUrl = $request->input('backUrl');

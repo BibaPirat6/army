@@ -89,9 +89,9 @@ class CommissariatsController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
-            'chief_employee_id' => 'nullable|integer|min:1|exists:employees,id',
-            'longitude' => 'nullable|sometimes|integer',
-            'latitude' => 'nullable|sometimes|integer',
+            'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
+            'longitude' => 'required|sometimes|integer',
+            'latitude' => 'required|sometimes|integer',
         ], [
             'name.required' => 'Название комиссариата обязательно для заполнения.',
             'name.string' => 'Название комиссариата должно быть строкой.',
@@ -108,18 +108,31 @@ class CommissariatsController extends Controller
             'latitude' => $data['latitude'],
         ]);
 
+        $chiefPosition = Position::whereHas('chiefType', function ($q) {
+            $q->where('name', 'Начальник комиссариата');
+        })->first();
+
         $currentPosition = EmployeePosition::where('commissariat_id', $commissariat->id)->first();
 
-        if ($currentPosition->employee_id != $data['chief_employee_id']) {
-            $currentPosition->delete();
-
-            EmployeePosition::create([
-                'employee_id' => $data['chief_employee_id'],
-                'commissariat_id' => $commissariat->id,
-                'position_id' => Position::whereHas('chiefType', function ($q) {
-                    $q->where('name', 'Начальник комиссариата');
-                })->first()->id,
-            ]);
+        if ($currentPosition) {
+            if ($currentPosition->employee_id != $data['chief_employee_id']) {
+                $currentPosition->delete();
+                if ($data['chief_employee_id']) {
+                    EmployeePosition::create([
+                        'employee_id' => $data['chief_employee_id'],
+                        'commissariat_id' => $commissariat->id,
+                        'position_id' => $chiefPosition->id,
+                    ]);
+                }
+            }
+        } else {
+            if ($data['chief_employee_id']) {
+                EmployeePosition::create([
+                    'employee_id' => $data['chief_employee_id'],
+                    'commissariat_id' => $commissariat->id,
+                    'position_id' => $chiefPosition->id,
+                ]);
+            }
         }
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));

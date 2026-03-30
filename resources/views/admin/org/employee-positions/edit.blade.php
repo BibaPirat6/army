@@ -8,6 +8,8 @@
     @if ($errors->any())
         @include('includes.errors', ['errors' => $errors])
     @endif
+    
+
 
     <div class="max-w-4xl mx-auto p-6">
         <!-- Заголовок и ссылка назад -->
@@ -28,7 +30,7 @@
         </div>
 
         <!-- Назначения должностей -->
-        @foreach ($employee->positions as $position)
+        @foreach ($employee->employeePositions as  $index =>$position)
             <details
                 class="group mb-3 rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md open:shadow-md">
                 <summary
@@ -44,7 +46,7 @@
                         <div>
                             <h4 class="font-medium text-gray-900">{{ $position->position->name ?? '' }}</h4>
                             <div class="flex items-center gap-2 text-xs text-gray-500">
-                                <span>Ставка: {{ $position->rate ?? '' }}</span>
+                                <span>Ставка: {{ $position->getRateValueAttribute() ?? '' }}</span>
                                 <span class="h-1 w-1 rounded-full bg-gray-300"></span>
                                 <span>{{ $position->commissariat->name ?? '' }}</span>
                             </div>
@@ -69,7 +71,11 @@
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">Ставка</span>
-                                    <span class="text-[#060606]">{{ $position->rate ?? '' }}</span>
+                                    <span class="text-[#060606]">{{ $position->getRateValueAttribute() ?? '' }}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-[#565A5B]">Занятость</span>
+                                    <span class="text-[#060606]">{{ $position->getStatusNameAttribute() ?? '' }}</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">Комиссариат</span>
@@ -110,51 +116,40 @@
                             <input type="hidden" name="employeeId" value="{{ $employeeId }}">
 
                             {{-- Должность --}}
-                            <div class="relative">
-                                <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                                    Должность *
-                                </label>
+                              <div class="relative position-selector" data-index="{{ $index }}">
+        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+            Должность *
+        </label>
 
-                                {{-- Видимое поле --}}
-                                <input required type="text" id="position_search" placeholder="Выберите должность"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                  outline-none transition-colors text-[#060606]"
-                                    autocomplete="off"
-                                    value="{{ old('position_id', $position->position->id ? trim($position->position->name) : '') }}">
+        {{-- Видимое поле --}}
+        <input required type="text" 
+            class="position-search w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
+            placeholder="Выберите должность"
+            autocomplete="off"
+            value="{{ old('positions.' . $index . '.position_id', $position->position->name ?? '') }}">
 
-                                {{-- Скрытое поле --}}
-                                <input type="hidden" name="position_id" id="position_id"
-                                    value="{{ old('position_id', $position->position->id) }}">
+        {{-- Скрытое поле --}}
+        <input type="hidden" name="positions[{{ $index }}][position_id]" 
+            class="position-id"
+            value="{{ old('positions.' . $index . '.position_id', $position->position->id ?? '') }}">
 
-                                {{-- Dropdown --}}
-                                <ul id="position_list"
-                                    class="absolute z-20 mt-1 w-full bg-white border border-[#BFBFBF]
-               rounded-lg max-h-72 overflow-auto hidden">
-                                    {{-- Кнопка очистить --}}
-                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                        data-name="" data-static="true">
-                                        Очистить
-                                    </li>
-
-                                    {{-- Список должностей (кроме начальников) --}}
-                                    @foreach ($positions as $pos)
-                                        @if (
-                                            $pos->name !== 'Начальник комиссариата' &&
-                                                $pos->name !== 'Начальник отдела' &&
-                                                $pos->name !== 'Начальник отделения')
-                                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                                data-id="{{ $pos->id }}" data-name="{{ $pos->name }}">
-                                                {{ $pos->name }}
-                                                <span class="text-gray-400">(ID: {{ $pos->id }})</span>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                </ul>
-                            </div>
+        {{-- Dropdown --}}
+        <ul class="position-list absolute z-20 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden">
+            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name="" data-static="true">
+                Очистить
+            </li>
+            @foreach ($positions as $pos)
+                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    data-id="{{ $pos->id }}" data-name="{{ $pos->name }}">
+                    {{ $pos->name }}
+                    <span class="text-gray-400">(ID: {{ $pos->id }})</span>
+                </li>
+            @endforeach
+        </ul>
+    </div>
 
 
-                            <!-- Ставка -->
+                               <!-- Ставка -->
                             <div>
                                 <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">
                                     Ставка *
@@ -162,10 +157,25 @@
                                 <select name="rate" id="rate"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
                                     required>
-                                    @foreach ($rates as $rate)
-                                        <option value="{{ $rate }}"
-                                            {{ old('rate', $rate) == $position->rate ? 'selected' : '' }}>
-                                            {{ $rate }}
+                                    @foreach ($employeePositionRates as $rate)
+                                        <option value="{{ $rate->id }}" {{ old('rate') == $rate->rate || $rate->rate == $position->getRateValueAttribute() ? 'selected' : ''  }}>
+                                            {{ $rate->rate }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- статус занятости --}}
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                    Ставка *
+                                </label>
+                                <select name="status" id="status"
+                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
+                                    required>
+                                    @foreach ($employeePositionStatuses as $status)
+                                        <option value="{{ $status->id }}" {{ old('status') == $status->name || $status->name == $position->getStatusNameAttribute() ? 'selected' : ''  }}>
+                                            {{ $status->name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -349,26 +359,32 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('position_search');
-        const hiddenInput = document.getElementById('position_id');
-        const list = document.getElementById('position_list');
+    // Находим все контейнеры с классом position-selector
+    const selectors = document.querySelectorAll('.position-selector');
+    
+    selectors.forEach(container => {
+        const input = container.querySelector('.position-search');
+        const hiddenInput = container.querySelector('.position-id');
+        const list = container.querySelector('.position-list');
         const items = list.querySelectorAll('li');
-
+        
+        if (!input || !hiddenInput || !list) return;
+        
         // Показать список
         function openList() {
             list.classList.remove('hidden');
         }
-
+        
         // Скрыть список
         function closeList() {
             list.classList.add('hidden');
         }
-
+        
         // Фильтр списка по вводу
         function filterList(value) {
             const query = value.toLowerCase().trim();
             let hasVisible = false;
-
+            
             items.forEach(item => {
                 if (item.dataset.static === 'true') {
                     item.classList.remove('hidden');
@@ -383,26 +399,29 @@
                     item.classList.add('hidden');
                 }
             });
-
+            
             list.classList.toggle('hidden', !hasVisible);
         }
-
+        
         // Клик по input → показать список
-        input.addEventListener('click', () => {
+        input.addEventListener('click', (e) => {
+            e.stopPropagation();
             input.removeAttribute('readonly');
             filterList(input.value);
             openList();
         });
-
+        
         // Ввод текста → фильтр
         input.addEventListener('input', () => {
             hiddenInput.value = '';
             filterList(input.value);
         });
-
+        
         // Клик по элементам списка
         items.forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
                 if (item.dataset.static === 'true') {
                     // Очистка
                     input.value = '';
@@ -411,7 +430,7 @@
                     filterList('');
                     return;
                 }
-
+                
                 // Выбор должности
                 input.value = item.dataset.name;
                 hiddenInput.value = item.dataset.id;
@@ -419,17 +438,18 @@
                 input.setAttribute('readonly', true);
             });
         });
-
-        // Закрытие списка при клике вне блока
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                closeList();
-                if (!hiddenInput.value) input.value = '';
-            }
-        });
     });
+    
+    // Закрытие всех списков при клике вне блоков
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.position-selector')) {
+            document.querySelectorAll('.position-list').forEach(list => {
+                list.classList.add('hidden');
+            });
+        }
+    });
+});
 </script>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 

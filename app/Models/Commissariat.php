@@ -26,7 +26,7 @@ class Commissariat extends Model
             ->with(['employee', 'position']);
     }
 
-    // все должности сотрудника
+    // получаем весь штат сотрудников комиссариата
     public function employeePositions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);
