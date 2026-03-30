@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             
             EmployeePositionStatusSeeder::class,
+            EmployeePositionRateSeeder::class,
         ]);
     }
 }

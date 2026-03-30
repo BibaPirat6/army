@@ -82,8 +82,21 @@ return new class extends Migration
             $table->unique(['name', 'commissariat_id']);
         });
 
-        Schema::create('commissariats_positions', function (Blueprint $table) {
+        Schema::create('employee_position_statuses', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            $table->timestamps();
+        });
+        Schema::create('employee_position_rates', function (Blueprint $table) {
+            $table->id();
+            $table->decimal('rate', 3, 2)->unique();
+            $table->timestamps();
+        });
+
+        Schema::create('employee_positions', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
 
             $table->foreignId('commissariat_id')->constrained()->cascadeOnDelete();
 
@@ -99,49 +112,25 @@ return new class extends Migration
 
             $table->foreignId('position_id')->constrained()->cascadeOnDelete();
 
-            // вместимость
-            $table->decimal('rate_total', 3, 2)->default(1.00);
-
-            $table->timestamps();
-
-            $table->unique([
-                'commissariat_id',
-                'department_id',
-                'division_id',
-                'position_id',
-            ], 'unique_position_structure');
-        });
-
-        Schema::create('employee_position_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
-        });
-
-        Schema::create('employee_positions', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
-
-            $table->foreignId('commissariat_position_id')
-                ->constrained('commissariats_positions')
-                ->cascadeOnDelete();
-            
-            $table->decimal('rate', 3, 2)->default(1.00);
-
-            $table->boolean('is_independent')->default(false);
+            $table->foreignId('employee_position_rate_id')->default(4)->constrained()->cascadeOnDelete();
 
             $table->foreignId('employee_position_status_id')
-                ->nullable()
+                ->default(1)
                 ->constrained()
-                ->nullOnDelete();
+                ->cascadeOnDelete();
+
+            $table->boolean('is_independent')->default(false);
 
             $table->timestamps();
 
             $table->unique([
                 'employee_id',
-                'commissariat_position_id',
-            ]);
+                'commissariat_id',
+                'department_id',
+                'division_id',
+                'position_id',
+            ],
+                'employee_position_unique');
         });
 
     }
