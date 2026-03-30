@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Commissariat extends Model
 {
@@ -17,26 +16,15 @@ class Commissariat extends Model
         'latitude',
     ];
 
-    // Добавляем виртуальные атрибуты в массив/JSON при необходимости
-    protected $appends = [
-        'rate_total',     // сумма rate_total по всем CommissariatPosition
-        'used_rate',      // суммарные занятые ставки (employee_positions.rate)
-        'available_rate', // остаток ставок
-    ];
-
-
-    /**
-     * Обратная связь: все должности в этом отделении
-     */
-    public function commissariatPositions(): HasMany
-    {
-        return $this->hasMany(CommissariatPosition::class);
-    }
-
     // получить начальника через поле chief_employee_id
-    public function chiefEmployee()
+    // public function chiefEmployee()
+    // {
+    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
+    // }
+
+    public function employeePositions(): HasMany
     {
-        return $this->belongsTo(Employee::class, 'chief_employee_id');
+        return $this->hasMany(EmployeePosition::class);
     }
 
     /**
@@ -55,115 +43,53 @@ class Commissariat extends Model
         return $this->hasMany(Division::class);
     }
 
-
-        // получаем все назначения должностей в нашем комиссиарате
-    public function employeePositions(): HasManyThrough
-    {
-        // все назначения должностей в нашем комиссариате: через commissariat_positions
-        return $this->hasManyThrough(
-            EmployeePosition::class,
-            CommissariatPosition::class,
-            'commissariat_id',          // foreign key on commissariat_positions -> commissariats.id
-            'commissariat_position_id', // foreign key on employee_positions -> commissariats_positions.id
-            'id',
-            'id'
-        );
-    }
-
-
-    /**
-     * Получить всех сотрудников комиссариата через должности
-     */
-    public function employees()
-    {
-        // возвращаем сотрудников, у которых есть EmployeePosition,
-        // связанная с CommissariatPosition этого комиссариата
-        return Employee::whereHas('employeePositions', function ($q) {
-            $q->whereHas('commissariatPosition', function ($q2) {
-                $q2->where('commissariat_id', $this->id);
-            });
-        })->get();
-    }
+    // тут потом поправить сделать связь через EmployeePosition
 
     // сотрудники прямо зависящие от комиссариата
-    public function employeesNotIndependent()
-    {
-        // сотрудники, назначенные на позиции данного комиссариата,
-        // где позиция в commissariats_positions без department/division и is_independent = 0
-        return Employee::whereHas('employeePositions', function ($q) {
-            $q->where('is_independent', 0)
-                ->whereHas('commissariatPosition', function ($q2) {
-                    $q2->where('commissariat_id', $this->id)
-                        ->whereNull('department_id')
-                        ->whereNull('division_id');
-                });
-        })->with(['employeePositions' => function ($q) {
-            $q->where('is_independent', 0)
-                ->whereHas('commissariatPosition', function ($q2) {
-                    $q2->where('commissariat_id', $this->id)
-                        ->whereNull('department_id')
-                        ->whereNull('division_id');
-                })->with('position');
-        }])->get();
-    }
+    // public function employeesNotIndependent()
+    // {
+    //     // сотрудники, назначенные на позиции данного комиссариата,
+    //     // где позиция в commissariats_positions без department/division и is_independent = 0
+    //     return Employee::whereHas('employeePositions', function ($q) {
+    //         $q->where('is_independent', 0)
+    //             ->whereHas('commissariatPosition', function ($q2) {
+    //                 $q2->where('commissariat_id', $this->id)
+    //                     ->whereNull('department_id')
+    //                     ->whereNull('division_id');
+    //             });
+    //     })->with(['employeePositions' => function ($q) {
+    //         $q->where('is_independent', 0)
+    //             ->whereHas('commissariatPosition', function ($q2) {
+    //                 $q2->where('commissariat_id', $this->id)
+    //                     ->whereNull('department_id')
+    //                     ->whereNull('division_id');
+    //             })->with('position');
+    //     }])->get();
+    // }
 
     // сотрудники самостоятельные
-    public function employeesIndependent()
-    {
-        return Employee::whereHas('employeePositions', function ($q) {
-            $q->where('is_independent', 1)
-                ->whereHas('commissariatPosition', function ($q2) {
-                    $q2->where('commissariat_id', $this->id)
-                        ->whereNull('department_id')
-                        ->whereNull('division_id');
-                });
-        })->with(['employeePositions' => function ($q) {
-            $q->where('is_independent', 1)
-                ->whereHas('commissariatPosition', function ($q2) {
-                    $q2->where('commissariat_id', $this->id)
-                        ->whereNull('department_id')
-                        ->whereNull('division_id');
-                })->with('position');
-        }])->get();
-    }
+    // public function employeesIndependent()
+    // {
+    //     return Employee::whereHas('employeePositions', function ($q) {
+    //         $q->where('is_independent', 1)
+    //             ->whereHas('commissariatPosition', function ($q2) {
+    //                 $q2->where('commissariat_id', $this->id)
+    //                     ->whereNull('department_id')
+    //                     ->whereNull('division_id');
+    //             });
+    //     })->with(['employeePositions' => function ($q) {
+    //         $q->where('is_independent', 1)
+    //             ->whereHas('commissariatPosition', function ($q2) {
+    //                 $q2->where('commissariat_id', $this->id)
+    //                     ->whereNull('department_id')
+    //                     ->whereNull('division_id');
+    //             })->with('position');
+    //     }])->get();
+    // }
 
     // самостоятельные отделения
     public function divisionsIntependent()
     {
         return $this->divisions()->whereNull('department_id')->get();
-    }
-
-
-    // вывод сколько каких должностей в каждом комиссариате
-    public function positionsCommissariat()
-    {
-        return $this->employeePositions()
-            ->with('position')
-            ->get()
-            ->pluck('position')
-            ->filter()
-            ->unique('id');
-    }
-
-
-    // ДОПЫ для ставок
-
-    // Суммарная общая ставка всех позиций в комиссариате
-    public function getRateTotalAttribute()
-    {
-        // суммируем поле rate_total у связанных commissariat_positions
-        return (float) $this->commissariatPositions()->sum('rate_total');
-    }
-
-    // Сумма ставок, уже назначенных сотрудникам (поле rate в employee_positions)
-    public function getUsedRateAttribute()
-    {
-        return (float) $this->employeePositions()->sum('rate');
-    }
-
-    // Доступный остаток ставок (общая ставка минус использованные)
-    public function getAvailableRateAttribute()
-    {
-        return $this->rate_total - $this->used_rate;
     }
 }

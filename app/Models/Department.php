@@ -17,18 +17,16 @@ class Department extends Model
     ];
 
     // получить начальника через поле chief_employee_id
-    public function chiefEmployee()
+    // public function chiefEmployee()
+    // {
+    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
+    // }
+
+     public function employeePositions(): HasMany
     {
-        return $this->belongsTo(Employee::class, 'chief_employee_id');
+        return $this->hasMany(EmployeePosition::class);
     }
 
-    /**
-     *  Все должности в этом отделе (в рамках комиссариата)
-     */
-    public function commissariatPositions(): HasMany
-    {
-        return $this->hasMany(CommissariatPosition::class);
-    }
 
     /**
      * Получить комиссариат, к которому относится отдел
@@ -44,17 +42,5 @@ class Department extends Model
     public function divisions(): HasMany
     {
         return $this->hasMany(Division::class);
-    }
-
-    /**
-     * Получить всех сотрудников отдела через должности
-     */
-    public function employees()
-    {
-        return Employee::whereHas('employeePositions', function ($q) {
-            $q->whereHas('commissariatPosition', function ($q2) {
-                $q2->where('department_id', $this->id);
-            });
-        })->get();
     }
 }

@@ -11,10 +11,13 @@ class EmployeePosition extends Model
 
     protected $fillable = [
         'employee_id',
-        'commissariat_position_id',
+        'commissariat_id',
+        'department_id',
+        'division_id',
+        'position_id',
+        'employee_position_rate_id',
         'employee_position_status_id',
         'is_independent',
-        'rate',
     ];
 
     protected $casts = [
@@ -22,7 +25,7 @@ class EmployeePosition extends Model
     ];
 
     /**
-     * Получить сотрудника
+     * Сотрудник
      */
     public function employee(): BelongsTo
     {
@@ -30,18 +33,61 @@ class EmployeePosition extends Model
     }
 
     /**
-     * Получить комиссариат-должность
+     * Комиссариат
      */
-    public function commissariatPosition(): BelongsTo
+    public function commissariat(): BelongsTo
     {
-        return $this->belongsTo(CommissariatPosition::class);
+        return $this->belongsTo(Commissariat::class);
     }
 
     /**
-     * Получить статус должности сотрудника
+     * Отдел
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Дивизия
+     */
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
+
+    /**
+     * Должность
+     */
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class);
+    }
+
+    /**
+     * Статус
      */
     public function employeePositionStatus(): BelongsTo
     {
         return $this->belongsTo(EmployeePositionStatus::class);
+    }
+
+    /**
+     * Ставка
+     */
+    public function employeePositionRate(): BelongsTo
+    {
+        return $this->belongsTo(EmployeePositionRate::class);
+    }
+
+    // АКСЕССОРЫ
+    public function getRateValueAttribute()
+    {
+        return $this->employeePositionRate?->rate;
+    }
+
+    public function getStatusNameAttribute()
+    {
+        return $this->employeePositionStatus?->name;
     }
 }

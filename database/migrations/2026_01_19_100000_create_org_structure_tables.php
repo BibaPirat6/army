@@ -141,8 +141,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('employee_positions');
+        Schema::dropIfExists('employee_position_rates');
         Schema::dropIfExists('employee_position_statuses');
-        Schema::dropIfExists('commissariats_positions');
         Schema::dropIfExists('divisions');
         Schema::dropIfExists('departments');
         Schema::dropIfExists('commissariats');
