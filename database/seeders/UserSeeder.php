@@ -21,7 +21,19 @@ class UserSeeder extends Seeder
                 'password_hash' => Hash::make('admin123'),
                 'role_id' => $adminRole->id,
                 'created_at' => now(),
-            ]
+            ],
+            [
+                'login' => 'иван123',
+                'password_hash' => Hash::make('12345'),
+                'role_id' => $adminRole->id,
+                'created_at' => now(),
+            ],
+            [
+                'login' => 'димон',
+                'password_hash' => Hash::make('12345'),
+                'role_id' => $adminRole->id,
+                'created_at' => now(),
+            ],
         ]);
     }
 }

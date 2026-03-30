@@ -16,7 +16,7 @@ class CommissariatsController extends Controller
 {
     public function index()
     {
-        $commissariats = Commissariat::with('chiefEmployee')->paginate(50);
+        $commissariats = Commissariat::all()->paginate(50);
 
         return view('admin.org.commissariats.index', compact('commissariats'));
     }
@@ -44,6 +44,8 @@ class CommissariatsController extends Controller
 
     public function store(Request $request)
     {
+
+        dd($request->all());
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'required|integer|min:1|exists:employees,id',

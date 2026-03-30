@@ -20,7 +20,21 @@ class PersonSeeder extends Seeder
                 'patronymic' => 'Иванович',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
+            [
+                'last_name' => 'Димончик',
+                'first_name' => 'Иван',
+                'patronymic' => 'Иванович',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'last_name' => 'Дениска',
+                'first_name' => 'Иван',
+                'patronymic' => 'Иванович',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($persons as $person) {
