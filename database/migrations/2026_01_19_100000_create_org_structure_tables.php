@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // position tables
         Schema::create('position_types', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255)->unique();
@@ -31,10 +32,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // structure tables
+
         Schema::create('commissariats', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255)->unique();
-            $table->foreignId('chief_employee_id')->nullable()->constrained('employees')->nullOnDelete();
 
             $table->integer('longitude')->nullable();
             $table->integer('latitude')->nullable();
@@ -48,11 +50,6 @@ return new class extends Migration
             $table->foreignId('commissariat_id')
                 ->constrained('commissariats')
                 ->cascadeOnDelete();
-
-            $table->foreignId('chief_employee_id')
-                ->nullable()
-                ->constrained('employees')
-                ->nullOnDelete();
 
             $table->timestamps();
 
@@ -72,16 +69,13 @@ return new class extends Migration
                 ->constrained('departments')
                 ->cascadeOnDelete();
 
-            $table->foreignId('chief_employee_id')
-                ->nullable()
-                ->constrained('employees')
-                ->nullOnDelete();
-
             $table->timestamps();
 
             $table->unique(['name', 'commissariat_id']);
         });
 
+
+        // Employee Positions tables
         Schema::create('employee_position_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();

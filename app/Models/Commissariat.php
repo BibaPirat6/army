@@ -11,7 +11,6 @@ class Commissariat extends Model
 
     protected $fillable = [
         'name',
-        'chief_employee_id',
         'longitude',
         'latitude',
     ];

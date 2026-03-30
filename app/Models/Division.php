@@ -14,7 +14,6 @@ class Division extends Model
         'name',
         'commissariat_id',
         'department_id',
-        'chief_employee_id',
     ];
 
     // получить начальника через поле chief_employee_id
