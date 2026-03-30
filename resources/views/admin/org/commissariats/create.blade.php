@@ -89,24 +89,6 @@
                         </ul>
                     </div>
 
-                    {{-- общая ставка должности --}}
-                     <div>
-                        <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Общая ставка должности *
-                        </label>
-                        <select required name="rate_total" id="rate_total"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="0.25">0.25</option>
-                            <option value="0.5">0.5</option>
-                            <option value="0.75">0.75</option>
-                            <option value="1" selected>1</option>
-                            <option value="1.25">1.25</option>
-                            <option value="1.5">1.5</option>
-                            <option value="1.75">1.75</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-
                     <!-- x -->
                     <div>
                         <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">

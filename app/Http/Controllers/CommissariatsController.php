@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ChiefType;
 use App\Models\Commissariat;
-use App\Models\CommissariatPosition;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
-use App\Models\EmployeePositionStatus;
 use App\Models\Person;
 use App\Models\Position;
 use Illuminate\Http\Request;
@@ -16,7 +13,7 @@ class CommissariatsController extends Controller
 {
     public function index()
     {
-        $commissariats = Commissariat::all()->paginate(50);
+        $commissariats = Commissariat::all();
 
         return view('admin.org.commissariats.index', compact('commissariats'));
     }
@@ -44,12 +41,9 @@ class CommissariatsController extends Controller
 
     public function store(Request $request)
     {
-
-        dd($request->all());
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
-            'rate_total' => 'required',
             'longitude' => 'required|integer',
             'latitude' => 'required|integer',
         ], [
@@ -60,33 +54,21 @@ class CommissariatsController extends Controller
             'chief_employee_id.exists' => 'Несуществующий сотрудник',
         ]);
 
-        // 1) создаем комиссариат
-        $commissariat = Commissariat::create($data);
-        $commissariat->refresh();
-
-        $chiefTypeId = ChiefType::where('name', 'начальник комиссариата')->value('id');
-        $positionId = Position::where('chief_type_id', $chiefTypeId)->value('id');
-
-        $commissariatPosition = CommissariatPosition::create([
-            'commissariat_id' => $commissariat->id,
-            'position_id' => $positionId,
-            'department_id' => null,
-            'division_id' => null,
-            'rate_total' => $data['rate_total'],
+        // 1) Создаем комиссариат
+        $commissariat = Commissariat::create([
+            'name' => $data['name'],
+            'longitude' => $data['longitude'],
+            'latitude' => $data['latitude'],
         ]);
 
-        // 3) назначаем эту должность сотруднику (employee_positions)
-        EmployeePosition::updateOrCreate(
-            [
-                'employee_id' => $data['chief_employee_id'],
-                'commissariat_position_id' => $commissariatPosition->id,
-            ],
-            [
-                'employee_position_status_id' => EmployeePositionStatus::where('name', 'занят')->value('id'),
-                'rate' => 1,
-                'is_independent' => 0,
-            ]
-        );
+        // 2) Создаем назначение сотрудника (employeePosition)
+        EmployeePosition::create([
+            'employee_id' => $data['chief_employee_id'],
+            'commissariat_id' => $commissariat->id,
+            'position_id' => Position::whereHas('chiefType', function ($q) {
+                $q->where('name', 'Начальник комиссариата');
+            })->first()->id,
+        ]);
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));
 
@@ -97,7 +79,6 @@ class CommissariatsController extends Controller
     {
         $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
         $employees = Employee::all();
-
 
         $employeePositions = EmployeePosition::whereHas('commissariatPosition', function ($q) use ($commissariat) {
             $q->where('commissariat_id', $commissariat->id);
@@ -132,15 +113,13 @@ class CommissariatsController extends Controller
 
         $commissariat = Commissariat::findOrFail($id);
 
-
         // Обновляем комиссариат
         $commissariat->update([
             'name' => $data['name'],
-            'chief_employee_id' => $data['chief_employee_id'], 
+            'chief_employee_id' => $data['chief_employee_id'],
             'longitude' => $data['longitude'],
             'latitude' => $data['latitude'],
         ]);
-
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));
 

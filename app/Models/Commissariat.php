@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Commissariat extends Model
 {
@@ -14,6 +15,15 @@ class Commissariat extends Model
         'longitude',
         'latitude',
     ];
+
+    public function chiefPosition(): HasOne
+    {
+        return $this->hasOne(EmployeePosition::class)
+            ->whereHas('position.chiefType', function ($query) {
+                $query->where('name', 'начальник комиссариата');
+            })
+            ->with(['employee', 'position']);
+    }
 
     // получить начальника через поле chief_employee_id
     // public function chiefEmployee()
@@ -90,5 +100,11 @@ class Commissariat extends Model
     public function divisionsIntependent()
     {
         return $this->divisions()->whereNull('department_id')->get();
+    }
+
+    // АКСЕССОРЫ
+    public function getChiefAttribute()
+    {
+        return $this->chiefPosition?->employee;
     }
 }

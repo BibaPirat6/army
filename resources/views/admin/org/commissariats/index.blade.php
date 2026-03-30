@@ -48,12 +48,11 @@
                                 <td class="px-6 py-4 text-[#060606]">
                                     <a href="">{{ $commissariat->name }}</a>   
                                 </td>
-
                                 {{-- начальник --}}
-                                <td class="px-6 py-4">
-                                    {{ $commissariat->chiefEmployee->getFullNameAttribute() }}
+                                <td class="px-6 py-4 text-[#060606]">
+                                    <a href="">{{ $commissariat->getChiefAttribute()->getFullNameAttribute() }}</a>   
                                 </td>
-
+                                
                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}
                                     Y: {{ $commissariat->latitude ?? '*' }}
                                 </td>
@@ -123,6 +122,5 @@
         </div>
 
 
-        @include('includes.pagination', ['paginator' => $commissariats])
     </div>
 @endsection
