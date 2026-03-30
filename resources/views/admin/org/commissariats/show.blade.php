@@ -53,7 +53,7 @@
                                 <span class="text-[#060606]">
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        {{ $commissariat->chiefEmployee->getFullNameAttribute() }}
+                                        {{ $commissariat->getChiefAttribute()->getFullNameAttribute() }}
                                     </span>
                                 </span>
                             </div>
@@ -118,7 +118,7 @@
                                 <div class="flex items-center justify-between">
                                     <span class="font-medium text-[#565A5B]">{{ $column["name"] }}</span>
                                     <span class="text-[#060606] truncate max-w-[150px]">
-                                        {{ $commissariat->chiefEmployee->person->{$column["name"]} }}
+                                        {{ $commissariat->getChiefAttribute()->person->{$column["name"]} }}
                                     </span>
                                 </div>
                             @endforeach
@@ -129,18 +129,18 @@
                             <div class="flex items-center justify-between">
                                 <span class="font-medium text-[#565A5B]">Пользователь</span>
                                 <span class="text-[#060606] truncate max-w-[150px]">
-                                    {{ $commissariat->chiefEmployee->user->login}}
+                                    {{ $commissariat->getChiefAttribute()->user->login}}
                                 </span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="font-medium text-[#565A5B]">Роль</span>
                                 <span class="text-[#060606] truncate max-w-[150px]">
-                                    {{ $commissariat->chiefEmployee->user->role->description}}
+                                    {{ $commissariat->getChiefAttribute()->user->role->description}}
                                 </span>
                             </div>
                             {{-- кнопка создания сотрудника --}}
                             <a href="{{ route('employees.edit', [
-        'id' => $commissariat->chiefEmployee->id,
+        'id' => $commissariat->getChiefAttribute()->id,
         'back_url' => url()->full(),
     ]) }}" class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +175,7 @@
                     <!-- Содержимое аккордеона -->
                     <div class="p-4 space-y-3 animate-fadeIn">
                         <a href="{{ route('employee-positions.create', [
-        'id' => $commissariat->chiefEmployee->id,
+        'id' => $commissariat->getChiefAttribute()->id,
         'back_url' => url()->full(),
     ]) }}" class="w-full inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,21 +185,19 @@
                             Назначить должность
                         </a>
 
-                        @foreach ($commissariat->chiefEmployee->employeePositions as $position)
+
+                        @foreach ($commissariat->employeePositions as $position)
                             <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
                                 <div class="space-y-1.5 text-sm">
                                     @php
                                         $info = [
-                                            ['label' => 'Комиссариат', 'value' => $position->commissariatPosition->commissariat->name],
-                                            ['label' => 'Общая ставка', 'value' => $position->commissariatPosition->rate_total],
-
-                                            ['label' => 'Должность', 'value' => $position->commissariatPosition->position->name],
-                                            ['label' => 'Тип должности', 'value' => $position->commissariatPosition->position->positionType->name],
-                                            ['label' => 'Тип руководителя', 'value' => $position->commissariatPosition->position->ChiefType->name],
-                                            ['label' => 'Ставка', 'value' => $position->rate],
+                                            ['label' => 'Комиссариат', 'value' => $position->commissariat->name],
+                                            ['label' => 'Должность', 'value' => $position->position->name],
+                                            ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
+                                            ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
+                                            ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
                                             ['label' => 'Самостоятельная', 'value' => $position->is_independent ? 'да' : 'нет'],
-                                            ['label' => 'Статус', 'value' => $position->employeePositionStatus->name],
-
+                                            ['label' => 'Статус', 'value' => $position->getStatusNameAttribute()],
                                         ];
                                     @endphp
 
@@ -211,7 +209,7 @@
                                     @endforeach
 
                                     <div class="flex gap-2 pt-2 mt-2 border-t border-[#BFBFBF]/30">
-                                        <a href="{{ route('employee-positions.edit', ['id' => $commissariat->chiefEmployee->id, 'back_url' => url()->full()]) }}"
+                                        <a href="{{ route('employee-positions.edit', ['id' => $commissariat->getChiefAttribute()->id, 'back_url' => url()->full()]) }}"
                                             class="inline-flex items-center px-3 py-1.5 bg-[#A60644] text-white text-xs font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors shadow-sm">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -16,6 +16,7 @@ class Commissariat extends Model
         'latitude',
     ];
 
+    // получить employee_position, который соответствует должности начальника комиссариата
     public function chiefPosition(): HasOne
     {
         return $this->hasOne(EmployeePosition::class)
@@ -25,12 +26,7 @@ class Commissariat extends Model
             ->with(['employee', 'position']);
     }
 
-    // получить начальника через поле chief_employee_id
-    // public function chiefEmployee()
-    // {
-    //     return $this->belongsTo(Employee::class, 'chief_employee_id');
-    // }
-
+    // все должности сотрудника
     public function employeePositions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);

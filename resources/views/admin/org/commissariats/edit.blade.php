@@ -46,9 +46,7 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
 
-                
-
-
+            
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -59,11 +57,11 @@
                         <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                    focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                    outline-none transition-colors text-[#060606]" autocomplete="off"
-                   value="{{ old('chief_employee_id', $commissariat->chiefEmployee ? $commissariat->chiefEmployee->getFullNameAttribute() : '') }}">
+                   value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->getFullNameAttribute() : '') }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ old('chief_employee_id', $commissariat->chiefEmployee ? $commissariat->chiefEmployee->id : '') }}">
+                            value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '') }}">
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
                    rounded-lg max-h-72 overflow-auto hidden">
@@ -88,31 +86,6 @@
                             @endforeach
                         </ul>
                     </div>
-
-
-                    
-
-                    {{-- общая ставка должности --}}
-                    <div>
-                        <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Общая ставка должности
-                        </label>
-                        <select required name="rate_total" id="rate_total"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            <option value="0.25" @selected($commissariat->getRateTotalAttribute() == 0.25)>0.25</option>
-                            <option value="0.5" @selected($commissariat->getRateTotalAttribute() == 0.5)>0.5</option>
-                            <option value="0.75" @selected($commissariat->getRateTotalAttribute() == 0.75)>0.75</option>
-                            <option value="1" @selected($commissariat->getRateTotalAttribute() == 1)>1</option>
-                            <option value="1.25" @selected($commissariat->getRateTotalAttribute() == 1.25)>1.25</option>
-                            <option value="1.5" @selected($commissariat->getRateTotalAttribute() == 1.5)>1.5</option>
-                            <option value="1.75" @selected($commissariat->getRateTotalAttribute() == 1.75)>1.75</option>
-                            <option value="2" @selected($commissariat->getRateTotalAttribute() == 2)>2</option>
-                        </select>
-                    </div>
-
-
-                    
-
 
 
                     <!-- x -->

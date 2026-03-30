@@ -77,18 +77,8 @@ class CommissariatsController extends Controller
 
     public function edit(Request $request, $id)
     {
-        $commissariat = Commissariat::with('chiefEmployee.person')->findOrFail($id);
+        $commissariat = Commissariat::findOrFail($id);
         $employees = Employee::all();
-
-        $employeePositions = EmployeePosition::whereHas('commissariatPosition', function ($q) use ($commissariat) {
-            $q->where('commissariat_id', $commissariat->id);
-        })->with('employee')->get();
-
-        // это для дивизий и отделов, если будет нужно
-        // Подгружаем только позиции, у которых chiefType.name = 'Начальник комиссариата'
-        // $positions = Position::whereHas('chiefType', function ($q) {
-        //     $q->where('name', 'Начальник комиссариата');
-        // })->get();
 
         $backUrl = $request->input('back_url');
 
@@ -100,7 +90,6 @@ class CommissariatsController extends Controller
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'nullable|integer|min:1|exists:employees,id',
-            'rate_total' => 'required',
             'longitude' => 'nullable|sometimes|integer',
             'latitude' => 'nullable|sometimes|integer',
         ], [
@@ -113,13 +102,25 @@ class CommissariatsController extends Controller
 
         $commissariat = Commissariat::findOrFail($id);
 
-        // Обновляем комиссариат
         $commissariat->update([
             'name' => $data['name'],
-            'chief_employee_id' => $data['chief_employee_id'],
             'longitude' => $data['longitude'],
             'latitude' => $data['latitude'],
         ]);
+
+        $currentPosition = EmployeePosition::where('commissariat_id', $commissariat->id)->first();
+
+        if ($currentPosition->employee_id != $data['chief_employee_id']) {
+            $currentPosition->delete();
+
+            EmployeePosition::create([
+                'employee_id' => $data['chief_employee_id'],
+                'commissariat_id' => $commissariat->id,
+                'position_id' => Position::whereHas('chiefType', function ($q) {
+                    $q->where('name', 'Начальник комиссариата');
+                })->first()->id,
+            ]);
+        }
 
         $backUrl = $request->get('backUrl', route('commissariats.index'));
 
