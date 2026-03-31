@@ -8,6 +8,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Position;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,13 +17,15 @@ class DivisionsController extends Controller
     public function index()
     {
         $divisions = Division::paginate(50);
+
         return view('admin.org.divisions.index', compact('divisions'));
     }
 
     public function show(Request $request, $id)
     {
         $division = Division::findOrFail($id);
-        $backUrl = $request->input("back_url");
+        $backUrl = $request->input('back_url');
+
         return view('admin.org.divisions.show', compact('division', 'backUrl'));
     }
 
@@ -43,146 +46,181 @@ class DivisionsController extends Controller
             ? Department::find($departmentId)
             : null;
 
-        $backUrl = $request->get("back_url");
+        $backUrl = $request->get('back_url');
 
-        return view('admin.org.divisions.create', compact("commissariats", "departments", "employees", 'commissariat', 'backUrl', 'department'));
+        $positions = Position::whereHas('chiefType', function ($query) {
+            $query->where('name', 'начальник отделения');
+        })->get();
+
+        return view('admin.org.divisions.create', compact('commissariats', 'departments', 'employees', 'commissariat', 'backUrl', 'department', 'positions'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            "name" => "required|string|min:2|max:255",
-            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => [
-                "nullable",
-                "sometimes",
+            'name' => 'required|string|min:2|max:255',
+            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
+            'department_id' => [
+                'nullable',
+                'sometimes',
                 Rule::exists('departments', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id"
+            'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
+            'chief_position_id' => 'required|integer|min:1|exists:positions,id',
         ], [
-            "name.required" => "Название подразделения обязательно для заполнения.",
-            "name.string" => "Название подразделения должно быть строкой.",
-            "name.min" => "Название подразделения должно содержать минимум 2 символа.",
-            "name.max" => "Название подразделения не должно превышать 255 символов.",
-            "is_active.boolean" => "Некорректное значение для поля активности",
-            "commissariat_id.required" => "Выберите комиссариат",
-            "commissariat_id.exists" => "Несуществующий комиссариат",
-            "department_id.exists" => "Несуществующий отдел",
-            "chief_employee_id.exists" => "Несуществующий сотрудник",
+            'name.required' => 'Название отделения обязательно для заполнения.',
+            'name.string' => 'Название отделения должно быть строкой.',
+            'name.min' => 'Название отделения должно содержать минимум 2 символа.',
+            'name.max' => 'Название отделения не должно превышать 255 символов.',
+            'commissariat_id.required' => 'Выберите комиссариат',
+            'commissariat_id.exists' => 'Несуществующий комиссариат',
+            'department_id.exists' => 'Несуществующий отдел',
+            'chief_employee_id.exists' => 'Несуществующий сотрудник',
+            'chief_position_id.exists' => 'Несуществующая должность',
         ]);
 
-        $division = Division::create($data);
+        $division = Division::create([
+            'name' => $data['name'],
+            'commissariat_id' => $data['commissariat_id'],
+            'department_id' => $data['department_id'] ?? null,
+        ]);
         $division->refresh();
 
-        if ($data["chief_employee_id"] !== null) {
-            $positionId = Position::where('name', 'Начальник отделения')->value('id');
+        EmployeePosition::create(
+            [
+                'employee_id' => $data['chief_employee_id'],
+                'position_id' => $data['chief_position_id'],
+                'commissariat_id' => $data['commissariat_id'],
+                'department_id' => $data['department_id'] ?? null,
+                'division_id' => $division->id,
+            ]
+        );
 
-            EmployeePosition::updateOrCreate(
-                [
-                    "employee_id" => $data["chief_employee_id"],
-                    "position_id" => $positionId,
-                    "commissariat_id" => $data["commissariat_id"],
-                    "department_id" => $data["department_id"],
-                    "division_id" => $division->id
-                ],
-                [
-                    "rate" => 1,
-                ]
-            );
-        }
+        $backUrl = $request->get('backUrl', route('divisions.index'));
 
-        $backUrl = $request->get("backUrl", route('departments.index'));
         return redirect()->to($backUrl)->with('success', 'Отделение успешно создано.');
     }
 
     public function edit(Request $request, $id)
     {
-        $division = Division::findOrFail($id);
         $commissariats = Commissariat::all();
         $departments = Department::all();
+        $division = Division::with('commissariat', 'department')->findOrFail($id);
         $employees = Employee::all();
+        $positions = Position::whereHas('chiefType', function ($q) {
+            $q->where('name', 'начальник отделения');
+        })->get();
 
-        $backUrl = $request->input("back_url");
+        $backUrl = $request->input('back_url');
 
-        return view('admin.org.divisions.edit', compact('division', 'commissariats', 'departments', "employees", 'backUrl'));
+        return view('admin.org.divisions.edit', compact('division', 'commissariats', 'departments', 'employees', 'backUrl', 'positions'));
     }
 
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            "name" => "required|string|min:2|max:255",
-            "commissariat_id" => "required|integer|min:1|exists:commissariats,id",
-            "department_id" => [
-                "nullable",
-                "sometimes",
+            'name' => 'required|string|min:2|max:255',
+            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
+            'department_id' => [
+                'nullable',
+                'sometimes',
                 Rule::exists('departments', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            "chief_employee_id" => "nullable|sometimes|integer|min:1|exists:employees,id",
+            'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
+            'chief_position_id' => 'required|integer|min:1|exists:positions,id',
         ], [
-            "name.required" => "Название подразделения обязательно для заполнения.",
-            "name.string" => "Название подразделения должно быть строкой.",
-            "name.min" => "Название подразделения должно содержать минимум 2 символа.",
-            "name.max" => "Название подразделения не должно превышать 255 символов.",
-            "commissariat_id.required" => "Выберите комиссариат",
-            "commissariat_id.exists" => "Несуществующий комиссариат",
-            "department_id.exists" => "Несуществующий отдел",
-            "chief_employee_id.exists" => "Несуществующий сотрудник",
+            'name.required' => 'Название отделения обязательно для заполнения.',
+            'name.string' => 'Название отделения должно быть строкой.',
+            'name.min' => 'Название отделения должно содержать минимум 2 символа.',
+            'name.max' => 'Название отделения не должно превышать 255 символов.',
+            'commissariat_id.required' => 'Выберите комиссариат',
+            'commissariat_id.exists' => 'Несуществующий комиссариат',
+            'department_id.exists' => 'Несуществующий отдел',
+            'chief_employee_id.exists' => 'Несуществующий сотрудник',
+            'chief_position_id.exists' => 'Несуществующая должность',
         ]);
 
         $division = Division::findOrFail($id);
-        Commissariat::findOrFail($data['commissariat_id']); // Проверка существования комиссариата
 
-        // Сохраняем старые значения для корректного удаления предыдущей должности
-        $oldChiefEmployeeId = $division->chief_employee_id;
-        $oldCommissariatId = $division->commissariat_id;
-        $oldDepartmentId = $division->department_id;
+        DB::transaction(function () use ($division, $data) {
+            $division->update([
+                'name' => $data['name'],
+                'commissariat_id' => $data['commissariat_id'],
+                'department_id' => $data['department_id'] ?? null,
+            ]);
 
-        // Обновляем подразделение
-        $division->update([
-            'name' => $data['name'],
-            'commissariat_id' => $data['commissariat_id'],
-            'department_id' => $data['department_id'], // Может быть null
-            'chief_employee_id' => $data['chief_employee_id'],
-        ]);
+            // Поиск текущей записи начальника отделения
+            $currentAssignment = EmployeePosition::where('division_id', $division->id)
+                ->whereHas('position.chiefType', function ($q) {
+                    $q->where('name', 'начальник отделения');
+                })->first();
 
-        // Получаем ID должности "Начальник отделения"
-        $chiefPositionId = Position::where('name', 'Начальник отделения')->value('id');
-        if (!$chiefPositionId) {
-            return back()->withErrors(['error' => 'Должность "Начальник отделения" не найдена в системе.']);
-        }
+            // Если выбран новый начальник — обрабатываем создание/смену
+            if (! empty($data['chief_employee_id']) && ! empty($data['chief_position_id'])) {
+                $newEmployeeId = $data['chief_employee_id'];
+                $newPositionId = $data['chief_position_id'];
 
-        // Удаляем предыдущую запись начальника (в старом контексте: старый комиссариат/отдел)
-        if ($oldChiefEmployeeId !== null) {
-            EmployeePosition::where([
-                'employee_id' => $oldChiefEmployeeId,
-                'position_id' => $chiefPositionId,
-                'commissariat_id' => $oldCommissariatId,
-                'department_id' => $oldDepartmentId, // null обрабатывается корректно
-                'division_id' => $division->id,
-            ])->delete();
-        }
+                if ($currentAssignment) {
+                    // Если выбран другой сотрудник — удаляем старую запись и создаём новую
+                    if ($currentAssignment->employee_id != $newEmployeeId) {
+                        $currentAssignment->delete();
 
-        // Создаём/обновляем запись для нового начальника (в новом контексте)
-        if ($data['chief_employee_id'] !== null) {
-            EmployeePosition::updateOrCreate(
-                [
-                    'employee_id' => $data['chief_employee_id'],
-                    'position_id' => $chiefPositionId,
-                    'commissariat_id' => $data['commissariat_id'],
-                    'department_id' => $data['department_id'], // null допустим
-                    'division_id' => $division->id,
-                ],
-                [
-                    'rate' => 1,
-                ]
-            );
-        }
+                        EmployeePosition::create([
+                            'employee_id' => $newEmployeeId,
+                            'position_id' => $newPositionId,
+                            'commissariat_id' => $data['commissariat_id'],
+                            'department_id' => $data['department_id'] ?? null,
+                            'division_id' => $division->id,
+                            'rate' => $currentAssignment->rate ?? 1,
+                        ]);
+                    } else {
+                        // Тот же сотрудник — если поменялись данные, обновляем запись
+                        $needUpdate = false;
+                        $updateData = [];
 
-        $backUrl = $request->get("backUrl", route('divisions.index'));
+                        if ($currentAssignment->position_id != $newPositionId) {
+                            $updateData['position_id'] = $newPositionId;
+                            $needUpdate = true;
+                        }
+                        if ($currentAssignment->commissariat_id != $data['commissariat_id']) {
+                            $updateData['commissariat_id'] = $data['commissariat_id'];
+                            $needUpdate = true;
+                        }
+                        // Проверка department_id с учётом null
+                        $currentDeptId = $currentAssignment->department_id;
+                        $newDeptId = $data['department_id'] ?? null;
+                        if ($currentDeptId != $newDeptId) {
+                            $updateData['department_id'] = $newDeptId;
+                            $needUpdate = true;
+                        }
+
+                        if ($needUpdate) {
+                            $currentAssignment->update($updateData);
+                        }
+                    }
+                } else {
+                    // Не было текущего назначения — создаём новую запись
+                    EmployeePosition::create([
+                        'employee_id' => $newEmployeeId,
+                        'position_id' => $newPositionId,
+                        'commissariat_id' => $data['commissariat_id'],
+                        'department_id' => $data['department_id'] ?? null,
+                        'division_id' => $division->id,
+                    ]);
+                }
+            } else {
+                // Если начальник снят — удаляем существующее назначение
+                if ($currentAssignment) {
+                    $currentAssignment->delete();
+                }
+            }
+        });
+
+        $backUrl = $request->get('backUrl', route('divisions.index'));
 
         return redirect()->to($backUrl)->with('success', 'Отделение успешно обновлено.');
     }
@@ -191,6 +229,7 @@ class DivisionsController extends Controller
     {
         $division = Division::findOrFail($id);
         $division->delete();
+
         return redirect()->route('divisions.index')->with('success', 'Подразделение успешно удалено.');
     }
 }
