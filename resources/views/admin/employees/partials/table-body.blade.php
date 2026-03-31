@@ -67,15 +67,6 @@
                                 </svg>
                             </a>
 
-                            <a href="{{ route('employee-positions.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"
-                                title="Подробнее">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </a>
-
                             <a href="{{ route('employee-positions.edit', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                 class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"
                                 title="Изменить">
@@ -86,20 +77,6 @@
                             </a>
 
                             <div class="border-l border-gray-200 mx-1"></div>
-
-                            <form
-                                action="{{ route('employee-positions.destroy', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                method="POST" onsubmit="return confirm('Удалить все назначения для сотрудника?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="p-2 text-gray-600 hover:text-red-600 hover:bg-gray-100 rounded transition-colors"
-                                    title="Удалить">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </form>
                         </div>
                     </div>
                 @else

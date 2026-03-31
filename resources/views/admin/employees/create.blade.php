@@ -122,20 +122,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <!-- Рабочий статус -->
-                    <div>
-                        <label for="work_status" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Рабочий статус *
-                        </label>
-                        <select name="work_status" id="work_status" required
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            @foreach ($statuses as $status)
-                                <option value="{{ $status->id }}">
-                                    {{ $status->description }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
                 </div>
                 <div class="flex justify-end mt-6">
                     <button type="submit"

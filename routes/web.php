@@ -36,8 +36,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/employees/{id}/edit', [EmployeesController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{id}', [EmployeesController::class, 'delete'])->name('employees.delete');
-    Route::get('/employees/live-search', [EmployeesController::class, 'liveSearch'])
-        ->name('employees.live-search');
 
 
     // persons columns
@@ -94,14 +92,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/divisions/{id}', [DivisionsController::class, 'delete'])->name('divisions.delete');
 
     // назначение сотруднику должности
-    Route::get('/employee-positions', [EmployeePositionsController::class, 'index'])->name('employee-positions.index');
     Route::get('/employee-positions/{id}/create', [EmployeePositionsController::class, 'create'])->name('employee-positions.create');
-    Route::get('/employee-positions/{id}', [EmployeePositionsController::class, 'show'])->name('employee-positions.show');
     Route::post('/employee-positions/{id}', [EmployeePositionsController::class, 'store'])->name('employee-positions.store');
     Route::get('/employee-positions/{id}/edit', [EmployeePositionsController::class, 'edit'])->name('employee-positions.edit');
     Route::put('/employee-positions/{id}', [EmployeePositionsController::class, 'update'])->name('employee-positions.update');
     Route::delete('/employee-positions/{id}', [EmployeePositionsController::class, 'delete'])->name('employee-positions.delete');
-    Route::delete('/employee-positions/{id}/deleteAll', [EmployeePositionsController::class, 'destroy'])->name('employee-positions.destroy');
 
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');

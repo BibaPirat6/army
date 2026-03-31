@@ -14,22 +14,7 @@ class PositionsController extends Controller
     public function index(Request $request)
     {
         // фильтр
-        $query = Position::query();
-
-        if ($request->filled('sort_commissariat')) {
-
-            $positionIds = EmployeePosition::query()
-                ->whereIn('commissariat_id', $request->sort_commissariat)
-                ->distinct()
-                ->pluck('position_id');
-
-            $query->whereIn('id', $positionIds);
-        }
-        //
-
-        $positions = $query
-            ->paginate(10)
-            ->withQueryString();
+        $positions = Position::orderBy('id', 'desc')->paginate(50);
 
         $commissariats = Commissariat::all();
 

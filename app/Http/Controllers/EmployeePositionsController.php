@@ -15,25 +15,6 @@ use Illuminate\Validation\Rule;
 
 class EmployeePositionsController extends Controller
 {
-    public function index()
-    {
-        $employees = Employee::with(['person', 'positions.position'])
-            ->whereHas('person', function ($query) {
-                $query->whereNotNull('id');
-            })
-            ->paginate(20);
-
-        return view('admin.org.employee-positions.index')->with('employees', $employees);
-    }
-
-    public function show(Request $request, $id)
-    {
-        $employee = Employee::findOrFail($id);
-        $backUrl = $request->input('back_url');
-
-        return view('admin.org.employee-positions.show', compact('employee', 'backUrl'));
-    }
-
     public function create(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
