@@ -32,6 +32,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // employess
     Route::get('/employees', [EmployeesController::class, 'index'])->name('employees.index');
     Route::get('/employees/create', [EmployeesController::class, 'create'])->name('employees.create');
+    Route::get('/employees/{id}', [EmployeesController::class, 'show'])->name('employees.show');
     Route::post('/employees', [EmployeesController::class, 'store'])->name('employees.store');
     Route::get('/employees/{id}/edit', [EmployeesController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');

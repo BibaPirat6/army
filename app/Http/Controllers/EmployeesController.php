@@ -39,6 +39,19 @@ class EmployeesController extends Controller
         ));
     }
 
+    public function show(Request $request, $id)
+    {
+        $backUrl = $request->input('back_url');
+        $employee = Employee::findOrFail($id);
+         $columns = Person::getTableColumns();
+
+        return view('admin.employees.show')->with([
+            'employee' => $employee,
+            'backUrl' => $backUrl,
+            'columns' => $columns,
+        ]);
+    }
+
     public function create(Request $request)
     {
         $roles = Role::all();

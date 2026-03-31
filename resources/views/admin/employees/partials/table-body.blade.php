@@ -94,6 +94,13 @@
             'id' => $employee->id,
             'back_url' => url()->full(),
         ]) }}" class="text-[10px] px-2 py-1 bg-[#A60644] text-white rounded hover:bg-[#A60644]/80 transition-colors">Редактировать</a>
+
+                    <a href="{{ route('employees.show', [
+            'id' => $employee->id,
+            'back_url' => url()->full(),
+        ]) }}" class="text-[10px] px-2 py-1 bg-[#746ccc] text-white rounded hover:bg-[#746ccc]/80 transition-colors">Подробнее</a>
+
+
                     <form action="{{ route('employees.delete', $employee->id) }}" method="POST" class="inline-block"
                         onsubmit="return confirm('Удалить сотрудника?')">
                         @csrf @method('DELETE')
