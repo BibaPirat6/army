@@ -125,11 +125,38 @@
                                                     @php
                                                         $columnName = $column['name'];
                                                         $value = $chief->person->{$columnName} ?? null;
-                                                        $columnType = $column['type'] ?? 'text'; // предполагаем, что тип хранится в $column['type']
+                                                        // Определяем тип колонки — согласовано с employees/edit.blade.php:
+                                                        // сначала используем явный $column['type'], иначе смотрим точный комментарий ($column['comment'])
+                                                        // где админ может указывать 'file' или 'json'. Далее — fallback по типу столбца.
+                                                        $columnType = 'text';
+                                                        $comment = $column['comment'] ?? null;
+                                                        if (!empty($column['type'])) {
+                                                            $columnType = strtolower($column['type']);
+                                                        } elseif (!empty($comment) && is_string($comment)) {
+                                                            $c = strtolower($comment);
+                                                            if ($c === 'file') {
+                                                                $columnType = 'file';
+                                                            } elseif ($c === 'json') {
+                                                                $columnType = 'json';
+                                                            } elseif ($c === 'date') {
+                                                                $columnType = 'date';
+                                                            } elseif ($c === 'number' || $c === 'int' || $c === 'float') {
+                                                                $columnType = 'number';
+                                                            } else {
+                                                                // fallback: по имени типа поля (если доступно)
+                                                                $t = strtolower($column['type'] ?? '');
+                                                                if (str_contains($t, 'int') || str_contains($t, 'float') || str_contains($t, 'decimal')) {
+                                                                    $columnType = 'number';
+                                                                } else {
+                                                                    $columnType = 'text';
+                                                                }
+                                                            }
+                                                        }
                                                     @endphp
 
-                                                    @if ($columnType === 'file' && $value)
-                                                        {{-- Вывод файлов --}}
+
+                                                    @if ($columnType === 'longtext' && $value && $comment==="file")
+                                                        {{-- Вывод файлов как квадратиков с превью и кнопкой скачивания --}}
                                                         <div class="flex gap-2 flex-wrap">
                                                             @php
                                                                 $files = is_string($value) ? json_decode($value, true) : $value;
@@ -138,39 +165,66 @@
 
                                                             @foreach ($files as $file)
                                                                 @php
-                                                                    $extension = pathinfo($file, PATHINFO_EXTENSION);
+                                                                    $fileUrl = asset('storage/' . ltrim($file, '/'));
+                                                                    $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION) ?: '');
                                                                     $filename = basename($file);
-                                                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']);
+                                                                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']);
                                                                 @endphp
 
-                                                                @if ($isImage)
-                                                                    {{-- Картинка --}}
-                                                                    <div class="relative group" title="{{ $filename }}">
-                                                                        <img src="{{ asset('storage/' . $file) }}" alt="{{ $filename }}"
-                                                                            class="w-12 h-12 object-cover rounded-lg border border-[#BFBFBF] cursor-pointer hover:opacity-80 transition-opacity"
-                                                                            onclick="window.open('{{ asset('storage/' . $file) }}', '_blank')">
-                                                                    </div>
-                                                                @else
-                                                                    {{-- Другой файл --}}
-                                                                    <div class="w-12 h-12 bg-gray-200 rounded-lg border border-[#BFBFBF] flex items-center justify-center text-xs font-bold text-[#060606] hover:bg-gray-300 transition-colors cursor-pointer"
-                                                                        title="{{ $filename }}"
-                                                                        onclick="window.open('{{ asset('storage/' . $file) }}', '_blank')">
-                                                                        {{ strtoupper($extension) }}
-                                                                    </div>
-                                                                @endif
+                                                                <div class="relative group w-12 h-12">
+                                                                    {{-- Обертка для открытия в новой вкладке --}}
+                                                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
+                                                                        @if ($isImage)
+                                                                            <img src="{{ $fileUrl }}" alt="{{ $filename }}"
+                                                                                class="w-full h-full object-cover rounded-lg border border-[#BFBFBF] cursor-pointer transition-opacity duration-150 group-hover:opacity-80">
+                                                                        @else
+                                                                            <div class="w-full h-full bg-gray-100 rounded-lg border border-[#BFBFBF] flex items-center justify-center text-xs font-bold text-[#060606]">
+                                                                                {{ strtoupper($extension ?: 'FILE') }}
+                                                                            </div>
+                                                                        @endif
+                                                                    </a>
+
+                                                                    {{-- Overlay кнопка скачивания --}}
+                                                                    <a href="{{ $fileUrl }}" download="{{ $filename }}"
+                                                                        class="absolute -right-1 -bottom-1 transform translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-white rounded-full p-1 shadow-md border border-[#E5E7EB]"
+                                                                        title="Скачать {{ $filename }}">
+                                                                        <svg class="w-4 h-4 text-[#060606]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                                                                        </svg>
+                                                                    </a>
+                                                                </div>
                                                             @endforeach
                                                         </div>
 
-                                                    @elseif ($columnType === 'json' && $value)
+                                                    @elseif ($columnType === 'longtext' && $value && $comment==="json")
                                                         {{-- Вывод JSON как список --}}
                                                         @php
                                                             $jsonData = is_string($value) ? json_decode($value, true) : $value;
                                                             $jsonData = is_array($jsonData) ? $jsonData : [];
                                                         @endphp
 
-                                                        <ul class="list-disc list-inside text-[#060606] max-w-[200px] truncate">
+                                                        <ul class="list-disc list-inside text-[#060606] max-w-[220px]">
                                                             @foreach ($jsonData as $item)
-                                                                <li class="text-sm truncate">{{ is_string($item) ? $item : json_encode($item) }}</li>
+                                                                <li class="text-sm truncate">
+                                                                    @if (is_string($item) || is_numeric($item))
+                                                                        {{ $item }}
+                                                                    @elseif (is_array($item))
+                                                                        {{-- если массив — вывести значения через запятую или ключ:значение --}}
+                                                                        @php
+                                                                            $assoc = array_keys($item) !== range(0, count($item) - 1);
+                                                                        @endphp
+                                                                        @if ($assoc)
+                                                                            @foreach ($item as $k => $v)
+                                                                                <span class="inline-block mr-1 text-xs font-medium">{{ $k }}:</span><span class="text-xs">{{ is_scalar($v) ? $v : json_encode($v) }}</span>@if (!$loop->last), @endif
+                                                                            @endforeach
+                                                                        @else
+                                                                            {{ implode(', ', array_map(function($v){ return is_scalar($v)? $v : json_encode($v); }, $item)) }}
+                                                                        @endif
+                                                                    @else
+                                                                        {{ json_encode($item) }}
+                                                                    @endif
+                                                                </li>
                                                             @endforeach
                                                         </ul>
 
