@@ -12,11 +12,11 @@
 
             <!-- Пользователь -->
             <td class="px-4 py-3 align-top">
-                    <div class="font-medium">{{ $employee->user->login }}</div>
-                    <div class="text-[#565A5B] text-xs">ID: {{ $employee->user->id }}</div>
-                    <div class="text-[#565A5B] text-xs">
-                        Роль: {{ $employee->user->role?->description ?? '' }}
-                    </div>
+                <div class="font-medium">{{ $employee->user->login }}</div>
+                <div class="text-[#565A5B] text-xs">ID: {{ $employee->user->id }}</div>
+                <div class="text-[#565A5B] text-xs">
+                    Роль: {{ $employee->user->role?->description ?? '' }}
+                </div>
             </td>
 
             <!-- Персона -->
@@ -30,7 +30,7 @@
                     <ul class="text-[#565A5B] text-xs space-y-1">
                         @foreach ($employee->employeePositions as $ep)
                             <li>ID: {{ $ep->id }} | {{ $ep->position->name }} (ставка:
-                                {{ number_format($ep->rate, 2, ',', '') }})
+                                {{ $ep->getRateValueAttribute() }})
                                 <br>
                                 Тип: {{ $ep->position->positionType->name }}
                                 @if ($ep->is_independent)
@@ -56,8 +56,9 @@
                         </button>
 
                         <!-- Меню -->
-                        <div class="dropdown-menu absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
-                            p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
+                        <div
+                            class="dropdown-menu absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
+                                    p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
 
                             <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                 class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"

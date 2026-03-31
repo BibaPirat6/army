@@ -9,7 +9,6 @@ use App\Models\Position;
 use App\Models\PositionType;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\WorkStatus;
 use App\Services\JsonColumnService;
 use Hash;
 use Illuminate\Http\Request;
@@ -190,16 +189,7 @@ class EmployeesController extends Controller
     {
         $employee = Employee::findOrFail($id);
 
-        $usedUserIds = Employee::pluck('user_id')->filter()->toArray();
-        $users = User::whereNotIn('id', $usedUserIds)
-            ->get();
-
-        $usedPersonIds = Employee::pluck('person_id')->filter()->toArray();
-        $persons = Person::whereNotIn('id', $usedPersonIds)
-            ->get();
-
         $roles = Role::all();
-        $statuses = WorkStatus::all();
 
         $backUrl = $request->input('back_url');
 
@@ -207,10 +197,7 @@ class EmployeesController extends Controller
 
         return view('admin.employees.edit')->with([
             'employee' => $employee,
-            'users' => $users,
-            'persons' => $persons,
             'roles' => $roles,
-            'statuses' => $statuses,
             'backUrl' => $backUrl,
             'columns' => $columns,
         ]);
@@ -221,16 +208,12 @@ class EmployeesController extends Controller
         $employee = Employee::with(['person', 'user'])->findOrFail($id);
 
         $data = $request->validate([
-            'work_status' => 'required|integer|exists:work_statuses,id',
-
-            // логин уникален, но игнорируем текущего пользователя
             'login' => [
                 'required',
                 'min:5',
                 'max:255',
                 'unique:users,login,'.($employee->user->id ?? 'NULL'),
             ],
-            // пароль теперь необязательный при редактировании
             'password' => [
                 'nullable',
                 'min:5',
@@ -238,9 +221,6 @@ class EmployeesController extends Controller
             ],
             'role' => 'required|exists:roles,id',
         ], [
-            'work_status.required' => 'Рабочий статус обязателен',
-            'work_status.exists' => 'Выбранный статус работы не существует',
-
             'login.required' => 'Логин обязателен',
             'login.min' => 'Логин минимум 5 символов',
             'login.max' => 'Логин максимум 255 символов',
@@ -417,8 +397,6 @@ class EmployeesController extends Controller
             $employee->user_id = $user->id;
         }
 
-        // workStatus
-        $employee->work_status_id = $data['work_status'];
         $employee->save();
 
         $backUrl = $request->get('backUrl', route('employees.index'));

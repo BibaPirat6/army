@@ -80,7 +80,7 @@ class EmployeePositionsController extends Controller
             'is_independent' => $data['is_independent'],
         ]);
 
-        $backUrl = $request->get('backUrl', route('employee-positions.index'));
+        $backUrl = $request->get('backUrl');
 
         return redirect()->to($backUrl)->with('success', 'Должность успешно добавлена сотруднику.');
     }
@@ -163,7 +163,7 @@ class EmployeePositionsController extends Controller
 
         $backUrl = $request->input('backUrl');
 
-        return redirect($backUrl ?? route('employee-positions.index'))->with('success', 'Должность успешно обновлена.');
+        return redirect($backUrl)->with('success', 'Должность успешно обновлена.');
     }
 
     public function delete(Request $request, $id)
@@ -171,7 +171,7 @@ class EmployeePositionsController extends Controller
         $employeePosition = EmployeePosition::findOrFail($id);
         $employeePosition->delete();
 
-        $backUrl = $request->get('backUrl', route('employee-positions.index'));
+        $backUrl = $request->get('backUrl');
 
         return redirect()->to($backUrl)->with('success', 'Должность успешно удалена у сотрудника.');
     }
@@ -181,7 +181,7 @@ class EmployeePositionsController extends Controller
         $employee = Employee::findOrFail($id);
         EmployeePosition::where('employee_id', $employee->id)->delete();
 
-        $backUrl = $request->get('back_url', route('employee-positions.index'));
+        $backUrl = $request->get('back_url');
 
         return redirect()->to($backUrl)->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
     }

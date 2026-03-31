@@ -43,8 +43,7 @@
                             <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">ID/статус</th>
 
                             <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Пользователь</th>
-                            <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Персона (ФИО,
-                                контакты)
+                            <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Персона (ФИО)
                             </th>
 
                             <th class="px-4 py-2 text-left text-[#060606] font-medium whitespace-nowrap">Должности

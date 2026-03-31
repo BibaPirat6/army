@@ -114,16 +114,72 @@
                                             </svg>
                                         </summary>
 
+                                        {{-- person --}}
                                         <!-- Содержимое аккордеона -->
                                         <div class="p-4 space-y-3 animate-fadeIn">
-
-                                            {{-- сюды динамические колонки --}}
                                             @foreach ($columns as $column)
                                                 <div class="flex items-center justify-between">
-                                                    <span class="font-medium text-[#565A5B]">{{ $column["name"] }}</span>
-                                                    <span class="text-[#060606] truncate max-w-[150px]">
-                                                        {{ $commissariat->getChiefAttribute()->person->{$column["name"]} }}
-                                                    </span>
+                                                    <span class="font-medium text-[#565A5B]">{{ $column['name'] }}</span>
+
+                                                    {{-- Обработка разных типов --}}
+                                                    @php
+                                                        $columnName = $column['name'];
+                                                        $value = $chief->person->{$columnName} ?? null;
+                                                        $columnType = $column['type'] ?? 'text'; // предполагаем, что тип хранится в $column['type']
+                                                    @endphp
+
+                                                    @if ($columnType === 'file' && $value)
+                                                        {{-- Вывод файлов --}}
+                                                        <div class="flex gap-2 flex-wrap">
+                                                            @php
+                                                                $files = is_string($value) ? json_decode($value, true) : $value;
+                                                                $files = is_array($files) ? $files : [];
+                                                            @endphp
+
+                                                            @foreach ($files as $file)
+                                                                @php
+                                                                    $extension = pathinfo($file, PATHINFO_EXTENSION);
+                                                                    $filename = basename($file);
+                                                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg']);
+                                                                @endphp
+
+                                                                @if ($isImage)
+                                                                    {{-- Картинка --}}
+                                                                    <div class="relative group" title="{{ $filename }}">
+                                                                        <img src="{{ asset('storage/' . $file) }}" alt="{{ $filename }}"
+                                                                            class="w-12 h-12 object-cover rounded-lg border border-[#BFBFBF] cursor-pointer hover:opacity-80 transition-opacity"
+                                                                            onclick="window.open('{{ asset('storage/' . $file) }}', '_blank')">
+                                                                    </div>
+                                                                @else
+                                                                    {{-- Другой файл --}}
+                                                                    <div class="w-12 h-12 bg-gray-200 rounded-lg border border-[#BFBFBF] flex items-center justify-center text-xs font-bold text-[#060606] hover:bg-gray-300 transition-colors cursor-pointer"
+                                                                        title="{{ $filename }}"
+                                                                        onclick="window.open('{{ asset('storage/' . $file) }}', '_blank')">
+                                                                        {{ strtoupper($extension) }}
+                                                                    </div>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+
+                                                    @elseif ($columnType === 'json' && $value)
+                                                        {{-- Вывод JSON как список --}}
+                                                        @php
+                                                            $jsonData = is_string($value) ? json_decode($value, true) : $value;
+                                                            $jsonData = is_array($jsonData) ? $jsonData : [];
+                                                        @endphp
+
+                                                        <ul class="list-disc list-inside text-[#060606] max-w-[200px] truncate">
+                                                            @foreach ($jsonData as $item)
+                                                                <li class="text-sm truncate">{{ is_string($item) ? $item : json_encode($item) }}</li>
+                                                            @endforeach
+                                                        </ul>
+
+                                                    @else
+                                                        {{-- Обычный текст --}}
+                                                        <span class="text-[#060606] truncate max-w-[150px]">
+                                                            {{ $value ?? '' }}
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             @endforeach
 
