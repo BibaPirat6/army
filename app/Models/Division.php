@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Employee;
 
 class Division extends Model
 {
@@ -36,6 +38,16 @@ class Division extends Model
     public function employeePositions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);
+    }
+
+    /**
+     * Сотрудники отделения (через таблицу employee_positions)
+     */
+    public function employees(): BelongsToMany
+    {
+        return $this->belongsToMany(Employee::class, 'employee_positions', 'division_id', 'employee_id')
+            ->withPivot(['position_id', 'commissariat_id', 'department_id', 'rate', 'is_independent'])
+            ->with('person');
     }
 
     /**

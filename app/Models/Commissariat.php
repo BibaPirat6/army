@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\Employee;
+use Illuminate\Support\Collection;
 
 class Commissariat extends Model
 {
@@ -48,49 +50,46 @@ class Commissariat extends Model
         return $this->hasMany(Division::class);
     }
 
-    // тут потом поправить сделать связь через EmployeePosition
+    /**
+     * Сотрудники, зависимые от комиссариата (is_independent = 0),
+     * назначенные на позиции данного комиссариата без department и division.
+     * Возвращает коллекцию Employee с подгруженными соответствующими employeePositions->position.
+     */
+    public function employeesNotIndependent(): Collection
+    {
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->where('commissariat_id', $this->id)
+                ->where('is_independent', 0)
+                ->whereNull('department_id')
+                ->whereNull('division_id');
+        })->with(['employeePositions' => function ($q) {
+            $q->where('commissariat_id', $this->id)
+                ->where('is_independent', 0)
+                ->whereNull('department_id')
+                ->whereNull('division_id')
+                ->with('position');
+        }, 'person'])->get();
+    }
 
-    // сотрудники прямо зависящие от комиссариата
-    // public function employeesNotIndependent()
-    // {
-    //     // сотрудники, назначенные на позиции данного комиссариата,
-    //     // где позиция в commissariats_positions без department/division и is_independent = 0
-    //     return Employee::whereHas('employeePositions', function ($q) {
-    //         $q->where('is_independent', 0)
-    //             ->whereHas('commissariatPosition', function ($q2) {
-    //                 $q2->where('commissariat_id', $this->id)
-    //                     ->whereNull('department_id')
-    //                     ->whereNull('division_id');
-    //             });
-    //     })->with(['employeePositions' => function ($q) {
-    //         $q->where('is_independent', 0)
-    //             ->whereHas('commissariatPosition', function ($q2) {
-    //                 $q2->where('commissariat_id', $this->id)
-    //                     ->whereNull('department_id')
-    //                     ->whereNull('division_id');
-    //             })->with('position');
-    //     }])->get();
-    // }
-
-    // сотрудники самостоятельные
-    // public function employeesIndependent()
-    // {
-    //     return Employee::whereHas('employeePositions', function ($q) {
-    //         $q->where('is_independent', 1)
-    //             ->whereHas('commissariatPosition', function ($q2) {
-    //                 $q2->where('commissariat_id', $this->id)
-    //                     ->whereNull('department_id')
-    //                     ->whereNull('division_id');
-    //             });
-    //     })->with(['employeePositions' => function ($q) {
-    //         $q->where('is_independent', 1)
-    //             ->whereHas('commissariatPosition', function ($q2) {
-    //                 $q2->where('commissariat_id', $this->id)
-    //                     ->whereNull('department_id')
-    //                     ->whereNull('division_id');
-    //             })->with('position');
-    //     }])->get();
-    // }
+    /**
+     * Самостоятельные сотрудники комиссариата (is_independent = 1),
+     * назначенные на позиции данного комиссариата без department и division.
+     */
+    public function employeesIndependent(): Collection
+    {
+        return Employee::whereHas('employeePositions', function ($q) {
+            $q->where('commissariat_id', $this->id)
+                ->where('is_independent', 1)
+                ->whereNull('department_id')
+                ->whereNull('division_id');
+        })->with(['employeePositions' => function ($q) {
+            $q->where('commissariat_id', $this->id)
+                ->where('is_independent', 1)
+                ->whereNull('department_id')
+                ->whereNull('division_id')
+                ->with('position');
+        }, 'person'])->get();
+    }
 
     // самостоятельные отделения
     public function divisionsIntependent()
