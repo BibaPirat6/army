@@ -37,6 +37,7 @@
                         @csrf
                         @method("PUT")
 
+                        <input type="hidden" name="backUrl" value="{{ $backUrl }}">
                         <div class="grid grid-cols-4 gap-4">
                             @foreach ($columns as $column)
                         @php

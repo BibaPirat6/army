@@ -6,6 +6,7 @@ use App\Models\Commissariat;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
+use App\Models\Person;
 use App\Models\Position;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +24,9 @@ class DepartmentsController extends Controller
     {
         $department = Department::findOrFail($id);
         $backUrl = $request->input('back_url');
+        $columns = Person::getTableColumns();
 
-        return view('admin.org.departments.show', compact('department', 'backUrl'));
+        return view('admin.org.departments.show', compact('department', 'backUrl', 'columns'));
     }
 
     public function create(Request $request)
@@ -117,7 +119,6 @@ class DepartmentsController extends Controller
             'chief_position_id.exists' => 'Несуществующая должность',
         ]);
 
- 
         $department = Department::findOrFail($id);
 
         DB::transaction(function () use ($department, $data) {
@@ -132,7 +133,7 @@ class DepartmentsController extends Controller
                 })->first();
 
             // Если выбран новый начальник (id) — обрабатываем создание/смену
-            if (!empty($data['chief_employee_id'])) {
+            if (! empty($data['chief_employee_id'])) {
                 $newEmployeeId = $data['chief_employee_id'];
                 $newPositionId = $data['chief_position_id'];
 
@@ -182,6 +183,7 @@ class DepartmentsController extends Controller
         });
 
         $backUrl = $request->get('backUrl', route('departments.index'));
+
         return redirect()->to($backUrl)->with('success', 'Отдел успешно обновлен.');
     }
 
