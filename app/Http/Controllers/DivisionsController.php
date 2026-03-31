@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
+use App\Models\Person;
 use App\Models\Position;
 use DB;
 use Illuminate\Http\Request;
@@ -25,8 +26,9 @@ class DivisionsController extends Controller
     {
         $division = Division::findOrFail($id);
         $backUrl = $request->input('back_url');
+            $columns = Person::getTableColumns();
 
-        return view('admin.org.divisions.show', compact('division', 'backUrl'));
+        return view('admin.org.divisions.show', compact('division', 'backUrl', 'columns'));
     }
 
     public function create(Request $request)

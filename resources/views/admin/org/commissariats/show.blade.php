@@ -303,6 +303,8 @@
                                                         @php
                                                             $info = [
                                                                 ['label' => 'Комиссариат', 'value' => $position->commissariat->name],
+                                                                ['label' => 'Отдел', 'value' => $position->department ? $position->department->name : 'Не назначен'],
+                                                                ['label' => 'Отделение', 'value' => $position->division ? $position->division->name : 'Не назначен'],
                                                                 ['label' => 'Должность', 'value' => $position->position->name],
                                                                 ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
                                                                 ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],

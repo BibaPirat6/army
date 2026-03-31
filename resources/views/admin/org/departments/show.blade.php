@@ -32,7 +32,7 @@
                         <!-- Заголовок аккордеона -->
                         <summary
                             class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                            <h1 class="text-xl font-bold text-[#060606]">Детали комиссариата</h1>
+                            <h1 class="text-xl font-bold text-[#060606]">Детали отдела</h1>
                             <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
@@ -53,6 +53,18 @@
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         {{ optional($department->getChiefAttribute())->getFullNameAttribute() ?? "" }}
+                                    </span>
+                                </span>
+                            </div>
+
+
+                            <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
+                                <span class="font-medium text-[#565A5B]">Комиссариат</span>
+
+                                <span class="text-[#060606]">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $department->commissariat->name ?? "" }}
                                     </span>
                                 </span>
                             </div>
@@ -302,8 +314,9 @@
                                                     <div class="space-y-1.5 text-sm">
                                                         @php
                                                             $info = [
-                                                                ['label' => 'Отдел', 'value' => $position->commissariat->name],
-                                                                ['label' => 'Отдел', 'value' => $position->department->name],
+                                                                ['label' => 'Комиссариат', 'value' => $position->commissariat->name],
+                                                                ['label' => 'Отдел', 'value' => $position->department ? $position->department->name : 'Не назначен'],
+                                                                ['label' => 'Отделение', 'value' => $position->division ? $position->division->name : 'Не назначен'],
                                                                 ['label' => 'Должность', 'value' => $position->position->name],
                                                                 ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
                                                                 ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
