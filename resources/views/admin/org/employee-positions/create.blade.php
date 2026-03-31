@@ -50,7 +50,7 @@
                             value="{{ old('position_id') ? $positions->find(old('position_id'))->name ?? '' : '' }}">
 
                         {{-- Скрытое поле --}}
-                        <input type="hidden" name="position_id" id="position_id" value="{{ old('position_id') }}">
+                        <input type="hidden" name="position_id" id="position_id" value="{{ old('position_id', $position->position->id ?? '') }}">
 
                         {{-- Dropdown --}}
                         <ul id="position_list" class="absolute z-20 mt-1 w-full bg-white border border-[#BFBFBF]
@@ -62,13 +62,16 @@
                             </li>
 
                             {{-- Список должностей (кроме начальников) --}}
-                            @foreach ($positions as $pos)
+                       @foreach ($positions as $pos)
+                            @if (optional($pos->chiefType)->name != "начальник комиссариата"
+                                && optional($pos->chiefType)->name != "начальник отдела" 
+                                && optional($pos->chiefType)->name != "начальник отделения")
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $pos->id }}"
                                     data-name="{{ $pos->name }}">
                                     {{ $pos->name }}
                                 </li>
-
-                            @endforeach
+                            @endif
+                        @endforeach
                         </ul>
                     </div>
 

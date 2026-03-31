@@ -89,14 +89,13 @@ class EmployeePositionsController extends Controller
             'employeeId.exists' => 'Не существующий id сотрудника',
         ]);
 
-
         EmployeePosition::create([
             'employee_id' => $id,
             'commissariat_id' => $data['commissariat_id'],
             'department_id' => $data['department_id'],
-            'division_id' => $data['division_id'],  
+            'division_id' => $data['division_id'],
             'position_id' => $data['position_id'],
-            'employee_position_rate_id ' => $data['rate'],
+            'employee_position_rate_id' => $data['rate'],
             'is_independent' => $data['is_independent'],
         ]);
 
@@ -118,15 +117,28 @@ class EmployeePositionsController extends Controller
         $backUrl = $request->get('back_url');
         $employeeId = $id;
 
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates','employeePositionStatuses'));
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates', 'employeePositionStatuses'));
     }
 
     public function update(Request $request, $id)
     {
+        // Извлекаем position_id из массива positions
+        $positionsData = $request->input('positions', []);
+
+        // Получаем первый (или единственный) position_id из массива
+        $positionId = null;
+        if (! empty($positionsData)) {
+            $firstPosition = reset($positionsData);
+            $positionId = $firstPosition['position_id'] ?? null;
+        }
+
+        // Добавляем position_id в запрос для валидации
+        $request->merge(['position_id' => $positionId]);
+
         $data = $request->validate([
             'position_id' => 'required|integer|exists:positions,id',
             'rate' => 'required|numeric',
-            'status'=>'required',
+            'status' => 'required',
             'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
             'department_id' => [
                 'nullable',
@@ -141,25 +153,20 @@ class EmployeePositionsController extends Controller
                 Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
-            ],
-
+        ],
             'is_independent' => 'required|in:0,1',
         ], [
-            'position_id.required' => 'Поле должность обязательно для заполнения.',
-            'position_id.integer' => 'Поле должность должно быть целым числом.',
-            'position_id.exists' => 'Выбранная должность не существует.',
-            'rate.required' => 'Поле ставка обязательно для заполнения.',
-            'rate.numeric' => 'Поле ставка должно быть числом.',
-            'rate.min' => 'Минимальное значение ставки 0.25.',
-            'rate.max' => 'Максимальное значение ставки 2.0.',
-            'commissariat_id.required' => 'Обязательное поле комиссариата',
-            'commissariat_id.exists' => 'Несуществующий комиссариат',
-            'department_id.required' => 'Обязательное поле отдела',
-            'department_id.exists' => 'Несуществующий отдел',
-            'division_id.required' => 'Обязательное поле отделения',
-            'division_id.exists' => 'Несуществующее отделение',
-            'is_independent.required' => 'Обязательное поле выбора самостоятельной должности',
-        ]);
+        'position_id.required' => 'Поле должность обязательно для заполнения.',
+        'position_id.integer' => 'Поле должность должно быть целым числом.',
+        'position_id.exists' => 'Выбранная должность не существует.',
+        'rate.required' => 'Поле ставка обязательно для заполнения.',
+        'rate.numeric' => 'Поле ставка должно быть числом.',
+        'commissariat_id.required' => 'Обязательное поле комиссариата',
+        'commissariat_id.exists' => 'Несуществующий комиссариат',
+        'department_id.exists' => 'Несуществующий отдел',
+        'division_id.exists' => 'Несуществующее отделение',
+        'is_independent.required' => 'Обязательное поле выбора самостоятельной должности',
+    ]);
 
         $employeePosition = EmployeePosition::findOrFail($id);
 
@@ -169,9 +176,8 @@ class EmployeePositionsController extends Controller
             'department_id' => $data['department_id'],
             'division_id' => $data['division_id'],
             'is_independent' => $data['is_independent'],
-
-                'rate' => $data['rate'],
-                'employee_position_status_id'=>$data['status'],
+            'employee_position_rate_id' => $data['rate'],
+            'employee_position_status_id' => $data['status'],
         ]);
 
         $backUrl = $request->input('backUrl');

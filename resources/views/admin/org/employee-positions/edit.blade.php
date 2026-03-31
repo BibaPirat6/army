@@ -139,11 +139,14 @@
                 Очистить
             </li>
             @foreach ($positions as $pos)
+               @if (optional($pos->chiefType)->name != "начальник комиссариата"
+                                && optional($pos->chiefType)->name != "начальник отдела" 
+                                && optional($pos->chiefType)->name != "начальник отделения")
                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100"
                     data-id="{{ $pos->id }}" data-name="{{ $pos->name }}">
                     {{ $pos->name }}
-                    <span class="text-gray-400">(ID: {{ $pos->id }})</span>
                 </li>
+                @endif
             @endforeach
         </ul>
     </div>
