@@ -50,39 +50,18 @@
 
 
                                 <td class="px-6 py-4">
-                                    @if ($department->chiefEmployeePosition !== null)
-                                        @if ($department->chiefEmployeePosition->employee && $department->chiefEmployeePosition->employee->person)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {{ $department->chiefEmployeePosition->employee->person->last_name ?? '*' }}
-                                                {{ $department->chiefEmployeePosition->employee->person->first_name ?? '*' }}
-                                                {{ $department->chiefEmployeePosition->employee->person->patronymic ?? '*' }}
-                                            </span>
-                                        @else
-                                            <span class="text-gray-400">Без ФИО (ID:
-                                                {{ $department->chiefEmployeePosition->employee->id }})</span>
-                                        @endif
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Нет
-                                        </span>
-                                    @endif
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ optional($department->getChiefAttribute())->getFullNameAttribute() ?? "" }}
+                                    </span>
                                 </td>
 
 
                                 <td class="px-6 py-4">
-                                    @if ($department->commissariat_id !== null)
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {{ $department->commissariat->name }}
-                                        </span>
-                                    @else
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            Нет
-                                        </span>
-                                    @endif
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $department->commissariat->name }}
+                                    </span>
                                 </td>
 
                                 {{-- кнопки --}}
