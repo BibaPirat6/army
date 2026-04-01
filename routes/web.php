@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
 use Illuminate\Support\Facades\Route;
 
+// затестить обсидиан
 Route::get('/test-graph', function () {
     return view('test-graph');
 })->name('test.graph');
