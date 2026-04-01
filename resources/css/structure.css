@@ -7,7 +7,6 @@
     --gray-low: #BFBFBF;
 }
 
-
 body {
     overflow: hidden;
 }
@@ -17,7 +16,8 @@ body {
     height: 100vh;
     background: var(--white);
     cursor: grab;
-    overflow: hidden;
+    overflow: auto;
+    padding: 20px;
 }
 
 #viewport:active {
@@ -25,344 +25,230 @@ body {
 }
 
 #canvas {
+    min-width: max-content;
+    min-height: max-content;
+    padding: 20px;
+}
+
+/* Горизонтальная структура */
+.tree {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 40px;
+    position: relative;
+    min-height: 600px;
+}
+
+/* Левая часть - начальник */
+.boss-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 250px;
+}
+
+/* Правая часть - отделы и структуры */
+.structure-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    flex: 1;
+    position: relative;
+}
+
+/* Горизонтальная линия от начальника к отделам */
+.boss-wrapper::after {
+    content: "";
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    width: 40px;
+    height: 2px;
+    background: var(--black);
+    transform: translateY(-50%);
+}
+
+/* Вертикальная линия для отделов */
+.departments-container {
+    position: relative;
+    padding-left: 40px;
+}
+
+.departments-container::before {
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
-    transform-origin: 0 0;
-    display: inline-block;
-    min-width: max-content;
+    bottom: 0;
+    width: 2px;
+    background: var(--black);
 }
 
-#canvas {
-    transform-origin: 0 0;
-}
-
-
-.tree {
+/* Отделы */
+.departments {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding-top: 100px;
+    gap: 30px;
 }
 
+.department {
+    background: var(--gray-low);
+    padding: 20px;
+    border-radius: 7px;
+    position: relative;
+    margin-left: 20px;
+}
 
+/* Горизонтальная линия от вертикальной к отделу */
+.department::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: var(--black);
+    transform: translateY(-50%);
+}
 
+/* Отделения */
+.units {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+    margin-left: 40px;
+    position: relative;
+}
+
+.units::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--black);
+}
+
+.unit {
+    background: var(--gray-middle);
+    padding: 15px;
+    border-radius: 7px;
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Линия от вертикальной к отделению */
+.unit::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: var(--black);
+    transform: translateY(-50%);
+}
+
+/* Сотрудники */
+.employees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+    margin-left: 40px;
+    position: relative;
+}
+
+.employees::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--black);
+}
+
+.employee {
+    background: var(--gray-high);
+    padding: 10px;
+    border-radius: 5px;
+    position: relative;
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Линия от вертикальной к сотруднику */
+.employee::before {
+    content: "";
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    width: 20px;
+    height: 2px;
+    background: var(--black);
+    transform: translateY(-50%);
+}
+
+/* Узел (карточка) */
 .node {
     background: var(--black);
     color: var(--white);
     padding: 20px 15px;
     border-radius: 7px;
-    font-size: 14px;
-    text-align: left;
-
     position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 
-/* начальник комиссариата */
-
-.boss-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    padding-top: 50px;
+.node:hover {
+    transform: scale(1.02);
 }
 
 .node.boss {
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    gap: 20px;
-    height: 100px;
+    min-width: 250px;
 }
 
-.photo {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: #f3f4f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid #e5e7eb;
-    color: var(--black);
-    text-align: center;
-    font-size: 12px;
-
-    flex-shrink: 0;
+.node .data__fio {
+    font-size: 14px;
+    word-break: break-word;
 }
 
-.photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-
-.photo svg {
-    width: 70%;
-    height: 70%;
-}
-
-.node.boss .data__fio {
-    font-size: 16px;
-    color: var(--white);
-}
-
-.node-line {
-    width: 100%;
-    height: 1px;
-    background-color: var(--gray-high);
-    margin: 5px 0;
-}
-
-.data__positions {
-    color: var(--gray-middle);
-}
-
-
-
-/* отдел */
-.departments {
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.department {
-    background: var(--gray-low);
-    padding: 20px 15px;
-    position: relative;
-    border-radius: 7px;
-
-    flex-shrink: 0;
-}
-
-.dept-title {
-    background: transparent;
-    color: var(--black);
-    font-weight: bold;
-    font-size: 30px;
-    margin: 0;
-    padding: 0;
-    text-transform: uppercase;
-}
-
-
-
-/* отделения */
-
-.units {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-columns: repeat(auto-fit);
-    gap: 20px;
-    margin-top: 20px;
-}
-
-
-
-.unit {
-    background: var(--gray-middle);
-    padding: 10px;
-    border-radius: 7px;
-}
-
-.unit-title {
-    text-align: left;
-    color: var(--white);
-    font-size: 20px;
-
-    text-transform: uppercase;
-}
-
-
-/* сотрудники отделений */
-
-.employees {
-    display: grid;
-    justify-content: start;
-    align-items: stretch;
-    flex-wrap: wrap;
-    grid-template-columns: repeat(3, minmax(180px, 1fr));
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.employee {
-    display: flex;
-    flex-direction: column;
-    padding: 5px;
-    background: var(--gray-high);
-    border-radius: 5px;
-    color: var(--white);
-    height: 100%;
-}
-
-.employee .node-line {
-    background-color: var(--white);
-}
-
-.employee__data {
-    display: flex;
-    justify-content: start;
-    align-items: start;
-    gap: 10px;
-}
-
-.employee__data .photo {
-    width: 50px;
-    height: 50px;
-}
-
-
-.employee__positions {
-    color: var(--gray-low);
-    font-size: 10px;
-}
-
-
-.employee__fio {
-    text-align: left;
-    font-size: 10px;
-}
-
-
-/* кнопка */
-
+/* Кнопка */
 #resetView {
     position: fixed;
-    bottom: 10px;
+    bottom: 20px;
     right: 20px;
     z-index: 1000;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 6px;
+    padding: 10px 20px;
     background: var(--black);
     color: var(--white);
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 #resetView:hover {
     opacity: 0.85;
 }
 
-
-/* линии к департаментам горизонтальные*/
-
-.lines-to-departments {
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    height: 40px;
-}
-
-.line.vertical {
-    position: absolute;
-    top: 0;
-    width: 2px;
-    height: 40px;
-    background: var(--black);
-}
-
-.line.horizontal {
-    position: absolute;
-    top: 40px;
-    height: 2px;
-    background: var(--black);
-
-    left: 0;
-    width: 100%;
-}
-
-/* линии к департаментам вертикальные*/
-.department {
-    position: relative;
-    margin-top: 20px;
-}
-
-.department::before {
-    content: "";
-    position: absolute;
-    top: -40px;
-
-    left: 50%;
-    width: 2px;
-    height: 40px;
-    background: var(--black);
-    transform: translateX(-50%);
-}
-
-/* при наведении */
-.node {
-    background: var(--black);
-    color: var(--white);
-    padding: 20px 15px;
-    border-radius: 7px;
-    font-size: 14px;
-    text-align: left;
-
-    position: relative;
-    overflow: hidden;
-}
-
-.employee {
-    position: relative;
-    overflow: hidden;
-}
-
-/* затемнение */
-.node::after,
-.employee::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: rgba(120, 120, 120, 0.9);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-    z-index: 1;
-}
-
-.node:hover::after,
-.employee:hover::after {
-    opacity: 1;
-}
-
-.node-info {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.85);
-
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    opacity: 0;
-    z-index: 2;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.node:hover .node-info,
-.employee:hover .node-info {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-
-
-.node-info svg {
-    width: 48px;
-    height: 48px;
-    stroke: white;
-    fill: none;
-    stroke-width: 2;
+/* Адаптивность */
+@media (max-width: 768px) {
+    .tree {
+        flex-direction: column;
+    }
+    
+    .boss-wrapper::after {
+        display: none;
+    }
+    
+    .departments-container::before {
+        display: none;
+    }
 }

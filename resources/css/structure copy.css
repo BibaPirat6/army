@@ -1,0 +1,368 @@
+:root {
+    --black: #060606;
+    --cherry: #A60644;
+    --white: #f7f3f3;
+    --gray-high: #565A5B;
+    --gray-middle: #7F7F7F;
+    --gray-low: #BFBFBF;
+}
+
+
+body {
+    overflow: hidden;
+}
+
+#viewport {
+    width: 100vw;
+    height: 100vh;
+    background: var(--white);
+    cursor: grab;
+    overflow: hidden;
+}
+
+#viewport:active {
+    cursor: grabbing;
+}
+
+#canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    display: inline-block;
+    min-width: max-content;
+}
+
+#canvas {
+    transform-origin: 0 0;
+}
+
+
+.tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 100px;
+}
+
+
+
+.node {
+    background: var(--black);
+    color: var(--white);
+    padding: 20px 15px;
+    border-radius: 7px;
+    font-size: 14px;
+    text-align: left;
+
+    position: relative;
+}
+
+/* начальник комиссариата */
+
+.boss-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: 50px;
+}
+
+.node.boss {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 20px;
+    height: 100px;
+}
+
+.photo {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e5e7eb;
+    color: var(--black);
+    text-align: center;
+    font-size: 12px;
+
+    flex-shrink: 0;
+}
+
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.photo svg {
+    width: 70%;
+    height: 70%;
+}
+
+.node.boss .data__fio {
+    font-size: 16px;
+    color: var(--white);
+}
+
+.node-line {
+    width: 100%;
+    height: 1px;
+    background-color: var(--gray-high);
+    margin: 5px 0;
+}
+
+.data__positions {
+    color: var(--gray-middle);
+}
+
+
+
+/* отдел */
+.departments {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.department {
+    background: var(--gray-low);
+    padding: 20px 15px;
+    position: relative;
+    border-radius: 7px;
+
+    flex-shrink: 0;
+}
+
+.dept-title {
+    background: transparent;
+    color: var(--black);
+    font-weight: bold;
+    font-size: 30px;
+    margin: 0;
+    padding: 0;
+    text-transform: uppercase;
+}
+
+
+
+/* отделения */
+
+.units {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+
+
+.unit {
+    background: var(--gray-middle);
+    padding: 10px;
+    border-radius: 7px;
+}
+
+.unit-title {
+    text-align: left;
+    color: var(--white);
+    font-size: 20px;
+
+    text-transform: uppercase;
+}
+
+
+/* сотрудники отделений */
+
+.employees {
+    display: grid;
+    justify-content: start;
+    align-items: stretch;
+    flex-wrap: wrap;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.employee {
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    background: var(--gray-high);
+    border-radius: 5px;
+    color: var(--white);
+    height: 100%;
+}
+
+.employee .node-line {
+    background-color: var(--white);
+}
+
+.employee__data {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    gap: 10px;
+}
+
+.employee__data .photo {
+    width: 50px;
+    height: 50px;
+}
+
+
+.employee__positions {
+    color: var(--gray-low);
+    font-size: 10px;
+}
+
+
+.employee__fio {
+    text-align: left;
+    font-size: 10px;
+}
+
+
+/* кнопка */
+
+#resetView {
+    position: fixed;
+    bottom: 10px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 6px;
+    background: var(--black);
+    color: var(--white);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+#resetView:hover {
+    opacity: 0.85;
+}
+
+
+/* линии к департаментам горизонтальные*/
+
+.lines-to-departments {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    height: 40px;
+}
+
+.line.vertical {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 40px;
+    background: var(--black);
+}
+
+.line.horizontal {
+    position: absolute;
+    top: 40px;
+    height: 2px;
+    background: var(--black);
+
+    left: 0;
+    width: 100%;
+}
+
+/* линии к департаментам вертикальные*/
+.department {
+    position: relative;
+    margin-top: 20px;
+}
+
+.department::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+
+    left: 50%;
+    width: 2px;
+    height: 40px;
+    background: var(--black);
+    transform: translateX(-50%);
+}
+
+/* при наведении */
+.node {
+    background: var(--black);
+    color: var(--white);
+    padding: 20px 15px;
+    border-radius: 7px;
+    font-size: 14px;
+    text-align: left;
+
+    position: relative;
+    overflow: hidden;
+}
+
+.employee {
+    position: relative;
+    overflow: hidden;
+}
+
+/* затемнение */
+.node::after,
+.employee::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(120, 120, 120, 0.9);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    z-index: 1;
+}
+
+.node:hover::after,
+.employee:hover::after {
+    opacity: 1;
+}
+
+.node-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0;
+    z-index: 2;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.node:hover .node-info,
+.employee:hover .node-info {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+
+.node-info svg {
+    width: 48px;
+    height: 48px;
+    stroke: white;
+    fill: none;
+    stroke-width: 2;
+}
