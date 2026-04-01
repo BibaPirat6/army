@@ -13,6 +13,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/test-graph', function () {
+    return view('test-graph');
+})->name('test.graph');
+
+
+
 // форма лоигна
 Route::get('/login', [LoginController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
