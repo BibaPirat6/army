@@ -5,13 +5,12 @@
 // Alpine.start();
 
 import { createApp } from 'vue';
-import TestGraph from '../views//components/TestGraph.vue';
+import StructureGraph from './components/StructureGraph.vue';
 
-// Создаем приложение Vue
+console.log('Vue app starting...'); // Отладка
+
 const app = createApp({});
-
-// Регистрируем компонент глобально
-app.component('test-graph', TestGraph);
-
-// Монтируем приложение
+app.component('structure-graph', StructureGraph);
 app.mount('#app');
+
+console.log('Vue app mounted'); // Отладка

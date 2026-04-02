@@ -108,4 +108,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
+    Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian']);
 });
