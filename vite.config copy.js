@@ -3,6 +3,7 @@ import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -13,6 +14,7 @@ export default defineConfig({
                 'resources/js/structure.js',
             ],
             refresh: true,
+            // buildDirectory:"build"
         }),
         tailwindcss(),
         vue({
@@ -30,6 +32,29 @@ export default defineConfig({
             'vue': 'vue/dist/vue.esm-bundler.js'
         },
     },
+    // для клиента
+    // server: {
+    //     host: '0.0.0.0',
+    //     port: 5173,
+    //     hmr:{
+    //         host: '192.168.0.132',
+    //         port:5173,
+    //         protocol: 'ws'
+    //     },
+    //     cors:true
+    // },
+    build: {
+        manifest: "manifest.json",
+        outDir: "public/build",
+        // rollupOptions:{
+        //     input:{
+        //         app:"resources/css/app.css"
+        //     }
+        // }
+    },
+
+
+    // http://localhost:8000 запуск php artisan serve - apache не запускать 
     server: {
         host: '127.0.0.1',
         port: 5173,
@@ -37,11 +62,16 @@ export default defineConfig({
         hmr: {
             host: '127.0.0.1',
         },
-    },
-    build: {
-        manifest: "manifest.json",
-        outDir: "public/build",
-        target: 'esnext',
-        sourcemap: false,
-    },
+    }
+
+    // тест на своем пк для клиента
+    // server: {
+    //     host: '0.0.0.0',
+    //     port: 5173,  
+    //     strictPort: true,
+    //     hmr: {
+    //         host: '192.168.0.16',
+    //     },
+    // }
+
 });
