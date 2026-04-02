@@ -137,7 +137,7 @@
                         </label>
 
                         {{-- visible input --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
+                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                outline-none transition-colors text-[#060606]"

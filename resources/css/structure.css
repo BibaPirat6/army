@@ -87,7 +87,7 @@
 
 /* Стили для скролла */
 .custom-scroll::-webkit-scrollbar {
-    width: 6px;
+    width: 12px;
 }
 
 .custom-scroll::-webkit-scrollbar-track {
