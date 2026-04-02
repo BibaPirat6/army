@@ -36,6 +36,11 @@
                 @csrf
 
                 <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+                <input type="hidden" name="commissariatId" value="{{ $commissariatId }}">
+                <input type="hidden" name="departmentId" value="{{ $departmentId }}">
+                <input type="hidden" name="divisionId" value="{{ $divisionId }}">
+
+
                 <div class="grid grid-cols-4 gap-4">
                     @foreach ($columns as $column)
                         @php

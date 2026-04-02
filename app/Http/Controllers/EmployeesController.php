@@ -43,7 +43,7 @@ class EmployeesController extends Controller
     {
         $backUrl = $request->input('back_url');
         $employee = Employee::findOrFail($id);
-         $columns = Person::getTableColumns();
+        $columns = Person::getTableColumns();
 
         return view('admin.employees.show')->with([
             'employee' => $employee,
@@ -54,16 +54,22 @@ class EmployeesController extends Controller
 
     public function create(Request $request)
     {
+        // со структуры получаем по кнопке добавления сотрудника
+        $commissariatId = $request->input('commissariat_id');
+        $departmentId = $request->input('department_id');
+        $divisionId = $request->input('division_id');
+
         $roles = Role::all();
-
         $backUrl = $request->input('back_url');
-
         $columns = Person::getTableColumns();
 
         return view('admin.employees.create')->with([
             'roles' => $roles,
             'backUrl' => $backUrl,
             'columns' => $columns,
+            'commissariatId' => $commissariatId,
+            'departmentId' => $departmentId,
+            'divisionId' => $divisionId,
         ]);
     }
 
@@ -191,9 +197,45 @@ class EmployeesController extends Controller
         $employee->user_id = $user->id;
         $employee->person_id = $person->id;
         $employee->save();
+        $employee->refresh();
 
+        $employeeId = $employee->id;
+
+        // Получаем параметры контекста
         $backUrl = $request->get('backUrl', route('employees.index'));
+        $commissariatId = $request->input('commissariatId');
+        $departmentId = $request->input('departmentId');
+        $divisionId = $request->input('divisionId');
 
+        // Определяем, нужно ли перенаправить на создание должности
+        $hasContext = $commissariatId || $departmentId || $divisionId;
+
+        if ($hasContext) {
+            // Собираем параметры для создания должности
+            $positionParams = [
+                'id'=> $employeeId,
+                'employeeId' => $employeeId,
+                'backUrl' => $backUrl,
+            ];
+
+            if ($commissariatId) {
+                $positionParams['commissariatId'] = $commissariatId;
+            }
+
+            if ($departmentId) {
+                $positionParams['departmentId'] = $departmentId;
+            }
+
+            if ($divisionId) {
+                $positionParams['divisionId'] = $divisionId;
+            }
+
+            // Перенаправляем на создание должности
+            return redirect()->route('employee-positions.create', $positionParams)
+                ->with('success', 'Сотрудник успешно создан! Теперь назначьте должность.');
+        }
+
+        // Если нет контекста, просто возвращаемся назад
         return redirect()->to($backUrl)
             ->with('success', 'Сотрудник успешно создан!');
     }

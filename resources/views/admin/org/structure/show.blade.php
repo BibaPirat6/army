@@ -333,9 +333,6 @@
                             $hasEmployees = $employeesNotIndependent->count() > 0 || $employeesIndependent->count() > 0;
                         @endphp
 
-
-
-
                         @if($hasEmployees)
                             <div
                                 class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover">
@@ -420,9 +417,6 @@
                             </div>
                         @endif
 
-
-
-
                         {{-- САМОСТОЯТЕЛЬНЫЕ ОТДЕЛЕНИЯ (вне отделов) --}}
                         @php
                             $divisionsIndependent = $commissariat?->divisionsIntependent() ?? collect();
@@ -499,6 +493,7 @@
                                         @else
                                             <div class="text-center text-[#565A5B] py-4 italic">Нет сотрудников</div>
                                         @endif
+
 
                                         {{-- Кнопка добавления сотрудника --}}
                                         <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"

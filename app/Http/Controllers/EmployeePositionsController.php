@@ -24,10 +24,45 @@ class EmployeePositionsController extends Controller
         $divisions = Division::all();
         $employeePositionRates = EmployeePositionRate::all();
 
-        $backUrl = $request->get('back_url');
-        $employeeId = $id;
+        $backUrl = $request->get('backUrl');
+        $employeeId = $id ?? $request->get('employeeId');
+        $commissariatId = $request->get('commissariatId');
+        $departmentId = $request->get('departmentId');
+        $divisionId = $request->get('divisionId');
 
-        return view('admin.org.employee-positions.create', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates'));
+        // Загружаем данные для отображения
+        $commissariat = null;
+        $department = null;
+        $division = null;
+
+        if ($commissariatId) {
+            $commissariat = Commissariat::find($commissariatId);
+        } 
+        if ($departmentId) {
+            $department = Department::find($departmentId);
+        } 
+        if ($divisionId) {
+            $division = Division::find($divisionId);
+        } 
+
+
+        // Передаем все переменные явно, а не через compact
+        return view('admin.org.employee-positions.create', [
+            'employee' => $employee,
+            'positions' => $positions,
+            'commissariats' => $commissariats,
+            'departments' => $departments,
+            'divisions' => $divisions,
+            'backUrl' => $backUrl,
+            'employeeId' => $employeeId,
+            'employeePositionRates' => $employeePositionRates,
+            'commissariatId' => $commissariatId,
+            'departmentId' => $departmentId,
+            'divisionId' => $divisionId,
+            'commissariat' => $commissariat,
+            'department' => $department,
+            'division' => $division,
+        ]);
     }
 
     public function store(Request $request, $id)
@@ -134,20 +169,20 @@ class EmployeePositionsController extends Controller
                 Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
-        ],
+            ],
             'is_independent' => 'required|in:0,1',
         ], [
-        'position_id.required' => 'Поле должность обязательно для заполнения.',
-        'position_id.integer' => 'Поле должность должно быть целым числом.',
-        'position_id.exists' => 'Выбранная должность не существует.',
-        'rate.required' => 'Поле ставка обязательно для заполнения.',
-        'rate.numeric' => 'Поле ставка должно быть числом.',
-        'commissariat_id.required' => 'Обязательное поле комиссариата',
-        'commissariat_id.exists' => 'Несуществующий комиссариат',
-        'department_id.exists' => 'Несуществующий отдел',
-        'division_id.exists' => 'Несуществующее отделение',
-        'is_independent.required' => 'Обязательное поле выбора самостоятельной должности',
-    ]);
+            'position_id.required' => 'Поле должность обязательно для заполнения.',
+            'position_id.integer' => 'Поле должность должно быть целым числом.',
+            'position_id.exists' => 'Выбранная должность не существует.',
+            'rate.required' => 'Поле ставка обязательно для заполнения.',
+            'rate.numeric' => 'Поле ставка должно быть числом.',
+            'commissariat_id.required' => 'Обязательное поле комиссариата',
+            'commissariat_id.exists' => 'Несуществующий комиссариат',
+            'department_id.exists' => 'Несуществующий отдел',
+            'division_id.exists' => 'Несуществующее отделение',
+            'is_independent.required' => 'Обязательное поле выбора самостоятельной должности',
+        ]);
 
         $employeePosition = EmployeePosition::findOrFail($id);
 

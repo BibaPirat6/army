@@ -13,7 +13,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ $backUrl ?? route('employee-positions.index') }}"
+                <a href="{{ $backUrl ?? route('employees.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -33,6 +33,7 @@
             <div class="p-6 md:p-8">
                 <form action="{{ route('employee-positions.store', $employee->id) }}" method="POST" class="space-y-6">
                     @csrf
+
 
                     <input type="hidden" name="backUrl" value="{{ $backUrl }}">
                     <input type="hidden" name="employeeId" value="{{ $employeeId }}">
@@ -93,6 +94,8 @@
                     </div>
 
 
+
+
                     {{-- комиссариат --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -103,11 +106,11 @@
                         <input required type="text" id="commissariat_search" placeholder="Выберите комиссариат" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                       outline-none transition-colors text-[#060606]" autocomplete="off"
-                            value="{{ old('commissariat_id') }}">
+                            value="{{ $commissariat ? $commissariat->name : old('commissariat_name', '') }}">
 
                         {{-- hidden value --}}
                         <input type="hidden" name="commissariat_id" id="commissariat_id"
-                            value="{{ old('commissariat_id') }}">
+                            value="{{$commissariatId ?? old('commissariat_id', '') }}">
 
                         {{-- dropdown --}}
                         <ul id="commissariat_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
@@ -134,14 +137,13 @@
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Отдел
                         </label>
-
                         {{-- visible input --}}
                         <input type="text" id="department_search" placeholder="Выберите отдел" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                      outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ old('department_id') }}">
+                      outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ $department ? $department->name : old('department_name', '') }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="department_id" id="department_id" value="{{ old('department_id') }}">
+                        <input type="hidden" name="department_id" id="department_id" value="{{ $departmentId ?? old('department_id', '')  }}">
 
                         {{-- dropdown --}}
                         <ul id="department_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
@@ -176,10 +178,10 @@
                         <input type="text" id="division_search" placeholder="Выберите отделение" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                    focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                    outline-none transition-colors text-[#060606]" autocomplete="off"
-                            value="{{ old('division_id') ? optional($divisions->firstWhere('id', old('division_id')))->name : '' }}">
+                            value="{{ $division ? $division->name : old('division_name', '') }}">
 
                         {{-- скрытое поле для отправки формы --}}
-                        <input type="hidden" name="division_id" id="division_id" value="{{ old('division_id') }}">
+                        <input type="hidden" name="division_id" id="division_id" value="{{ $divisionId ?? old('division_id', '') }}">
 
                         {{-- выпадающий список --}}
                         <ul id="division_list"
@@ -222,10 +224,6 @@
                             <option value="1">Да</option>
                         </select>
                     </div>
-
-
-
-
 
 
                     <!-- Кнопка отправки -->
