@@ -186,7 +186,6 @@
                                         // исключая позицию начальника отдела, затем мапим на employee и убираем дубликаты.
                                         $departmentEmployees = $department->employeePositions()
                                             ->whereNull('division_id')
-                                            ->where('is_independent', 0)
                                             ->where('employee_id', '!=', $departmentChiefId)
                                             ->with('employee.person')
                                             ->get()

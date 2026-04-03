@@ -1,40 +1,30 @@
 <template>
     <div class="graph-container">
         <div ref="svgContainer" class="svg-container"></div>
-        
+
         <!-- Управление -->
         <div class="controls">
-            <button 
-                @mousedown="startZoomIn" 
-                @mouseup="stopZoom" 
-                @mouseleave="stopZoom"
-                @touchstart="startZoomIn" 
-                @touchend="stopZoom"
-                class="control-btn" 
-                title="Приблизить">
+            <button @mousedown="startZoomIn" @mouseup="stopZoom" @mouseleave="stopZoom" @touchstart="startZoomIn"
+                @touchend="stopZoom" class="control-btn" title="Приблизить">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
             </button>
-            <button 
-                @mousedown="startZoomOut" 
-                @mouseup="stopZoom" 
-                @mouseleave="stopZoom"
-                @touchstart="startZoomOut" 
-                @touchend="stopZoom"
-                class="control-btn" 
-                title="Отдалить">
+            <button @mousedown="startZoomOut" @mouseup="stopZoom" @mouseleave="stopZoom" @touchstart="startZoomOut"
+                @touchend="stopZoom" class="control-btn" title="Отдалить">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                 </svg>
             </button>
             <button @click="resetView" class="control-btn" title="Сбросить вид">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                    </path>
                 </svg>
             </button>
         </div>
-        
+
         <!-- Модальное окно для узлов -->
         <div v-if="selectedNode && selectedNode.type !== 'employee'" class="modal-overlay" @click.self="closeModal">
             <div class="modal-content">
@@ -48,13 +38,15 @@
                     <div class="modal-buttons">
                         <button @click="addEmployee" class="btn-add">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
                             </svg>
                             Добавить сотрудника
                         </button>
                         <button v-if="selectedNode.type !== 'employee'" @click="addSubdivision" class="btn-add">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
                             </svg>
                             Добавить {{ selectedNode.type === 'commissariat' ? 'отдел' : 'отделение' }}
                         </button>
@@ -118,7 +110,7 @@ export default {
             };
             return colors[type] || '#999';
         },
-        
+
         getNodeTypeLabel(type) {
             const labels = {
                 commissariat: 'Комиссариат',
@@ -128,13 +120,13 @@ export default {
             };
             return labels[type] || type;
         },
-        
+
         initGraph() {
             const container = this.$refs.svgContainer;
             if (!container) return;
-            
+
             container.innerHTML = '';
-            
+
             this.zoomBehavior = d3.zoom()
                 .scaleExtent([0.1, 3])
                 .on('zoom', (event) => {
@@ -142,26 +134,26 @@ export default {
                         this.g.attr('transform', event.transform);
                     }
                 });
-            
+
             this.svg = d3.select(container)
                 .append('svg')
                 .attr('width', this.width)
                 .attr('height', this.height)
                 .call(this.zoomBehavior);
-            
+
             this.g = this.svg.append('g');
-            
+
             const simulationNodes = this.nodes.map(n => ({ ...n }));
-            const simulationLinks = this.links.map(l => ({ 
-                source: l.source, 
-                target: l.target 
+            const simulationLinks = this.links.map(l => ({
+                source: l.source,
+                target: l.target
             }));
-            
+
             const nodeMap = new Map();
             simulationNodes.forEach(node => {
                 nodeMap.set(node.id, node);
             });
-            
+
             simulationLinks.forEach(link => {
                 if (typeof link.source === 'string') {
                     link.source = nodeMap.get(link.source);
@@ -170,15 +162,123 @@ export default {
                     link.target = nodeMap.get(link.target);
                 }
             });
-            
+
+            // ========== РАСЧЕТ НАЧАЛЬНЫХ ПОЗИЦИЙ ==========
+            const centerX = this.width / 2;
+            const centerY = this.height / 2;
+
+            // Находим главный узел (комиссариат)
+            const mainNode = simulationNodes.find(n => n.type === 'commissariat');
+
+            if (mainNode) {
+                // Комиссариат в центре
+                mainNode.x = centerX;
+                mainNode.y = centerY;
+                mainNode.fx = centerX;
+                mainNode.fy = centerY;
+
+                // Группируем узлы по типам
+                const departments = simulationNodes.filter(n => n.type === 'department');
+                const divisions = simulationNodes.filter(n => n.type === 'division');
+                const employees = simulationNodes.filter(n => n.type === 'employee');
+
+                // Располагаем отделы по кругу
+                const deptRadius = 250;
+                const deptAngleStep = (Math.PI * 2) / Math.max(departments.length, 1);
+                departments.forEach((dept, index) => {
+                    const angle = index * deptAngleStep;
+                    dept.x = centerX + Math.cos(angle) * deptRadius;
+                    dept.y = centerY + Math.sin(angle) * deptRadius;
+                });
+
+                // Располагаем отделения вокруг их отделов
+                departments.forEach(dept => {
+                    const relatedDivisions = simulationNodes.filter(n =>
+                        n.type === 'division' &&
+                        simulationLinks.some(l => l.source === dept && l.target === n)
+                    );
+
+                    const divRadius = 150;
+                    const divAngleStep = (Math.PI * 2) / Math.max(relatedDivisions.length, 1);
+                    relatedDivisions.forEach((div, idx) => {
+                        const angle = idx * divAngleStep;
+                        div.x = dept.x + Math.cos(angle) * divRadius;
+                        div.y = dept.y + Math.sin(angle) * divRadius;
+                    });
+                });
+
+                // Располагаем сотрудников вокруг их отделений
+                simulationNodes.forEach(node => {
+                    if (node.type === 'division') {
+                        const relatedEmployees = simulationNodes.filter(n =>
+                            n.type === 'employee' &&
+                            simulationLinks.some(l => l.source === node && l.target === n)
+                        );
+
+                        const empRadius = 120;
+                        const empAngleStep = (Math.PI * 2) / Math.max(relatedEmployees.length, 1);
+                        relatedEmployees.forEach((emp, idx) => {
+                            const angle = idx * empAngleStep;
+                            emp.x = node.x + Math.cos(angle) * empRadius;
+                            emp.y = node.y + Math.sin(angle) * empRadius;
+                        });
+                    }
+                });
+
+                // Сотрудники, связанные напрямую с комиссариатом
+                const directEmployees = simulationNodes.filter(n =>
+                    n.type === 'employee' &&
+                    simulationLinks.some(l => l.source === mainNode && l.target === n)
+                );
+
+                const directEmpRadius = 200;
+                const directEmpAngleStep = (Math.PI * 2) / Math.max(directEmployees.length, 1);
+                directEmployees.forEach((emp, idx) => {
+                    const angle = idx * directEmpAngleStep;
+                    emp.x = centerX + Math.cos(angle) * directEmpRadius;
+                    emp.y = centerY + Math.sin(angle) * directEmpRadius;
+                });
+            }
+
+            // ========== НАСТРОЙКА СИЛ ==========
             this.simulation = d3.forceSimulation(simulationNodes)
-                .force('link', d3.forceLink(simulationLinks).id(d => d.id).distance(150).strength(0.5))
-                .force('charge', d3.forceManyBody().strength(-300))
+                .force('link', d3.forceLink(simulationLinks)
+                    .id(d => d.id)
+                    .distance(d => {
+                        if (d.source.type === 'commissariat' || d.target.type === 'commissariat') return 180;
+                        if (d.source.type === 'department' || d.target.type === 'department') return 140;
+                        if (d.source.type === 'division' || d.target.type === 'division') return 110;
+                        return 80;
+                    })
+                    .strength(d => {
+                        if (d.source.type === 'commissariat' || d.target.type === 'commissariat') return 0.3;
+                        if (d.source.type === 'department' || d.target.type === 'department') return 0.4;
+                        return 0.5;
+                    }))
+                .force('charge', d3.forceManyBody()
+                    .strength(d => {
+                        if (d.type === 'commissariat') return -500;
+                        if (d.type === 'department') return -300;
+                        if (d.type === 'division') return -200;
+                        return -150;
+                    }))
                 .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-                .force('collision', d3.forceCollide().radius(50));
-            
+                .force('collision', d3.forceCollide().radius(60))
+                .alphaDecay(0.02)  // Медленнее затухание для лучшей стабилизации
+                .velocityDecay(0.4);  // Инерция
+
+            // Фиксируем комиссариат в центре на время стабилизации
+            if (mainNode) {
+                setTimeout(() => {
+                    if (this.simulation) {
+                        mainNode.fx = null;
+                        mainNode.fy = null;
+                    }
+                }, 3000);
+            }
+
             this.draw(simulationNodes, simulationLinks);
-            
+
             this.simulation.on('tick', () => {
                 this.updatePositions();
             });
@@ -193,7 +293,7 @@ export default {
                 .attr('stroke', '#999')
                 .attr('stroke-width', 1.5)
                 .attr('stroke-opacity', 0.5);
-            
+
             this.nodeElements = this.g.append('g')
                 .selectAll('g')
                 .data(nodesData)
@@ -215,7 +315,7 @@ export default {
                         d.fx = null;
                         d.fy = null;
                     }));
-            
+
             this.nodeElements.append('circle')
                 .attr('r', d => {
                     if (d.type === 'commissariat') return 45;
@@ -226,7 +326,7 @@ export default {
                 .attr('fill', d => this.getNodeColor(d.type))
                 .attr('stroke', '#060606')
                 .attr('stroke-width', 2);
-            
+
             this.nodeElements.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('dy', '0.35em')
@@ -239,7 +339,7 @@ export default {
                     if (d.type === 'division') return '◆';
                     return '👤';
                 });
-            
+
             this.nodeElements.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('dy', d => d.type === 'commissariat' ? '2.5em' : '2.2em')
@@ -251,7 +351,7 @@ export default {
                     if (name.length > 18) name = name.substring(0, 15) + '...';
                     return name;
                 });
-            
+
             this.nodeElements.on('click', (event, d) => {
                 event.stopPropagation();
                 if (d.type === 'employee') {
@@ -260,8 +360,8 @@ export default {
                     this.selectedNode = d;
                 }
             });
-            
-            this.nodeElements.on('mouseenter', function(event, d) {
+
+            this.nodeElements.on('mouseenter', function (event, d) {
                 d3.select(this).select('circle')
                     .transition().duration(200)
                     .attr('r', d => {
@@ -270,7 +370,7 @@ export default {
                         if (d.type === 'division') return 38;
                         return 34;
                     });
-            }).on('mouseleave', function() {
+            }).on('mouseleave', function () {
                 d3.select(this).select('circle')
                     .transition().duration(200)
                     .attr('r', d => {
@@ -281,7 +381,7 @@ export default {
                     });
             });
         },
-        
+
         updatePositions() {
             if (this.linkElements) {
                 this.linkElements
@@ -294,53 +394,53 @@ export default {
                 this.nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
             }
         },
-        
+
         // ========== ДИНАМИЧЕСКИЙ ЗУМ ==========
-        
+
         startZoomIn() {
             this.zoomIn();
             this.zoomInterval = setInterval(() => {
                 this.zoomIn();
             }, 50); // Каждые 50мс приближаем
         },
-        
+
         startZoomOut() {
             this.zoomOut();
             this.zoomInterval = setInterval(() => {
                 this.zoomOut();
             }, 50); // Каждые 50мс отдаляем
         },
-        
+
         stopZoom() {
             if (this.zoomInterval) {
                 clearInterval(this.zoomInterval);
                 this.zoomInterval = null;
             }
         },
-        
+
         zoomIn() {
             if (this.svg && this.zoomBehavior) {
                 this.svg.transition().duration(50).call(this.zoomBehavior.scaleBy, 1.05);
             }
         },
-        
+
         zoomOut() {
             if (this.svg && this.zoomBehavior) {
                 this.svg.transition().duration(50).call(this.zoomBehavior.scaleBy, 0.95);
             }
         },
-        
+
         resetView() {
             if (this.svg && this.zoomBehavior) {
                 this.svg.transition().duration(500).call(this.zoomBehavior.transform, d3.zoomIdentity);
             }
         },
 
-        
+
         closeModal() {
             this.selectedNode = null;
         },
-        
+
         addEmployee() {
             if (this.selectedNode) {
                 let url = '';
@@ -358,7 +458,7 @@ export default {
                 window.location.href = url;
             }
         },
-        
+
         addSubdivision() {
             if (this.selectedNode) {
                 let url = '';
@@ -373,7 +473,7 @@ export default {
                 window.location.href = url;
             }
         },
-        
+
         handleResize() {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
@@ -466,6 +566,7 @@ export default {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -523,7 +624,8 @@ export default {
     margin-top: 20px;
 }
 
-.btn-add, .btn-cancel {
+.btn-add,
+.btn-cancel {
     display: flex;
     align-items: center;
     justify-content: center;
