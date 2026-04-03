@@ -285,103 +285,201 @@ export default {
             });
         },
 
-        draw(nodesData, linksData) {
-            this.linkElements = this.g.append('g')
-                .selectAll('line')
-                .data(linksData)
-                .enter()
-                .append('line')
-                .attr('stroke', '#999')
-                .attr('stroke-width', 1.5)
-                .attr('stroke-opacity', 0.5);
+       draw(nodesData, linksData) {
+    // Очищаем предыдущие элементы
+    this.g.selectAll('.links').remove();
+    this.g.selectAll('.nodes').remove();
+    
+    // Рисуем связи
+    this.linkElements = this.g.append('g')
+        .attr('class', 'links')
+        .selectAll('line')
+        .data(linksData)
+        .enter()
+        .append('line')
+        .attr('stroke', '#999')
+        .attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 0.5);
 
-            this.nodeElements = this.g.append('g')
-                .selectAll('g')
-                .data(nodesData)
-                .enter()
-                .append('g')
-                .attr('cursor', 'pointer')
-                .call(d3.drag()
-                    .on('start', (event, d) => {
-                        if (!event.active) this.simulation.alphaTarget(0.3).restart();
-                        d.fx = d.x;
-                        d.fy = d.y;
-                    })
-                    .on('drag', (event, d) => {
-                        d.fx = event.x;
-                        d.fy = event.y;
-                    })
-                    .on('end', (event, d) => {
-                        if (!event.active) this.simulation.alphaTarget(0);
-                        d.fx = null;
-                        d.fy = null;
-                    }));
+    // Рисуем узлы
+    this.nodeElements = this.g.append('g')
+        .attr('class', 'nodes')
+        .selectAll('g')
+        .data(nodesData)
+        .enter()
+        .append('g')
+        .attr('cursor', 'pointer')
+        .call(d3.drag()
+            .on('start', (event, d) => {
+                if (!event.active) this.simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            })
+            .on('drag', (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+            })
+            .on('end', (event, d) => {
+                if (!event.active) this.simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }));
 
-            this.nodeElements.append('circle')
-                .attr('r', d => {
-                    if (d.type === 'commissariat') return 45;
-                    if (d.type === 'department') return 38;
-                    if (d.type === 'division') return 32;
-                    return 28;
-                })
-                .attr('fill', d => this.getNodeColor(d.type))
+    // Добавляем элементы для каждого узла
+    this.nodeElements.each((d, i, group) => {
+        const nodeGroup = d3.select(group[i]);
+        const isChief = d.isChief === true;
+        
+        if (d.type === 'group') {
+            // Группа - прямоугольник
+            nodeGroup.append('rect')
+                .attr('x', -40)
+                .attr('y', -18)
+                .attr('width', 80)
+                .attr('height', 36)
+                .attr('rx', 8)
+                .attr('fill', this.getNodeColor(d.type))
                 .attr('stroke', '#060606')
                 .attr('stroke-width', 2);
-
-            this.nodeElements.append('text')
+            
+            nodeGroup.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('dy', '0.35em')
                 .attr('fill', 'white')
-                .style('font-size', d => d.type === 'commissariat' ? '20px' : '16px')
+                .style('font-size', '11px')
                 .style('font-weight', 'bold')
-                .text(d => {
-                    if (d.type === 'commissariat') return '★';
-                    if (d.type === 'department') return '●';
-                    if (d.type === 'division') return '◆';
-                    return '👤';
+                .text(() => {
+                    let name = d.name;
+                    if (name.length > 14) name = name.substring(0, 11) + '...';
+                    return name;
                 });
-
-            this.nodeElements.append('text')
+        } else {
+            // Обычные узлы
+            let radius = 28;
+            let fillColor = '#BFBFBF';
+            let strokeColor = '#060606';
+            let iconSize = '16px';
+            let iconColor = 'white';
+            let iconText = '👤';
+            let textDy = '2.2em';
+            let textSize = '10px';
+            let textWeight = '500';
+            
+            if (d.type === 'commissariat') {
+                radius = 45;
+                fillColor = '#A60644';
+                iconSize = '20px';
+                iconText = '★';
+            } else if (d.type === 'department') {
+                radius = 38;
+                fillColor = '#565A5B';
+                iconText = '●';
+            } else if (d.type === 'division') {
+                radius = 32;
+                fillColor = '#7F7F7F';
+                iconText = '◆';
+            }
+            
+            if (isChief) {
+                radius = 34;
+                fillColor = '#FFD700';
+                strokeColor = '#DAA520';
+                iconColor = '#060606';
+                iconSize = '18px';
+                iconText = '👑';
+                textDy = '2.3em';
+                textSize = '11px';
+                textWeight = 'bold';
+            }
+            
+            nodeGroup.append('circle')
+                .attr('r', radius)
+                .attr('fill', fillColor)
+                .attr('stroke', strokeColor)
+                .attr('stroke-width', 2);
+            
+            nodeGroup.append('text')
                 .attr('text-anchor', 'middle')
-                .attr('dy', d => d.type === 'commissariat' ? '2.5em' : '2.2em')
+                .attr('dy', '0.35em')
+                .attr('fill', iconColor)
+                .style('font-size', iconSize)
+                .style('font-weight', 'bold')
+                .text(iconText);
+            
+            nodeGroup.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', textDy)
                 .attr('fill', '#060606')
-                .style('font-size', '10px')
-                .style('font-weight', '500')
-                .text(d => {
+                .style('font-size', textSize)
+                .style('font-weight', textWeight)
+                .text(() => {
                     let name = d.name;
                     if (name.length > 18) name = name.substring(0, 15) + '...';
                     return name;
                 });
+        }
+    });
 
-            this.nodeElements.on('click', (event, d) => {
-                event.stopPropagation();
-                if (d.type === 'employee') {
-                    if (d.url) window.location.href = d.url;
-                } else {
-                    this.selectedNode = d;
-                }
-            });
+    // Обработчик клика
+    this.nodeElements.on('click', (event, d) => {
+        event.stopPropagation();
+        if (d.type === 'employee' || d.type === 'commissariat' || d.type === 'department' || d.type === 'division') {
+            if (d.url) {
+                window.location.href = d.url;
+            }
+        } else {
+            this.selectedNode = d;
+        }
+    });
 
-            this.nodeElements.on('mouseenter', function (event, d) {
-                d3.select(this).select('circle')
-                    .transition().duration(200)
-                    .attr('r', d => {
-                        if (d.type === 'commissariat') return 52;
-                        if (d.type === 'department') return 44;
-                        if (d.type === 'division') return 38;
-                        return 34;
-                    });
-            }).on('mouseleave', function () {
-                d3.select(this).select('circle')
-                    .transition().duration(200)
-                    .attr('r', d => {
-                        if (d.type === 'commissariat') return 45;
-                        if (d.type === 'department') return 38;
-                        if (d.type === 'division') return 32;
-                        return 28;
-                    });
-            });
-        },
+    // Эффект при наведении для кругов
+    this.nodeElements.filter(d => d.type !== 'group')
+        .on('mouseenter', function(event, d) {
+            const isChief = d.isChief === true;
+            let newRadius = 34;
+            if (d.type === 'commissariat') newRadius = 52;
+            else if (d.type === 'department') newRadius = 44;
+            else if (d.type === 'division') newRadius = 38;
+            else if (isChief) newRadius = 40;
+            else newRadius = 34;
+            
+            d3.select(this).select('circle')
+                .transition().duration(200)
+                .attr('r', newRadius);
+        }).on('mouseleave', function(event, d) {
+            const isChief = d.isChief === true;
+            let newRadius = 28;
+            if (d.type === 'commissariat') newRadius = 45;
+            else if (d.type === 'department') newRadius = 38;
+            else if (d.type === 'division') newRadius = 32;
+            else if (isChief) newRadius = 34;
+            else newRadius = 28;
+            
+            d3.select(this).select('circle')
+                .transition().duration(200)
+                .attr('r', newRadius);
+        });
+    
+    // Эффект при наведении для групп
+    this.nodeElements.filter(d => d.type === 'group')
+        .on('mouseenter', function() {
+            d3.select(this).select('rect')
+                .transition().duration(200)
+                .attr('width', 90)
+                .attr('height', 42)
+                .attr('x', -45)
+                .attr('y', -21)
+                .attr('stroke-width', 3);
+        }).on('mouseleave', function() {
+            d3.select(this).select('rect')
+                .transition().duration(200)
+                .attr('width', 80)
+                .attr('height', 36)
+                .attr('x', -40)
+                .attr('y', -18)
+                .attr('stroke-width', 2);
+        });
+},
 
         updatePositions() {
             if (this.linkElements) {

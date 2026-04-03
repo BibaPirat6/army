@@ -47,6 +47,7 @@ class StructureController extends Controller
                 'id' => $chiefNodeId,
                 'name' => $chief->getFullNameAttribute(),
                 'type' => 'employee',
+                'isChief' => true,  // ← ДОБАВИТЬ
                 'url' => route('employees.show', $chief->id),
             ];
             $links[] = ['source' => $chiefId, 'target' => $chiefNodeId];
@@ -73,6 +74,7 @@ class StructureController extends Controller
                         'id' => $empId,
                         'name' => $employee->getFullNameAttribute(),
                         'type' => 'employee',
+                        'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
                         'url' => route('employees.show', $employee->id),
                     ];
                 }
@@ -100,6 +102,7 @@ class StructureController extends Controller
                         'id' => $deptChiefNodeId,
                         'name' => $deptChief->getFullNameAttribute(),
                         'type' => 'employee',
+                        'isChief' => true,  // ← ДОБАВИТЬ
                         'url' => route('employees.show', $deptChief->id),
                     ];
                 }
@@ -107,7 +110,6 @@ class StructureController extends Controller
             }
 
             // ========== СОТРУДНИКИ ОТДЕЛА (прямозависящие) ==========
-            // Получаем сотрудников, привязанных напрямую к отделу (без отделения)
             $departmentEmployees = $department->employeePositions()
                 ->whereNull('division_id')
                 ->where('is_independent', 0)
@@ -139,6 +141,7 @@ class StructureController extends Controller
                             'id' => $empId,
                             'name' => $employee->getFullNameAttribute(),
                             'type' => 'employee',
+                            'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
                             'url' => route('employees.show', $employee->id),
                         ];
                     }
@@ -166,6 +169,7 @@ class StructureController extends Controller
                             'id' => $divChiefNodeId,
                             'name' => $divChief->getFullNameAttribute(),
                             'type' => 'employee',
+                            'isChief' => true,  // ← ДОБАВИТЬ
                             'url' => route('employees.show', $divChief->id),
                         ];
                     }
@@ -198,6 +202,7 @@ class StructureController extends Controller
                                 'id' => $empId,
                                 'name' => $emp->getFullNameAttribute(),
                                 'type' => 'employee',
+                                'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
                                 'url' => route('employees.show', $emp->id),
                             ];
                         }
@@ -228,6 +233,7 @@ class StructureController extends Controller
                         'id' => $empId,
                         'name' => $employee->getFullNameAttribute(),
                         'type' => 'employee',
+                        'isChief' => false,  // ← ДОБАВИТЬ (самостоятельный сотрудник)
                         'url' => route('employees.show', $employee->id),
                     ];
                 }
@@ -257,6 +263,7 @@ class StructureController extends Controller
                         'id' => $divChiefNodeId,
                         'name' => $divChief->getFullNameAttribute(),
                         'type' => 'employee',
+                        'isChief' => true,  // ← ДОБАВИТЬ
                         'url' => route('employees.show', $divChief->id),
                     ];
                 }
@@ -289,6 +296,7 @@ class StructureController extends Controller
                             'id' => $empId,
                             'name' => $emp->getFullNameAttribute(),
                             'type' => 'employee',
+                            'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
                             'url' => route('employees.show', $emp->id),
                         ];
                     }
