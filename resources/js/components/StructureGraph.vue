@@ -106,7 +106,8 @@ export default {
                 commissariat: '#A60644',
                 department: '#565A5B',
                 division: '#7F7F7F',
-                employee: '#BFBFBF'
+                employee: '#BFBFBF',
+                group: '#3a86ff'  // Синий цвет для узлов-групп
             };
             return colors[type] || '#999';
         },
@@ -282,8 +283,8 @@ export default {
             this.simulation.on('tick', () => {
                 this.updatePositions();
             });
-        },  
-        
+        },
+
         draw(nodesData, linksData) {
             this.linkElements = this.g.append('g')
                 .selectAll('line')

@@ -10,7 +10,7 @@
 
 @section('content')
     {{-- Кнопка сброса вида --}}
-    <button id="resetView"
+    {{-- <button id="resetView"
         class="fixed bottom-5 right-5 z-[1000] px-4 py-2.5 rounded-xl bg-[#060606] text-white text-sm font-medium hover:bg-[#060606]/80 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
         <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -18,7 +18,34 @@
             </path>
         </svg>
         Вернуться к центру
-    </button>
+    </button> --}}
+
+    <!-- Контейнер группы кнопок -->
+    <div class="fixed bottom-5 right-5 z-[1000] flex flex-col gap-3">
+
+        <!-- Розовая кнопка -->
+        <a href="{{ route("structure.obsidian", [
+            "id"=> $commissariat->id
+        ]) }}"
+            class="px-4 py-2.5 rounded-xl bg-[#A60644] text-white text-sm font-medium hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
+            Узловая структура
+        </a>
+
+        <!-- Тёмная кнопка (оригинал) -->
+        <button id="resetView"
+            class="px-4 py-2.5 rounded-xl bg-[#060606] text-white text-sm font-medium hover:bg-[#060606]/80 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                </path>
+            </svg>
+            Вернуться к центру
+        </button>
+
+    </div>
+
+
+
 
     {{-- Кнопка назад --}}
     <a href="{{ route('structure.index') }}"
