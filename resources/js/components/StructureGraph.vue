@@ -282,7 +282,7 @@ export default {
             this.simulation.on('tick', () => {
                 this.updatePositions();
             });
-        },
+        },  
         
         draw(nodesData, linksData) {
             this.linkElements = this.g.append('g')
