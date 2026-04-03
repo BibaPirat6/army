@@ -15,9 +15,4 @@
             :links="{{ json_encode($graphData['links']) }}">
         </structure-graph>
     </div>
-    
-    {{-- Отладка: выводим данные в консоль --}}
-    <script>
-        console.log('Graph data:', @json($graphData));
-    </script>
 @endsection

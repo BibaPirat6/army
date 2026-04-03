@@ -2,16 +2,57 @@
     <div class="graph-container">
         <div ref="svgContainer" class="svg-container"></div>
         
+        <!-- Управление -->
         <div class="controls">
-            <button @click="zoomIn">+</button>
-            <button @click="zoomOut">-</button>
-            <button @click="resetView">⟳</button>
+            <button @click="zoomIn" class="control-btn" title="Приблизить">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </button>
+            <button @click="zoomOut" class="control-btn" title="Отдалить">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                </svg>
+            </button>
+            <button @click="resetView" class="control-btn" title="Сбросить вид">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+            <button @click="fitToScreen" class="control-btn" title="Вписать в экран">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+            </button>
         </div>
         
-        <div v-if="selectedNode" class="info-panel">
-            <h3>{{ selectedNode.name }}</h3>
-            <p>Тип: {{ selectedNode.type }}</p>
-            <button @click="selectedNode = null">Закрыть</button>
+        <!-- Модальное окно для узлов (отдел/отделение/комиссариат) -->
+        <div v-if="selectedNode && selectedNode.type !== 'employee'" class="modal-overlay" @click.self="closeModal">
+            <div class="modal-content">
+                <div class="modal-header" :style="{ backgroundColor: getNodeColor(selectedNode.type) }">
+                    <h3>{{ selectedNode.name }}</h3>
+                    <button @click="closeModal" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Тип:</strong> {{ getNodeTypeLabel(selectedNode.type) }}</p>
+                    <p><strong>ID:</strong> {{ selectedNode.id }}</p>
+                    <div class="modal-buttons">
+                        <button @click="addEmployee" class="btn-add">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Добавить сотрудника
+                        </button>
+                        <button v-if="selectedNode.type !== 'employee'" @click="addSubdivision" class="btn-add">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Добавить {{ selectedNode.type === 'commissariat' ? 'отдел' : 'отделение' }}
+                        </button>
+                        <button @click="closeModal" class="btn-cancel">Закрыть</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -38,17 +79,17 @@ export default {
             simulation: null,
             selectedNode: null,
             width: window.innerWidth,
-            height: window.innerHeight
+            height: window.innerHeight,
+            nodeElements: null,
+            linkElements: null
         };
     },
     mounted() {
-        console.log('Component mounted, nodes:', this.nodes);
-        console.log('Component mounted, links:', this.links);
+        console.log('Component mounted, nodes:', this.nodes.length);
+        console.log('Component mounted, links:', this.links.length);
         
         if (this.nodes.length > 0) {
             this.initGraph();
-        } else {
-            console.warn('No nodes data received!');
         }
         
         window.addEventListener('resize', this.handleResize);
@@ -62,7 +103,6 @@ export default {
     watch: {
         nodes: {
             handler(newVal) {
-                console.log('Nodes changed:', newVal);
                 if (newVal.length > 0) {
                     this.initGraph();
                 }
@@ -71,6 +111,26 @@ export default {
         }
     },
     methods: {
+        getNodeColor(type) {
+            const colors = {
+                commissariat: '#A60644',
+                department: '#565A5B',
+                division: '#7F7F7F',
+                employee: '#BFBFBF'
+            };
+            return colors[type] || '#999';
+        },
+        
+        getNodeTypeLabel(type) {
+            const labels = {
+                commissariat: 'Комиссариат',
+                department: 'Отдел',
+                division: 'Отделение',
+                employee: 'Сотрудник'
+            };
+            return labels[type] || type;
+        },
+        
         initGraph() {
             const container = this.$refs.svgContainer;
             if (!container) {
@@ -84,39 +144,87 @@ export default {
                 .append('svg')
                 .attr('width', this.width)
                 .attr('height', this.height)
-                .call(d3.zoom().on('zoom', (event) => {
-                    if (this.g) {
-                        this.g.attr('transform', event.transform);
-                    }
-                }));
+                .call(d3.zoom()
+                    .scaleExtent([0.1, 3])
+                    .on('zoom', (event) => {
+                        if (this.g) {
+                            this.g.attr('transform', event.transform);
+                        }
+                    }));
             
             this.g = this.svg.append('g');
             
-            // Копируем узлы для симуляции
+            // Копируем данные для симуляции
             const simulationNodes = this.nodes.map(n => ({ ...n }));
-            const simulationLinks = this.links.map(l => ({ ...l }));
+            const simulationLinks = this.links.map(l => ({ 
+                source: l.source, 
+                target: l.target 
+            }));
+            
+            // Создаем карту узлов для быстрого доступа
+            const nodeMap = new Map();
+            simulationNodes.forEach(node => {
+                nodeMap.set(node.id, node);
+            });
+            
+            // Преобразуем ссылки из ID в объекты
+            simulationLinks.forEach(link => {
+                if (typeof link.source === 'string') {
+                    link.source = nodeMap.get(link.source);
+                }
+                if (typeof link.target === 'string') {
+                    link.target = nodeMap.get(link.target);
+                }
+            });
             
             this.simulation = d3.forceSimulation(simulationNodes)
-                .force('link', d3.forceLink(simulationLinks).id(d => d.id).distance(150))
-                .force('charge', d3.forceManyBody().strength(-300))
+                .force('link', d3.forceLink(simulationLinks)
+                    .id(d => d.id)
+                    .distance(d => {
+                        // Разное расстояние в зависимости от типа
+                        if (d.source.type === 'commissariat' || d.target.type === 'commissariat') return 200;
+                        if (d.source.type === 'department' || d.target.type === 'department') return 160;
+                        if (d.source.type === 'division' || d.target.type === 'division') return 130;
+                        return 100;
+                    })
+                    .strength(0.5))
+                .force('charge', d3.forceManyBody()
+                    .strength(d => {
+                        if (d.type === 'commissariat') return -800;
+                        if (d.type === 'department') return -500;
+                        if (d.type === 'division') return -300;
+                        return -200;
+                    }))
                 .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-                .force('collision', d3.forceCollide().radius(50));
+                .force('collision', d3.forceCollide().radius(60));
             
+            this.draw(simulationNodes, simulationLinks);
+            
+            this.simulation.on('tick', () => {
+                this.updatePositions();
+            });
+        },
+        
+        draw(nodesData, linksData) {
             // Рисуем связи
             this.linkElements = this.g.append('g')
+                .attr('class', 'links')
                 .selectAll('line')
-                .data(simulationLinks)
+                .data(linksData)
                 .enter()
                 .append('line')
                 .attr('stroke', '#999')
-                .attr('stroke-width', 2);
+                .attr('stroke-width', 1.5)
+                .attr('stroke-opacity', 0.5);
             
             // Рисуем узлы
             this.nodeElements = this.g.append('g')
+                .attr('class', 'nodes')
                 .selectAll('g')
-                .data(simulationNodes)
+                .data(nodesData)
                 .enter()
                 .append('g')
+                .attr('cursor', 'pointer')
                 .call(d3.drag()
                     .on('start', (event, d) => {
                         if (!event.active) this.simulation.alphaTarget(0.3).restart();
@@ -133,58 +241,165 @@ export default {
                         d.fy = null;
                     }));
             
-            // Круги
+            // Круг узла
             this.nodeElements.append('circle')
-                .attr('r', 30)
-                .attr('fill', d => {
-                    if (d.type === 'commissariat') return '#A60644';
-                    if (d.type === 'department') return '#565A5B';
-                    if (d.type === 'division') return '#7F7F7F';
-                    return '#BFBFBF';
+                .attr('r', d => {
+                    if (d.type === 'commissariat') return 45;
+                    if (d.type === 'department') return 38;
+                    if (d.type === 'division') return 32;
+                    return 28;
                 })
+                .attr('fill', d => this.getNodeColor(d.type))
                 .attr('stroke', '#060606')
                 .attr('stroke-width', 2);
             
-            // Текст
+            // Иконка
             this.nodeElements.append('text')
-                .text(d => d.name.length > 15 ? d.name.substring(0, 12) + '...' : d.name)
                 .attr('text-anchor', 'middle')
                 .attr('dy', '0.35em')
                 .attr('fill', 'white')
-                .style('font-size', '12px')
-                .style('font-weight', 'bold');
+                .style('font-size', d => d.type === 'commissariat' ? '20px' : '16px')
+                .style('font-weight', 'bold')
+                .text(d => {
+                    if (d.type === 'commissariat') return '★';
+                    if (d.type === 'department') return '●';
+                    if (d.type === 'division') return '◆';
+                    return '👤';
+                });
             
-            // Клик
+            // Название
+            this.nodeElements.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', d => d.type === 'commissariat' ? '2.5em' : '2.2em')
+                .attr('fill', '#060606')
+                .style('font-size', '10px')
+                .style('font-weight', '500')
+                .text(d => {
+                    let name = d.name;
+                    if (name.length > 18) {
+                        name = name.substring(0, 15) + '...';
+                    }
+                    return name;
+                });
+            
+            // Обработчик клика
             this.nodeElements.on('click', (event, d) => {
                 event.stopPropagation();
-                this.selectedNode = d;
+                
+                if (d.type === 'employee') {
+                    // Для сотрудника - переход на страницу
+                    if (d.url) {
+                        window.location.href = d.url;
+                    }
+                } else {
+                    // Для отдела/отделения/комиссариата - показываем модальное окно
+                    this.selectedNode = d;
+                }
             });
             
-            // Обновление позиций
-            this.simulation.on('tick', () => {
+            // Эффект при наведении
+            this.nodeElements.on('mouseenter', function(event, d) {
+                d3.select(this).select('circle')
+                    .transition()
+                    .duration(200)
+                    .attr('r', d => {
+                        if (d.type === 'commissariat') return 52;
+                        if (d.type === 'department') return 44;
+                        if (d.type === 'division') return 38;
+                        return 34;
+                    })
+                    .attr('stroke-width', 3);
+            }).on('mouseleave', function() {
+                d3.select(this).select('circle')
+                    .transition()
+                    .duration(200)
+                    .attr('r', d => {
+                        if (d.type === 'commissariat') return 45;
+                        if (d.type === 'department') return 38;
+                        if (d.type === 'division') return 32;
+                        return 28;
+                    })
+                    .attr('stroke-width', 2);
+            });
+        },
+        
+        updatePositions() {
+            if (this.linkElements) {
                 this.linkElements
                     .attr('x1', d => d.source.x)
                     .attr('y1', d => d.source.y)
                     .attr('x2', d => d.target.x)
                     .attr('y2', d => d.target.y);
-                
+            }
+            
+            if (this.nodeElements) {
                 this.nodeElements
                     .attr('transform', d => `translate(${d.x},${d.y})`);
-            });
-            
-            console.log('Graph initialized with', simulationNodes.length, 'nodes');
+            }
         },
         
         zoomIn() {
-            this.svg.transition().call(d3.zoom().scaleBy, 1.2);
+            this.svg.transition().duration(300).call(d3.zoom().scaleBy, 1.2);
         },
         
         zoomOut() {
-            this.svg.transition().call(d3.zoom().scaleBy, 0.8);
+            this.svg.transition().duration(300).call(d3.zoom().scaleBy, 0.8);
         },
         
         resetView() {
-            this.svg.transition().call(d3.zoom().transform, d3.zoomIdentity);
+            this.svg.transition().duration(500).call(d3.zoom().transform, d3.zoomIdentity);
+        },
+        
+        fitToScreen() {
+            if (!this.nodeElements) return;
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            this.nodeElements.each(function(d) {
+                minX = Math.min(minX, d.x);
+                minY = Math.min(minY, d.y);
+                maxX = Math.max(maxX, d.x);
+                maxY = Math.max(maxY, d.y);
+            });
+            
+            const width = maxX - minX + 200;
+            const height = maxY - minY + 200;
+            const scale = Math.min(this.width / width, this.height / height, 1.5);
+            const translateX = (this.width - (minX + maxX) / 2 * scale) / 2;
+            const translateY = (this.height - (minY + maxY) / 2 * scale) / 2;
+            
+            this.svg.transition()
+                .duration(500)
+                .call(d3.zoom().transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+        },
+        
+        closeModal() {
+            this.selectedNode = null;
+        },
+        
+        addEmployee() {
+            if (this.selectedNode) {
+                let url = '';
+                if (this.selectedNode.type === 'commissariat') {
+                    url = `/employees/create?commissariat_id=${this.selectedNode.id.replace('commissariat_', '')}&back_url=${window.location.href}`;
+                } else if (this.selectedNode.type === 'department') {
+                    url = `/employees/create?department_id=${this.selectedNode.id.replace('department_', '')}&back_url=${window.location.href}`;
+                } else if (this.selectedNode.type === 'division') {
+                    url = `/employees/create?division_id=${this.selectedNode.id.replace('division_', '')}&back_url=${window.location.href}`;
+                }
+                window.location.href = url;
+            }
+        },
+        
+        addSubdivision() {
+            if (this.selectedNode) {
+                let url = '';
+                if (this.selectedNode.type === 'commissariat') {
+                    url = `/departments/create?commissariat_id=${this.selectedNode.id.replace('commissariat_', '')}&back_url=${window.location.href}`;
+                } else if (this.selectedNode.type === 'department') {
+                    url = `/divisions/create?department_id=${this.selectedNode.id.replace('department_', '')}&back_url=${window.location.href}`;
+                }
+                window.location.href = url;
+            }
         },
         
         handleResize() {
@@ -229,47 +444,141 @@ export default {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.controls button {
+.control-btn {
     width: 40px;
     height: 40px;
     border: none;
     background: #f5f5f5;
     border-radius: 8px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+    background: #A60644;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 350px;
+    max-width: 90%;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    color: white;
+}
+
+.modal-header h3 {
+    margin: 0;
     font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-body p {
+    margin: 8px 0;
+    color: #060606;
+}
+
+.modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-add, .btn-cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
     transition: all 0.2s;
 }
 
-.controls button:hover {
+.btn-add {
     background: #A60644;
     color: white;
 }
 
-.info-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    z-index: 200;
-    min-width: 250px;
+.btn-add:hover {
+    background: #6b0229;
+    transform: translateY(-1px);
 }
 
-.info-panel h3 {
-    margin: 0 0 10px 0;
-    color: #A60644;
+.btn-cancel {
+    background: #e0e0e0;
+    color: #060606;
 }
 
-.info-panel button {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background: #A60644;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+.btn-cancel:hover {
+    background: #ccc;
 }
 </style>
