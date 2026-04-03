@@ -14,33 +14,32 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Получаем всех пользователей
-        $adminUser = User::all();
+        // Получаем всех пользователей и персон, отсортированных по ID
+        $users = User::orderBy('id')->get();
+        $persons = Person::orderBy('id')->get();
 
-        // Получаем существующих персон
-        $persons = Person::all();
-
-        // Создаём сотрудников
-        $employees = [
-            [
-                'user_id' => $adminUser[0]->id,  // добавляем ->id
-                'person_id' => $persons[0]->id,  // добавляем ->id
-                'created_at' => now(),
-            ],
-            [
-                'user_id' => $adminUser[1]->id,  // добавляем ->id
-                'person_id' => $persons[1]->id,  // добавляем ->id
-                'created_at' => now(),
-            ],
-            [
-                'user_id' => $adminUser[2]->id,  // добавляем ->id
-                'person_id' => $persons[2]->id,  // добавляем ->id
-                'created_at' => now(),
-            ],
-        ];
-
-        foreach ($employees as $employeeData) {
-            Employee::create($employeeData);
+        // Проверка: должно быть минимум 60 записей в каждой таблице
+        if ($users->count() < 60 || $persons->count() < 60) {
+            throw new \RuntimeException(
+                "Недостаточно данных: пользователей — {$users->count()}, персон — {$persons->count()}. " .
+                "Убедитесь, что UserSeeder и PersonSeeder отработали корректно."
+            );
         }
+
+        // Формируем массив для вставки: 1 пользователь → 1 персона (по индексу)
+        $employees = [];
+        $now = now();
+
+        for ($i = 0; $i < 60; $i++) {
+            $employees[] = [
+                'user_id'   => $users[$i]->id,
+                'person_id' => $persons[$i]->id,
+                'created_at'=> $now,
+                'updated_at'=> $now, // на случай, если в миграции есть timestamps()
+            ];
+        }
+
+        // Массовая вставка (один запрос вместо 60)
+        Employee::insert($employees);
     }
 }
