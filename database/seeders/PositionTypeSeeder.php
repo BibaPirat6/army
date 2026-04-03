@@ -7,23 +7,39 @@ use Illuminate\Support\Facades\DB;
 
 class PositionTypeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $now = now();
 
-        foreach ([
+        $types = [
+            // Основные направления
             ['name' => 'Управленческие'],
-            ['name' => 'Операционные'],
-            ['name' => 'Обеспечение делопроизводства и логистики'],
-            ['name' => 'Творческие, поддержка'],
-        ] as $row) {
+            ['name' => 'Операционные / Призывные'],
+            ['name' => 'Кадровая работа'],
+            ['name' => 'Финансово-экономические'],
+            ['name' => 'Юридические'],
+            
+            // Технические и обеспечивающие
+            ['name' => 'Информационные технологии'],
+            ['name' => 'Связь и коммуникации'],
+            ['name' => 'Документооборот и архив'],
+            ['name' => 'Материально-техническое обеспечение'],
+            ['name' => 'Транспорт и логистика'],
+            
+            // Специализированные
+            ['name' => 'Медицинские / ВВЭК'],
+            ['name' => 'Безопасность и режим'],
+            ['name' => 'Учебно-методические'],
+            ['name' => 'Общие / Вспомогательные'],
+        ];
+
+        foreach ($types as $row) {
             DB::table('position_types')->updateOrInsert(
                 ['name' => $row['name']],
-                ['name' => $row['name'], 'updated_at' => $now, 'created_at' => $now]
+                ['name' => $row['name'], 'created_at' => $now, 'updated_at' => $now]
             );
         }
+
+        $this->command->info('✓ Position types seeded: '.count($types));
     }
 }

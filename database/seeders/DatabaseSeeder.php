@@ -26,6 +26,11 @@ class DatabaseSeeder extends Seeder
             
             EmployeePositionStatusSeeder::class,
             EmployeePositionRateSeeder::class,
+
+
+            CommissariatSeeder::class,
+            DepartmentSeeder::class,
+            DivisionSeeder::class,
         ]);
     }
 }
