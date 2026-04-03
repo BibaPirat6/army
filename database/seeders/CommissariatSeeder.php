@@ -13,16 +13,16 @@ class CommissariatSeeder extends Seeder
 
         $commissariats = [
             [
-                'name' => 'Военный комиссариат г. Москвы',
-                'longitude' => 37615560, // * 1e6 для integer
-                'latitude' => 55751244,
+                'name' => 'Военный комиссариат г. Северодвинск',
+                'longitude' => 29,
+                'latitude' => 74,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'name' => 'Военный комиссариат г. Санкт-Петербурга',
-                'longitude' => 30315466,
-                'latitude' => 59938632,
+                'name' => 'Военный комиссариат г. Архангельск',
+                'longitude' => 36,
+                'latitude' => 73,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
