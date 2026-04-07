@@ -27,6 +27,10 @@
             <div class="p-6 md:p-8">
 
                 <div class="space-y-4">
+
+                     <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1">
+                        {{ $division['name'] }}
+                    </h2>
                     {{-- комиссариат --}}
                     <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                         <!-- Заголовок аккордеона -->
@@ -123,7 +127,7 @@
                                         <!-- Заголовок аккордеона -->
                                         <summary
                                             class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                                            <h1 class="text-xl font-bold text-[#060606]">Данные сотрудника</h1>
+                                            <h1 class="text-xl font-bold text-[#060606]">Данные начальника</h1>
                                             <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
@@ -296,7 +300,7 @@
                                         <!-- Заголовок аккордеона -->
                                         <summary
                                             class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                                            <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
+                                            <h1 class="text-xl font-bold text-[#060606]">Должности начальника</h1>
                                             <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">

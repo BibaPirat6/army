@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Добавление коммиссариата
+    {{ $employee->getFullNameAttribute()}}
 @endsection
 
 @section('content')
@@ -28,6 +28,9 @@
         <!-- Форма -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
+                 <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1">
+                        {{ $employee->getFullNameAttribute()}}
+                    </h2>
                 {{-- сотрудник --}}
                                     <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden mb-4">
                                         <!-- Заголовок аккордеона -->

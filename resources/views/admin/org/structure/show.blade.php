@@ -9,24 +9,13 @@
 @endsection
 
 @section('content')
-    {{-- Кнопка сброса вида --}}
-    {{-- <button id="resetView"
-        class="fixed bottom-5 right-5 z-[1000] px-4 py-2.5 rounded-xl bg-[#060606] text-white text-sm font-medium hover:bg-[#060606]/80 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95">
-        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-            </path>
-        </svg>
-        Вернуться к центру
-    </button> --}}
-
     <!-- Контейнер группы кнопок -->
     <div class="fixed bottom-5 right-5 z-[1000] flex flex-col gap-3">
 
         <!-- Розовая кнопка -->
         <a href="{{ route("structure.obsidian", [
-            "id"=> $commissariat->id
-        ]) }}"
+        "id" => $commissariat->id
+    ]) }}"
             class="px-4 py-2.5 rounded-xl bg-[#A60644] text-white text-sm font-medium hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
             Узловая структура
         </a>
@@ -100,13 +89,6 @@
                     <a href="{{ route('commissariats.show', ['id' => $commissariat->id, 'back_url' => url()->full()]) }}"
                         class="chief-link block w-[360px] bg-gradient-to-r from-[#060606] to-[#1a1a1a] rounded-2xl shadow-2xl border border-white/10 card-hover no-underline">
                         <div class="flex items-center gap-4 p-5">
-                            <div
-                                class="w-16 h-16 rounded-full bg-gradient-to-br from-[#A60644] to-[#6b0229] flex items-center justify-center shadow-lg">
-                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
                             <div class="flex-1">
                                 <div class="text-xs text-white/60 uppercase tracking-wider mb-1">Начальник комиссариата
                                 </div>
@@ -118,13 +100,18 @@
                                     <div class="text-white/50 italic">Не назначен</div>
                                 @endif
                             </div>
-                            <div
-                                class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#A60644] transition-all duration-200">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
+                            <div class="relative group">
+                                <!-- Сам значок -->
+                                <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center 
+                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
+                                            transition-all duration-200 cursor-pointer">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18h.01">
+                                        </path>
+                                    </svg>
+                                </div>
                             </div>
                         </div>
                     </a>
@@ -233,18 +220,20 @@
                                             </div>
                                             <div class="space-y-1.5">
                                                 @foreach ($departmentEmployees as $employee)
-                                                    <div
-                                                        class="flex items-center justify-between bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:shadow-md transition-all duration-200">
-                                                        <div class="flex-1">
-                                                            <span class="text-sm text-[#060606] truncate block">
-                                                                {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
-                                                            </span>
-                                                        </div>
-                                                        <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                            class="text-[#A60644] hover:text-[#6b0229] transition-colors text-xs font-medium ml-2">
-                                                            Подробнее →
-                                                        </a>
-                                                    </div>
+                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+
+                                                        <span class="text-sm text-[#060606] font-medium truncate min-w-0">
+                                                            {{ $employee->getFullNameAttribute() ?? 'Нет данных' }}
+                                                        </span>
+
+                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                    </a>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -297,18 +286,20 @@
                                                 @if($divisionEmployees->count() > 0)
                                                     <div class="mt-2 space-y-1.5">
                                                         @foreach ($divisionEmployees as $employeePosition)
-                                                            <div
-                                                                class="flex items-center justify-between bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:shadow-md transition-all duration-200">
-                                                                <div class="flex-1">
-                                                                    <span class="text-sm text-[#060606] truncate block">
-                                                                        {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "Нет данных" }}
-                                                                    </span>
-                                                                </div>
-                                                                <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
-                                                                    class="text-[#A60644] hover:text-[#6b0229] transition-colors text-xs font-medium ml-2">
-                                                                    Подробнее →
-                                                                </a>
-                                                            </div>
+                                                            <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
+                                                                class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+
+                                                                <span class="text-sm text-[#060606] font-medium truncate min-w-0">
+                                                                    {{ optional($employeePosition->employee)->getFullNameAttribute() ?? 'Нет данных' }}
+                                                                </span>
+
+                                                                <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
+                                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                        d="M9 5l7 7-7 7"></path>
+                                                                </svg>
+                                                            </a>
                                                         @endforeach
                                                     </div>
                                                 @else
@@ -385,27 +376,20 @@
                                             </div>
                                             <div class="space-y-2">
                                                 @foreach ($employeesNotIndependent as $employee)
-                                                    <div
-                                                        class="flex items-center justify-between bg-[#f5f5f5] rounded-lg p-3 border border-[#BFBFBF]/20 hover:shadow-md transition-all duration-200">
-                                                        <div class="flex-1">
-                                                            @if($employee->person)
-                                                                <div class="text-[#060606] font-medium">{{ $employee->person->last_name }}
-                                                                    {{ $employee->person->first_name }}
-                                                                </div>
-                                                                <div class="text-xs text-[#565A5B]">
-                                                                    {{ $employee->person->patronymic ?? '' }}
-                                                                </div>
-                                                            @else
-                                                                <div class="text-[#565A5B] italic">
-                                                                    {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                        <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                            class="text-[#A60644] hover:text-[#6b0229] transition-colors text-sm font-medium ml-2">
-                                                            Подробнее →
-                                                        </a>
-                                                    </div>
+                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+
+                                                        <span class="text-sm text-[#060606] font-medium truncate min-w-0">
+                                                            {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
+                                                        </span>
+
+                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                    </a>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -421,18 +405,20 @@
                                             </div>
                                             <div class="space-y-2">
                                                 @foreach ($employeesIndependent as $employee)
-                                                    <div
-                                                        class="flex items-center justify-between bg-gradient-to-r from-[#f5f5f5] to-[#faf5f5] rounded-lg p-3 border border-[#A60644]/20 hover:shadow-md transition-all duration-200">
-                                                        <div class="flex-1">
-                                                            <div class="text-[#060606] font-medium">
-                                                                {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
-                                                            </div>
-                                                        </div>
-                                                        <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                            class="text-[#A60644] hover:text-[#6b0229] transition-colors text-sm font-medium ml-2">
-                                                            Подробнее →
-                                                        </a>
-                                                    </div>
+                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+
+                                                        <span class="text-sm text-[#060606] font-medium truncate min-w-0">
+                                                            {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
+                                                        </span>
+
+                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M9 5l7 7-7 7"></path>
+                                                        </svg>
+                                                    </a>
                                                 @endforeach
                                             </div>
                                         </div>
@@ -499,22 +485,20 @@
 
                                         @if($regularEmployees->count() > 0)
                                             @foreach ($regularEmployees as $employeePosition)
-                                                <div
-                                                    class="flex items-center justify-between bg-[#f5f5f5] rounded-lg p-3 border border-[#BFBFBF]/20 hover:shadow-md transition-all duration-200">
-                                                    <div class="flex-1">
-                                                        @if(optional($employeePosition->employee)->getFullNameAttribute())
-                                                            <div class="text-[#060606] font-medium">
-                                                                {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "" }}
-                                                            </div>
-                                                        @else
-                                                            <div class="text-[#565A5B] italic">Нет данных</div>
-                                                        @endif
-                                                    </div>
-                                                    <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
-                                                        class="text-[#A60644] hover:text-[#6b0229] transition-colors text-sm font-medium ml-2">
-                                                        Подробнее →
-                                                    </a>
-                                                </div>
+                                                <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
+                                                    class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                                                                                        hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+
+                                                    <span class="text-sm text-[#060606] font-medium truncate min-w-0">
+                                                        {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "Нет данных" }}
+                                                    </span>
+
+                                                    <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M9 5l7 7-7 7"></path>
+                                                    </svg>
+                                                </a>
                                             @endforeach
                                         @else
                                             <div class="text-center text-[#565A5B] py-4 italic">Нет сотрудников</div>

@@ -18,30 +18,30 @@
                     <ul class="space-y-3">
                         @foreach ($commissariats as $commissariat)
                             <li
-                                class="bg-white rounded-lg border border-[#BFBFBF] p-4 hover:bg-[#A60644]/5 transition-colors duration-200">
+                                class="bg-white rounded-lg border border-[#BFBFBF] hover:border-[#A60644] hover:bg-[#A60644]/5 transition-all duration-200">
                                 <a href="{{ route('structure.show', $commissariat->id) }}"
-                                    class="inline-flex items-center text-[#060606] font-medium hover:text-[#A60644] transition-colors duration-200">
-                                    <svg class="w-5 h-5 mr-3 text-[#A60644]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                                        </path>
-                                    </svg>
-                                    {{ $commissariat->name }}
+                                    class="block w-full p-4 flex items-center justify-between group cursor-pointer">
 
-                                    <span>
-                                        ⠀(ID: {{ $commissariat->id }})
+                                    <!-- Левая часть: Иконка + Название -->
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 mr-3 text-[#A60644] group-hover:scale-110 transition-transform duration-200"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                            </path>
+                                        </svg>
+                                        <span
+                                            class="text-[#060606] font-medium group-hover:text-[#A60644] transition-colors duration-200">
+                                            {{ $commissariat->name }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Правая часть: ID (опционально, можно убрать если не нужно) -->
+                                    <span
+                                        class="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-1 rounded group-hover:bg-[#A60644]/10 group-hover:text-[#A60644] transition-colors duration-200">
+                                        #{{ $commissariat->id }}
                                     </span>
 
-                                    {{-- <svg class="w-4 h-4 ml-2 text-[#A60644]" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                                        </path>
-                                    </svg>
-
-                                    <p>
-                                        ⠀(X: {{ $commissariat->longitude }}
-                                        Y: {{ $commissariat->latitude }})
-                                    </p> --}}
                                 </a>
                             </li>
                         @endforeach
@@ -80,9 +80,9 @@
         <div class="grid grid-markers">
             @foreach ($commissariats as $commissariat)
                 <div class="marker" data-id="{{ $commissariat->id }}" style="
-                                    left: {{ ($commissariat->longitude / 200) * 100 }}%;
-                                    top: {{ ($commissariat->latitude / 120) * 100 }}%;
-                                "
+                                            left: {{ ($commissariat->longitude / 200) * 100 }}%;
+                                            top: {{ ($commissariat->latitude / 120) * 100 }}%;
+                                        "
                     title="{{ $commissariat->name }} (X: {{ $commissariat->longitude }} Y: {{ $commissariat->latitude }})">
                     {{ $commissariat->id }}
                 </div>

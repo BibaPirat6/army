@@ -27,6 +27,9 @@
             <div class="p-6 md:p-8">
 
                 <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1">
+                        {{ $commissariat['name'] }}
+                    </h2>
                     {{-- комиссариат --}}
                     <details class="group bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg overflow-hidden">
                         <!-- Заголовок аккордеона -->
@@ -106,7 +109,7 @@
                                         <!-- Заголовок аккордеона -->
                                         <summary
                                             class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                                            <h1 class="text-xl font-bold text-[#060606]">Данные сотрудника</h1>
+                                            <h1 class="text-xl font-bold text-[#060606]">Данные начальника</h1>
                                             <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
@@ -155,7 +158,7 @@
                                                     @endphp
 
 
-                                                    @if ($columnType === 'longtext' && $value && $comment==="file")
+                                                    @if ($columnType === 'longtext' && $value && $comment === "file")
                                                         {{-- Вывод файлов как квадратиков с превью и кнопкой скачивания --}}
                                                         <div class="flex gap-2 flex-wrap">
                                                             @php
@@ -173,12 +176,14 @@
 
                                                                 <div class="relative group w-12 h-12">
                                                                     {{-- Обертка для открытия в новой вкладке --}}
-                                                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
+                                                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
+                                                                        class="block w-full h-full">
                                                                         @if ($isImage)
                                                                             <img src="{{ $fileUrl }}" alt="{{ $filename }}"
                                                                                 class="w-full h-full object-cover rounded-lg border border-[#BFBFBF] cursor-pointer transition-opacity duration-150 group-hover:opacity-80">
                                                                         @else
-                                                                            <div class="w-full h-full bg-gray-100 rounded-lg border border-[#BFBFBF] flex items-center justify-center text-xs font-bold text-[#060606]">
+                                                                            <div
+                                                                                class="w-full h-full bg-gray-100 rounded-lg border border-[#BFBFBF] flex items-center justify-center text-xs font-bold text-[#060606]">
                                                                                 {{ strtoupper($extension ?: 'FILE') }}
                                                                             </div>
                                                                         @endif
@@ -188,7 +193,8 @@
                                                                     <a href="{{ $fileUrl }}" download="{{ $filename }}"
                                                                         class="absolute -right-1 -bottom-1 transform translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-white rounded-full p-1 shadow-md border border-[#E5E7EB]"
                                                                         title="Скачать {{ $filename }}">
-                                                                        <svg class="w-4 h-4 text-[#060606]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <svg class="w-4 h-4 text-[#060606]" fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                                 d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                                                                         </svg>
@@ -197,7 +203,7 @@
                                                             @endforeach
                                                         </div>
 
-                                                    @elseif ($columnType === 'longtext' && $value && $comment==="json")
+                                                    @elseif ($columnType === 'longtext' && $value && $comment === "json")
                                                         {{-- Вывод JSON как список --}}
                                                         @php
                                                             $jsonData = is_string($value) ? json_decode($value, true) : $value;
@@ -216,10 +222,13 @@
                                                                         @endphp
                                                                         @if ($assoc)
                                                                             @foreach ($item as $k => $v)
-                                                                                <span class="inline-block mr-1 text-xs font-medium">{{ $k }}:</span><span class="text-xs">{{ is_scalar($v) ? $v : json_encode($v) }}</span>@if (!$loop->last), @endif
+                                                                                <span class="inline-block mr-1 text-xs font-medium">{{ $k }}:</span><span
+                                                                                    class="text-xs">{{ is_scalar($v) ? $v : json_encode($v) }}</span>@if (!$loop->last),
+                                                                                    @endif
                                                                             @endforeach
                                                                         @else
-                                                                            {{ implode(', ', array_map(function($v){ return is_scalar($v)? $v : json_encode($v); }, $item)) }}
+                                                                                    {{ implode(', ', array_map(function ($v) {
+                                                                            return is_scalar($v) ? $v : json_encode($v); }, $item)) }}
                                                                         @endif
                                                                     @else
                                                                         {{ json_encode($item) }}
@@ -273,7 +282,7 @@
                                         <!-- Заголовок аккордеона -->
                                         <summary
                                             class="flex items-center justify-between cursor-pointer p-4 hover:bg-[#A60644]/10 transition-colors duration-200">
-                                            <h1 class="text-xl font-bold text-[#060606]">Должности</h1>
+                                            <h1 class="text-xl font-bold text-[#060606]">Должности начальника</h1>
                                             <svg class="w-5 h-5 text-[#565A5B] group-open:rotate-180 transition-transform duration-300"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
