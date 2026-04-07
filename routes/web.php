@@ -92,12 +92,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/divisions/{id}', [DivisionsController::class, 'update'])->name('divisions.update');
     Route::delete('/divisions/{id}', [DivisionsController::class, 'delete'])->name('divisions.delete');
 
+    // добавить некое назначение какомуто сотруднику
+    Route::get('/employee-positions/add', [EmployeePositionsController::class, 'add'])->name('employee-positions.add');
+    Route::post('/employee-positions/add', [EmployeePositionsController::class, 'addStore'])->name('employee-positions.addStore');
     // назначение сотруднику должности
     Route::get('/employee-positions/{id}/create', [EmployeePositionsController::class, 'create'])->name('employee-positions.create');
     Route::post('/employee-positions/{id}', [EmployeePositionsController::class, 'store'])->name('employee-positions.store');
     Route::get('/employee-positions/{id}/edit', [EmployeePositionsController::class, 'edit'])->name('employee-positions.edit');
     Route::put('/employee-positions/{id}', [EmployeePositionsController::class, 'update'])->name('employee-positions.update');
     Route::delete('/employee-positions/{id}', [EmployeePositionsController::class, 'delete'])->name('employee-positions.delete');
+
 
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');

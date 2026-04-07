@@ -37,14 +37,13 @@ class EmployeePositionsController extends Controller
 
         if ($commissariatId) {
             $commissariat = Commissariat::find($commissariatId);
-        } 
+        }
         if ($departmentId) {
             $department = Department::find($departmentId);
-        } 
+        }
         if ($divisionId) {
             $division = Division::find($divisionId);
-        } 
-
+        }
 
         // Передаем все переменные явно, а не через compact
         return view('admin.org.employee-positions.create', [
@@ -211,13 +210,105 @@ class EmployeePositionsController extends Controller
         return redirect()->to($backUrl)->with('success', 'Должность успешно удалена у сотрудника.');
     }
 
-    public function destroy(Request $request, $id)
+    public function add(Request $request)
     {
-        $employee = Employee::findOrFail($id);
-        EmployeePosition::where('employee_id', $employee->id)->delete();
+        $employees = Employee::all();
+        $positions = Position::all();
+        $commissariats = Commissariat::all();
+        $departments = Department::all();
+        $divisions = Division::all();
+        $employeePositionRates = EmployeePositionRate::all();
 
         $backUrl = $request->get('back_url');
+        $commissariatId = $request->get('commissariat_id');
+        $departmentId = $request->get('department_id');
+        $divisionId = $request->get('division_id');
 
-        return redirect()->to($backUrl)->with('success', 'Все назначения должностей успешно удалены у сотрудника.');
+        // Загружаем данные для отображения
+        $commissariat = null;
+        $department = null;
+        $division = null;
+
+        if ($commissariatId) {
+            $commissariat = Commissariat::find($commissariatId);
+        }
+        if ($departmentId) {
+            $department = Department::find($departmentId);
+        }
+        if ($divisionId) {
+            $division = Division::find($divisionId);
+        }
+
+        // Передаем все переменные явно, а не через compact
+        return view('admin.org.employee-positions.add', [
+            'positions' => $positions,
+            'commissariats' => $commissariats,
+            'departments' => $departments,
+            'divisions' => $divisions,
+            'backUrl' => $backUrl,
+            'employeePositionRates' => $employeePositionRates,
+            'commissariatId' => $commissariatId,
+            'departmentId' => $departmentId,
+            'divisionId' => $divisionId,
+            'commissariat' => $commissariat,
+            'department' => $department,
+            'division' => $division,
+            'employees' => $employees,
+        ]);
+    }
+
+    public function addStore(Request $request)
+    {
+        $data = $request->validate([
+            'chief_employee_id' => 'required|exists:employees,id',
+            'position_id' => 'required|integer|exists:positions,id',
+            'rate' => 'required|numeric',
+
+            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
+            'department_id' => [
+                'nullable',
+                'sometimes',
+                Rule::exists('departments', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+            'division_id' => [
+                'nullable',
+                'sometimes',
+                Rule::exists('divisions', 'id')->where(function ($query) use ($request) {
+                    return $query->where('commissariat_id', $request->commissariat_id);
+                }),
+            ],
+
+            'is_independent' => 'required|integer|in:1,0',
+        ], [
+            'chief_employee_id.required' => 'Выберите сотрудника',
+            'position_id.required' => 'Поле должность обязательно для заполнения.',
+            'position_id.integer' => 'Поле должность должно быть целым числом.',
+            'position_id.exists' => 'Выбранная должность не существует.',
+            'rate.required' => 'Поле ставка обязательно для заполнения.',
+            'rate.numeric' => 'Поле ставка должно быть числом.',
+            'rate.min' => 'Минимальное значение ставки 0.25.',
+            'rate.max' => 'Максимальное значение ставки 2.0.',
+            'commissariat_id.required' => 'Выберите комиссариат',
+            'commissariat_id.exists' => 'Несуществующий комиссариат',
+            'department_id.exists' => 'Несуществующий отдел',
+            'division_id.exists' => 'Несуществующий отдел',
+            'is_independent.required' => 'Выберите тип должность самостоятельная/нет',
+        ]);
+
+        EmployeePosition::create([
+            'employee_id' => $data['chief_employee_id'],
+            'commissariat_id' => $data['commissariat_id'],
+            'department_id' => $data['department_id'],
+            'division_id' => $data['division_id'],
+            'position_id' => $data['position_id'],
+            'employee_position_rate_id' => $data['rate'],
+            'is_independent' => $data['is_independent'],
+        ]);
+
+        $backUrl = $request->get('backUrl');
+
+        return redirect()->to($backUrl)->with('success', 'Должность успешно добавлена сотруднику.');
     }
 }

@@ -103,8 +103,8 @@
                             <div class="relative group">
                                 <!-- Сам значок -->
                                 <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center 
-                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
-                                            transition-all duration-200 cursor-pointer">
+                                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
+                                                            transition-all duration-200 cursor-pointer">
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -187,7 +187,16 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Добавить сотрудника
+                                        Создать сотрудника
+                                    </a>
+                                    {{-- назначение сотрудника --}}
+                                    <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'back_url' => url()->full()]) }}"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Назначить сотрудника
                                     </a>
 
 
@@ -222,7 +231,7 @@
                                                 @foreach ($departmentEmployees as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? 'Нет данных' }}
@@ -288,7 +297,7 @@
                                                         @foreach ($divisionEmployees as $employeePosition)
                                                             <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
                                                                 class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                                 <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                                     {{ optional($employeePosition->employee)->getFullNameAttribute() ?? 'Нет данных' }}
@@ -313,7 +322,17 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M12 4v16m8-8H4"></path>
                                                     </svg>
-                                                    Добавить сотрудника
+                                                    Слздать сотрудника
+                                                </a>
+
+                                                {{-- назначение сотрудника --}}
+                                                <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
+                                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                    Назначить сотрудника
                                                 </a>
                                             </div>
                                         @endforeach
@@ -364,7 +383,16 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        Добавить сотрудника
+                                        Создать сотрудника
+                                    </a>
+                                    {{-- назначение сотрудника --}}
+                                    <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'back_url' => url()->full()]) }}"
+                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Назначить сотрудника
                                     </a>
                                     {{-- Сотрудники комиссариата --}}
                                     @if($employeesNotIndependent->count() > 0)
@@ -378,7 +406,7 @@
                                                 @foreach ($employeesNotIndependent as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
@@ -407,7 +435,7 @@
                                                 @foreach ($employeesIndependent as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
@@ -487,7 +515,7 @@
                                             @foreach ($regularEmployees as $employeePosition)
                                                 <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
                                                     class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                        hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                        hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                     <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                         {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "Нет данных" }}
@@ -512,7 +540,16 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 4v16m8-8H4"></path>
                                             </svg>
-                                            Добавить сотрудника
+                                            Создать сотрудника
+                                        </a>
+                                        {{-- назначение сотрудника --}}
+                                        <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
+                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Назначить сотрудника
                                         </a>
                                     </div>
                                 </div>
