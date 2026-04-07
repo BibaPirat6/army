@@ -2,6 +2,50 @@
     <div class="graph-container">
         <div ref="svgContainer" class="svg-container"></div>
 
+        <!-- поиск -->
+
+        <!-- Статистическая панель -->
+        <div class="stats-panel">
+            <div class="stats-header" @click="showStats = !showStats">
+                <h3>📊 Статистика</h3>
+                <svg class="stats-toggle" :class="{ rotated: showStats }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div v-show="showStats" class="stats-content">
+                <div class="stat-item">
+                    <span class="stat-label">👥 Всего сотрудников:</span>
+                    <span class="stat-value">{{ stats.totalEmployees }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">👔 Включая начальников:</span>
+                    <span class="stat-value">{{ stats.totalChiefs }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">⭐ Самостоятельных:</span>
+                    <span class="stat-value">{{ stats.independentEmployees }}</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">🏢 Отделов:</span>
+                    <span class="stat-value">{{ stats.departmentsCount }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">📁 Отделений (обычных):</span>
+                    <span class="stat-value">{{ stats.divisionsCount }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">🔗 Отделений (самостоятельных):</span>
+                    <span class="stat-value">{{ stats.independentDivisionsCount }}</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-label">🔗 Всего связей:</span>
+                    <span class="stat-value">{{ stats.totalLinks }}</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Управление -->
         <div class="controls">
             <button @mousedown="startZoomIn" @mouseup="stopZoom" @mouseleave="stopZoom" @touchstart="startZoomIn"
@@ -23,6 +67,11 @@
                     </path>
                 </svg>
             </button>
+            <button @click="fitToScreen" class="control-btn" title="Вписать в экран">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                </svg>
+            </button>
         </div>
 
         <!-- Модальное окно для узлов -->
@@ -34,7 +83,6 @@
                 </div>
                 <div class="modal-body">
                     <p><strong>Тип:</strong> {{ getNodeTypeLabel(selectedNode.type) }}</p>
-                    <p><strong>ID:</strong> {{ selectedNode.id }}</p>
                     <div class="modal-buttons">
                         <button @click="addEmployee" class="btn-add">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +91,7 @@
                             </svg>
                             Добавить сотрудника
                         </button>
-                        <button v-if="selectedNode.type !== 'employee'" @click="addSubdivision" class="btn-add">
+                        <button v-if="selectedNode.type !== 'employee' && selectedNode.type !== 'group'" @click="addSubdivision" class="btn-add">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4"></path>
@@ -84,8 +132,26 @@ export default {
             height: window.innerHeight,
             nodeElements: null,
             linkElements: null,
-            zoomInterval: null  // Для интервала при зажатой кнопке
+            zoomInterval: null,
+            showStats: true
         };
+    },
+    computed: {
+        stats() {
+            const employees = this.nodes.filter(n => n.type === 'employee');
+            const chiefs = employees.filter(e => e.isChief === true);
+            const independentEmployees = this.nodes.filter(n => n.name === 'Самостоятельные сотрудники' || n.name === 'Cотрудники').length;
+            
+            return {
+                totalEmployees: employees.length,
+                totalChiefs: chiefs.length,
+                independentEmployees: independentEmployees,
+                departmentsCount: this.nodes.filter(n => n.type === 'department').length,
+                divisionsCount: this.nodes.filter(n => n.type === 'division' && !n.id.includes('independent')).length,
+                independentDivisionsCount: this.nodes.filter(n => n.id && n.id.includes('independent')).length,
+                totalLinks: this.links.length
+            };
+        }
     },
     mounted() {
         if (this.nodes.length > 0) {
@@ -107,7 +173,7 @@ export default {
                 department: '#565A5B',
                 division: '#7F7F7F',
                 employee: '#BFBFBF',
-                group: '#3a86ff'  // Синий цвет для узлов-групп
+                group: '#3a86ff'
             };
             return colors[type] || '#999';
         },
@@ -117,7 +183,8 @@ export default {
                 commissariat: 'Комиссариат',
                 department: 'Отдел',
                 division: 'Отделение',
-                employee: 'Сотрудник'
+                employee: 'Сотрудник',
+                group: 'Группа'
             };
             return labels[type] || type;
         },
@@ -480,6 +547,219 @@ export default {
                 .attr('stroke-width', 2);
         });
 },
+draw(nodesData, linksData) {
+            this.g.selectAll('.links').remove();
+            this.g.selectAll('.nodes').remove();
+            
+            this.linkElements = this.g.append('g')
+                .attr('class', 'links')
+                .selectAll('line')
+                .data(linksData)
+                .enter()
+                .append('line')
+                .attr('stroke', '#999')
+                .attr('stroke-width', 1.5)
+                .attr('stroke-opacity', 0.4);
+
+            this.nodeElements = this.g.append('g')
+                .attr('class', 'nodes')
+                .selectAll('g')
+                .data(nodesData)
+                .enter()
+                .append('g')
+                .attr('cursor', 'pointer')
+                .call(d3.drag()
+                    .on('start', (event, d) => {
+                        if (!event.active) this.simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    })
+                    .on('drag', (event, d) => {
+                        d.fx = event.x;
+                        d.fy = event.y;
+                    })
+                    .on('end', (event, d) => {
+                        if (!event.active) this.simulation.alphaTarget(0);
+                        d.fx = null;
+                        d.fy = null;
+                    }));
+
+            this.nodeElements.each((d, i, group) => {
+                const nodeGroup = d3.select(group[i]);
+                const isChief = d.isChief === true;
+                
+                if (d.type === 'group') {
+                    nodeGroup.append('rect')
+                        .attr('x', -45)
+                        .attr('y', -20)
+                        .attr('width', 90)
+                        .attr('height', 40)
+                        .attr('rx', 10)
+                        .attr('fill', this.getNodeColor(d.type))
+                        .attr('stroke', '#060606')
+                        .attr('stroke-width', 2)
+                        .attr('stroke-dasharray', '4,2');
+                    
+                    nodeGroup.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', '0.35em')
+                        .attr('fill', 'white')
+                        .style('font-size', '12px')
+                        .style('font-weight', 'bold')
+                        .text(() => {
+                            let name = d.name;
+                            if (name.length > 14) name = name.substring(0, 11) + '...';
+                            return name;
+                        });
+                } else {
+                    let radius = 28;
+                    let fillColor = '#BFBFBF';
+                    let strokeColor = '#060606';
+                    let iconSize = '16px';
+                    let iconColor = 'white';
+                    let iconText = '👤';
+                    let textDy = '2.2em';
+                    let textSize = '10px';
+                    let textWeight = '500';
+                    
+                    if (d.type === 'commissariat') {
+                        radius = 48;
+                        fillColor = '#A60644';
+                        iconSize = '22px';
+                        iconText = '★';
+                        textDy = '2.5em';
+                    } else if (d.type === 'department') {
+                        radius = 40;
+                        fillColor = '#565A5B';
+                        iconText = '◆';
+                        textDy = '2.3em';
+                    } else if (d.type === 'division') {
+                        radius = 34;
+                        fillColor = '#7F7F7F';
+                        iconText = '●';
+                        textDy = '2.2em';
+                    }
+                    
+                    if (isChief) {
+                        radius = 36;
+                        fillColor = '#FFD700';
+                        strokeColor = '#DAA520';
+                        iconColor = '#060606';
+                        iconSize = '18px';
+                        iconText = '👑';
+                        textDy = '2.3em';
+                        textSize = '11px';
+                        textWeight = 'bold';
+                    }
+                    
+                    nodeGroup.append('circle')
+                        .attr('r', radius)
+                        .attr('fill', fillColor)
+                        .attr('stroke', strokeColor)
+                        .attr('stroke-width', 2.5)
+                        .attr('filter', 'url(#shadow)');
+                    
+                    nodeGroup.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', '0.35em')
+                        .attr('fill', iconColor)
+                        .style('font-size', iconSize)
+                        .style('font-weight', 'bold')
+                        .text(iconText);
+                    
+                    nodeGroup.append('text')
+                        .attr('text-anchor', 'middle')
+                        .attr('dy', textDy)
+                        .attr('fill', '#060606')
+                        .style('font-size', textSize)
+                        .style('font-weight', textWeight)
+                        .text(() => {
+                            let name = d.name;
+                            if (name.length > 20) name = name.substring(0, 17) + '...';
+                            return name;
+                        });
+                }
+            });
+
+            this.nodeElements.on('click', (event, d) => {
+                event.stopPropagation();
+                if (d.url) {
+                    window.location.href = d.url;
+                } else if (d.type !== 'group') {
+                    this.selectedNode = d;
+                }
+            });
+
+            this.nodeElements.filter(d => d.type !== 'group')
+                .on('mouseenter', function(event, d) {
+                    const isChief = d.isChief === true;
+                    let newRadius = 34;
+                    if (d.type === 'commissariat') newRadius = 55;
+                    else if (d.type === 'department') newRadius = 46;
+                    else if (d.type === 'division') newRadius = 40;
+                    else if (isChief) newRadius = 42;
+                    else newRadius = 34;
+                    
+                    d3.select(this).select('circle')
+                        .transition().duration(200)
+                        .attr('r', newRadius)
+                        .attr('stroke-width', 3.5);
+                }).on('mouseleave', function(event, d) {
+                    const isChief = d.isChief === true;
+                    let newRadius = 28;
+                    if (d.type === 'commissariat') newRadius = 48;
+                    else if (d.type === 'department') newRadius = 40;
+                    else if (d.type === 'division') newRadius = 34;
+                    else if (isChief) newRadius = 36;
+                    else newRadius = 28;
+                    
+                    d3.select(this).select('circle')
+                        .transition().duration(200)
+                        .attr('r', newRadius)
+                        .attr('stroke-width', 2.5);
+                });
+            
+            this.nodeElements.filter(d => d.type === 'group')
+                .on('mouseenter', function() {
+                    d3.select(this).select('rect')
+                        .transition().duration(200)
+                        .attr('width', 100)
+                        .attr('height', 46)
+                        .attr('x', -50)
+                        .attr('y', -23)
+                        .attr('stroke-width', 3);
+                }).on('mouseleave', function() {
+                    d3.select(this).select('rect')
+                        .transition().duration(200)
+                        .attr('width', 90)
+                        .attr('height', 40)
+                        .attr('x', -45)
+                        .attr('y', -20)
+                        .attr('stroke-width', 2);
+                });
+        },
+
+        fitToScreen() {
+            if (!this.nodeElements) return;
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            this.nodeElements.each(function(d) {
+                minX = Math.min(minX, d.x);
+                minY = Math.min(minY, d.y);
+                maxX = Math.max(maxX, d.x);
+                maxY = Math.max(maxY, d.y);
+            });
+            
+            const padding = 100;
+            const scaleX = this.width / (maxX - minX + padding * 2);
+            const scaleY = this.height / (maxY - minY + padding * 2);
+            const scale = Math.min(scaleX, scaleY, 1.2);
+            const translateX = (this.width - (minX + maxX) * scale) / 2;
+            const translateY = (this.height - (minY + maxY) * scale) / 2;
+            
+            const transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale);
+            this.svg.transition().duration(500).call(this.zoomBehavior.transform, transform);
+        },
 
         updatePositions() {
             if (this.linkElements) {
@@ -494,20 +774,18 @@ export default {
             }
         },
 
-        // ========== ДИНАМИЧЕСКИЙ ЗУМ ==========
-
         startZoomIn() {
             this.zoomIn();
             this.zoomInterval = setInterval(() => {
                 this.zoomIn();
-            }, 50); // Каждые 50мс приближаем
+            }, 50);
         },
 
         startZoomOut() {
             this.zoomOut();
             this.zoomInterval = setInterval(() => {
                 this.zoomOut();
-            }, 50); // Каждые 50мс отдаляем
+            }, 50);
         },
 
         stopZoom() {
@@ -534,7 +812,6 @@ export default {
                 this.svg.transition().duration(500).call(this.zoomBehavior.transform, d3.zoomIdentity);
             }
         },
-
 
         closeModal() {
             this.selectedNode = null;
@@ -588,8 +865,6 @@ export default {
 };
 </script>
 
-
-
 <style scoped>
 .graph-container {
     width: 100vw;
@@ -604,6 +879,84 @@ export default {
     height: 100%;
 }
 
+/* Статистическая панель */
+.stats-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    min-width: 220px;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #A60644;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.stats-header:hover {
+    background: #6b0229;
+}
+
+.stats-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stats-toggle {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s;
+}
+
+.stats-toggle.rotated {
+    transform: rotate(180deg);
+}
+
+.stats-content {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.stat-label {
+    color: #565A5B;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #060606;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.stat-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 8px 0;
+}
+
+/* Управление */
 .controls {
     position: fixed;
     bottom: 20px;
@@ -653,7 +1006,7 @@ export default {
 .modal-content {
     background: white;
     border-radius: 16px;
-    width: 350px;
+    width: 320px;
     max-width: 90%;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -665,7 +1018,6 @@ export default {
         opacity: 0;
         transform: translateY(-20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -676,13 +1028,13 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
+    padding: 14px 18px;
     color: white;
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
 
@@ -708,7 +1060,7 @@ export default {
 }
 
 .modal-body {
-    padding: 20px;
+    padding: 18px;
 }
 
 .modal-body p {
@@ -720,7 +1072,7 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
 .btn-add,
