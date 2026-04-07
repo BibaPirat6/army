@@ -28,7 +28,7 @@
         <!-- Форма -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
-                 <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1">
+                 <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1 mb-4">
                         {{ $employee->getFullNameAttribute()}}
                     </h2>
                 {{-- сотрудник --}}
