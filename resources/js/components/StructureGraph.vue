@@ -373,11 +373,11 @@ export default {
             } else if (d.type === 'department') {
                 radius = 38;
                 fillColor = '#565A5B';
-                iconText = '●';
+                iconText = '◆';
             } else if (d.type === 'division') {
                 radius = 32;
                 fillColor = '#7F7F7F';
-                iconText = '◆';
+                iconText = '●';
             }
             
             if (isChief) {
@@ -386,7 +386,7 @@ export default {
                 strokeColor = '#DAA520';
                 iconColor = '#060606';
                 iconSize = '18px';
-                iconText = '👑';
+                iconText = '👨‍💼';
                 textDy = '2.3em';
                 textSize = '11px';
                 textWeight = 'bold';

@@ -60,7 +60,7 @@ class StructureController extends Controller
             $commissariatEmployeesGroupId = 'group_commissariat_employees_'.$commissariat->id;
             $nodes[] = [
                 'id' => $commissariatEmployeesGroupId,
-                'name' => 'Сотрудники комиссариата',
+                'name' => 'Сотрудники',
                 'type' => 'group',
                 'isGroup' => true,
                 'url' => null,
@@ -127,7 +127,7 @@ class StructureController extends Controller
                 $departmentEmployeesGroupId = 'group_department_employees_'.$department->id;
                 $nodes[] = [
                     'id' => $departmentEmployeesGroupId,
-                    'name' => 'Сотрудники отдела',
+                    'name' => 'Сотрудники',
                     'type' => 'group',
                     'isGroup' => true,
                     'url' => null,
@@ -187,7 +187,7 @@ class StructureController extends Controller
                     $divisionEmployeesGroupId = 'group_division_employees_'.$division->id;
                     $nodes[] = [
                         'id' => $divisionEmployeesGroupId,
-                        'name' => 'Сотрудники отделения',
+                        'name' => 'Сотрудники',
                         'type' => 'group',
                         'isGroup' => true,
                         'url' => null,
@@ -219,7 +219,7 @@ class StructureController extends Controller
             $independentEmployeesGroupId = 'group_independent_employees_'.$commissariat->id;
             $nodes[] = [
                 'id' => $independentEmployeesGroupId,
-                'name' => 'Самостоятельные сотрудники',
+                'name' => 'Cотрудники',
                 'type' => 'group',
                 'isGroup' => true,
                 'url' => null,
@@ -281,7 +281,7 @@ class StructureController extends Controller
                 $divisionEmployeesGroupId = 'group_division_employees_'.$division->id;
                 $nodes[] = [
                     'id' => $divisionEmployeesGroupId,
-                    'name' => 'Сотрудники отделения',
+                    'name' => 'Сотрудники',
                     'type' => 'group',
                     'isGroup' => true,
                     'url' => null,
