@@ -2,6 +2,64 @@
     <div class="graph-container">
         <div ref="svgContainer" class="svg-container"></div>
 
+        <!-- Фильтры -->
+        <div class="filters-panel">
+            <div class="filters-header" @click="showFilters = !showFilters">
+                <h3>🔍 Фильтры</h3>
+                <svg class="filters-toggle" :class="{ rotated: showFilters }" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div v-show="showFilters" class="filters-content">
+                <div class="filter-group">
+                    <div class="filter-title">Типы узлов</div>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.commissariat" @change="applyFilters">
+                        <span>🏢 Комиссариат</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.departments" @change="applyFilters">
+                        <span>📁 Отделы</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.divisions" @change="applyFilters">
+                        <span>📂 Отделения (обычные)</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="FiltersIndependentDivisions" @change="applyFilters">
+                        <span>🔗 Отделения (самостоятельные)</span>
+                    </label>
+                </div>
+
+                <div class="filter-group">
+                    <div class="filter-title">Сотрудники</div>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.employeesNotIndependent" @change="applyFilters">
+                        <span>👥 Сотрудники комиссариата</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.employeesIndependent" @change="applyFilters">
+                        <span>⭐ Самостоятельные сотрудники</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.chiefs" @change="applyFilters">
+                        <span>👑 Начальники</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.regularEmployees" @change="applyFilters">
+                        <span>👤 Обычные сотрудники</span>
+                    </label>
+                </div>
+
+                <div class="filter-actions">
+                    <button @click="resetFilters" class="filter-reset">Сбросить все</button>
+                    <span class="filter-count">Показано: {{ visibleNodesCount }}</span>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Поиск -->
         <div class="search-panel">
             <div class="search-header">
@@ -158,12 +216,25 @@ export default {
             nodeElements: null,
             linkElements: null,
             zoomInterval: null,
-            showStats: true,
+            showStats: false,
             // search
             searchQuery: '',
             searchResults: [],
             originalNodeColors: new Map(), // для хранения оригинальных цветов
-        };
+            // фильтры
+            showFilters: true,
+            filters: {
+                commissariat: true,
+                departments: true,
+                divisions: true,
+                independentDivisions: true,
+                employeesNotIndependent: true,
+                employeesIndependent: true,
+                chiefs: true,
+                regularEmployees: true,
+            },
+            visibleNodesCount: 0,
+        }
     },
     computed: {
         stats() {
@@ -180,6 +251,15 @@ export default {
                 independentDivisionsCount: this.nodes.filter(n => n.id && n.id.includes('independent')).length,
                 totalLinks: this.links.length
             };
+        },
+        filteredNodeIds() {
+            const filtered = [];
+            this.nodes.forEach(node => {
+                if (this.shouldShowNode(node)) {
+                    filtered.push(node.id);
+                }
+            });
+            return filtered;
         }
     },
     mounted() {
@@ -382,201 +462,6 @@ export default {
         },
 
         draw(nodesData, linksData) {
-            // Очищаем предыдущие элементы
-            this.g.selectAll('.links').remove();
-            this.g.selectAll('.nodes').remove();
-
-            // Рисуем связи
-            this.linkElements = this.g.append('g')
-                .attr('class', 'links')
-                .selectAll('line')
-                .data(linksData)
-                .enter()
-                .append('line')
-                .attr('stroke', '#999')
-                .attr('stroke-width', 1.5)
-                .attr('stroke-opacity', 0.5);
-
-            // Рисуем узлы
-            this.nodeElements = this.g.append('g')
-                .attr('class', 'nodes')
-                .selectAll('g')
-                .data(nodesData)
-                .enter()
-                .append('g')
-                .attr('cursor', 'pointer')
-                .call(d3.drag()
-                    .on('start', (event, d) => {
-                        if (!event.active) this.simulation.alphaTarget(0.3).restart();
-                        d.fx = d.x;
-                        d.fy = d.y;
-                    })
-                    .on('drag', (event, d) => {
-                        d.fx = event.x;
-                        d.fy = event.y;
-                    })
-                    .on('end', (event, d) => {
-                        if (!event.active) this.simulation.alphaTarget(0);
-                        d.fx = null;
-                        d.fy = null;
-                    }));
-
-            // Добавляем элементы для каждого узла
-            this.nodeElements.each((d, i, group) => {
-                const nodeGroup = d3.select(group[i]);
-                const isChief = d.isChief === true;
-
-                if (d.type === 'group') {
-                    // Группа - прямоугольник
-                    nodeGroup.append('rect')
-                        .attr('x', -40)
-                        .attr('y', -18)
-                        .attr('width', 80)
-                        .attr('height', 36)
-                        .attr('rx', 8)
-                        .attr('fill', this.getNodeColor(d.type))
-                        .attr('stroke', '#060606')
-                        .attr('stroke-width', 2);
-
-                    nodeGroup.append('text')
-                        .attr('text-anchor', 'middle')
-                        .attr('dy', '0.35em')
-                        .attr('fill', 'white')
-                        .style('font-size', '11px')
-                        .style('font-weight', 'bold')
-                        .text(() => {
-                            let name = d.name;
-                            if (name.length > 14) name = name.substring(0, 11) + '...';
-                            return name;
-                        });
-                } else {
-                    // Обычные узлы
-                    let radius = 28;
-                    let fillColor = '#BFBFBF';
-                    let strokeColor = '#060606';
-                    let iconSize = '16px';
-                    let iconColor = 'white';
-                    let iconText = '👤';
-                    let textDy = '2.2em';
-                    let textSize = '10px';
-                    let textWeight = '500';
-
-                    if (d.type === 'commissariat') {
-                        radius = 45;
-                        fillColor = '#A60644';
-                        iconSize = '20px';
-                        iconText = '★';
-                    } else if (d.type === 'department') {
-                        radius = 38;
-                        fillColor = '#565A5B';
-                        iconText = '◆';
-                    } else if (d.type === 'division') {
-                        radius = 32;
-                        fillColor = '#7F7F7F';
-                        iconText = '●';
-                    }
-
-                    if (isChief) {
-                        radius = 34;
-                        fillColor = '#FFD700';
-                        strokeColor = '#DAA520';
-                        iconColor = '#060606';
-                        iconSize = '18px';
-                        iconText = '👨‍💼';
-                        textDy = '2.3em';
-                        textSize = '11px';
-                        textWeight = 'bold';
-                    }
-
-                    nodeGroup.append('circle')
-                        .attr('r', radius)
-                        .attr('fill', fillColor)
-                        .attr('stroke', strokeColor)
-                        .attr('stroke-width', 2);
-
-                    nodeGroup.append('text')
-                        .attr('text-anchor', 'middle')
-                        .attr('dy', '0.35em')
-                        .attr('fill', iconColor)
-                        .style('font-size', iconSize)
-                        .style('font-weight', 'bold')
-                        .text(iconText);
-
-                    nodeGroup.append('text')
-                        .attr('text-anchor', 'middle')
-                        .attr('dy', textDy)
-                        .attr('fill', '#060606')
-                        .style('font-size', textSize)
-                        .style('font-weight', textWeight)
-                        .text(() => {
-                            let name = d.name;
-                            if (name.length > 18) name = name.substring(0, 15) + '...';
-                            return name;
-                        });
-                }
-            });
-
-            // Обработчик клика
-            this.nodeElements.on('click', (event, d) => {
-                event.stopPropagation();
-                if (d.type === 'employee' || d.type === 'commissariat' || d.type === 'department' || d.type === 'division') {
-                    if (d.url) {
-                        window.location.href = d.url;
-                    }
-                } else {
-                    this.selectedNode = d;
-                }
-            });
-
-            // Эффект при наведении для кругов
-            this.nodeElements.filter(d => d.type !== 'group')
-                .on('mouseenter', function (event, d) {
-                    const isChief = d.isChief === true;
-                    let newRadius = 34;
-                    if (d.type === 'commissariat') newRadius = 52;
-                    else if (d.type === 'department') newRadius = 44;
-                    else if (d.type === 'division') newRadius = 38;
-                    else if (isChief) newRadius = 40;
-                    else newRadius = 34;
-
-                    d3.select(this).select('circle')
-                        .transition().duration(200)
-                        .attr('r', newRadius);
-                }).on('mouseleave', function (event, d) {
-                    const isChief = d.isChief === true;
-                    let newRadius = 28;
-                    if (d.type === 'commissariat') newRadius = 45;
-                    else if (d.type === 'department') newRadius = 38;
-                    else if (d.type === 'division') newRadius = 32;
-                    else if (isChief) newRadius = 34;
-                    else newRadius = 28;
-
-                    d3.select(this).select('circle')
-                        .transition().duration(200)
-                        .attr('r', newRadius);
-                });
-
-            // Эффект при наведении для групп
-            this.nodeElements.filter(d => d.type === 'group')
-                .on('mouseenter', function () {
-                    d3.select(this).select('rect')
-                        .transition().duration(200)
-                        .attr('width', 90)
-                        .attr('height', 42)
-                        .attr('x', -45)
-                        .attr('y', -21)
-                        .attr('stroke-width', 3);
-                }).on('mouseleave', function () {
-                    d3.select(this).select('rect')
-                        .transition().duration(200)
-                        .attr('width', 80)
-                        .attr('height', 36)
-                        .attr('x', -40)
-                        .attr('y', -18)
-                        .attr('stroke-width', 2);
-                });
-        },
-        draw(nodesData, linksData) {
             this.g.selectAll('.links').remove();
             this.g.selectAll('.nodes').remove();
 
@@ -680,6 +565,11 @@ export default {
                         textSize = '11px';
                         textWeight = 'bold';
                     }
+
+                    // Сохраняем оригинальные цвета и радиус в данных узла
+                    d.originalFill = fillColor;
+                    d.originalStroke = strokeColor;
+                    d.originalRadius = radius;
 
                     nodeGroup.append('circle')
                         .attr('r', radius)
@@ -1005,6 +895,139 @@ export default {
                     }
                 }, 3000);
             }
+        },
+
+
+        shouldShowNode(node) {
+            // Комиссариат
+            if (node.type === 'commissariat') {
+                return this.filters.commissariat;
+            }
+
+            // Отделы
+            if (node.type === 'department') {
+                return this.filters.departments;
+            }
+
+            // Отделения (обычные)
+            if (node.type === 'division' && !node.id.includes('independent')) {
+                return this.filters.divisions;
+            }
+
+            // Отделения (самостоятельные)
+            if (node.type === 'division' && node.id.includes('independent')) {
+                return this.filters.independentDivisions;
+            }
+
+            // Группы (контейнеры сотрудников)
+            if (node.type === 'group') {
+                // Группы показываем всегда, если в них есть видимые сотрудники
+                return true;
+            }
+
+            // Сотрудники
+            if (node.type === 'employee') {
+                const isChief = node.isChief === true;
+                const isIndependent = node.id && node.id.includes('independent');
+
+                // Самостоятельные сотрудники
+                if (isIndependent) {
+                    return this.filters.employeesIndependent;
+                }
+
+                // Сотрудники комиссариата (не самостоятельные)
+                if (!isIndependent && !isChief) {
+                    // Проверяем, привязан ли к комиссариату
+                    const isCommissariatEmployee = this.links.some(link =>
+                        link.source === 'commissariat_' + this.$route?.params?.id && link.target === node.id
+                    );
+                    if (isCommissariatEmployee) {
+                        return this.filters.employeesNotIndependent;
+                    }
+                }
+
+                // Начальники
+                if (isChief) {
+                    return this.filters.chiefs;
+                }
+
+                // Обычные сотрудники
+                if (!isChief && !isIndependent) {
+                    return this.filters.regularEmployees;
+                }
+            }
+
+            return true;
+        },
+
+        applyFilters() {
+            if (!this.nodeElements) return;
+
+            let visibleCount = 0;
+
+            this.nodeElements.each((d, i, group) => {
+                const nodeGroup = d3.select(group[i]);
+                const shouldShow = this.shouldShowNode(d);
+
+                if (shouldShow) {
+                    nodeGroup.style('opacity', 1);
+                    nodeGroup.style('display', null);
+                    visibleCount++;
+
+                    // Восстанавливаем оригинальные цвета
+                    const circle = nodeGroup.select('circle');
+                    if (d.originalFill) {
+                        circle.attr('fill', d.originalFill);
+                        circle.attr('stroke', d.originalStroke);
+                    }
+                } else {
+                    nodeGroup.style('opacity', 0.15);
+                }
+            });
+
+            this.visibleNodesCount = visibleCount;
+
+            // Обновляем связи
+            if (this.linkElements) {
+                this.linkElements.each((d, i, group) => {
+                    const sourceVisible = this.shouldShowNode(d.source);
+                    const targetVisible = this.shouldShowNode(d.target);
+                    const linkGroup = d3.select(group[i]);
+
+                    if (sourceVisible && targetVisible) {
+                        linkGroup.style('opacity', 0.4);
+                    } else {
+                        linkGroup.style('opacity', 0.05);
+                    }
+                });
+            }
+        },
+
+        updateVisibleCount() {
+            let count = 0;
+            if (this.nodeElements) {
+                this.nodeElements.each((d) => {
+                    if (this.shouldShowNode(d)) {
+                        count++;
+                    }
+                });
+            }
+            this.visibleNodesCount = count;
+        },
+
+        resetFilters() {
+            // Сбрасываем все фильтры в true
+            this.filters = {
+                commissariat: true,
+                departments: true,
+                divisions: true,
+                independentDivisions: true,
+                employeesNotIndependent: true,
+                employeesIndependent: true,
+                chiefs: true,
+                regularEmployees: true,
+            };
+            this.applyFilters();
         },
     }
 };
@@ -1356,5 +1379,135 @@ export default {
     text-align: center;
     color: #999;
     font-size: 13px;
+}
+
+
+/* Панель фильтров */
+.filters-panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    width: 260px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #A60644;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.filters-header:hover {
+    background: #6b0229;
+}
+
+.filters-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.filters-toggle {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s;
+}
+
+.filters-toggle.rotated {
+    transform: rotate(180deg);
+}
+
+.filters-content {
+    padding: 12px;
+    border-top: 1px solid #e0e0e0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.filter-group {
+    margin-bottom: 16px;
+}
+
+.filter-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #A60644;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    cursor: pointer;
+    font-size: 13px;
+    color: #060606;
+    transition: color 0.2s;
+}
+
+.filter-checkbox:hover {
+    color: #A60644;
+}
+
+.filter-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #A60644;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.filter-reset {
+    padding: 6px 12px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #060606;
+    transition: all 0.2s;
+}
+
+.filter-reset:hover {
+    background: #A60644;
+    color: white;
+}
+
+.filter-count {
+    font-size: 12px;
+    color: #565A5B;
+}
+
+/* Анимация для затемнения */
+.node-fade-enter-active,
+.node-fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.node-fade-enter,
+.node-fade-leave-to {
+    opacity: 0;
 }
 </style>
