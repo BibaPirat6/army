@@ -15,7 +15,7 @@
         <!-- Розовая кнопка -->
         <a href="{{ route("structure.obsidian", [
         "id" => $commissariat->id,
-        "back_url"=>url()->full()
+        "back_url" => url()->full()
     ]) }}"
             class="px-4 py-2.5 rounded-xl bg-[#A60644] text-white text-sm font-medium hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
             Узловая структура
@@ -104,8 +104,8 @@
                             <div class="relative group">
                                 <!-- Сам значок -->
                                 <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center 
-                                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
-                                                            transition-all duration-200 cursor-pointer">
+                                                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
+                                                                            transition-all duration-200 cursor-pointer">
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -232,7 +232,7 @@
                                                 @foreach ($departmentEmployees as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? 'Нет данных' }}
@@ -298,7 +298,7 @@
                                                         @foreach ($divisionEmployees as $employeePosition)
                                                             <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
                                                                 class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                                 <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                                     {{ optional($employeePosition->employee)->getFullNameAttribute() ?? 'Нет данных' }}
@@ -407,7 +407,7 @@
                                                 @foreach ($employeesNotIndependent as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
@@ -436,7 +436,7 @@
                                                 @foreach ($employeesIndependent as $employee)
                                                     <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                                         class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
 
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                             {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
@@ -514,9 +514,15 @@
 
                                         @if($regularEmployees->count() > 0)
                                             @foreach ($regularEmployees as $employeePosition)
+
+                                                @php
+                                                    $statusColor = $employeePosition->employeePositionStatus->color ?? '#f5f5f5';
+                                                @endphp
+
                                                 <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
-                                                    class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                        hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
+                                                    class="group flex items-center justify-between w-full rounded-lg p-3 border border-[#BFBFBF]/20 
+                                                                            hover:border-[#A60644]/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                                                    style="background-color: {{ $statusColor }};">
 
                                                     <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                         {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "Нет данных" }}

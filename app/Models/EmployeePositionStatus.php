@@ -11,6 +11,7 @@ class EmployeePositionStatus extends Model
 
     protected $fillable = [
         'name',
+        'color'
     ];
 
     /**

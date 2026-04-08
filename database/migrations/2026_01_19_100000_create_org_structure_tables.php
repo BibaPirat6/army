@@ -79,6 +79,7 @@ return new class extends Migration
         Schema::create('employee_position_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->string('color');
             $table->timestamps();
         });
         Schema::create('employee_position_rates', function (Blueprint $table) {
