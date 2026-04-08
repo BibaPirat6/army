@@ -103,3 +103,21 @@
 .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #6b0229;
 }
+
+/* Курсор для панорамирования */
+#viewport {
+    cursor: grab;
+}
+
+#viewport:active {
+    cursor: grabbing;
+}
+
+/* Исключаем интерактивные элементы из драга */
+#viewport a,
+#viewport button,
+#viewport .info-btn,
+#viewport .add-employee-btn,
+#viewport .dropdown-btn {
+    cursor: pointer;
+}
