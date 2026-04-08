@@ -1,58 +1,51 @@
 <template>
     <div class="graph-container">
-        <!-- кнопка назад -->
-        <a href="/"
-            class="fixed left-5 top-20 z-[100] inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-[#A60644] font-medium hover:bg-white shadow-md hover:shadow-lg transition-all duration-200 group">
-            <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                </path>
-            </svg>
-            Назад
-        </a>
-
         <div ref="svgContainer" class="svg-container"></div>
 
         <!-- Фильтры -->
         <div class="filters-panel">
             <div v-show="showFilters" class="filters-content">
                 <div class="filter-group">
-                    <div class="filter-title">Типы узлов</div>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" v-model="filters.commissariat" @change="applyFilters">
-                        <span>🏢 Комиссариат</span>
-                    </label>
+                    <div class="filter-title">Структура</div>
                     <label class="filter-checkbox">
                         <input type="checkbox" v-model="filters.departments" @change="applyFilters">
                         <span>📁 Отделы</span>
+                        <span class="filter-count-badge">{{ counts.departments }}</span>
                     </label>
                     <label class="filter-checkbox">
                         <input type="checkbox" v-model="filters.divisions" @change="applyFilters">
                         <span>📂 Отделения (обычные)</span>
+                        <span class="filter-count-badge">{{ counts.divisions }}</span>
                     </label>
                     <label class="filter-checkbox">
-                        <input type="checkbox" v-model="FiltersIndependentDivisions" @change="applyFilters">
+                        <input type="checkbox" v-model="filters.independentDivisions" @change="applyFilters">
                         <span>🔗 Отделения (самостоятельные)</span>
+                        <span class="filter-count-badge">{{ counts.independentDivisions }}</span>
                     </label>
                 </div>
 
                 <div class="filter-group">
                     <div class="filter-title">Сотрудники</div>
                     <label class="filter-checkbox">
-                        <input type="checkbox" v-model="filters.employeesNotIndependent" @change="applyFilters">
-                        <span>👥 Сотрудники комиссариата</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" v-model="filters.employeesIndependent" @change="applyFilters">
-                        <span>⭐ Самостоятельные сотрудники</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" v-model="filters.chiefs" @change="applyFilters">
-                        <span>👑 Начальники</span>
+                        <input type="checkbox" v-model="filters.employees" @change="applyFilters">
+                        <span>👥 Все сотрудники</span>
+                        <span class="filter-count-badge">{{ counts.employees + counts.independentEmployees +
+                            counts.chiefs }}</span>
                     </label>
                     <label class="filter-checkbox">
                         <input type="checkbox" v-model="filters.regularEmployees" @change="applyFilters">
                         <span>👤 Обычные сотрудники</span>
+                        <span class="filter-count-badge">{{ counts.regularEmployees }}</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.independentEmployees" @change="applyFilters">
+                        <span>⭐ Самостоятельные сотрудники</span>
+                        <span class="filter-count-badge">{{ counts.independentEmployees }}</span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" v-model="filters.chiefs" @change="applyFilters">
+                        <span>👨‍💼 Начальники</span>
+                        <span class="filter-count-badge">{{ counts.chiefs }}</span>
                     </label>
                 </div>
 
@@ -169,6 +162,10 @@ export default {
         links: {
             type: Array,
             default: () => []
+        },
+        backUrl: {
+            type: String,
+            default: ''
         }
     },
     data() {
@@ -190,16 +187,17 @@ export default {
             // фильтры
             showFilters: false,
             filters: {
-                commissariat: true,
                 departments: true,
                 divisions: true,
                 independentDivisions: true,
-                employeesNotIndependent: true,
-                employeesIndependent: true,
-                chiefs: true,
+                employees: true,
                 regularEmployees: true,
+                independentEmployees: true,
+                chiefs: true,
             },
             visibleNodesCount: 0,
+
+            currentBackUrl: this.backUrl || window.location.href,
         }
     },
     computed: {
@@ -211,7 +209,19 @@ export default {
                 }
             });
             return filtered;
-        }
+        },
+        // Счетчики для фильтров
+        counts() {
+            return {
+                departments: this.nodes.filter(n => n.type === 'department').length,
+                divisions: this.nodes.filter(n => n.type === 'division' && !n.id.includes('independent') && !n.id.includes('group')).length,
+                independentDivisions: this.nodes.filter(n => n.type === 'division' && n.id.includes('independent')).length,
+                employees: this.nodes.filter(n => n.type === 'employee' && !n.isChief && !n.isIndependent && !n.id.includes('independent')).length,
+                regularEmployees: this.nodes.filter(n => n.type === 'employee' && !n.isChief && !n.isIndependent && !n.id.includes('independent')).length,
+                independentEmployees: this.nodes.filter(n => n.type === 'employee' && (n.isIndependent === true || n.id.includes('independent'))).length,
+                chiefs: this.nodes.filter(n => n.type === 'employee' && n.isChief === true).length,
+            };
+        },
     },
     mounted() {
         if (this.nodes.length > 0) {
@@ -277,11 +287,22 @@ export default {
                 target: l.target
             }));
 
+            // СОЗДАЕМ nodeMap ПЕРЕД ИСПОЛЬЗОВАНИЕМ
             const nodeMap = new Map();
             simulationNodes.forEach(node => {
                 nodeMap.set(node.id, node);
             });
 
+            // ДОБАВЛЯЕМ back_url В УЗЛЫ
+            simulationNodes.forEach(node => {
+                if (node.url && node.url.includes('?')) {
+                    node.url = node.url + (node.url.includes('back_url') ? '' : `&back_url=${encodeURIComponent(this.backUrl)}`);
+                } else if (node.url) {
+                    node.url = node.url + `?back_url=${encodeURIComponent(this.backUrl)}`;
+                }
+            });
+
+            // ПРЕОБРАЗУЕМ ССЫЛКИ ИЗ ID В ОБЪЕКТЫ
             simulationLinks.forEach(link => {
                 if (typeof link.source === 'string') {
                     link.source = nodeMap.get(link.source);
@@ -307,8 +328,6 @@ export default {
 
                 // Группируем узлы по типам
                 const departments = simulationNodes.filter(n => n.type === 'department');
-                const divisions = simulationNodes.filter(n => n.type === 'division');
-                const employees = simulationNodes.filter(n => n.type === 'employee');
 
                 // Располагаем отделы по кругу
                 const deptRadius = 250;
@@ -366,6 +385,23 @@ export default {
                     emp.x = centerX + Math.cos(angle) * directEmpRadius;
                     emp.y = centerY + Math.sin(angle) * directEmpRadius;
                 });
+
+                // Группы (контейнеры сотрудников)
+                const groups = simulationNodes.filter(n => n.type === 'group');
+                groups.forEach(group => {
+                    const parentDept = simulationNodes.find(d =>
+                        simulationLinks.some(l => l.source === d && l.target === group)
+                    );
+                    if (parentDept) {
+                        const groupRadius = 140;
+                        const angle = Math.random() * Math.PI * 2;
+                        group.x = parentDept.x + Math.cos(angle) * groupRadius;
+                        group.y = parentDept.y + Math.sin(angle) * groupRadius;
+                    } else {
+                        group.x = centerX + (Math.random() - 0.5) * 400;
+                        group.y = centerY + (Math.random() - 0.5) * 300;
+                    }
+                });
             }
 
             // ========== НАСТРОЙКА СИЛ ==========
@@ -376,6 +412,7 @@ export default {
                         if (d.source.type === 'commissariat' || d.target.type === 'commissariat') return 180;
                         if (d.source.type === 'department' || d.target.type === 'department') return 140;
                         if (d.source.type === 'division' || d.target.type === 'division') return 110;
+                        if (d.source.type === 'group' || d.target.type === 'group') return 100;
                         return 80;
                     })
                     .strength(d => {
@@ -388,12 +425,13 @@ export default {
                         if (d.type === 'commissariat') return -500;
                         if (d.type === 'department') return -300;
                         if (d.type === 'division') return -200;
-                        return -150;
+                        if (d.type === 'group') return -150;
+                        return -120;
                     }))
                 .force('center', d3.forceCenter(this.width / 2, this.height / 2))
                 .force('collision', d3.forceCollide().radius(60))
-                .alphaDecay(0.02)  // Медленнее затухание для лучшей стабилизации
-                .velocityDecay(0.4);  // Инерция
+                .alphaDecay(0.02)
+                .velocityDecay(0.4);
 
             // Фиксируем комиссариат в центре на время стабилизации
             if (mainNode) {
@@ -511,7 +549,7 @@ export default {
                         strokeColor = '#DAA520';
                         iconColor = '#060606';
                         iconSize = '18px';
-                        iconText = '👑';
+                        iconText = '👨‍💼';
                         textDy = '2.3em';
                         textSize = '11px';
                         textWeight = 'bold';
@@ -554,7 +592,13 @@ export default {
             this.nodeElements.on('click', (event, d) => {
                 event.stopPropagation();
                 if (d.url) {
-                    window.location.href = d.url;
+                    // Добавляем back_url если его нет
+                    let url = d.url;
+                    if (!url.includes('back_url')) {
+                        const separator = url.includes('?') ? '&' : '?';
+                        url = `${url}${separator}back_url=${encodeURIComponent(this.backUrl || window.location.href)}`;
+                    }
+                    window.location.href = url;
                 } else if (d.type !== 'group') {
                     this.selectedNode = d;
                 }
@@ -690,7 +734,7 @@ export default {
         addEmployee() {
             if (this.selectedNode) {
                 let url = '';
-                const backUrl = encodeURIComponent(window.location.href);
+                const backUrl = encodeURIComponent(this.backUrl || window.location.href);
                 if (this.selectedNode.type === 'commissariat') {
                     const id = this.selectedNode.id.replace('commissariat_', '');
                     url = `/employees/create?commissariat_id=${id}&back_url=${backUrl}`;
@@ -708,7 +752,7 @@ export default {
         addSubdivision() {
             if (this.selectedNode) {
                 let url = '';
-                const backUrl = encodeURIComponent(window.location.href);
+                const backUrl = encodeURIComponent(this.backUrl || window.location.href);
                 if (this.selectedNode.type === 'commissariat') {
                     const id = this.selectedNode.id.replace('commissariat_', '');
                     url = `/departments/create?commissariat_id=${id}&back_url=${backUrl}`;
@@ -818,28 +862,19 @@ export default {
         },
 
         focusOnNode(node) {
-            // Находим элемент узла
             const nodeElement = this.nodeElements?.filter(d => d.id === node.id);
             if (nodeElement && nodeElement.size() > 0) {
-                // Получаем позицию узла
                 const nodeData = nodeElement.data()[0];
                 const x = nodeData.x;
                 const y = nodeData.y;
-
-                // Центрируем view на узле
                 const scale = this.zoomBehavior.scaleExtent()[1];
                 const transform = d3.zoomIdentity
                     .translate(this.width / 2 - x * scale, this.height / 2 - y * scale)
                     .scale(scale);
-
                 this.svg.transition()
                     .duration(500)
                     .call(this.zoomBehavior.transform, transform);
-
-                // Дополнительно подсвечиваем найденный узел
                 this.highlightNodes([node]);
-
-                // Снимаем подсветку через 3 секунды
                 setTimeout(() => {
                     if (this.searchQuery === '') {
                         this.clearHighlight();
@@ -848,11 +883,10 @@ export default {
             }
         },
 
-
         shouldShowNode(node) {
-            // Комиссариат
+            // Комиссариат всегда показываем
             if (node.type === 'commissariat') {
-                return this.filters.commissariat;
+                return true;
             }
 
             // Отделы
@@ -860,8 +894,8 @@ export default {
                 return this.filters.departments;
             }
 
-            // Отделения (обычные)
-            if (node.type === 'division' && !node.id.includes('independent')) {
+            // Отделения (обычные) - не самостоятельные и не группы
+            if (node.type === 'division' && !node.id.includes('independent') && node.type !== 'group') {
                 return this.filters.divisions;
             }
 
@@ -870,10 +904,15 @@ export default {
                 return this.filters.independentDivisions;
             }
 
-            // Группы (контейнеры сотрудников)
+            // Группы (контейнеры сотрудников) - показываем если есть видимые сотрудники
             if (node.type === 'group') {
-                // Группы показываем всегда, если в них есть видимые сотрудники
-                return true;
+                // Проверяем, есть ли у этой группы видимые сотрудники
+                const hasVisibleEmployees = this.nodes.some(emp => {
+                    if (emp.type !== 'employee') return false;
+                    const isLinkedToGroup = this.links.some(link => link.source === node.id && link.target === emp.id);
+                    return isLinkedToGroup && this.shouldShowNode(emp);
+                });
+                return hasVisibleEmployees;
             }
 
             // Сотрудники
@@ -881,20 +920,14 @@ export default {
                 const isChief = node.isChief === true;
                 const isIndependent = node.id && node.id.includes('independent');
 
-                // Самостоятельные сотрудники
-                if (isIndependent) {
-                    return this.filters.employeesIndependent;
+                // Проверяем включен ли общий фильтр сотрудников
+                if (!this.filters.employees && !isChief && !isIndependent) {
+                    return false;
                 }
 
-                // Сотрудники комиссариата (не самостоятельные)
-                if (!isIndependent && !isChief) {
-                    // Проверяем, привязан ли к комиссариату
-                    const isCommissariatEmployee = this.links.some(link =>
-                        link.source === 'commissariat_' + this.$route?.params?.id && link.target === node.id
-                    );
-                    if (isCommissariatEmployee) {
-                        return this.filters.employeesNotIndependent;
-                    }
+                // Самостоятельные сотрудники
+                if (isIndependent) {
+                    return this.filters.independentEmployees;
                 }
 
                 // Начальники
@@ -902,7 +935,7 @@ export default {
                     return this.filters.chiefs;
                 }
 
-                // Обычные сотрудники
+                // Обычные сотрудники (не начальники и не самостоятельные)
                 if (!isChief && !isIndependent) {
                     return this.filters.regularEmployees;
                 }
@@ -927,9 +960,15 @@ export default {
 
                     // Восстанавливаем оригинальные цвета
                     const circle = nodeGroup.select('circle');
-                    if (d.originalFill) {
-                        circle.attr('fill', d.originalFill);
-                        circle.attr('stroke', d.originalStroke);
+                    if (d.originalFill && circle.size()) {
+                        circle.attr('fill', d.originalFill)
+                            .attr('stroke', d.originalStroke)
+                            .attr('stroke-width', 2.5);
+                    }
+                    // Для групп (прямоугольников)
+                    const rect = nodeGroup.select('rect');
+                    if (rect.size() && d.type === 'group') {
+                        rect.attr('fill', this.getNodeColor(d.type));
                     }
                 } else {
                     nodeGroup.style('opacity', 0.15);
@@ -938,13 +977,18 @@ export default {
 
             this.visibleNodesCount = visibleCount;
 
-            // Обновляем связи
+            // Обновляем связи - ПОЛНОСТЬЮ ВОССТАНАВЛИВАЕМ все линии, а потом затемняем ненужные
             if (this.linkElements) {
                 this.linkElements.each((d, i, group) => {
+                    const linkGroup = d3.select(group[i]);
                     const sourceVisible = this.shouldShowNode(d.source);
                     const targetVisible = this.shouldShowNode(d.target);
-                    const linkGroup = d3.select(group[i]);
 
+                    // Сначала восстанавливаем оригинальный стиль
+                    linkGroup.attr('stroke', '#999')
+                        .attr('stroke-width', 1.5);
+
+                    // Затем затемняем если нужно
                     if (sourceVisible && targetVisible) {
                         linkGroup.style('opacity', 0.4);
                     } else {
@@ -967,16 +1011,14 @@ export default {
         },
 
         resetFilters() {
-            // Сбрасываем все фильтры в true
             this.filters = {
-                commissariat: true,
                 departments: true,
                 divisions: true,
                 independentDivisions: true,
-                employeesNotIndependent: true,
-                employeesIndependent: true,
-                chiefs: true,
+                employees: true,
                 regularEmployees: true,
+                independentEmployees: true,
+                chiefs: true,
             };
             this.applyFilters();
         },
@@ -1384,5 +1426,28 @@ export default {
 .node-fade-enter,
 .node-fade-leave-to {
     opacity: 0;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    cursor: pointer;
+    font-size: 13px;
+    color: #060606;
+    transition: color 0.2s;
+}
+
+.filter-count-badge {
+    margin-left: auto;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #565A5B;
+    min-width: 28px;
+    text-align: center;
 }
 </style>

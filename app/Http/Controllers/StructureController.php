@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commissariat;
+use Illuminate\Http\Request;
 
 class StructureController extends Controller
 {
@@ -22,8 +23,10 @@ class StructureController extends Controller
         return view('admin.org.structure.show', compact('commissariat'));
     }
 
-    public function obsidian($id)
+    public function obsidian(Request $request, $id)
     {
+        $backUrl = $request->input('back_url');
+
         $commissariat = Commissariat::findOrFail($id);
 
         $nodes = [];
@@ -47,20 +50,20 @@ class StructureController extends Controller
                 'id' => $chiefNodeId,
                 'name' => $chief->getFullNameAttribute(),
                 'type' => 'employee',
-                'isChief' => true,  // ← ДОБАВИТЬ
+                'isChief' => true,
                 'url' => route('employees.show', $chief->id),
             ];
             $links[] = ['source' => $chiefId, 'target' => $chiefNodeId];
         }
 
-        // ========== СОТРУДНИКИ КОМИССАРИАТА (прямозависящие) ==========
+        // ========== ОБЫЧНЫЕ СОТРУДНИКИ КОМИССАРИАТА (прямозависящие, is_independent = 0) ==========
         $employeesNotIndependent = $commissariat->employeesNotIndependent();
 
         if ($employeesNotIndependent->count() > 0) {
             $commissariatEmployeesGroupId = 'group_commissariat_employees_'.$commissariat->id;
             $nodes[] = [
                 'id' => $commissariatEmployeesGroupId,
-                'name' => 'Сотрудники',
+                'name' => 'Сотрудники комиссариата',
                 'type' => 'group',
                 'isGroup' => true,
                 'url' => null,
@@ -74,11 +77,42 @@ class StructureController extends Controller
                         'id' => $empId,
                         'name' => $employee->getFullNameAttribute(),
                         'type' => 'employee',
-                        'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
+                        'isChief' => false,
+                        'isIndependent' => false,
                         'url' => route('employees.show', $employee->id),
                     ];
                 }
                 $links[] = ['source' => $commissariatEmployeesGroupId, 'target' => $empId];
+            }
+        }
+
+        // ========== САМОСТОЯТЕЛЬНЫЕ СОТРУДНИКИ КОМИССАРИАТА (is_independent = 1) ==========
+        $employeesIndependent = $commissariat->employeesIndependent();
+
+        if ($employeesIndependent->count() > 0) {
+            $independentEmployeesGroupId = 'group_independent_employees_'.$commissariat->id;
+            $nodes[] = [
+                'id' => $independentEmployeesGroupId,
+                'name' => 'Самостоятельные сотрудники',
+                'type' => 'group',
+                'isGroup' => true,
+                'url' => null,
+            ];
+            $links[] = ['source' => $chiefId, 'target' => $independentEmployeesGroupId];
+
+            foreach ($employeesIndependent as $employee) {
+                $empId = 'employee_'.$employee->id;
+                if (! in_array($empId, array_column($nodes, 'id'))) {
+                    $nodes[] = [
+                        'id' => $empId,
+                        'name' => $employee->getFullNameAttribute(),
+                        'type' => 'employee',
+                        'isChief' => false,
+                        'isIndependent' => true,
+                        'url' => route('employees.show', $employee->id),
+                    ];
+                }
+                $links[] = ['source' => $independentEmployeesGroupId, 'target' => $empId];
             }
         }
 
@@ -102,14 +136,14 @@ class StructureController extends Controller
                         'id' => $deptChiefNodeId,
                         'name' => $deptChief->getFullNameAttribute(),
                         'type' => 'employee',
-                        'isChief' => true,  // ← ДОБАВИТЬ
+                        'isChief' => true,
                         'url' => route('employees.show', $deptChief->id),
                     ];
                 }
                 $links[] = ['source' => $deptId, 'target' => $deptChiefNodeId];
             }
 
-            // ========== СОТРУДНИКИ ОТДЕЛА (прямозависящие) ==========
+            // ========== СОТРУДНИКИ ОТДЕЛА (прямозависящие, без отделения) ==========
             $departmentEmployees = $department->employeePositions()
                 ->whereNull('division_id')
                 ->where('is_independent', 0)
@@ -127,7 +161,7 @@ class StructureController extends Controller
                 $departmentEmployeesGroupId = 'group_department_employees_'.$department->id;
                 $nodes[] = [
                     'id' => $departmentEmployeesGroupId,
-                    'name' => 'Сотрудники',
+                    'name' => 'Сотрудники отдела',
                     'type' => 'group',
                     'isGroup' => true,
                     'url' => null,
@@ -141,7 +175,7 @@ class StructureController extends Controller
                             'id' => $empId,
                             'name' => $employee->getFullNameAttribute(),
                             'type' => 'employee',
-                            'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
+                            'isChief' => false,
                             'url' => route('employees.show', $employee->id),
                         ];
                     }
@@ -169,7 +203,7 @@ class StructureController extends Controller
                             'id' => $divChiefNodeId,
                             'name' => $divChief->getFullNameAttribute(),
                             'type' => 'employee',
-                            'isChief' => true,  // ← ДОБАВИТЬ
+                            'isChief' => true,
                             'url' => route('employees.show', $divChief->id),
                         ];
                     }
@@ -187,7 +221,7 @@ class StructureController extends Controller
                     $divisionEmployeesGroupId = 'group_division_employees_'.$division->id;
                     $nodes[] = [
                         'id' => $divisionEmployeesGroupId,
-                        'name' => 'Сотрудники',
+                        'name' => 'Сотрудники отделения',
                         'type' => 'group',
                         'isGroup' => true,
                         'url' => null,
@@ -202,42 +236,13 @@ class StructureController extends Controller
                                 'id' => $empId,
                                 'name' => $emp->getFullNameAttribute(),
                                 'type' => 'employee',
-                                'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
+                                'isChief' => false,
                                 'url' => route('employees.show', $emp->id),
                             ];
                         }
                         $links[] = ['source' => $divisionEmployeesGroupId, 'target' => $empId];
                     }
                 }
-            }
-        }
-
-        // ========== САМОСТОЯТЕЛЬНЫЕ СОТРУДНИКИ ==========
-        $employeesIndependent = $commissariat->employeesIndependent();
-
-        if ($employeesIndependent->count() > 0) {
-            $independentEmployeesGroupId = 'group_independent_employees_'.$commissariat->id;
-            $nodes[] = [
-                'id' => $independentEmployeesGroupId,
-                'name' => 'Cотрудники',
-                'type' => 'group',
-                'isGroup' => true,
-                'url' => null,
-            ];
-            $links[] = ['source' => $chiefId, 'target' => $independentEmployeesGroupId];
-
-            foreach ($employeesIndependent as $employee) {
-                $empId = 'employee_'.$employee->id;
-                if (! in_array($empId, array_column($nodes, 'id'))) {
-                    $nodes[] = [
-                        'id' => $empId,
-                        'name' => $employee->getFullNameAttribute(),
-                        'type' => 'employee',
-                        'isChief' => false,  // ← ДОБАВИТЬ (самостоятельный сотрудник)
-                        'url' => route('employees.show', $employee->id),
-                    ];
-                }
-                $links[] = ['source' => $independentEmployeesGroupId, 'target' => $empId];
             }
         }
 
@@ -263,7 +268,7 @@ class StructureController extends Controller
                         'id' => $divChiefNodeId,
                         'name' => $divChief->getFullNameAttribute(),
                         'type' => 'employee',
-                        'isChief' => true,  // ← ДОБАВИТЬ
+                        'isChief' => true,
                         'url' => route('employees.show', $divChief->id),
                     ];
                 }
@@ -281,7 +286,7 @@ class StructureController extends Controller
                 $divisionEmployeesGroupId = 'group_division_employees_'.$division->id;
                 $nodes[] = [
                     'id' => $divisionEmployeesGroupId,
-                    'name' => 'Сотрудники',
+                    'name' => 'Сотрудники отделения',
                     'type' => 'group',
                     'isGroup' => true,
                     'url' => null,
@@ -296,7 +301,7 @@ class StructureController extends Controller
                             'id' => $empId,
                             'name' => $emp->getFullNameAttribute(),
                             'type' => 'employee',
-                            'isChief' => false,  // ← ДОБАВИТЬ (обычный сотрудник)
+                            'isChief' => false,
                             'url' => route('employees.show', $emp->id),
                         ];
                     }
@@ -311,6 +316,7 @@ class StructureController extends Controller
                 'nodes' => $nodes,
                 'links' => $links,
             ],
+            'backUrl' => $backUrl,
         ]);
     }
 }

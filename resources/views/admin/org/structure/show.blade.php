@@ -14,7 +14,8 @@
 
         <!-- Розовая кнопка -->
         <a href="{{ route("structure.obsidian", [
-        "id" => $commissariat->id
+        "id" => $commissariat->id,
+        "back_url"=>url()->full()
     ]) }}"
             class="px-4 py-2.5 rounded-xl bg-[#A60644] text-white text-sm font-medium hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
             Узловая структура
