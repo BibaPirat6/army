@@ -1,16 +1,20 @@
 <template>
     <div class="graph-container">
+        <!-- кнопка назад -->
+        <a href="/"
+            class="fixed left-5 top-20 z-[100] inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-[#A60644] font-medium hover:bg-white shadow-md hover:shadow-lg transition-all duration-200 group">
+            <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+            Назад
+        </a>
+
         <div ref="svgContainer" class="svg-container"></div>
 
         <!-- Фильтры -->
         <div class="filters-panel">
-            <div class="filters-header" @click="showFilters = !showFilters">
-                <h3>🔍 Фильтры</h3>
-                <svg class="filters-toggle" :class="{ rotated: showFilters }" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </div>
             <div v-show="showFilters" class="filters-content">
                 <div class="filter-group">
                     <div class="filter-title">Типы узлов</div>
@@ -57,8 +61,14 @@
                     <span class="filter-count">Показано: {{ visibleNodesCount }}</span>
                 </div>
             </div>
+            <div class="filters-header" @click="showFilters = !showFilters">
+                <h3>🔍 Фильтры</h3>
+                <svg class="filters-toggle" :class="{ rotated: showFilters }" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
         </div>
-
 
         <!-- Поиск -->
         <div class="search-panel">
@@ -80,49 +90,6 @@
             </div>
             <div v-if="searchResults.length === 0 && searchQuery" class="search-no-results">
                 Ничего не найдено
-            </div>
-        </div>
-
-        <!-- Статистическая панель -->
-        <div class="stats-panel">
-            <div class="stats-header" @click="showStats = !showStats">
-                <h3>📊 Статистика</h3>
-                <svg class="stats-toggle" :class="{ rotated: showStats }" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </div>
-            <div v-show="showStats" class="stats-content">
-                <div class="stat-item">
-                    <span class="stat-label">👥 Всего сотрудников:</span>
-                    <span class="stat-value">{{ stats.totalEmployees }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">👔 Включая начальников:</span>
-                    <span class="stat-value">{{ stats.totalChiefs }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">⭐ Самостоятельных:</span>
-                    <span class="stat-value">{{ stats.independentEmployees }}</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-label">🏢 Отделов:</span>
-                    <span class="stat-value">{{ stats.departmentsCount }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">📁 Отделений (обычных):</span>
-                    <span class="stat-value">{{ stats.divisionsCount }}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">🔗 Отделений (самостоятельных):</span>
-                    <span class="stat-value">{{ stats.independentDivisionsCount }}</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-label">🔗 Всего связей:</span>
-                    <span class="stat-value">{{ stats.totalLinks }}</span>
-                </div>
             </div>
         </div>
 
@@ -216,13 +183,12 @@ export default {
             nodeElements: null,
             linkElements: null,
             zoomInterval: null,
-            showStats: false,
             // search
             searchQuery: '',
             searchResults: [],
             originalNodeColors: new Map(), // для хранения оригинальных цветов
             // фильтры
-            showFilters: true,
+            showFilters: false,
             filters: {
                 commissariat: true,
                 departments: true,
@@ -237,21 +203,6 @@ export default {
         }
     },
     computed: {
-        stats() {
-            const employees = this.nodes.filter(n => n.type === 'employee');
-            const chiefs = employees.filter(e => e.isChief === true);
-            const independentEmployees = this.nodes.filter(n => n.name === 'Самостоятельные сотрудники' || n.name === 'Cотрудники').length;
-
-            return {
-                totalEmployees: employees.length,
-                totalChiefs: chiefs.length,
-                independentEmployees: independentEmployees,
-                departmentsCount: this.nodes.filter(n => n.type === 'department').length,
-                divisionsCount: this.nodes.filter(n => n.type === 'division' && !n.id.includes('independent')).length,
-                independentDivisionsCount: this.nodes.filter(n => n.id && n.id.includes('independent')).length,
-                totalLinks: this.links.length
-            };
-        },
         filteredNodeIds() {
             const filtered = [];
             this.nodes.forEach(node => {
@@ -1047,82 +998,6 @@ export default {
     height: 100%;
 }
 
-/* Статистическая панель */
-.stats-panel {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 100;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    min-width: 220px;
-    overflow: hidden;
-    backdrop-filter: blur(8px);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.stats-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: #A60644;
-    color: white;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.stats-header:hover {
-    background: #6b0229;
-}
-
-.stats-header h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.stats-toggle {
-    width: 16px;
-    height: 16px;
-    transition: transform 0.3s;
-}
-
-.stats-toggle.rotated {
-    transform: rotate(180deg);
-}
-
-.stats-content {
-    padding: 12px 16px;
-    border-top: 1px solid #e0e0e0;
-}
-
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 13px;
-}
-
-.stat-label {
-    color: #565A5B;
-}
-
-.stat-value {
-    font-weight: 600;
-    color: #060606;
-    background: #f0f0f0;
-    padding: 2px 8px;
-    border-radius: 20px;
-}
-
-.stat-divider {
-    height: 1px;
-    background: #e0e0e0;
-    margin: 8px 0;
-}
 
 /* Управление */
 .controls {
@@ -1385,7 +1260,7 @@ export default {
 /* Панель фильтров */
 .filters-panel {
     position: fixed;
-    top: 20px;
+    bottom: 20px;
     left: 20px;
     z-index: 100;
     width: 260px;
