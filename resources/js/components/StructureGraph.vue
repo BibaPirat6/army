@@ -198,6 +198,8 @@ export default {
             visibleNodesCount: 0,
 
             currentBackUrl: this.backUrl || window.location.href,
+            storageKey: `graph_${this.backUrl || 'default'}`,
+            isInitialized: false,
         }
     },
     computed: {
@@ -235,6 +237,8 @@ export default {
         }
         window.removeEventListener('resize', this.handleResize);
         this.stopZoom();
+        this.stopAutoSave();
+        if (this.saveTimeout) clearTimeout(this.saveTimeout);
     },
     methods: {
         getNodeColor(type) {
@@ -271,6 +275,8 @@ export default {
                     if (this.g) {
                         this.g.attr('transform', event.transform);
                     }
+                    // Сохраняем состояние при зуме
+                    this.saveGraphState();
                 });
 
             this.svg = d3.select(container)
@@ -281,7 +287,7 @@ export default {
 
             this.g = this.svg.append('g');
 
-            const simulationNodes = this.nodes.map(n => ({ ...n }));
+            let simulationNodes = this.nodes.map(n => ({ ...n }));
             const simulationLinks = this.links.map(l => ({
                 source: l.source,
                 target: l.target
@@ -312,96 +318,15 @@ export default {
                 }
             });
 
-            // ========== РАСЧЕТ НАЧАЛЬНЫХ ПОЗИЦИЙ ==========
-            const centerX = this.width / 2;
-            const centerY = this.height / 2;
+            // ========== ЗАГРУЖАЕМ СОХРАНЕННОЕ СОСТОЯНИЕ ==========
+            const savedState = this.loadGraphState();
 
-            // Находим главный узел (комиссариат)
-            const mainNode = simulationNodes.find(n => n.type === 'commissariat');
-
-            if (mainNode) {
-                // Комиссариат в центре
-                mainNode.x = centerX;
-                mainNode.y = centerY;
-                mainNode.fx = centerX;
-                mainNode.fy = centerY;
-
-                // Группируем узлы по типам
-                const departments = simulationNodes.filter(n => n.type === 'department');
-
-                // Располагаем отделы по кругу
-                const deptRadius = 250;
-                const deptAngleStep = (Math.PI * 2) / Math.max(departments.length, 1);
-                departments.forEach((dept, index) => {
-                    const angle = index * deptAngleStep;
-                    dept.x = centerX + Math.cos(angle) * deptRadius;
-                    dept.y = centerY + Math.sin(angle) * deptRadius;
-                });
-
-                // Располагаем отделения вокруг их отделов
-                departments.forEach(dept => {
-                    const relatedDivisions = simulationNodes.filter(n =>
-                        n.type === 'division' &&
-                        simulationLinks.some(l => l.source === dept && l.target === n)
-                    );
-
-                    const divRadius = 150;
-                    const divAngleStep = (Math.PI * 2) / Math.max(relatedDivisions.length, 1);
-                    relatedDivisions.forEach((div, idx) => {
-                        const angle = idx * divAngleStep;
-                        div.x = dept.x + Math.cos(angle) * divRadius;
-                        div.y = dept.y + Math.sin(angle) * divRadius;
-                    });
-                });
-
-                // Располагаем сотрудников вокруг их отделений
-                simulationNodes.forEach(node => {
-                    if (node.type === 'division') {
-                        const relatedEmployees = simulationNodes.filter(n =>
-                            n.type === 'employee' &&
-                            simulationLinks.some(l => l.source === node && l.target === n)
-                        );
-
-                        const empRadius = 120;
-                        const empAngleStep = (Math.PI * 2) / Math.max(relatedEmployees.length, 1);
-                        relatedEmployees.forEach((emp, idx) => {
-                            const angle = idx * empAngleStep;
-                            emp.x = node.x + Math.cos(angle) * empRadius;
-                            emp.y = node.y + Math.sin(angle) * empRadius;
-                        });
-                    }
-                });
-
-                // Сотрудники, связанные напрямую с комиссариатом
-                const directEmployees = simulationNodes.filter(n =>
-                    n.type === 'employee' &&
-                    simulationLinks.some(l => l.source === mainNode && l.target === n)
-                );
-
-                const directEmpRadius = 200;
-                const directEmpAngleStep = (Math.PI * 2) / Math.max(directEmployees.length, 1);
-                directEmployees.forEach((emp, idx) => {
-                    const angle = idx * directEmpAngleStep;
-                    emp.x = centerX + Math.cos(angle) * directEmpRadius;
-                    emp.y = centerY + Math.sin(angle) * directEmpRadius;
-                });
-
-                // Группы (контейнеры сотрудников)
-                const groups = simulationNodes.filter(n => n.type === 'group');
-                groups.forEach(group => {
-                    const parentDept = simulationNodes.find(d =>
-                        simulationLinks.some(l => l.source === d && l.target === group)
-                    );
-                    if (parentDept) {
-                        const groupRadius = 140;
-                        const angle = Math.random() * Math.PI * 2;
-                        group.x = parentDept.x + Math.cos(angle) * groupRadius;
-                        group.y = parentDept.y + Math.sin(angle) * groupRadius;
-                    } else {
-                        group.x = centerX + (Math.random() - 0.5) * 400;
-                        group.y = centerY + (Math.random() - 0.5) * 300;
-                    }
-                });
+            if (savedState && savedState.nodes && savedState.nodes.length > 0) {
+                // Восстанавливаем позиции узлов из сохранения
+                simulationNodes = this.restoreNodePositions(simulationNodes, savedState);
+            } else {
+                // Если сохранения нет - рассчитываем начальные позиции
+                this.calculateInitialPositions(simulationNodes, simulationLinks);
             }
 
             // ========== НАСТРОЙКА СИЛ ==========
@@ -433,8 +358,9 @@ export default {
                 .alphaDecay(0.02)
                 .velocityDecay(0.4);
 
-            // Фиксируем комиссариат в центре на время стабилизации
-            if (mainNode) {
+            // Фиксируем комиссариат в центре на время стабилизации (только если нет сохраненного состояния)
+            const mainNode = simulationNodes.find(n => n.type === 'commissariat');
+            if (mainNode && (!savedState || !savedState.nodes)) {
                 setTimeout(() => {
                     if (this.simulation) {
                         mainNode.fx = null;
@@ -445,9 +371,19 @@ export default {
 
             this.draw(simulationNodes, simulationLinks);
 
+            // Восстанавливаем вид после отрисовки
+            if (savedState && savedState.viewState) {
+                setTimeout(() => {
+                    this.restoreViewState(savedState);
+                }, 100);
+            }
+
             this.simulation.on('tick', () => {
                 this.updatePositions();
             });
+
+            // Запускаем автосохранение
+            this.startAutoSave();
         },
 
         draw(nodesData, linksData) {
@@ -716,6 +652,12 @@ export default {
             if (this.nodeElements) {
                 this.nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
             }
+
+            // Сохраняем состояние при движении (с debounce)
+            if (this.saveTimeout) clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(() => {
+                this.saveGraphState();
+            }, 500);
         },
 
         startZoomIn() {
@@ -1051,6 +993,193 @@ export default {
                 chiefs: true,
             };
             this.applyFilters();
+        },
+
+
+        // Сохранение состояния графа
+        saveGraphState() {
+            if (!this.nodeElements || !this.simulation) return;
+
+            const state = {
+                nodes: [],
+                links: [],
+                viewState: null,
+                timestamp: Date.now()
+            };
+
+            // Сохраняем позиции узлов
+            this.nodeElements.each((d) => {
+                state.nodes.push({
+                    id: d.id,
+                    x: d.x,
+                    y: d.y,
+                    fx: d.fx || null,
+                    fy: d.fy || null
+                });
+            });
+
+            // Сохраняем текущий вид (зум и позиция)
+            if (this.svg) {
+                const transform = d3.zoomTransform(this.svg.node());
+                state.viewState = {
+                    x: transform.x,
+                    y: transform.y,
+                    k: transform.k
+                };
+            }
+
+            localStorage.setItem(this.storageKey, JSON.stringify(state));
+            console.log('Graph state saved to localStorage');
+        },
+
+        // Загрузка состояния графа
+        loadGraphState() {
+            const saved = localStorage.getItem(this.storageKey);
+            if (!saved) return false;
+
+            try {
+                const state = JSON.parse(saved);
+                // Проверяем, что сохранение не старше 7 дней
+                if (state.timestamp && Date.now() - state.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                    localStorage.removeItem(this.storageKey);
+                    return false;
+                }
+                return state;
+            } catch (e) {
+                console.error('Failed to load graph state:', e);
+                return false;
+            }
+        },
+
+        // Восстановление позиций узлов из сохраненного состояния
+        restoreNodePositions(simulationNodes, savedState) {
+            if (!savedState || !savedState.nodes) return;
+
+            const savedNodesMap = new Map();
+            savedState.nodes.forEach(savedNode => {
+                savedNodesMap.set(savedNode.id, savedNode);
+            });
+
+            simulationNodes.forEach(node => {
+                const saved = savedNodesMap.get(node.id);
+                if (saved) {
+                    node.x = saved.x;
+                    node.y = saved.y;
+                    node.fx = saved.fx;
+                    node.fy = saved.fy;
+                }
+            });
+
+            return simulationNodes;
+        },
+
+        // Восстановление вида (зум и позиция)
+        restoreViewState(savedState) {
+            if (!savedState || !savedState.viewState || !this.svg || !this.zoomBehavior) return;
+
+            const { x, y, k } = savedState.viewState;
+            const transform = d3.zoomIdentity.translate(x, y).scale(k);
+            this.svg.call(this.zoomBehavior.transform, transform);
+        },
+
+        // Автосохранение (по таймеру)
+        startAutoSave() {
+            if (this.autoSaveInterval) clearInterval(this.autoSaveInterval);
+            this.autoSaveInterval = setInterval(() => {
+                this.saveGraphState();
+            }, 30000); // Сохраняем каждые 30 секунд
+        },
+
+        stopAutoSave() {
+            if (this.autoSaveInterval) {
+                clearInterval(this.autoSaveInterval);
+                this.autoSaveInterval = null;
+            }
+        },
+
+        calculateInitialPositions(simulationNodes, simulationLinks) {
+            const centerX = this.width / 2;
+            const centerY = this.height / 2;
+
+            const mainNode = simulationNodes.find(n => n.type === 'commissariat');
+
+            if (mainNode) {
+                mainNode.x = centerX;
+                mainNode.y = centerY;
+                mainNode.fx = centerX;
+                mainNode.fy = centerY;
+
+                const departments = simulationNodes.filter(n => n.type === 'department');
+
+                const deptRadius = 250;
+                const deptAngleStep = (Math.PI * 2) / Math.max(departments.length, 1);
+                departments.forEach((dept, index) => {
+                    const angle = index * deptAngleStep;
+                    dept.x = centerX + Math.cos(angle) * deptRadius;
+                    dept.y = centerY + Math.sin(angle) * deptRadius;
+                });
+
+                departments.forEach(dept => {
+                    const relatedDivisions = simulationNodes.filter(n =>
+                        n.type === 'division' &&
+                        simulationLinks.some(l => l.source === dept && l.target === n)
+                    );
+
+                    const divRadius = 150;
+                    const divAngleStep = (Math.PI * 2) / Math.max(relatedDivisions.length, 1);
+                    relatedDivisions.forEach((div, idx) => {
+                        const angle = idx * divAngleStep;
+                        div.x = dept.x + Math.cos(angle) * divRadius;
+                        div.y = dept.y + Math.sin(angle) * divRadius;
+                    });
+                });
+
+                simulationNodes.forEach(node => {
+                    if (node.type === 'division') {
+                        const relatedEmployees = simulationNodes.filter(n =>
+                            n.type === 'employee' &&
+                            simulationLinks.some(l => l.source === node && l.target === n)
+                        );
+
+                        const empRadius = 120;
+                        const empAngleStep = (Math.PI * 2) / Math.max(relatedEmployees.length, 1);
+                        relatedEmployees.forEach((emp, idx) => {
+                            const angle = idx * empAngleStep;
+                            emp.x = node.x + Math.cos(angle) * empRadius;
+                            emp.y = node.y + Math.sin(angle) * empRadius;
+                        });
+                    }
+                });
+
+                const directEmployees = simulationNodes.filter(n =>
+                    n.type === 'employee' &&
+                    simulationLinks.some(l => l.source === mainNode && l.target === n)
+                );
+
+                const directEmpRadius = 200;
+                const directEmpAngleStep = (Math.PI * 2) / Math.max(directEmployees.length, 1);
+                directEmployees.forEach((emp, idx) => {
+                    const angle = idx * directEmpAngleStep;
+                    emp.x = centerX + Math.cos(angle) * directEmpRadius;
+                    emp.y = centerY + Math.sin(angle) * directEmpRadius;
+                });
+
+                const groups = simulationNodes.filter(n => n.type === 'group');
+                groups.forEach(group => {
+                    const parentDept = simulationNodes.find(d =>
+                        simulationLinks.some(l => l.source === d && l.target === group)
+                    );
+                    if (parentDept) {
+                        const groupRadius = 140;
+                        const angle = Math.random() * Math.PI * 2;
+                        group.x = parentDept.x + Math.cos(angle) * groupRadius;
+                        group.y = parentDept.y + Math.sin(angle) * groupRadius;
+                    } else {
+                        group.x = centerX + (Math.random() - 0.5) * 400;
+                        group.y = centerY + (Math.random() - 0.5) * 300;
+                    }
+                });
+            }
         },
     }
 };
