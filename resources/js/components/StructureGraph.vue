@@ -503,6 +503,16 @@ export default {
                         .attr('stroke-width', 2)
                         .attr('stroke-dasharray', '4,2');
 
+                    // ДОБАВЛЯЕМ TITLE ДЛЯ ГРУППЫ
+                    nodeGroup.append('title')
+                        .text(() => {
+                            let titleText = d.name;
+                            if (d.type === 'group') {
+                                titleText = `Группа: ${d.name}`;
+                            }
+                            return titleText;
+                        });
+
                     nodeGroup.append('text')
                         .attr('text-anchor', 'middle')
                         .attr('dy', '0.35em')
@@ -559,6 +569,26 @@ export default {
                     d.originalFill = fillColor;
                     d.originalStroke = strokeColor;
                     d.originalRadius = radius;
+
+                    // ДОБАВЛЯЕМ TITLE ДЛЯ ОБЫЧНЫХ УЗЛОВ
+                    nodeGroup.append('title')
+                        .text(() => {
+                            let titleText = '';
+                            if (d.type === 'commissariat') {
+                                titleText = `Комиссариат: ${d.name}`;
+                            } else if (d.type === 'department') {
+                                titleText = `Отдел: ${d.name}`;
+                            } else if (d.type === 'division') {
+                                titleText = `Отделение: ${d.name}`;
+                            } else if (d.type === 'employee') {
+                                if (isChief) {
+                                    titleText = `Начальник: ${d.name}`;
+                                } else {
+                                    titleText = `Сотрудник: ${d.name}`;
+                                }
+                            }
+                            return titleText;
+                        });
 
                     nodeGroup.append('circle')
                         .attr('r', radius)
