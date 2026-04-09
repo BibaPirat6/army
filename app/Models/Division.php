@@ -5,64 +5,73 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\Employee;
 
 class Division extends Model
 {
     protected $table = 'divisions';
+    protected $fillable = ['name', 'commissariat_id', 'department_id'];
 
-    protected $fillable = [
-        'name',
-        'commissariat_id',
-        'department_id',
-    ];
+    // ===== ОТНОШЕНИЯ =====
 
-    // получить employee_position, который соответствует должности начальника отделения
-    public function chiefPosition(): HasOne
-    {
-        return $this->hasOne(EmployeePosition::class)
-            ->whereHas('position.chiefType', function ($query) {
-                $query->where('name', 'начальник отделения');
-            })
-            ->with(['employee', 'position']);
-    }
-
-    // аксессор
-    public function getChiefAttribute()
-    {
-        return $this->chiefPosition?->employee;
-    }
-
-    public function employeePositions(): HasMany
-    {
-        return $this->hasMany(EmployeePosition::class);
-    }
-
-    /**
-     * Сотрудники отделения (через таблицу employee_positions)
-     */
-    public function employees(): BelongsToMany
-    {
-        return $this->belongsToMany(Employee::class, 'employee_positions', 'division_id', 'employee_id')
-            ->withPivot(['position_id', 'commissariat_id', 'department_id', 'rate', 'is_independent'])
-            ->with('person');
-    }
-
-    /**
-     * Получить комиссариат, к которому относится отделение
-     */
     public function commissariat(): BelongsTo
     {
         return $this->belongsTo(Commissariat::class);
     }
 
-    /**
-     * Получить отдел, к которому относится отделение
-     */
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Штатные должности в этом отделении
+     */
+    public function commissariatPositions(): HasMany
+    {
+        return $this->hasMany(CommissariatPosition::class);
+    }
+
+    /**
+     * Назначения сотрудников в этом отделении
+     */
+    public function employeePositions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            EmployeePosition::class,
+            CommissariatPosition::class,
+            'division_id',
+            'commissariat_position_id'
+        );
+    }
+
+    /**
+     * Штатная должность начальника отделения
+     */
+    public function chiefCommissariatPosition(): HasOne
+    {
+        return $this->hasOne(CommissariatPosition::class)
+            ->whereHas('position.chiefType', fn($q) => $q->where('name', 'начальник отделения'));
+    }
+
+    // ===== АКСЕССОРЫ =====
+
+    public function getChiefAttribute()
+    {
+        return $this->chiefCommissariatPosition?->activeAssignment?->employee;
+    }
+
+    /**
+     * Сотрудники отделения
+     */
+    public function getEmployeesAttribute()
+    {
+        return Employee::whereHas('employeePositions.commissariatPosition', function ($q) {
+            $q->where('commissariat_positions.division_id', $this->id);
+        })
+        ->with('person')
+        ->get()
+        ->unique('id');
     }
 }

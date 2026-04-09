@@ -13,10 +13,10 @@ class EmployeePositionStatusSeeder extends Seeder
     public function run(): void
     {
         $statuses = [
-            ['name' => 'занят', 'color'=>'#ffffff'],
-            ['name' => 'вакант', 'color'=>'#66FF00'],
-            ['name' => 'отпуск', 'color'=>'#F64A46'],
-            ['name' => 'декрет', 'color'=>'#F7943C'],
+            ['name' => 'работает', 'color'=>'FFFFFF','occupies_rate'=>true],
+            ['name' => 'отпуск', 'color'=>'F64A46','occupies_rate'=>false],
+            ['name' => 'декрет', 'color'=>'F7943C','occupies_rate'=>false],
+            ['name' => 'уволен', 'color'=>'FF0000','occupies_rate'=>false],
         ];
 
         $now = now();

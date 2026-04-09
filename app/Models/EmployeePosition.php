@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class EmployeePosition extends Model
 {
@@ -11,17 +12,18 @@ class EmployeePosition extends Model
 
     protected $fillable = [
         'employee_id',
-        'commissariat_id',
-        'department_id',
-        'division_id',
-        'position_id',
-        'employee_position_rate_id',
+        'commissariat_position_id',
+        'rate',
         'employee_position_status_id',
-        'is_independent',
+        'started_at',
+        'ended_at',
+        'is_active',
+        'expected_return_at',
     ];
 
     protected $casts = [
-        'is_independent' => 'boolean',
+        'rate' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -33,35 +35,11 @@ class EmployeePosition extends Model
     }
 
     /**
-     * Комиссариат
+     * Назначение ссылается на штатную должность (КЛЮЧЕВАЯ СВЯЗЬ)
      */
-    public function commissariat(): BelongsTo
+    public function commissariatPosition(): BelongsTo
     {
-        return $this->belongsTo(Commissariat::class);
-    }
-
-    /**
-     * Отдел
-     */
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
-    /**
-     * Дивизия
-     */
-    public function division(): BelongsTo
-    {
-        return $this->belongsTo(Division::class);
-    }
-
-    /**
-     * Должность
-     */
-    public function position(): BelongsTo
-    {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(CommissariatPosition::class, 'commissariat_position_id');
     }
 
     /**
@@ -72,19 +50,69 @@ class EmployeePosition extends Model
         return $this->belongsTo(EmployeePositionStatus::class);
     }
 
+    // ===== СКВОЗНЫЕ ОТНОШЕНИЯ (через commissariat_position) =====
+
     /**
-     * Ставка
+     * Комиссариат (через штатную должность)
      */
-    public function employeePositionRate(): BelongsTo
+    public function commissariat(): HasOneThrough
     {
-        return $this->belongsTo(EmployeePositionRate::class);
+        return $this->hasOneThrough(
+            Commissariat::class,
+            CommissariatPosition::class,
+            'id', // FK на commissariat_positions
+            'id', // FK на commissariats
+            'commissariat_position_id', // FK на employee_positions
+            'commissariat_id' // FK на commissariat_positions
+        );
+    }
+
+    /**
+     * Отдел (через штатную должность)
+     */
+    public function department(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Department::class,
+            CommissariatPosition::class,
+            'id',
+            'id',
+            'commissariat_position_id',
+            'department_id'
+        );
+    }
+
+    /**
+     * Отделение (через штатную должность)
+     */
+    public function division(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Division::class,
+            CommissariatPosition::class,
+            'id',
+            'id',
+            'commissariat_position_id',
+            'division_id'
+        );
+    }
+
+    /**
+     * Должность из справочника (через штатную должность)
+     */
+    public function position(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Position::class,
+            CommissariatPosition::class,
+            'id',
+            'id',
+            'commissariat_position_id',
+            'position_id'
+        );
     }
 
     // АКСЕССОРЫ
-    public function getRateValueAttribute()
-    {
-        return $this->employeePositionRate?->rate;
-    }
 
     public function getStatusNameAttribute()
     {

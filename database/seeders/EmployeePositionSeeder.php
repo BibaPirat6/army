@@ -4,281 +4,205 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+// Импортируем модели
+use App\Models\Employee;
+use App\Models\CommissariatPosition;
+use App\Models\EmployeePositionStatus;
+use App\Models\EmployeePosition;
 
 class EmployeePositionSeeder extends Seeder
 {
+    /**
+     * Веса статусов для распределения
+     */
+    private const STATUS_WEIGHTS = [
+        'работает' => 70,
+        'отпуск'   => 15,
+        'декрет'   => 10,
+        'уволен'   => 5,
+    ];
+
+    /**
+     * ~25% должностей останутся вакантными
+     */
+    private const VACANCY_RATE = 0;
+
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // =====================================================================
-        // 1. Загружаем данные
-        // =====================================================================
-        $employees = DB::table('employees')->orderBy('id')->get();
-        $positions = DB::table('positions')->get();
-        $chiefTypes = DB::table('chief_types')->pluck('name', 'id');
-        $commissariats = DB::table('commissariats')->get();
-        $departments = DB::table('departments')->get()->groupBy('commissariat_id');
-        $divisionsInDept = DB::table('divisions')
-            ->whereNotNull('department_id')
-            ->get()
-            ->groupBy('department_id');
-        $independentDivisions = DB::table('divisions')
-            ->whereNull('department_id')
+        $now = now();
+
+        // Статусы
+        $statuses = DB::table('employee_position_statuses')->pluck('id', 'name')->toArray();
+        if (empty($statuses)) {
+            $this->command->error('❌ Нет статусов в employee_position_statuses. Запустите EmployeePositionStatusSeeder.');
+            return;
+        }
+
+        // Загружаем все штатные позиции с привязанной позицией (чтобы знать chief_type)
+        $commPositions = DB::table('commissariat_positions as cp')
+            ->join('positions as p', 'cp.position_id', '=', 'p.id')
+            ->select('cp.*', 'p.chief_type_id')
+            ->orderBy('cp.commissariat_id')
             ->get()
             ->groupBy('commissariat_id');
 
-        if ($employees->count() < 60) {
-            $this->command->error('❌ Необходимо минимум 60 сотрудников!');
+        if ($commPositions->isEmpty()) {
+            $this->command->error('❌ Нет commissariat_positions. Запустите CommissariatPositionSeeder.');
             return;
         }
 
-        // =====================================================================
-        // 2. Группируем позиции по chief_type
-        // =====================================================================
-        $byChief = $positions->groupBy(fn($p) => $chiefTypes[$p->chief_type_id] ?? '');
-        
-        $commHeadPos = $byChief['начальник комиссариата']?->first();
-        $deptHeadPos = $byChief['начальник отдела']?->values() ?? collect();
-        $divHeadPos = $byChief['начальник отделения']?->values() ?? collect();
-        $workerPos = $byChief['работник']?->values() ?? collect();
+        // Сотрудники сгруппированные по комиссариату
+        $employeesByComm = DB::table('employees')->get()->groupBy('commissariat_id');
 
-        // Проверка минимального набора
-        if (!$commHeadPos) {
-            $this->command->error('❌ Нет должности "начальник комиссариата" в PositionSeeder!');
-            return;
-        }
-        if ($deptHeadPos->count() < 1) {
-            $this->command->error('❌ Нет должности "начальник отдела" в PositionSeeder!');
-            return;
-        }
-        if ($divHeadPos->count() < 1) {
-            $this->command->error('❌ Нет должности "начальник отделения" в PositionSeeder!');
-            return;
-        }
-        if ($workerPos->count() < 1) {
-            $this->command->error('❌ Нет должности "работник" в PositionSeeder!');
-            return;
-        }
+        $totalAssigned = 0;
+        $totalPositions = 0;
 
-        $this->command->info("📊 Доступно позиций: работник={$workerPos->count()}, нач.отделов={$deptHeadPos->count()}, нач.отделений={$divHeadPos->count()}");
+        foreach ($commPositions as $commId => $positions) {
+            $positions = $positions->values();
+            $totalPositions += $positions->count();
 
-        // =====================================================================
-        // 3. Формируем назначения (ровно 60 записей)
-        // =====================================================================
-        $records = [];
-        $now = now();
-        $empIdx = 0;
+            // сотрудники в этом комиссариате (shuffle чтобы распределение было случайным)
+            $availableEmployees = ($employeesByComm[$commId] ?? collect())->shuffle()->values();
+            $empIdx = 0;
 
-        // --- 3.1. Начальники комиссариатов: 2 записи ---
-        foreach ($commissariats as $comm) {
-            $records[] = $this->makeRecord(
-                employeeId: $employees[$empIdx++]->id,
-                commissariatId: $comm->id,
-                departmentId: null,
-                divisionId: null,
-                positionId: $commHeadPos->id
-            );
-        }
+            foreach ($positions as $pos) {
+                // 25% оставляем вакантными
+                if (rand(1, 100) <= (int)(self::VACANCY_RATE * 100)) {
+                    continue;
+                }
 
-        // --- 3.2. Начальники отделов: 6 записей ---
-        $deptHeadList = $deptHeadPos->toArray();
-        $deptHeadIdx = 0;
-        
-        foreach ($commissariats as $comm) {
-            $commDepts = $departments[$comm->id] ?? collect();
-            foreach ($commDepts->take(3) as $dept) {
-                $pos = $deptHeadList[$deptHeadIdx % count($deptHeadList)];
-                $records[] = $this->makeRecord(
-                    employeeId: $employees[$empIdx++]->id,
-                    commissariatId: $comm->id,
-                    departmentId: $dept->id,
-                    divisionId: null,
-                    positionId: $pos->id
-                );
-                $deptHeadIdx++;
-            }
-        }
-
-        // --- 3.3. Начальники отделений: 16 записей ---
-        $divHeadList = $divHeadPos->toArray();
-        $divHeadIdx = 0;
-        
-        foreach ($commissariats as $comm) {
-            $commDepts = $departments[$comm->id] ?? collect();
-            $assignedInComm = 0;
-            
-            // 3.3.1. Начальники отделений внутри отделов: 12 (по 6 на комиссариат)
-            foreach ($commDepts as $dept) {
-                $deptDivs = $divisionsInDept[$dept->id] ?? collect();
-                foreach ($deptDivs->take(2) as $div) {
-                    if ($assignedInComm < 6) {
-                        $pos = $divHeadList[$divHeadIdx % count($divHeadList)];
-                        $records[] = $this->makeRecord(
-                            employeeId: $employees[$empIdx++]->id,
-                            commissariatId: $comm->id,
-                            departmentId: $dept->id,
-                            divisionId: $div->id,
-                            positionId: $pos->id
-                        );
-                        $divHeadIdx++;
-                        $assignedInComm++;
+                // берем сотрудника из этого комиссариата, если есть
+                $employee = $availableEmployees->get($empIdx) ?? null;
+                if ($employee) {
+                    $empIdx++;
+                } else {
+                    // fallback: любой сотрудник из таблицы (вдруг штат персонально меньше)
+                    $employee = DB::table('employees')->inRandomOrder()->first();
+                    if (!$employee) {
+                        $this->command->warn("⚠️ Нет доступных сотрудников для назначения позиции id={$pos->id}");
+                        continue;
                     }
                 }
-            }
-            
-            // 3.3.2. Начальники самостоятельных отделений: 4 (по 2 на комиссариат)
-            $indDivs = $independentDivisions[$comm->id] ?? collect();
-            foreach ($indDivs->take(2) as $div) {
-                if ($assignedInComm < 8) {
-                    $pos = $divHeadList[$divHeadIdx % count($divHeadList)];
-                    $records[] = $this->makeRecord(
-                        employeeId: $employees[$empIdx++]->id,
-                        commissariatId: $comm->id,
-                        departmentId: null,
-                        divisionId: $div->id,
-                        positionId: $pos->id,
-                        isIndependent: true
-                    );
-                    $divHeadIdx++;
-                    $assignedInComm++;
+
+                // определим статус — руководителям даём "работает"
+                $statusName = ($pos->chief_type_id !== null) ? 'работает' : $this->getWeightedRandomStatus();
+                $statusId = $statuses[$statusName] ?? reset($statuses);
+
+                // ставка: руководители — 1.0, остальные — случайно из набора (ограничено available rate в commissariat_positions.rate_total)
+                $rateOptions = [0.25, 0.5, 0.75, 1.0];
+                $rate = ($pos->chief_type_id !== null) ? 1.0 : $rateOptions[array_rand($rateOptions)];
+
+                // дата начала/окончания/ожидаемого возвращения
+                $startedAt = $this->generateStartDate($statusName);
+                $endedAt = null;
+                $expectedReturnAt = null;
+                $isActive = true;
+
+                if ($statusName === 'уволен') {
+                    $isActive = false;
+                    $endedAt = $startedAt->copy()->addMonths(rand(3, 24));
+                } elseif ($statusName === 'отпуск') {
+                    $expectedReturnAt = $startedAt->copy()->addDays(rand(7, 56));
+                } elseif ($statusName === 'декрет') {
+                    $expectedReturnAt = $startedAt->copy()->addMonths(rand(18, 36));
                 }
+
+                // Вставляем назначение
+                DB::table('employee_positions')->insert([
+                    'employee_id' => $employee->id,
+                    'commissariat_position_id' => $pos->id,
+                    'rate' => round($rate, 2),
+                    'employee_position_status_id' => $statusId,
+                    'started_at' => $startedAt,
+                    'ended_at' => $endedAt,
+                    'is_active' => $isActive,
+                    'expected_return_at' => $expectedReturnAt,
+                ]);
+
+                $totalAssigned++;
             }
         }
 
-        // --- 3.4. Работники напрямую в комиссариате: 8 записей (4 на каждый) ---
-        $workerList = $workerPos->toArray();
-        $workerIdx = 0;
-        
-        // Если работников мало, используем те что есть по циклу
-        if (count($workerList) === 0) {
-            $this->command->warn('⚠️ Нет позиций типа "работник", пропускаем этот блок');
-        } else {
-            foreach ($commissariats as $comm) {
-                for ($i = 0; $i < 4; $i++) {
-                    if (count($records) >= 60) break;
-                    
-                    $records[] = $this->makeRecord(
-                        employeeId: $employees[$empIdx++]->id,
-                        commissariatId: $comm->id,
-                        departmentId: null,
-                        divisionId: null,
-                        positionId: $workerList[$workerIdx % count($workerList)]->id
-                    );
-                    $workerIdx++;
-                }
-            }
-        }
-
-        // --- 3.5. Остальные работники: дополняем до 60 ---
-        while (count($records) < 60 && $empIdx < $employees->count()) {
-            if (count($workerList) === 0) {
-                $this->command->error('❌ Недостаточно позиций "работник" для заполнения 60 записей!');
-                break;
-            }
-
-            foreach ($commissariats as $comm) {
-                if (count($records) >= 60) break;
-                
-                $commDepts = $departments[$comm->id] ?? collect();
-                
-                // Работники в обычных отделениях
-                foreach ($commDepts as $dept) {
-                    if (count($records) >= 60) break;
-                    $deptDivs = $divisionsInDept[$dept->id] ?? collect();
-                    foreach ($deptDivs as $div) {
-                        if (count($records) >= 60) break;
-                        
-                        $records[] = $this->makeRecord(
-                            employeeId: $employees[$empIdx++]->id,
-                            commissariatId: $comm->id,
-                            departmentId: $dept->id,
-                            divisionId: $div->id,
-                            positionId: $workerList[$workerIdx % count($workerList)]->id
-                        );
-                        $workerIdx++;
-                    }
-                }
-                
-                // Работники в самостоятельных отделениях
-                $indDivs = $independentDivisions[$comm->id] ?? collect();
-                foreach ($indDivs as $div) {
-                    if (count($records) >= 60) break;
-                    
-                    $records[] = $this->makeRecord(
-                        employeeId: $employees[$empIdx++]->id,
-                        commissariatId: $comm->id,
-                        departmentId: null,
-                        divisionId: $div->id,
-                        positionId: $workerList[$workerIdx % count($workerList)]->id,
-                        isIndependent: true
-                    );
-                    $workerIdx++;
-                }
-            }
-        }
-
-        // =====================================================================
-        // 4. Вставка в БД
-        // =====================================================================
-        foreach ($records as $rec) {
-            DB::table('employee_positions')->updateOrInsert(
-                [
-                    'employee_id' => $rec['employee_id'],
-                    'commissariat_id' => $rec['commissariat_id'],
-                    'department_id' => $rec['department_id'],
-                    'division_id' => $rec['division_id'],
-                    'position_id' => $rec['position_id'],
-                ],
-                [
-                    'employee_position_rate_id' => $rec['employee_position_rate_id'],
-                    'employee_position_status_id' => $rec['employee_position_status_id'],
-                    'is_independent' => $rec['is_independent'],
-                    'updated_at' => $now,
-                ]
-            );
-        }
-
-        // =====================================================================
-        // 5. Статистика
-        // =====================================================================
-        $directCount = 0;   // department_id = null AND division_id = null
-        $deptCount = 0;     // department_id != null AND division_id = null
-        $divCount = 0;      // division_id != null
-        
-        foreach ($records as $r) {
-            if ($r['department_id'] === null && $r['division_id'] === null) {
-                $directCount++;
-            } elseif ($r['division_id'] === null) {
-                $deptCount++;
-            } else {
-                $divCount++;
-            }
-        }
-
-        $this->command->info('✓ Назначения созданы: '.count($records));
-        $this->command->info('  └─ Прямо в комиссариате (dept=null, div=null): '.$directCount);
-        $this->command->info('  └─ В отделах (dept!=null, div=null): '.$deptCount);
-        $this->command->info('  └─ В отделениях (div!=null): '.$divCount);
+        $this->command->info("✓ Назначений создано: {$totalAssigned} / {$totalPositions} (прибл.)");
     }
 
-    private function makeRecord(
-        int $employeeId,
-        int $commissariatId,
-        ?int $departmentId,
-        ?int $divisionId,
-        int $positionId,
-        bool $isIndependent = false
-    ): array {
-        return [
-            'employee_id' => $employeeId,
-            'commissariat_id' => $commissariatId,
-            'department_id' => $departmentId,
-            'division_id' => $divisionId,
-            'position_id' => $positionId,
-            'employee_position_rate_id' => 4,
-            'employee_position_status_id' => 1,
-            'is_independent' => $isIndependent,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
+    /**
+     * Получить случайный статус с учётом весов
+     */
+    private function getWeightedRandomStatus(): string
+    {
+        $pool = [];
+        foreach (self::STATUS_WEIGHTS as $status => $weight) {
+            for ($i = 0; $i < $weight; $i++) {
+                $pool[] = $status;
+            }
+        }
+        return $pool[array_rand($pool)];
+    }
+
+    /**
+     * Рассчитать занимаемую ставку в зависимости от статуса
+     */
+    private function calculateOccupiedRate(float $availableRate, string $statusName): float
+    {
+        if (!in_array($statusName, ['работает', 'уволен'])) {
+            return min(0.01, $availableRate);
+        }
+        $options = [0.25, 0.5, 0.75, 1.0];
+        $candidate = $options[array_rand($options)];
+        return min($candidate, $availableRate);
+    }
+
+    /**
+     * Сгенерировать дату начала в зависимости от статуса
+     */
+    private function generateStartDate(string $statusName): Carbon
+    {
+        $now = now();
+        if ($statusName === 'уволен') {
+            return $now->copy()->subMonths(rand(12, 48));
+        }
+        if ($statusName === 'декрет') {
+            return $now->copy()->subMonths(rand(6, 30));
+        }
+        if ($statusName === 'отпуск') {
+            return $now->copy()->subDays(rand(0, 30));
+        }
+        return $now->copy()->subDays(rand(0, 730));
+    }
+
+    /**
+     * Вывести статистику
+     */
+    private function printStats(): void
+    {
+        $stats = DB::table('employee_positions')
+            ->join('employee_position_statuses', 'employee_positions.employee_position_status_id', '=', 'employee_position_statuses.id')
+            ->selectRaw('employee_position_statuses.name, COUNT(*) as count')
+            ->groupBy('employee_position_statuses.name')
+            ->pluck('count', 'name');
+
+        $this->command->info("\n📊 Статистика назначений:");
+        foreach (self::STATUS_WEIGHTS as $status => $_) {
+            $count = $stats[$status] ?? 0;
+            $bar = str_repeat('█', (int)($count / 2));
+            $this->command->line("   {$status}: {$count} {$bar}");
+        }
+
+        $vacant = DB::table('commissariat_positions as cp')
+            ->leftJoin('employee_positions as ep', function($join) {
+                $join->on('cp.id', '=', 'ep.commissariat_position_id')
+                     ->where('ep.is_active', true)
+                     ->whereNull('ep.ended_at');
+            })
+            ->whereNull('ep.id')
+            ->count();
+
+        $this->command->info("   💼 Вакантные должности: {$vacant}");
     }
 }

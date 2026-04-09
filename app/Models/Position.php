@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Position extends Model
 {
@@ -27,6 +28,14 @@ class Position extends Model
     public function employeePositions()
     {
         return $this->hasMany(EmployeePosition::class);
+    }
+
+    /**
+     * ✅ Штатные должности, использующие эту должность из справочника
+     */
+    public function commissariatPositions(): HasMany
+    {
+        return $this->hasMany(CommissariatPosition::class, 'position_id');
     }
 
     // Аксессор: имя chief_type через связь

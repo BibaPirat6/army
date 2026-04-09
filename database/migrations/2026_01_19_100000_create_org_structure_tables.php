@@ -74,58 +74,42 @@ return new class extends Migration
             $table->unique(['name', 'commissariat_id']);
         });
 
-
         // Employee Positions tables
         Schema::create('employee_position_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->string('color');
+            // занимает ли статус ставку
+            $table->boolean('occupies_rate')->default(true);
             $table->timestamps();
         });
-        Schema::create('employee_position_rates', function (Blueprint $table) {
+
+        // штатные должности в каждом комиссариате
+        Schema::create('commissariat_positions', function (Blueprint $table) {
             $table->id();
-            $table->decimal('rate', 3, 2)->unique();
+            $table->foreignId('commissariat_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('department_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('division_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('position_id')->constrained()->cascadeOnDelete();
+            $table->decimal('rate_total', 4, 2)->default(1.00);
+            $table->boolean('is_independent')->default(false);
             $table->timestamps();
+            // добавить сервис для вычисления статуса - например вакантна, занята, сотрудник в отпуске свободна до 03.03,
+            // сотрудник в декрете свободна до 03.03
         });
 
         Schema::create('employee_positions', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
-
-            $table->foreignId('commissariat_id')->constrained()->cascadeOnDelete();
-
-            $table->foreignId('department_id')
-                ->nullable()
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('division_id')
-                ->nullable()
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('position_id')->constrained()->cascadeOnDelete();
-
-            $table->foreignId('employee_position_rate_id')->default(4)->constrained()->cascadeOnDelete();
-
-            $table->foreignId('employee_position_status_id')
-                ->default(1)
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->boolean('is_independent')->default(false);
-
-            $table->timestamps();
-
-            $table->unique([
-                'employee_id',
-                'commissariat_id',
-                'department_id',
-                'division_id',
-                'position_id',
-            ],
-                'employee_position_unique');
+            $table->foreignId('commissariat_position_id')->constrained()->cascadeOnDelete();
+            $table->decimal('rate', 4, 2)->default(1.00);
+            $table->foreignId('employee_position_status_id')->default(1)->constrained()->cascadeOnDelete();
+            // для истории
+            $table->timestamp('started_at')->default(now());
+            $table->timestamp('ended_at')->nullable();
+            // для отпусков и декрета
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('expected_return_at')->nullable();
         });
 
     }
@@ -136,7 +120,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('employee_positions');
-        Schema::dropIfExists('employee_position_rates');
+        Schema::dropIfExists('commissariat_positions');
         Schema::dropIfExists('employee_position_statuses');
         Schema::dropIfExists('divisions');
         Schema::dropIfExists('departments');

@@ -11,7 +11,12 @@ class EmployeePositionStatus extends Model
 
     protected $fillable = [
         'name',
-        'color'
+        'color',
+        'occupies_rate',
+    ];
+
+    protected $casts = [
+        'occupies_rate' => 'boolean',
     ];
 
     /**
