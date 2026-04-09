@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 class Commissariat extends Model
 {
     protected $table = 'commissariats';
+
     protected $fillable = ['name', 'longitude', 'latitude'];
 
     // ===== ОТНОШЕНИЯ =====
@@ -54,7 +55,8 @@ class Commissariat extends Model
         return $this->hasOne(CommissariatPosition::class)
             ->whereNull('department_id')
             ->whereNull('division_id')
-            ->whereHas('position.chiefType', fn($q) => $q->where('name', 'начальник комиссариата'));
+            ->whereHas('position.chiefType', fn ($q) => $q->where('name', 'начальник комиссариата')
+            );
     }
 
     // ===== АКСЕССОРЫ =====
@@ -97,19 +99,19 @@ class Commissariat extends Model
     {
         return Employee::whereHas('employeePositions.commissariatPosition', function ($q) use ($independent) {
             $q->where('commissariat_positions.commissariat_id', $this->id)
-              ->where('commissariat_positions.is_independent', $independent)
-              ->whereNull('commissariat_positions.department_id')
-              ->whereNull('commissariat_positions.division_id');
+                ->where('commissariat_positions.is_independent', $independent)
+                ->whereNull('commissariat_positions.department_id')
+                ->whereNull('commissariat_positions.division_id');
         })
-        ->with([
-            'person',
-            'employeePositions' => fn($q) => $q->with([
-                'commissariatPosition.position',
-                'status'
+            ->with([
+                'person',
+                'employeePositions' => fn ($q) => $q->with([
+                    'commissariatPosition.position',
+                    'status',
+                ]),
             ])
-        ])
-        ->get()
-        ->unique('id');
+            ->get()
+            ->unique('id');
     }
 
     /**
@@ -119,7 +121,7 @@ class Commissariat extends Model
     {
         $total = $this->commissariatPositions()->count();
         $occupied = $this->commissariatPositions()
-            ->whereHas('employeePositions', fn($q) => $q->active()->occupiesRate())
+            ->whereHas('employeePositions', fn ($q) => $q->active()->occupiesRate())
             ->count();
         $totalRate = $this->commissariatPositions()->sum('rate_total');
         $occupiedRate = $this->employeePositions()

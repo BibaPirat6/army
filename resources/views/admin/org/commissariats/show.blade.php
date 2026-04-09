@@ -305,7 +305,6 @@
                                                 Назначить должность
                                             </a>
 
-
                                             @foreach ($commissariat->getChiefAttribute()->employeePositions as $position)
                                                 <div class="bg-white/50 rounded-lg border border-[#BFBFBF] p-4 mb-4 last:mb-0">
                                                     <div class="space-y-1.5 text-sm">
@@ -317,8 +316,8 @@
                                                                 ['label' => 'Должность', 'value' => $position->position->name],
                                                                 ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
                                                                 ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
-                                                                ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
-                                                                ['label' => 'Самостоятельная', 'value' => $position->is_independent ? 'да' : 'нет'],
+                                                                ['label' => 'Ставка', 'value' => $position->rate],
+                                                                ['label' => 'Самостоятельная', 'value' => $position->commissariatPosition->is_independent ? 'да' : 'нет'],
                                                                 ['label' => 'Статус', 'value' => $position->getStatusNameAttribute()],
                                                             ];
                                                         @endphp

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CommissariatPosition extends Model
 {
@@ -67,37 +68,12 @@ class CommissariatPosition extends Model
     // ДОП ПЛЮШКИ
 
     /**
-     * Активное назначение (работает прямо сейчас)
+     * ✅ Активное назначение (сотрудник, который сейчас занимает эту должность)
      */
-    public function activeEmployeePosition()
+    public function activeAssignment(): HasOne
     {
         return $this->hasOne(EmployeePosition::class, 'commissariat_position_id')
             ->where('is_active', true)
-            ->whereNull('ended_at')
-            ->with(['employee.person', 'status']);
-    }
-
-    /**
-     * Проверка: занята ли должность (есть активное назначение со статусом "работает")
-     */
-    public function getIsOccupiedAttribute(): bool
-    {
-        return $this->activeEmployeePosition()
-            ->whereHas('status', fn ($q) => $q->where('name', 'работает'))
-            ->exists();
-    }
-
-    /**
-     * Свободная ставка: rate_total минус сумма занятых ставок
-     */
-    public function getAvailableRateAttribute(): float
-    {
-        $occupied = $this->employeePositions()
-            ->where('is_active', true)
-            ->whereNull('ended_at')
-            ->whereHas('status', fn ($q) => $q->where('occupies_rate', true))
-            ->sum('rate');
-
-        return max(0, $this->rate_total - $occupied);
+            ->whereNull('ended_at');
     }
 }

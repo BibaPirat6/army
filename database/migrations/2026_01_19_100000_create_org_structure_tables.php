@@ -105,11 +105,11 @@ return new class extends Migration
             $table->decimal('rate', 4, 2)->default(1.00);
             $table->foreignId('employee_position_status_id')->default(1)->constrained()->cascadeOnDelete();
             // для истории
-            $table->timestamp('started_at')->default(now());
-            $table->timestamp('ended_at')->nullable();
+            $table->date('started_at')->default(now());
+            $table->date('ended_at')->nullable();
             // для отпусков и декрета
             $table->boolean('is_active')->default(true);
-            $table->timestamp('expected_return_at')->nullable();
+            $table->date('expected_return_at')->nullable();
         });
 
     }
