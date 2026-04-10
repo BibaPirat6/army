@@ -10,6 +10,8 @@ class EmployeePosition extends Model
 {
     protected $table = 'employee_positions';
 
+    public $timestamps = false; 
+
     protected $fillable = [
         'employee_id',
         'commissariat_position_id',

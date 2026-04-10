@@ -47,17 +47,17 @@
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник *
+                            Начальник (опционально — поле можно оставить пустым)
                         </label>
 
-                        {{-- visible input --}}
-                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
+                        {{-- visible input (необязательное) --}}
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                outline-none transition-colors text-[#060606]"
                             autocomplete="off">
 
-                        {{-- hidden value --}}
+                        {{-- hidden value (необязательное) --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
                             value="{{ old('chief_employee_id') }}">
 
