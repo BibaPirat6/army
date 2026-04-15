@@ -6,6 +6,7 @@ use App\Models\Commissariat;
 use App\Models\CommissariatPosition;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
+use App\Models\EmployeePositionStatus;
 use App\Models\Person;
 use App\Models\Position;
 use DB;
@@ -33,19 +34,27 @@ class CommissariatsController extends Controller
     public function create(Request $request)
     {
         $employees = Employee::all();
+        $employeePositionStatuses = EmployeePositionStatus::all();
 
         $backUrl = $request->input('back_url');
         $x = $request->input('x');
         $y = $request->input('y');
 
-        return view('admin.org.commissariats.create', compact('employees', 'backUrl', 'x', 'y'));
+        return view('admin.org.commissariats.create', compact('employees', 'backUrl', 'x', 'y', 'employeePositionStatuses'));
     }
 
     public function store(Request $request)
     {
+        dd($request->all());
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'sometimes|nullable|integer|exists:employees,id',
+            'rate_total' => 'sometimes|numeric|min:0.25|max:2',
+            'rate' => 'sometimes|numeric|min:0.25|max:2',
+            'employee_position_status_id' => 'sometimes|nullable|integer|exists:employee_position_statuses,id',
+            'started_at' => 'sometimes|nullable|date',
+            'expected_return_at' => 'sometimes|nullable|date',
+            'ended_at' => 'sometimes|nullable|date',
             'longitude' => 'required|integer',
             'latitude' => 'required|integer',
         ], [
@@ -73,28 +82,41 @@ class CommissariatsController extends Controller
             if (! $chiefPositionRef) {
                 // откат и ошибка: справочник должностей не содержит нужную запись
                 DB::rollBack();
+
                 return back()->withErrors(['error' => 'Не найдена должность "начальник комиссариата" в справочнике'])->withInput();
             }
 
             // 3) создаем штатную должность (слот) для начальника комиссариата
+            $rateTotal = isset($data['rate_total']) ? (float)$data['rate_total'] : 1.00;
+            // checkbox may come as 'on' or be absent — используем has()
+            $isIndependent = $request->has('is_independent');
+
             $commissariatPosition = CommissariatPosition::create([
                 'commissariat_id' => $commissariat->id,
                 'position_id' => $chiefPositionRef->id,
+                'rate_total' => $rateTotal,
+                'is_independent' => $isIndependent,
             ]);
             $commissariatPosition->refresh();
 
             // 4) Если выбран начальник — создаём назначение
             $chiefEmployeeId = $data['chief_employee_id'] ?? null;
-            if (!empty($chiefEmployeeId)) {
+            if (! empty($chiefEmployeeId)) {
+                $rate = isset($data['rate']) ? (float)$data['rate'] : 1.00;
+                $statusId = $data['employee_position_status_id'] ?? 1; // fallback to 1
+                $startedAt = $data['started_at'] ?? now()->toDateString();
+                $expectedReturnAt = $data['expected_return_at'] ?? null;
+                $endedAt = $data['ended_at'] ?? null;
+
                 EmployeePosition::create([
                     'employee_id' => $chiefEmployeeId,
                     'commissariat_position_id' => $commissariatPosition->id,
-                    'rate' => 1.00,
-                    'employee_position_status_id' => 1, // ID статуса "работает" — проверьте в вашей БД!
-                    'started_at' => now()->toDateString(),
+                    'rate' => $rate,
+                    'employee_position_status_id' => $statusId,
+                    'started_at' => $startedAt,
                     'is_active' => true,
-                    'ended_at' => null,
-                    'expected_return_at' => null,
+                    'ended_at' => $endedAt,
+                    'expected_return_at' => $expectedReturnAt,
                 ]);
             }
 
@@ -115,17 +137,19 @@ class CommissariatsController extends Controller
     {
         $commissariat = Commissariat::findOrFail($id);
         $employees = Employee::all();
+        $employeePositionStatuses = EmployeePositionStatus::all();
 
         $backUrl = $request->input('back_url');
 
-        return view('admin.org.commissariats.edit', compact('commissariat', 'employees', 'backUrl'));
+        return view('admin.org.commissariats.edit', compact('commissariat', 'employees', 'backUrl', 'employeePositionStatuses'));
     }
 
     public function update(Request $request, $id)
     {
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
-            'chief_employee_id' => 'required|integer|exists:employees,id',
+            'chief_employee_id' => 'sometimes|nullable|integer|exists:employees,id',
+            'chief_employee_position_status_id' => 'sometimes|nullable|integer|exists:employee_position_statuses,id',
             'longitude' => 'sometimes|nullable|integer',
             'latitude' => 'sometimes|nullable|integer',
         ]);
@@ -157,25 +181,27 @@ class CommissariatsController extends Controller
                 ->first();
 
             // 4) Ищем текущее активное назначение на эту должность
-            $currentAssignment = EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
+            $currentAssignment = $chiefSlot ? EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
                 ->where('is_active', true)
                 ->whereNull('ended_at')
-                ->first();
+                ->first() : null;
 
-            $newEmployeeId = $data['chief_employee_id'];
-            // 5) 🔄 Логика смены начальника
+            $newEmployeeId = $data['chief_employee_id'] ?? null;
+            $newStatusId = $data['chief_employee_position_status_id'] ?? null;
+
+            // 5) Логика смены начальника: учитываем nullable новый id
             if ($currentAssignment) {
-                if ($currentAssignment->employee_id != $newEmployeeId) {
-                    // ❌ Сотрудник изменился — удаляем старое назначение полностью
+                if (! empty($newEmployeeId) && $currentAssignment->employee_id != $newEmployeeId) {
+                    // сотрудник изменился — удаляем старое назначение и создаём новое (с выбранным статусом если есть)
                     $currentAssignment->delete();
-
-                    // ✅ Создаём новое назначение
-                    $this->createChiefAssignment($chiefSlot->id, $newEmployeeId);
+                    $this->createChiefAssignment($chiefSlot->id, $newEmployeeId, $newStatusId);
                 }
-                // Если сотрудник тот же — ничего не делаем
+                // если новый id пустой или равен текущему — ничего не делаем
             } else {
-                // ✅ Назначения не было — создаём новое
-                $this->createChiefAssignment($chiefSlot->id, $newEmployeeId);
+                // назначение не было — создаём только если передан новый сотрудник
+                if (! empty($newEmployeeId)) {
+                    $this->createChiefAssignment($chiefSlot->id, $newEmployeeId, $newStatusId);
+                }
             }
 
             DB::commit();
@@ -195,13 +221,13 @@ class CommissariatsController extends Controller
     /**
      * Вспомогательный метод: создать назначение начальника
      */
-    private function createChiefAssignment(int $commissariatPositionId, int $employeeId): void
+    private function createChiefAssignment(int $commissariatPositionId, int $employeeId, ?int $statusId = null): void
     {
         EmployeePosition::create([
-            'commissariat_position_id' => $commissariatPositionId, // ✅ Ключевое поле!
+            'commissariat_position_id' => $commissariatPositionId,
             'employee_id' => $employeeId,
             'rate' => 1.00,
-            'employee_position_status_id' => 1, // ID статуса "работает" — проверьте в вашей БД!
+            'employee_position_status_id' => $statusId ?? 1, // если статус передан — используем его, иначе дефолт 1
             'started_at' => now()->toDateString(),
             'is_active' => true,
             'ended_at' => null,

@@ -50,18 +50,20 @@
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник *
+                            Начальник (опционально)
                         </label>
 
-                        {{-- visible input --}}
-                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                        {{-- visible input (необязательное) --}}
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                    focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                    outline-none transition-colors text-[#060606]" autocomplete="off"
                    value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->getFullNameAttribute() : '') }}">
 
-                        {{-- hidden value --}}
+                        {{-- hidden value (необязательное) --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '') }}">
+                            value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '') }}"
+                            data-original="{{ $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '' }}"
+                            data-original-exists="{{ $commissariat->getChiefAttribute() ? '1' : '0' }}">
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
                    rounded-lg max-h-72 overflow-auto hidden">
@@ -85,8 +87,24 @@
                                                     </li>
                             @endforeach
                         </ul>
-                    </div>
 
+                        {{-- блок выбора статуса — показывается только при смене начальника (если ранее начальник был) --}}
+                        <div id="chief_status_wrapper" class="mt-3 hidden">
+                            <label for="chief_employee_position_status_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                                Статус назначения
+                            </label>
+                            <select name="chief_employee_position_status_id" id="chief_employee_position_status_id"
+                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                <option value="">— выберите статус —</option>
+                                @foreach($employeePositionStatuses as $status)
+                                    <option value="{{ $status->id }}"
+                                        {{ old('chief_employee_position_status_id') == $status->id ? 'selected' : '' }}>
+                                        {{ $status->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
                     <!-- x -->
                     <div>
@@ -136,12 +154,24 @@
         const list = document.getElementById('chief_employee_list');
         const items = list.querySelectorAll('li');
 
+        const statusWrapper = document.getElementById('chief_status_wrapper');
+        const originalId = hiddenInput.dataset.original || '';
+        const originalExists = hiddenInput.dataset.originalExists === '1';
+
         function showList() {
             list.classList.remove('hidden');
         }
 
         function hideList() {
             list.classList.add('hidden');
+        }
+
+        function hideStatus() {
+            statusWrapper.classList.add('hidden');
+        }
+
+        function showStatus() {
+            statusWrapper.classList.remove('hidden');
         }
 
         function filterList(value) {
@@ -181,25 +211,23 @@
             filterList(input.value);
         });
 
-
         input.addEventListener('input', () => {
             hiddenInput.value = '';
+            hideStatus();
             showList();
             filterList(input.value);
         });
 
-
         items.forEach(item => {
             item.addEventListener('click', () => {
 
-
                 if (item.dataset.static === 'true') {
-
                     const wasNotEmpty =
                         input.value.trim() !== '' || hiddenInput.value !== '';
 
                     input.value = '';
                     hiddenInput.value = '';
+                    hideStatus();
 
                     if (wasNotEmpty) {
                         showList();
@@ -210,11 +238,30 @@
 
                     return;
                 }
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
+
+                const selectedId = item.dataset.id || '';
+                input.value = item.dataset.name || `ID ${selectedId}`;
+                hiddenInput.value = selectedId;
                 hideList();
+
+                // показать выбор статуса только если ранее начальник был (originalExists)
+                // и выбран новый (selectedId !== originalId)
+                if (originalExists && selectedId && selectedId !== originalId) {
+                    showStatus();
+                } else {
+                    hideStatus();
+                }
             });
         });
+
+        // При загрузке — если в old есть выбор и он отличается от оригинала, показать статус (учёт возврата с ошибкой)
+        const currentSelectedId = hiddenInput.value || '';
+        if (originalExists && currentSelectedId && currentSelectedId !== originalId) {
+            showStatus();
+        } else {
+            hideStatus();
+        }
+
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.relative')) {
                 hideList();
