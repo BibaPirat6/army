@@ -34,7 +34,7 @@
                     @csrf
                     @method('PUT')
 
-                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+
 
                     <!-- Название комиссариата -->
                     <div>
@@ -46,7 +46,12 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                     </div>
 
-            
+                    <input type="hidden" name="old_chief_employee_id"
+                        value="{{  old('old_chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '') }}">
+
+
+                    <input type="hidden" name="backUrl" value="{{ $backUrl }}">
+
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -55,9 +60,9 @@
 
                         {{-- visible input (необязательное) --}}
                         <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                   outline-none transition-colors text-[#060606]" autocomplete="off"
-                   value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->getFullNameAttribute() : '') }}">
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                               outline-none transition-colors text-[#060606]" autocomplete="off"
+                            value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->getFullNameAttribute() : '') }}">
 
                         {{-- hidden value (необязательное) --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
@@ -66,7 +71,7 @@
                             data-original-exists="{{ $commissariat->getChiefAttribute() ? '1' : '0' }}">
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-                   rounded-lg max-h-72 overflow-auto hidden">
+                               rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
@@ -89,133 +94,74 @@
                         </ul>
 
 
-                         {{-- Поля штатной должности (всегда видимы) для редактирования --}}
+                        {{-- Поля штатной должности (всегда видимы) для редактирования --}}
                         @php
                             $chiefSlot = $commissariat->chiefCommissariatPosition ?? null;
                             $currentAssignment = $chiefSlot ? $chiefSlot->activeAssignment : null;
                         @endphp
-                        <div class="mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
-                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Штатная должность (параметры)</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка (rate_total)</label>
-                                    <input type="number" step="0.25"  min="0.25" max="2.00" name="rate_total" id="rate_total" value="{{ old('rate_total', $chiefSlot ? $chiefSlot->rate_total : '1.00') }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                </div>
-
-                               <div class="flex items-end">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        {{-- 1. Скрытое поле со значением 0 (отправляется всегда) --}}
-                                        <input type="hidden" name="is_independent" value="0">
-                                        
-                                        {{-- 2. Чекбокс со значением 1 (перезапишет 0, если отмечен) --}}
-                                        <input type="checkbox" 
-                                            name="is_independent" 
-                                            id="is_independent" 
-                                            value="1" 
-                                            class="mr-2 rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]" 
-                                            {{ old('is_independent', $chiefSlot->is_independent) ? 'checked' : '' }}>
-                                            
-                                        <span class="text-sm text-[#565A5B]">Самостоятельная должность (is_independent)</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
 
 
                         {{-- блок выбора статуса — показывается только при смене начальника (если ранее начальник был) --}}
                         <div id="chief_status_wrapper" class="mt-3 hidden">
-                            <label for="chief_employee_position_status_id" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            <label for="old_chief_employee_position_status_id"
+                                class="block text-sm font-medium text-[#565A5B] mb-2">
                                 Статус назначения
                             </label>
-                            <select name="chief_employee_position_status_id" id="chief_employee_position_status_id"
-                                class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                <option value="">— выберите статус —</option>
-                                @foreach($employeePositionStatuses as $status)
-                                    <option value="{{ $status->id }}"
-                                        {{ old('chief_employee_position_status_id') == $status->id ? 'selected' : '' }}>
-                                        {{ $status->name }}
-                                    </option>
-                                @endforeach
-                            </select>
 
                             <!-- Дополнительные поля для предыдущего начальника (появляются при смене) -->
-                            <div id="previous_assignment_fields" class="mt-3 hidden bg-white p-4 rounded-lg border border-[#E5E7EB]">
+                            <div id="previous_assignment_fields"
+                                class="mt-3 hidden bg-white p-4 rounded-lg border border-[#E5E7EB]">
                                 <h4 class="text-sm font-medium text-[#565A5B] mb-2">Данные для предыдущего начальника</h4>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Ставка (old_rate)</label>
-                                        <input type="number" value="1.00" step="0.25" min="0.25" max="2.00" name="old_rate" id="old_rate" value="{{ old('old_rate') }}"
-                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
-                                    </div>
+                                    <select name="old_chief_employee_position_status_id"
+                                        id="old_chief_employee_position_status_id"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                        <option value="">— выберите статус —</option>
+                                        @foreach($employeePositionStatuses as $status)
+                                            {{-- 🔥 Исключаем статус "работает" (ID = 1) из списка причин смены --}}
+                                            @if($status->id != 1)
+                                                @php
+                                                    $selected = old('old_chief_employee_position_status_id')
+                                                        ? (old('old_chief_employee_position_status_id') == $status->id)
+                                                        : ($currentAssignment?->employee_position_status_id == $status->id);
+                                                @endphp
+                                                <option value="{{ $status->id }}" {{ $selected ? 'selected' : '' }}>
+                                                    {{ $status->name }}
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    </select>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Дата начала (old_started_at)</label>
-                                        <input type="date" name="old_started_at" id="old_started_at" value="{{ old('old_started_at') }}"
-                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Ожидаемое возвращение (old_expected_return_at)</label>
-                                        <input type="date" name="old_expected_return_at" id="old_expected_return_at" value="{{ old('old_expected_return_at') }}"
-                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Дата увольнения (old_ended_at)</label>
-                                        <input type="date" name="old_ended_at" id="old_ended_at" value="{{ old('old_ended_at') }}"
-                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
-                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                       
+
                         {{-- Параметры назначения начальника (показываются только если выбран начальник) --}}
-                        <div id="chief_assignment_fields" class="hidden mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
-                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Параметры назначения (только если выбран начальник)</h3>
+                        <div id="chief_assignment_fields"
+                            class="hidden mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
+                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Параметры назначения (только если выбран
+                                начальник)</h3>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка сотрудника (rate)</label>
-                                    <input type="number" step="0.25" min="0.25" max="2.00" name="rate" id="rate" value="{{ old('rate', $currentAssignment ? $currentAssignment->rate : '1.00') }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                </div>
-
-                                <div>
-                                    <label for="employee_position_status_id" class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
+                                    <label for="employee_position_status_id"
+                                        class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
                                     <select name="employee_position_status_id" id="employee_position_status_id"
                                         class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                                         @foreach($employeePositionStatuses as $status)
                                             @php
                                                 $sel = false;
-                                                if(old('employee_position_status_id')) {
+                                                if (old('employee_position_status_id')) {
                                                     $sel = old('employee_position_status_id') == $status->id;
                                                 } else {
                                                     $sel = $currentAssignment && $currentAssignment->employee_position_status_id == $status->id;
                                                 }
                                             @endphp
-                                            <option value="{{ $status->id }}" {{ $sel ? 'selected' : '' }}>{{ $status->name }}</option>
+                                            <option value="{{ $status->id }}" {{ $sel ? 'selected' : '' }}>{{ $status->name }}
+                                            </option>
                                         @endforeach
                                     </select>
-                                </div>
-
-                                <div>
-                                    <label for="started_at" class="block text-sm font-medium text-[#565A5B] mb-2">Дата начала</label>
-                                    <input type="date" name="started_at" id="started_at" value="{{ old('started_at', $currentAssignment ? $currentAssignment->started_at : \Carbon\Carbon::now()->toDateString()) }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                </div>
-
-                                <div>
-                                    <label for="expected_return_at" class="block text-sm font-medium text-[#565A5A] mb-2">Ожидаемое возвращение</label>
-                                    <input type="date" name="expected_return_at" id="expected_return_at" value="{{ old('expected_return_at', $currentAssignment ? $currentAssignment->expected_return_at : '') }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                </div>
-
-                                <div>
-                                    <label for="ended_at" class="block text-sm font-medium text-[#565A5A] mb-2">Ожидаемая дата увольнения</label>
-                                    <input type="date" name="ended_at" id="ended_at" value="{{ old('ended_at', $currentAssignment ? $currentAssignment->ended_at : '') }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                                 </div>
                             </div>
                         </div>
@@ -269,20 +215,20 @@
         const list = document.getElementById('chief_employee_list');
         const items = list.querySelectorAll('li');
 
-    const assignmentBlock = document.getElementById('chief_assignment_fields');
-    const statusWrapper = document.getElementById('chief_status_wrapper');
-    const previousFields = document.getElementById('previous_assignment_fields');
+        const assignmentBlock = document.getElementById('chief_assignment_fields');
+        const statusWrapper = document.getElementById('chief_status_wrapper');
+        const previousFields = document.getElementById('previous_assignment_fields');
 
-    const statusSelectNew = document.getElementById('employee_position_status_id');
-    const expectedReturnNew = document.getElementById('expected_return_at');
-    const endedAtNew = document.getElementById('ended_at');
+        const statusSelectNew = document.getElementById('employee_position_status_id');
+        const expectedReturnNew = document.getElementById('expected_return_at');
+        const endedAtNew = document.getElementById('ended_at');
 
-    const statusSelectOld = document.getElementById('chief_employee_position_status_id');
-    const expectedReturnOld = document.getElementById('old_expected_return_at');
-    const endedAtOld = document.getElementById('old_ended_at');
+        const statusSelectOld = document.getElementById('old_chief_employee_position_status_id');
+        const expectedReturnOld = document.getElementById('old_expected_return_at');
+        const endedAtOld = document.getElementById('old_ended_at');
 
-    const originalId = hiddenInput.dataset.original || '';
-    const originalExists = hiddenInput.dataset.originalExists === '1';
+        const originalId = hiddenInput.dataset.original || '';
+        const originalExists = hiddenInput.dataset.originalExists === '1';
 
         function showList() { list.classList.remove('hidden'); }
         function hideList() { list.classList.add('hidden'); }
@@ -298,10 +244,10 @@
         // 🔥 2. Показывает поля для ПРЕДЫДУЩЕГО начальника (только при замене)
         function updatePreviousAssignmentVisibility() {
             const selectedId = hiddenInput.value || '';
-            
+
             // Показываем, если: был начальник + выбран новый + это не тот же самый
             const shouldShow = originalExists && selectedId && selectedId !== originalId;
-            
+
             statusWrapper.classList.toggle('hidden', !shouldShow);
             previousFields.classList.toggle('hidden', !shouldShow);
         }
@@ -390,7 +336,7 @@
                 const selectedId = item.dataset.id || '';
                 input.value = item.dataset.name || `ID ${selectedId}`;
                 hiddenInput.value = selectedId;
-                
+
                 updateAssignmentVisibility();      // 🔥 Показываем поля для НОВОГО
                 updatePreviousAssignmentVisibility(); // 🔥 Показываем поля для СТАРОГО (если замена)
                 hideList();

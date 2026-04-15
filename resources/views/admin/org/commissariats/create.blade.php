@@ -52,8 +52,8 @@
 
                         {{-- visible input (необязательное) --}}
                         <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                       outline-none transition-colors text-[#060606]" autocomplete="off">
+                           focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                           outline-none transition-colors text-[#060606]" autocomplete="off">
 
                         {{-- hidden value (необязательное) --}}
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id"
@@ -61,7 +61,7 @@
 
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-                       rounded-lg max-h-72 overflow-auto hidden">
+                           rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
@@ -82,41 +82,6 @@
                                                     </li>
                             @endforeach
                         </ul>
-
-
-                        {{-- Поля штатной должности (всегда видимы) --}}
-                        <div class="mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
-                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Штатная должность (параметры)</h3>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка
-                                        (rate_total)</label>
-                                    <input type="number" step="0.25" min="0.25" max="2.00" name="rate_total" id="rate_total" required
-                                        value="{{ old('rate_total', '1.00') }}"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                </div>
-
-                                <div class="flex items-end">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        {{-- 1. Скрытое поле со значением 0 (отправляется всегда) --}}
-                                        <input type="hidden" name="is_independent" value="0">
-                                        
-                                        {{-- 2. Чекбокс со значением 1 (перезапишет 0, если отмечен) --}}
-                                        <input type="checkbox" 
-                                            name="is_independent" 
-                                            id="is_independent" 
-                                            value="1" 
-                                            class="mr-2 rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]" 
-                                            {{ old('is_independent') ? 'checked' : '' }}>
-                                            
-                                        <span class="text-sm text-[#565A5B]">Самостоятельная должность (is_independent)</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-
                     </div>
 
                     {{-- Параметры назначения начальника (показываются только если выбран начальник) --}}
@@ -125,14 +90,6 @@
                             начальник)</h3>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка сотрудника
-                                    (rate)</label>
-                                <input type="number" step="0.25" min="0.25" max="2.00" name="rate" id="rate"
-                                    value="{{ old('rate', '1.00') }}"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            </div>
-
                             <div>
                                 <label for="employee_position_status_id"
                                     class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
@@ -153,31 +110,6 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-
-                            <div>
-                                <label for="started_at" class="block text-sm font-medium text-[#565A5B] mb-2">Дата
-                                    начала</label>
-                                <input type="date" name="started_at" id="started_at"
-                                    value="{{ old('started_at', \Carbon\Carbon::now()->toDateString()) }}"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            </div>
-
-                            <div>
-                                <label for="expected_return_at"
-                                    class="block text-sm font-medium text-[#565A5A] mb-2">Ожидаемое возвращение (только для
-                                    отпуск/декрет)</label>
-                                <input type="date" name="expected_return_at" id="expected_return_at"
-                                    value="{{ old('expected_return_at') }}"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                            </div>
-
-                            <div>
-                                <label for="ended_at" class="block text-sm font-medium text-[#565A5A] mb-2">Дата увольнения
-                                    (только для статус "уволен")</label>
-                                <input type="date" name="ended_at" id="ended_at"
-                                    value="{{ old('ended_at', \Carbon\Carbon::now()->toDateString()) }}"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                             </div>
                         </div>
                     </div>

@@ -68,12 +68,12 @@ class CommissariatPosition extends Model
     // ДОП ПЛЮШКИ
 
     /**
-     * ✅ Активное назначение (сотрудник, который сейчас занимает эту должность)
+     * ✅ Активное назначение (сотрудник, который сейчас работает в этой должности)
+     * Проверяем, что статус назначения = 1 ("работает")
      */
     public function activeAssignment(): HasOne
     {
-        return $this->hasOne(EmployeePosition::class, 'commissariat_position_id')
-            ->where('is_active', true)
-            ->whereNull('ended_at');
+        return $this->hasOne(EmployeePosition::class, 'commissariat_position_id')   
+            ->where('employee_position_status_id', 1); // 🔥 ID статуса "работает"
     }
 }
