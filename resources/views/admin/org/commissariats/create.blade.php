@@ -92,15 +92,25 @@
                                 <div>
                                     <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка
                                         (rate_total)</label>
-                                    <input type="number" step="0.25" min="0.25" max="2.00" name="rate_total" id="rate_total"
+                                    <input type="number" step="0.25" min="0.25" max="2.00" name="rate_total" id="rate_total" required
                                         value="{{ old('rate_total', '1.00') }}"
                                         class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                                 </div>
 
                                 <div class="flex items-end">
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" name="is_independent" id="is_independent" class="mr-2" {{ old('is_independent') ? 'checked' : '' }}>
-                                        <span class="text-sm text-[#565A5B]">Независимая ставка (is_independent)</span>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        {{-- 1. Скрытое поле со значением 0 (отправляется всегда) --}}
+                                        <input type="hidden" name="is_independent" value="0">
+                                        
+                                        {{-- 2. Чекбокс со значением 1 (перезапишет 0, если отмечен) --}}
+                                        <input type="checkbox" 
+                                            name="is_independent" 
+                                            id="is_independent" 
+                                            value="1" 
+                                            class="mr-2 rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]" 
+                                            {{ old('is_independent') ? 'checked' : '' }}>
+                                            
+                                        <span class="text-sm text-[#565A5B]">Самостоятельная должность (is_independent)</span>
                                     </label>
                                 </div>
                             </div>

@@ -59,11 +59,44 @@ class Commissariat extends Model
             );
     }
 
-    // ===== АКСЕССОРЫ =====
-
+    /**
+     * Аксессор: Получает действующего начальника комиссариата.
+     * Возвращает Employee только если он активен и не находится в отсутствии.
+     */
     public function getChiefAttribute()
     {
-        return $this->chiefCommissariatPosition?->activeAssignment?->employee;
+        // 1. Получаем штатную должность начальника
+        $position = $this->chiefCommissariatPosition;
+
+        if (! $position) {
+            return null;
+        }
+
+        // 2. Получаем текущее активное назначение
+        $assignment = $position->activeAssignment;
+
+        if (! $assignment || ! $assignment->employee) {
+            return null;
+        }
+
+        // 3. Проверяем статус назначения
+        // IDs статусов, при которых начальник НЕ должен отображаться как действующий
+        // Замените [2, 3, 4] на реальные ID из вашей таблицы employee_position_statuses
+        // Например: 2=Отпуск, 3=Декрет, 4=Уволен
+        $excludedStatusIds = [2, 3, 4];
+
+        // Если статус назначения попадает в исключенные — возвращаем null
+        if (in_array($assignment->employee_position_status_id, $excludedStatusIds)) {
+            return null;
+        }
+
+        // Также можно проверить дату окончания, если она есть и уже прошла
+        if ($assignment->ended_at && \Carbon\Carbon::parse($assignment->ended_at)->isPast()) {
+            return null;
+        }
+
+        // Если все проверки пройдены — возвращаем сотрудника
+        return $assignment->employee;
     }
 
     // ===== МЕТОДЫ ДЛЯ VIEW =====

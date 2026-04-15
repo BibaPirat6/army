@@ -88,6 +88,41 @@
                             @endforeach
                         </ul>
 
+
+                         {{-- Поля штатной должности (всегда видимы) для редактирования --}}
+                        @php
+                            $chiefSlot = $commissariat->chiefCommissariatPosition ?? null;
+                            $currentAssignment = $chiefSlot ? $chiefSlot->activeAssignment : null;
+                        @endphp
+                        <div class="mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
+                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Штатная должность (параметры)</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="rate_total" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка (rate_total)</label>
+                                    <input type="number" step="0.25"  min="0.25" max="2.00" name="rate_total" id="rate_total" value="{{ old('rate_total', $chiefSlot ? $chiefSlot->rate_total : '1.00') }}"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                </div>
+
+                               <div class="flex items-end">
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        {{-- 1. Скрытое поле со значением 0 (отправляется всегда) --}}
+                                        <input type="hidden" name="is_independent" value="0">
+                                        
+                                        {{-- 2. Чекбокс со значением 1 (перезапишет 0, если отмечен) --}}
+                                        <input type="checkbox" 
+                                            name="is_independent" 
+                                            id="is_independent" 
+                                            value="1" 
+                                            class="mr-2 rounded border-gray-300 text-[#A60644] focus:ring-[#A60644]" 
+                                            {{ old('is_independent', $chiefSlot->is_independent) ? 'checked' : '' }}>
+                                            
+                                        <span class="text-sm text-[#565A5B]">Самостоятельная должность (is_independent)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+
                         {{-- блок выбора статуса — показывается только при смене начальника (если ранее начальник был) --}}
                         <div id="chief_status_wrapper" class="mt-3 hidden">
                             <label for="chief_employee_position_status_id" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -103,6 +138,86 @@
                                     </option>
                                 @endforeach
                             </select>
+
+                            <!-- Дополнительные поля для предыдущего начальника (появляются при смене) -->
+                            <div id="previous_assignment_fields" class="mt-3 hidden bg-white p-4 rounded-lg border border-[#E5E7EB]">
+                                <h4 class="text-sm font-medium text-[#565A5B] mb-2">Данные для предыдущего начальника</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Ставка (old_rate)</label>
+                                        <input type="number" value="1.00" step="0.25" min="0.25" max="2.00" name="old_rate" id="old_rate" value="{{ old('old_rate') }}"
+                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Дата начала (old_started_at)</label>
+                                        <input type="date" name="old_started_at" id="old_started_at" value="{{ old('old_started_at') }}"
+                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Ожидаемое возвращение (old_expected_return_at)</label>
+                                        <input type="date" name="old_expected_return_at" id="old_expected_return_at" value="{{ old('old_expected_return_at') }}"
+                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-[#565A5B] mb-2">Дата увольнения (old_ended_at)</label>
+                                        <input type="date" name="old_ended_at" id="old_ended_at" value="{{ old('old_ended_at') }}"
+                                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                       
+                        {{-- Параметры назначения начальника (показываются только если выбран начальник) --}}
+                        <div id="chief_assignment_fields" class="hidden mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
+                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Параметры назначения (только если выбран начальник)</h3>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">Ставка сотрудника (rate)</label>
+                                    <input type="number" step="0.25" min="0.25" max="2.00" name="rate" id="rate" value="{{ old('rate', $currentAssignment ? $currentAssignment->rate : '1.00') }}"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                </div>
+
+                                <div>
+                                    <label for="employee_position_status_id" class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
+                                    <select name="employee_position_status_id" id="employee_position_status_id"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                        @foreach($employeePositionStatuses as $status)
+                                            @php
+                                                $sel = false;
+                                                if(old('employee_position_status_id')) {
+                                                    $sel = old('employee_position_status_id') == $status->id;
+                                                } else {
+                                                    $sel = $currentAssignment && $currentAssignment->employee_position_status_id == $status->id;
+                                                }
+                                            @endphp
+                                            <option value="{{ $status->id }}" {{ $sel ? 'selected' : '' }}>{{ $status->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="started_at" class="block text-sm font-medium text-[#565A5B] mb-2">Дата начала</label>
+                                    <input type="date" name="started_at" id="started_at" value="{{ old('started_at', $currentAssignment ? $currentAssignment->started_at : \Carbon\Carbon::now()->toDateString()) }}"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                </div>
+
+                                <div>
+                                    <label for="expected_return_at" class="block text-sm font-medium text-[#565A5A] mb-2">Ожидаемое возвращение</label>
+                                    <input type="date" name="expected_return_at" id="expected_return_at" value="{{ old('expected_return_at', $currentAssignment ? $currentAssignment->expected_return_at : '') }}"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                </div>
+
+                                <div>
+                                    <label for="ended_at" class="block text-sm font-medium text-[#565A5A] mb-2">Ожидаемая дата увольнения</label>
+                                    <input type="date" name="ended_at" id="ended_at" value="{{ old('ended_at', $currentAssignment ? $currentAssignment->ended_at : '') }}"
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -154,24 +269,59 @@
         const list = document.getElementById('chief_employee_list');
         const items = list.querySelectorAll('li');
 
-        const statusWrapper = document.getElementById('chief_status_wrapper');
-        const originalId = hiddenInput.dataset.original || '';
-        const originalExists = hiddenInput.dataset.originalExists === '1';
+    const assignmentBlock = document.getElementById('chief_assignment_fields');
+    const statusWrapper = document.getElementById('chief_status_wrapper');
+    const previousFields = document.getElementById('previous_assignment_fields');
 
-        function showList() {
-            list.classList.remove('hidden');
+    const statusSelectNew = document.getElementById('employee_position_status_id');
+    const expectedReturnNew = document.getElementById('expected_return_at');
+    const endedAtNew = document.getElementById('ended_at');
+
+    const statusSelectOld = document.getElementById('chief_employee_position_status_id');
+    const expectedReturnOld = document.getElementById('old_expected_return_at');
+    const endedAtOld = document.getElementById('old_ended_at');
+
+    const originalId = hiddenInput.dataset.original || '';
+    const originalExists = hiddenInput.dataset.originalExists === '1';
+
+        function showList() { list.classList.remove('hidden'); }
+        function hideList() { list.classList.add('hidden'); }
+        function showStatus() { statusWrapper.classList.remove('hidden'); }
+        function hideStatus() { statusWrapper.classList.add('hidden'); }
+
+        // 🔥 1. Показывает поля назначения для ВЫБРАННОГО начальника
+        function updateAssignmentVisibility() {
+            const hasChief = !!(hiddenInput.value && hiddenInput.value.trim() !== '');
+            assignmentBlock.classList.toggle('hidden', !hasChief);
         }
 
-        function hideList() {
-            list.classList.add('hidden');
+        // 🔥 2. Показывает поля для ПРЕДЫДУЩЕГО начальника (только при замене)
+        function updatePreviousAssignmentVisibility() {
+            const selectedId = hiddenInput.value || '';
+            
+            // Показываем, если: был начальник + выбран новый + это не тот же самый
+            const shouldShow = originalExists && selectedId && selectedId !== originalId;
+            
+            statusWrapper.classList.toggle('hidden', !shouldShow);
+            previousFields.classList.toggle('hidden', !shouldShow);
         }
 
-        function hideStatus() {
-            statusWrapper.classList.add('hidden');
-        }
+        // Показать/скрыть поля expected_return / ended в зависимости от выбранного статуса
+        function updateDynamicFields(selectEl, expectedEl, endedEl) {
+            if (!selectEl) return;
+            const selectedText = selectEl.options[selectEl.selectedIndex]?.text?.toLowerCase() || '';
 
-        function showStatus() {
-            statusWrapper.classList.remove('hidden');
+            const showExpected = selectedText.includes('отпуск') || selectedText.includes('декрет');
+            if (expectedEl && expectedEl.closest) {
+                expectedEl.closest('div').classList.toggle('hidden', !showExpected);
+                if (!showExpected) expectedEl.value = '';
+            }
+
+            const showEnded = selectedText.includes('увол');
+            if (endedEl && endedEl.closest) {
+                endedEl.closest('div').classList.toggle('hidden', !showEnded);
+                if (!showEnded) endedEl.value = '';
+            }
         }
 
         function filterList(value) {
@@ -179,7 +329,6 @@
             let hasVisible = false;
 
             items.forEach(item => {
-
                 if (item.dataset.static === 'true') {
                     item.classList.remove('hidden');
                     hasVisible = true;
@@ -206,6 +355,10 @@
             list.classList.toggle('hidden', !hasVisible);
         }
 
+        // 🔥 Инициализация при загрузке (учёт возврата с ошибкой валидации)
+        updateAssignmentVisibility();
+        updatePreviousAssignmentVisibility();
+
         input.addEventListener('focus', () => {
             showList();
             filterList(input.value);
@@ -213,6 +366,8 @@
 
         input.addEventListener('input', () => {
             hiddenInput.value = '';
+            updateAssignmentVisibility();
+            updatePreviousAssignmentVisibility();
             hideStatus();
             showList();
             filterList(input.value);
@@ -220,52 +375,47 @@
 
         items.forEach(item => {
             item.addEventListener('click', () => {
-
                 if (item.dataset.static === 'true') {
-                    const wasNotEmpty =
-                        input.value.trim() !== '' || hiddenInput.value !== '';
-
+                    // Клик на "Не назначать"
                     input.value = '';
                     hiddenInput.value = '';
+                    updateAssignmentVisibility();
+                    updatePreviousAssignmentVisibility();
                     hideStatus();
-
-                    if (wasNotEmpty) {
-                        showList();
-                        filterList('');
-                    } else {
-                        hideList();
-                    }
-
+                    hideList();
                     return;
                 }
 
+                // Выбор сотрудника из списка
                 const selectedId = item.dataset.id || '';
                 input.value = item.dataset.name || `ID ${selectedId}`;
                 hiddenInput.value = selectedId;
+                
+                updateAssignmentVisibility();      // 🔥 Показываем поля для НОВОГО
+                updatePreviousAssignmentVisibility(); // 🔥 Показываем поля для СТАРОГО (если замена)
                 hideList();
-
-                // показать выбор статуса только если ранее начальник был (originalExists)
-                // и выбран новый (selectedId !== originalId)
-                if (originalExists && selectedId && selectedId !== originalId) {
-                    showStatus();
-                } else {
-                    hideStatus();
-                }
+                // обновляем динамические поля (expected_return/ended) для обоих блоков
+                updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew);
+                updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld);
             });
         });
 
-        // При загрузке — если в old есть выбор и он отличается от оригинала, показать статус (учёт возврата с ошибкой)
-        const currentSelectedId = hiddenInput.value || '';
-        if (originalExists && currentSelectedId && currentSelectedId !== originalId) {
-            showStatus();
-        } else {
-            hideStatus();
-        }
-
+        // Закрытие списка при клике вне
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.relative')) {
                 hideList();
             }
         });
+
+        // инициализация динамических полей при загрузке
+        updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew);
+        updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld);
+
+        if (statusSelectNew) {
+            statusSelectNew.addEventListener('change', () => updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew));
+        }
+        if (statusSelectOld) {
+            statusSelectOld.addEventListener('change', () => updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld));
+        }
     });
 </script>

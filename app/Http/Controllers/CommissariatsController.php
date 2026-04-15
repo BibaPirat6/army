@@ -11,6 +11,7 @@ use App\Models\Person;
 use App\Models\Position;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CommissariatsController extends Controller
 {
@@ -45,24 +46,88 @@ class CommissariatsController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'chief_employee_id' => 'sometimes|nullable|integer|exists:employees,id',
-            'rate_total' => 'sometimes|numeric|min:0.25|max:2',
-            'rate' => 'sometimes|numeric|min:0.25|max:2',
-            'employee_position_status_id' => 'sometimes|nullable|integer|exists:employee_position_statuses,id',
-            'started_at' => 'sometimes|nullable|date',
-            'expected_return_at' => 'sometimes|nullable|date',
-            'ended_at' => 'sometimes|nullable|date',
             'longitude' => 'required|integer',
             'latitude' => 'required|integer',
+            'rate_total' => 'required|numeric|min:0.25|max:2',
+            'is_independent' => 'sometimes|boolean',
+
+            'rate' => [
+                'sometimes', 'numeric', 'min:0.25', 'max:2',
+                'lte:rate_total',
+                Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+            'employee_position_status_id' => [
+                'sometimes', 'integer', 'exists:employee_position_statuses,id',
+                Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+            'started_at' => [
+                'sometimes', 'date',
+                Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+
+            'expected_return_at' => [
+                'sometimes', 'nullable', 'date', 'after:started_at',
+                Rule::requiredIf(fn () => filled($request->chief_employee_id) && in_array($request->input('employee_position_status_id'), [2, 3])),
+            ],
+
+            'ended_at' => [
+                'sometimes', 'nullable', 'date', 'after:started_at',
+                Rule::requiredIf(fn () => filled($request->chief_employee_id) && $request->input('employee_position_status_id') == 4),
+            ],
         ], [
+            // 🔹 Название комиссариата
             'name.required' => 'Название комиссариата обязательно для заполнения.',
-            'name.string' => 'Название комиссариата должно быть строкой.',
-            'name.min' => 'Название комиссариата должно содержать минимум 2 символа.',
-            'name.max' => 'Название комиссариата не должно превышать 255 символов.',
-            'chief_employee_id.exists' => 'Несуществующий сотрудник',
+            'name.string' => 'Название комиссариата должно быть текстом.',
+            'name.min' => 'Название комиссариата должно содержать не менее 2 символов.',
+            'name.max' => 'Название комиссариата не может превышать 255 символов.',
+
+            // 🔹 Координаты
+            'longitude.required' => 'Координата X (горизонталь) обязательна.',
+            'longitude.integer' => 'Координата X должна быть целым числом.',
+            'latitude.required' => 'Координата Y (вертикаль) обязательна.',
+            'latitude.integer' => 'Координата Y должна быть целым числом.',
+
+            // 🔹 Ставка комиссариата
+            'rate_total.required' => 'Ставка комиссариата обязательна.',
+            'rate_total.numeric' => 'Ставка должна быть числом.',
+            'rate_total.min' => 'Ставка не может быть меньше 0.25.',
+            'rate_total.max' => 'Ставка не может превышать 2.00.',
+
+            // 🔹 Начальник
+            'chief_employee_id.integer' => 'Некорректный ID сотрудника.',
+            'chief_employee_id.exists' => 'Выбранный сотрудник не найден в системе.',
+
+            // 🔹 Чекбокс
+            'is_independent.boolean' => 'Некорректное значение поля «Самостоятельная должность».',
+
+            // 🔹 Ставка сотрудника (rate)
+            'rate.numeric' => 'Ставка сотрудника должна быть числом.',
+            'rate.min' => 'Ставка сотрудника не может быть меньше 0.25.',
+            'rate.max' => 'Ставка сотрудника не может превышать 2.00.',
+            'rate.lte' => 'Ставка сотрудника не может превышать общую ставку комиссариата (rate_total).',
+            'rate.required' => 'Ставка сотрудника обязательна при назначении начальника.',
+
+            // 🔹 Статус назначения
+            'employee_position_status_id.integer' => 'Некорректный формат статуса.',
+            'employee_position_status_id.exists' => 'Выбранный статус назначения не найден.',
+            'employee_position_status_id.required' => 'Статус назначения обязателен при назначении начальника.',
+
+            // 🔹 Дата начала
+            'started_at.date' => 'Некорректный формат даты начала.',
+            'started_at.required' => 'Дата начала обязательна при назначении начальника.',
+
+            // 🔹 Ожидаемое возвращение
+            'expected_return_at.date' => 'Некорректный формат даты.',
+            'expected_return_at.after' => 'Ожидаемое возвращение должно быть позже даты начала.',
+            'expected_return_at.required' => 'Ожидаемое возвращение обязательно для статусов «Отпуск» и «Декрет».',
+
+            // 🔹 Дата увольнения
+            'ended_at.date' => 'Некорректный формат даты.',
+            'ended_at.after' => 'Дата увольнения должна быть позже даты начала.',
+            'ended_at.required' => 'Дата увольнения обязательна для статуса «Уволен».',
         ]);
 
         DB::beginTransaction();
@@ -87,7 +152,7 @@ class CommissariatsController extends Controller
             }
 
             // 3) создаем штатную должность (слот) для начальника комиссариата
-            $rateTotal = isset($data['rate_total']) ? (float)$data['rate_total'] : 1.00;
+            $rateTotal = isset($data['rate_total']) ? (float) $data['rate_total'] : 1.00;
             // checkbox may come as 'on' or be absent — используем has()
             $isIndependent = $request->has('is_independent');
 
@@ -102,11 +167,12 @@ class CommissariatsController extends Controller
             // 4) Если выбран начальник — создаём назначение
             $chiefEmployeeId = $data['chief_employee_id'] ?? null;
             if (! empty($chiefEmployeeId)) {
-                $rate = isset($data['rate']) ? (float)$data['rate'] : 1.00;
+                $rate = isset($data['rate']) ? (float) $data['rate'] : 1.00;
                 $statusId = $data['employee_position_status_id'] ?? 1; // fallback to 1
                 $startedAt = $data['started_at'] ?? now()->toDateString();
                 $expectedReturnAt = $data['expected_return_at'] ?? null;
                 $endedAt = $data['ended_at'] ?? null;
+                $isActive = $data['employee_position_status_id'] == 4 ? false : true;
 
                 EmployeePosition::create([
                     'employee_id' => $chiefEmployeeId,
@@ -114,7 +180,7 @@ class CommissariatsController extends Controller
                     'rate' => $rate,
                     'employee_position_status_id' => $statusId,
                     'started_at' => $startedAt,
-                    'is_active' => true,
+                    'is_active' => $isActive,
                     'ended_at' => $endedAt,
                     'expected_return_at' => $expectedReturnAt,
                 ]);
@@ -152,6 +218,33 @@ class CommissariatsController extends Controller
             'chief_employee_position_status_id' => 'sometimes|nullable|integer|exists:employee_position_statuses,id',
             'longitude' => 'sometimes|nullable|integer',
             'latitude' => 'sometimes|nullable|integer',
+
+            // Штатная должность
+            'rate_total' => 'required|numeric|min:0.25|max:2',
+            'is_independent' => 'sometimes|boolean',
+
+            // Новое назначение (если выбран начальник)
+            'rate' => [
+                'sometimes', 'numeric', 'min:0.25', 'max:2',
+                'lte:rate_total',
+                \Illuminate\Validation\Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+            'employee_position_status_id' => [
+                'sometimes', 'integer', 'exists:employee_position_statuses,id',
+                \Illuminate\Validation\Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+            'started_at' => [
+                'sometimes', 'date',
+                \Illuminate\Validation\Rule::requiredIf(fn () => filled($request->chief_employee_id)),
+            ],
+            'expected_return_at' => ['sometimes', 'nullable', 'date', 'after:started_at'],
+            'ended_at' => ['sometimes', 'nullable', 'date', 'after:started_at'],
+
+            // Старое назначение (при смене) — необязательные поля, используются если переданы
+            'old_rate' => ['sometimes', 'nullable', 'numeric', 'min:0.25', 'max:2'],
+            'old_started_at' => ['sometimes', 'nullable', 'date'],
+            'old_expected_return_at' => ['sometimes', 'nullable', 'date', 'after:old_started_at'],
+            'old_ended_at' => ['sometimes', 'nullable', 'date', 'after:old_started_at'],
         ]);
 
         $commissariat = Commissariat::findOrFail($id);
@@ -180,6 +273,21 @@ class CommissariatsController extends Controller
                 ->whereNull('division_id')
                 ->first();
 
+            // обновляем или создаём слот если нужно
+            $rateTotal = isset($data['rate_total']) ? (float)$data['rate_total'] : 1.00;
+            $isIndependent = $request->has('is_independent');
+
+            if ($chiefSlot) {
+                $chiefSlot->update(['rate_total' => $rateTotal, 'is_independent' => $isIndependent]);
+            } else {
+                $chiefSlot = CommissariatPosition::create([
+                    'commissariat_id' => $commissariat->id,
+                    'position_id' => $chiefPositionRef->id,
+                    'rate_total' => $rateTotal,
+                    'is_independent' => $isIndependent,
+                ]);
+            }
+
             // 4) Ищем текущее активное назначение на эту должность
             $currentAssignment = $chiefSlot ? EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
                 ->where('is_active', true)
@@ -192,15 +300,67 @@ class CommissariatsController extends Controller
             // 5) Логика смены начальника: учитываем nullable новый id
             if ($currentAssignment) {
                 if (! empty($newEmployeeId) && $currentAssignment->employee_id != $newEmployeeId) {
-                    // сотрудник изменился — удаляем старое назначение и создаём новое (с выбранным статусом если есть)
-                    $currentAssignment->delete();
-                    $this->createChiefAssignment($chiefSlot->id, $newEmployeeId, $newStatusId);
+                    // сотрудник изменился — обновляем старое назначение (если переданы поля)
+                    $oldStatusId = $data['chief_employee_position_status_id'] ?? null;
+                    $oldRate = $request->input('old_rate');
+                    $oldStartedAt = $request->input('old_started_at');
+                    $oldExpectedReturnAt = $request->input('old_expected_return_at');
+                    $oldEndedAt = $request->input('old_ended_at');
+
+                    if ($oldStatusId !== null) {
+                        $currentAssignment->employee_position_status_id = $oldStatusId;
+                        // если уволен (предположим id 4) — помечаем неактивным
+                        if ((int)$oldStatusId === 4) {
+                            $currentAssignment->is_active = false;
+                        }
+                    }
+                    if ($oldRate !== null) $currentAssignment->rate = (float)$oldRate;
+                    if ($oldStartedAt) $currentAssignment->started_at = $oldStartedAt;
+                    if ($oldExpectedReturnAt) $currentAssignment->expected_return_at = $oldExpectedReturnAt;
+                    if ($oldEndedAt) $currentAssignment->ended_at = $oldEndedAt;
+
+                    $currentAssignment->save();
+
+                    // затем создаём новое назначение для нового сотрудника (если передан)
+                    $newRate = isset($data['rate']) ? (float)$data['rate'] : 1.00;
+                    $newStatus = $data['employee_position_status_id'] ?? 1;
+                    $newStartedAt = $data['started_at'] ?? now()->toDateString();
+                    $newExpectedReturnAt = $data['expected_return_at'] ?? null;
+                    $newEndedAt = $data['ended_at'] ?? null;
+
+                    if (! empty($newEmployeeId)) {
+                        EmployeePosition::create([
+                            'employee_id' => $newEmployeeId,
+                            'commissariat_position_id' => $chiefSlot->id,
+                            'rate' => $newRate,
+                            'employee_position_status_id' => $newStatus,
+                            'started_at' => $newStartedAt,
+                            'is_active' => true,
+                            'ended_at' => $newEndedAt,
+                            'expected_return_at' => $newExpectedReturnAt,
+                        ]);
+                    }
                 }
                 // если новый id пустой или равен текущему — ничего не делаем
             } else {
                 // назначение не было — создаём только если передан новый сотрудник
                 if (! empty($newEmployeeId)) {
-                    $this->createChiefAssignment($chiefSlot->id, $newEmployeeId, $newStatusId);
+                    $newRate = isset($data['rate']) ? (float)$data['rate'] : 1.00;
+                    $newStatus = $data['employee_position_status_id'] ?? 1;
+                    $newStartedAt = $data['started_at'] ?? now()->toDateString();
+                    $newExpectedReturnAt = $data['expected_return_at'] ?? null;
+                    $newEndedAt = $data['ended_at'] ?? null;
+
+                    EmployeePosition::create([
+                        'employee_id' => $newEmployeeId,
+                        'commissariat_position_id' => $chiefSlot->id,
+                        'rate' => $newRate,
+                        'employee_position_status_id' => $newStatus,
+                        'started_at' => $newStartedAt,
+                        'is_active' => true,
+                        'ended_at' => $newEndedAt,
+                        'expected_return_at' => $newExpectedReturnAt,
+                    ]);
                 }
             }
 
