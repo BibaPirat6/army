@@ -140,6 +140,8 @@ class DepartmentsController extends Controller
         try {
             $department = Department::findOrFail($id);
 
+               $oldCommissariatId = $department->commissariat_id;
+
             // Обновляем отдел
             $department->update([
                 'name' => $data['name'],
@@ -156,11 +158,15 @@ class DepartmentsController extends Controller
 
             // Получаем или создаём слот начальника для этого отдела
             $chiefSlot = CommissariatPosition::where([
-                'commissariat_id' => $department->commissariat_id,
+                'commissariat_id' => $oldCommissariatId,
                 'position_id' => $chiefPositionRef->id,
                 'department_id' => $department->id,
                 'division_id' => null,
             ])->first();
+
+            $chiefSlot->update([
+                'commissariat_id'=>$data['commissariat_id']
+            ]);
 
             $oldId = (int) $data['old_chief_employee_id'];
             $newId = (int) $data['chief_employee_id'];

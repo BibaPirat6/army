@@ -161,6 +161,8 @@ class DivisionsController extends Controller
         DB::beginTransaction();
         try {
             $division = Division::findOrFail($id);
+            $oldCommissariatId = $division->commissariat_id;
+            $oldDepartmentId = $division->department_id ?? null;
 
             // Обновляем отдел
             $division->update([
@@ -173,19 +175,23 @@ class DivisionsController extends Controller
             $chiefPositionRef = Position::where('id', $data['chief_position_id'])->first();
             if (! $chiefPositionRef) {
                 DB::rollBack();
+
                 return back()->withErrors(['error' => 'Не найдена должность в справочнике'])->withInput();
             }
 
             // Получаем или создаём слот начальника для этого отделения (учитываем, что commissariat/department могли измениться)
-            $chiefSlot = CommissariatPosition::firstOrUpdate([
-                'commissariat_id' => $division->commissariat_id,
-                'department_id' => $division->department_id,
-                'division_id' => $division->id,
+            $chiefSlot = CommissariatPosition::where([
+                'commissariat_id' => $oldCommissariatId,
                 'position_id' => $chiefPositionRef->id,
-            ], [
-                'rate_total' => 1.00,
-                'is_independent' => false,
+                'department_id' => $oldDepartmentId,
+                'division_id' => $division->id,
+            ])->first();
+
+            $chiefSlot->update([
+                 'commissariat_id'=>$data["commissariat_id"],
+                 'department_id'=>$data["department_id"],
             ]);
+
 
             // Убедимся, что слот загружен
             $chiefSlot->refresh();
