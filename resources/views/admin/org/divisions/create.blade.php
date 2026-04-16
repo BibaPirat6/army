@@ -130,61 +130,45 @@
                     </div>
 
 
-                    {{-- начальник --}}
-                    <div class="relative">
+                     {{-- начальник --}}
+                    <div class="relative" id="chief-select">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник
+                            Начальник *
                         </label>
 
-                        {{-- visible input --}}
-                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
+                        {{-- visible --}}
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-               outline-none transition-colors text-[#060606]"
-                            autocomplete="off">
+                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" required>
 
-                        {{-- hidden value --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ old('chief_employee_id') }}">
+                        {{-- hidden --}}
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" required>
 
                         {{-- dropdown --}}
-                        <ul id="chief_employee_list"
-                            class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-               rounded-lg max-h-72 overflow-auto hidden">
+                        <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
+                       rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
-                            {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="Не назначать" data-static="true">
-                                Не назначать
+                                data-name="Не назначать">
+                                Очистить
                             </li>
 
                             @foreach ($employees as $employee)
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
-                                    data-name="{{ trim(
-                                        ($employee->person?->last_name ?? '') .
-                                            ' ' .
-                                            ($employee->person?->first_name ?? '') .
-                                            ' ' .
-                                            ($employee->person?->patronymic ?? ''),
-                                    ) }}"
-                                    data-search="{{ $employee->id }}">
-                                    @if ($employee->person)
-                                        {{ $employee->person->last_name ?? '*' }}
-                                        {{ $employee->person->first_name ?? '*' }}
-                                        {{ $employee->person->patronymic ?? '*' }}
-                                        <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
-                                    @else
-                                        <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
-                                    @endif
+                                    data-name="{{ trim($employee->getFullNameAttribute()) }}">
+                                    {{ $employee->getFullNameAttribute() }}
+                                    <span class="text-gray-400">(ID: {{ $employee->id }})</span>
                                 </li>
                             @endforeach
                         </ul>
                     </div>
 
-                      {{-- название должности начальника отдела --}}
+
+
+                    {{-- название должности начальника отдела --}}
                     <div class="relative mt-4">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Должность начальника отдела
+                            Должность начальника отдела *
                         </label>
 
                         {{-- visible input --}}
@@ -197,7 +181,7 @@
 
                         {{-- hidden value --}}
                         <input type="hidden" name="chief_position_id" id="chief_position_id"
-                            value="{{ old('chief_position_id') ?? '' }}">
+                            value="{{ old('chief_position_id') ?? '' }}" required>
 
                         {{-- dropdown --}}
                         <ul id="chief_position_list"
@@ -207,7 +191,7 @@
                             {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
                                 data-name="Не назначать" data-static="true">
-                                Не назначать
+                                Очистить
                             </li>
 
                             @foreach ($positions as $pos)
@@ -227,66 +211,6 @@
                         </ul>
                     </div>
 
-
-
-                    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('chief_position_search');
-        const hiddenInput = document.getElementById('chief_position_id');
-        const list = document.getElementById('chief_position_list');
-        if (!input || !list) return;
-
-        const items = list.querySelectorAll('li');
-
-        function showList() { list.classList.remove('hidden'); }
-        function hideList() { list.classList.add('hidden'); }
-
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
-            items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-                const name = item.dataset.name?.toLowerCase() || '';
-                const id = item.dataset.id || '';
-                if (query === '' || name.includes(query) || id.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-            list.classList.toggle('hidden', !hasVisible);
-        }
-
-        input.addEventListener('focus', () => { showList(); filterList(input.value); });
-        input.addEventListener('input', () => { hiddenInput.value = ''; showList(); filterList(input.value); });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                if (item.dataset.static === 'true') {
-                    const wasNotEmpty = input.value.trim() !== '' || hiddenInput.value !== '';
-                    input.value = '';
-                    hiddenInput.value = '';
-                    if (wasNotEmpty) { showList(); filterList(''); } else { hideList(); }
-                    return;
-                }
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
-                hideList();
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                hideList();
-            }
-        });
-    });
-</script>
 
 
 
@@ -311,93 +235,65 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('chief_employee_search');
-        const hiddenInput = document.getElementById('chief_employee_id');
-        const list = document.getElementById('chief_employee_list');
+        const container = document.getElementById('chief-select');
+        const input = container.querySelector('#chief_employee_search');
+        const hidden = container.querySelector('#chief_employee_id');
+        const list = container.querySelector('#chief_employee_list');
         const items = list.querySelectorAll('li');
 
-        function showList() {
+        function open() {
             list.classList.remove('hidden');
         }
 
-        function hideList() {
+        function close() {
             list.classList.add('hidden');
         }
 
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
+        function filter(value) {
+            const q = value.toLowerCase().trim();
 
             items.forEach(item => {
-
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                const name = item.dataset.name?.toLowerCase() || '';
+                const name = (item.dataset.name || '').toLowerCase();
                 const id = item.dataset.id || '';
 
-                if (query === '') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                if (name.includes(query) || id.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
+                if (!q || name.includes(q) || id.includes(q)) {
+                    item.style.display = 'block';
                 } else {
-                    item.classList.add('hidden');
+                    item.style.display = 'none';
                 }
             });
-
-            list.classList.toggle('hidden', !hasVisible);
         }
 
+        // focus
         input.addEventListener('focus', () => {
-            showList();
-            filterList(input.value);
+            open();
+            filter(input.value);
         });
 
-
+        // typing
         input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            showList();
-            filterList(input.value);
+            hidden.value = ''; // сбрасываем только при ручном вводе
+            open();
+            filter(input.value);
         });
 
-
+        // select
         items.forEach(item => {
             item.addEventListener('click', () => {
+                const id = item.dataset.id || '';
+                const name = item.dataset.name || '';
 
+                input.value = name;
+                hidden.value = id;
 
-                if (item.dataset.static === 'true') {
-
-                    const wasNotEmpty =
-                        input.value.trim() !== '' || hiddenInput.value !== '';
-
-                    input.value = '';
-                    hiddenInput.value = '';
-
-                    if (wasNotEmpty) {
-                        showList();
-                        filterList('');
-                    } else {
-                        hideList();
-                    }
-
-                    return;
-                }
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
-                hideList();
+                close();
             });
         });
+
+        // click outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                hideList();
+            if (!container.contains(e.target)) {
+                close();
             }
         });
     });
