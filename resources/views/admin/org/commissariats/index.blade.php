@@ -50,7 +50,7 @@
                                                 </td>
                                                 {{-- начальник --}}
                                                 <td class="px-6 py-4 text-[#060606]">
-                                                    {{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() }}
+                                                    {{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}
                                                 </td>
 
                                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}

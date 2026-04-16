@@ -33,9 +33,6 @@
                 <form action="{{ route('commissariats.update', $commissariat->id) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PUT')
-
-
-
                     <!-- Название комиссариата -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -55,41 +52,36 @@
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник (опционально)
+                            Начальник *
                         </label>
 
                         {{-- visible input (необязательное) --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                               outline-none transition-colors text-[#060606]" autocomplete="off"
+                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                           focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                           outline-none transition-colors text-[#060606]" autocomplete="off"
                             value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->getFullNameAttribute() : '') }}">
 
                         {{-- hidden value (необязательное) --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id"
+                        <input required type="hidden" name="chief_employee_id" id="chief_employee_id"
                             value="{{ old('chief_employee_id', $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '') }}"
                             data-original="{{ $commissariat->getChiefAttribute() ? $commissariat->getChiefAttribute()->id : '' }}"
                             data-original-exists="{{ $commissariat->getChiefAttribute() ? '1' : '0' }}">
                         {{-- dropdown --}}
-                        <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-                               rounded-lg max-h-72 overflow-auto hidden">
+                        <ul id="chief_employee_list" class="absolute z-50 mt-1 w-full bg-white border border-[#BFBFBF]
+                   rounded-lg max-h-72 overflow-auto hidden">
 
-                            {{-- опция "Не назначать" --}}
+                            {{-- Не назначать --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
                                 data-name="Не назначать" data-static="true">
-                                Не назначать
+                                Очистить
                             </li>
 
                             @foreach ($employees as $employee)
-                                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}" data-name="{{ trim(
-                                    $employee->getFullNameAttribute()
-                                ) }}" data-search="{{ $employee->id }}">
-                                                        @if ($employee->person)
-                                                            {{ $employee->getFullNameAttribute()}}
-                                                            <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
-                                                        @else
-                                                            <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
-                                                        @endif
-                                                    </li>
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
+                                    data-name="{{ trim($employee->getFullNameAttribute()) }}">
+                                        {{ $employee->getFullNameAttribute() }}
+                                        <span class="text-gray-400">(ID: {{ $employee->id }})</span>
+                                </li>
                             @endforeach
                         </ul>
 
@@ -105,7 +97,7 @@
                         <div id="chief_status_wrapper" class="mt-3 hidden">
                             <label for="old_chief_employee_position_status_id"
                                 class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Статус назначения
+                                Статус назначения *
                             </label>
 
                             <!-- Дополнительные поля для предыдущего начальника (появляются при смене) -->
@@ -135,42 +127,12 @@
                                 </div>
                             </div>
                         </div>
-
-
-                        {{-- Параметры назначения начальника (показываются только если выбран начальник) --}}
-                        <div id="chief_assignment_fields"
-                            class="hidden mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
-                            <h3 class="text-sm font-medium text-[#565A5B] mb-2">Параметры назначения (только если выбран
-                                начальник)</h3>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="employee_position_status_id"
-                                        class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
-                                    <select name="employee_position_status_id" id="employee_position_status_id"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                        @foreach($employeePositionStatuses as $status)
-                                            @php
-                                                $sel = false;
-                                                if (old('employee_position_status_id')) {
-                                                    $sel = old('employee_position_status_id') == $status->id;
-                                                } else {
-                                                    $sel = $currentAssignment && $currentAssignment->employee_position_status_id == $status->id;
-                                                }
-                                            @endphp
-                                            <option value="{{ $status->id }}" {{ $sel ? 'selected' : '' }}>{{ $status->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- x -->
                     <div>
                         <label for="longitude" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Координаты по горизонтали
+                            Координаты по горизонтали *
                         </label>
                         <input type="number" name="longitude" id="longitude" placeholder="Ось х" max="200" min="1"
                             value="{{ old('longitude', $commissariat->longitude) }}"
@@ -180,7 +142,7 @@
                     <!-- y -->
                     <div>
                         <label for="latitude" class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Координаты по вертикали
+                            Координаты по вертикали *
                         </label>
                         <input type="number" name="latitude" id="latitude" placeholder="Ось y" max="120" min="1"
                             value="{{ old('latitude', $commissariat->latitude) }}"
@@ -208,66 +170,40 @@
     </div>
 @endsection
 
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function () {
+
         const input = document.getElementById('chief_employee_search');
         const hiddenInput = document.getElementById('chief_employee_id');
         const list = document.getElementById('chief_employee_list');
+
+        if (!input || !hiddenInput || !list) return;
+
         const items = list.querySelectorAll('li');
 
-        const assignmentBlock = document.getElementById('chief_assignment_fields');
         const statusWrapper = document.getElementById('chief_status_wrapper');
         const previousFields = document.getElementById('previous_assignment_fields');
-
-        const statusSelectNew = document.getElementById('employee_position_status_id');
-        const expectedReturnNew = document.getElementById('expected_return_at');
-        const endedAtNew = document.getElementById('ended_at');
-
-        const statusSelectOld = document.getElementById('old_chief_employee_position_status_id');
-        const expectedReturnOld = document.getElementById('old_expected_return_at');
-        const endedAtOld = document.getElementById('old_ended_at');
 
         const originalId = hiddenInput.dataset.original || '';
         const originalExists = hiddenInput.dataset.originalExists === '1';
 
-        function showList() { list.classList.remove('hidden'); }
-        function hideList() { list.classList.add('hidden'); }
-        function showStatus() { statusWrapper.classList.remove('hidden'); }
-        function hideStatus() { statusWrapper.classList.add('hidden'); }
-
-        // 🔥 1. Показывает поля назначения для ВЫБРАННОГО начальника
-        function updateAssignmentVisibility() {
-            const hasChief = !!(hiddenInput.value && hiddenInput.value.trim() !== '');
-            assignmentBlock.classList.toggle('hidden', !hasChief);
+        function showList() {
+            list.classList.remove('hidden');
         }
 
-        // 🔥 2. Показывает поля для ПРЕДЫДУЩЕГО начальника (только при замене)
-        function updatePreviousAssignmentVisibility() {
+        function hideList() {
+            list.classList.add('hidden');
+        }
+
+        function updatePreviousBlock() {
             const selectedId = hiddenInput.value || '';
 
-            // Показываем, если: был начальник + выбран новый + это не тот же самый
             const shouldShow = originalExists && selectedId && selectedId !== originalId;
 
             statusWrapper.classList.toggle('hidden', !shouldShow);
             previousFields.classList.toggle('hidden', !shouldShow);
-        }
-
-        // Показать/скрыть поля expected_return / ended в зависимости от выбранного статуса
-        function updateDynamicFields(selectEl, expectedEl, endedEl) {
-            if (!selectEl) return;
-            const selectedText = selectEl.options[selectEl.selectedIndex]?.text?.toLowerCase() || '';
-
-            const showExpected = selectedText.includes('отпуск') || selectedText.includes('декрет');
-            if (expectedEl && expectedEl.closest) {
-                expectedEl.closest('div').classList.toggle('hidden', !showExpected);
-                if (!showExpected) expectedEl.value = '';
-            }
-
-            const showEnded = selectedText.includes('увол');
-            if (endedEl && endedEl.closest) {
-                endedEl.closest('div').classList.toggle('hidden', !showEnded);
-                if (!showEnded) endedEl.value = '';
-            }
         }
 
         function filterList(value) {
@@ -281,16 +217,10 @@
                     return;
                 }
 
-                const name = item.dataset.name?.toLowerCase() || '';
-                const id = item.dataset.id || '';
+                const name = item.dataset.name.toLowerCase();
+                const id = item.dataset.id;
 
-                if (query === '') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                if (name.includes(query) || id.includes(query)) {
+                if (query === '' || name.includes(query) || id.includes(query)) {
                     item.classList.remove('hidden');
                     hasVisible = true;
                 } else {
@@ -301,9 +231,7 @@
             list.classList.toggle('hidden', !hasVisible);
         }
 
-        // 🔥 Инициализация при загрузке (учёт возврата с ошибкой валидации)
-        updateAssignmentVisibility();
-        updatePreviousAssignmentVisibility();
+        // --- EVENTS ---
 
         input.addEventListener('focus', () => {
             showList();
@@ -312,56 +240,42 @@
 
         input.addEventListener('input', () => {
             hiddenInput.value = '';
-            updateAssignmentVisibility();
-            updatePreviousAssignmentVisibility();
-            hideStatus();
+            updatePreviousBlock();
             showList();
             filterList(input.value);
         });
 
         items.forEach(item => {
             item.addEventListener('click', () => {
+
+                // --- НЕ НАЗНАЧАТЬ ---
                 if (item.dataset.static === 'true') {
-                    // Клик на "Не назначать"
                     input.value = '';
                     hiddenInput.value = '';
-                    updateAssignmentVisibility();
-                    updatePreviousAssignmentVisibility();
-                    hideStatus();
+                    updatePreviousBlock();
                     hideList();
                     return;
                 }
 
-                // Выбор сотрудника из списка
-                const selectedId = item.dataset.id || '';
-                input.value = item.dataset.name || `ID ${selectedId}`;
-                hiddenInput.value = selectedId;
+                // --- ВЫБОР СОТРУДНИКА ---
+                const id = item.dataset.id;
+                const name = item.dataset.name;
 
-                updateAssignmentVisibility();      // 🔥 Показываем поля для НОВОГО
-                updatePreviousAssignmentVisibility(); // 🔥 Показываем поля для СТАРОГО (если замена)
+                input.value = name;
+                hiddenInput.value = id;
+
+                updatePreviousBlock();
                 hideList();
-                // обновляем динамические поля (expected_return/ended) для обоих блоков
-                updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew);
-                updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld);
             });
         });
 
-        // Закрытие списка при клике вне
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.relative')) {
                 hideList();
             }
         });
 
-        // инициализация динамических полей при загрузке
-        updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew);
-        updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld);
-
-        if (statusSelectNew) {
-            statusSelectNew.addEventListener('change', () => updateDynamicFields(statusSelectNew, expectedReturnNew, endedAtNew));
-        }
-        if (statusSelectOld) {
-            statusSelectOld.addEventListener('change', () => updateDynamicFields(statusSelectOld, expectedReturnOld, endedAtOld));
-        }
+        // init
+        updatePreviousBlock();
     });
 </script>

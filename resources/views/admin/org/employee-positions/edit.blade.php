@@ -46,7 +46,7 @@
                         <div>
                             <h4 class="font-medium text-gray-900">{{ $position->position->name ?? '' }}</h4>
                             <div class="flex items-center gap-2 text-xs text-gray-500">
-                                <span>Ставка: {{ $position->getRateValueAttribute() ?? '' }}</span>
+                                <span>Ставка: {{ $position->rate ?? '' }}</span>
                                 <span class="h-1 w-1 rounded-full bg-gray-300"></span>
                                 <span>{{ $position->commissariat->name ?? '' }}</span>
                             </div>
@@ -61,49 +61,6 @@
                 <div class="border-t border-gray-100">
                     <div class="p-2">
                         <h4 class="font-semibold text-[#565A5B]">Должность</h4>
-
-                        <!-- Информация о текущей должности -->
-                        <div class="bg-white/50 rounded-lg p-4 mb-4 border border-[#BFBFBF]">
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-[#565A5B]">Название</span>
-                                    <span class="text-[#060606]">{{ $position->position->name ?? '' }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-[#565A5B]">Ставка</span>
-                                    <span class="text-[#060606]">{{ $position->getRateValueAttribute() ?? '' }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-[#565A5B]">Занятость</span>
-                                    <span class="text-[#060606]">{{ $position->getStatusNameAttribute() ?? '' }}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="font-medium text-[#565A5B]">Комиссариат</span>
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->commissariat->name ?? '' }}</span>
-                                </div>
-
-                                @if ($position->department)
-                                    <div class="flex items-center justify-between">
-                                        <span class="font-medium text-[#565A5B]">Отдел</span>
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->department->name ?? '' }}</span>
-                                    </div>
-                                @endif
-                                @if ($position->division)
-                                    <div class="flex items-center justify-between">
-                                        <span class="font-medium text-[#565A5B]">Отделение</span>
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $position->division->name ?? '' }}</span>
-                                    </div>
-                                @endif
-
-                                @if ($position->is_independent !== false)
-                                    <i
-                                        style="color: rgb(17, 183, 17)">({{ $position->is_independent ? 'Самостоятельная должность' : '' }})</i>
-                                @endif
-                            </div>
-                        </div>
 
                         <!-- Форма обновления -->
                         <form action="{{ route('employee-positions.update', $position->id) }}" method="POST"
@@ -157,15 +114,9 @@
                                 <label for="rate" class="block text-sm font-medium text-[#565A5B] mb-2">
                                     Ставка *
                                 </label>
-                                <select name="rate" id="rate"
+                                <input name="rate" id="rate" type="number" value="{{ $position->rate }}" min="0.25" max="2.00" step="0.25"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
-                                    required>
-                                    @foreach ($employeePositionRates as $rate)
-                                        <option value="{{ $rate->id }}" {{ old('rate') == $rate->rate || $rate->rate == $position->getRateValueAttribute() ? 'selected' : ''  }}>
-                                            {{ $rate->rate }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                    required />
                             </div>
 
                             {{-- статус занятости --}}

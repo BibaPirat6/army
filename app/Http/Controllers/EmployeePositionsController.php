@@ -126,13 +126,12 @@ class EmployeePositionsController extends Controller
         $commissariats = Commissariat::all();
         $departments = Department::all();
         $divisions = Division::all();
-        $employeePositionRates = EmployeePositionRate::all();
         $employeePositionStatuses = EmployeePositionStatus::all();
 
         $backUrl = $request->get('back_url');
         $employeeId = $id;
 
-        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionRates', 'employeePositionStatuses'));
+        return view('admin.org.employee-positions.edit', compact('employee', 'positions', 'commissariats', 'departments', 'divisions', 'backUrl', 'employeeId', 'employeePositionStatuses'));
     }
 
     public function update(Request $request, $id)

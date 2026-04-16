@@ -45,73 +45,36 @@
                     </div>
 
                     {{-- начальник --}}
-                    <div class="relative">
+                    <div class="relative" id="chief-select">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник (опционально — поле можно оставить пустым)
+                            Начальник *
                         </label>
 
-                        {{-- visible input (необязательное) --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                           focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                           outline-none transition-colors text-[#060606]" autocomplete="off">
+                        {{-- visible --}}
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" required>
 
-                        {{-- hidden value (необязательное) --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ old('chief_employee_id') }}">
+                        {{-- hidden --}}
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" required>
 
                         {{-- dropdown --}}
-                        <ul id="chief_employee_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
-                           rounded-lg max-h-72 overflow-auto hidden">
+                        <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
+                       rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
-                            {{-- опция "Не назначать" --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="Не назначать" data-static="true">
-                                Не назначать
+                                data-name="Не назначать">
+                                Очистить
                             </li>
 
                             @foreach ($employees as $employee)
-                                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}" data-name="{{ trim(
-                                    $employee->getFullNameAttribute()
-                                ) }}" data-search="{{ $employee->id }}">
-                                                        @if ($employee->person)
-                                                            {{ $employee->getFullNameAttribute()}}
-                                                            <span class="text-gray-400">(ID: {{ $employee->id ?? '*' }})</span>
-                                                        @else
-                                                            <span class="text-gray-400">Без ФИО (ID: {{ $employee->id }})</span>
-                                                        @endif
-                                                    </li>
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
+                                    data-name="{{ trim($employee->getFullNameAttribute()) }}">
+                                    {{ $employee->getFullNameAttribute() }}
+                                    <span class="text-gray-400">(ID: {{ $employee->id }})</span>
+                                </li>
                             @endforeach
                         </ul>
-                    </div>
-
-                    {{-- Параметры назначения начальника (показываются только если выбран начальник) --}}
-                    <div id="chief_assignment_fields" class="hidden mt-4 bg-white p-4 rounded-lg border border-[#E5E7EB]">
-                        <h3 class="text-sm font-medium text-[#565A5B] mb-2">Параметры назначения (только если выбран
-                            начальник)</h3>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label for="employee_position_status_id"
-                                    class="block text-sm font-medium text-[#565A5B] mb-2">Статус назначения</label>
-                                <select name="employee_position_status_id" id="employee_position_status_id"
-                                    class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
-                                    @foreach($employeePositionStatuses as $status)
-                                        @php
-                                            $selected = false;
-                                            if (old('employee_position_status_id')) {
-                                                $selected = old('employee_position_status_id') == $status->id;
-                                            } else {
-                                                // выбрать статус "работает" по умолчанию если есть, иначе id==1
-                                                $lower = mb_strtolower($status->name);
-                                                $selected = (str_contains($lower, 'работ') || $status->id == 1) && !isset($selected);
-                                            }
-                                        @endphp
-                                        <option value="{{ $status->id }}" {{ $selected ? 'selected' : '' }}>{{ $status->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- x -->
@@ -155,112 +118,66 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('chief_employee_search');
-        const hiddenInput = document.getElementById('chief_employee_id');
-        const list = document.getElementById('chief_employee_list');
+        const container = document.getElementById('chief-select');
+        const input = container.querySelector('#chief_employee_search');
+        const hidden = container.querySelector('#chief_employee_id');
+        const list = container.querySelector('#chief_employee_list');
         const items = list.querySelectorAll('li');
 
-        const assignmentBlock = document.getElementById('chief_assignment_fields');
-        const statusSelect = document.getElementById('employee_position_status_id');
-        const expectedReturn = document.getElementById('expected_return_at');
-        const endedAt = document.getElementById('ended_at');
+        function open() {
+            list.classList.remove('hidden');
+        }
 
-        function showList() { list.classList.remove('hidden'); }
-        function hideList() { list.classList.add('hidden'); }
+        function close() {
+            list.classList.add('hidden');
+        }
 
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
+        function filter(value) {
+            const q = value.toLowerCase().trim();
 
             items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                const name = item.dataset.name?.toLowerCase() || '';
+                const name = (item.dataset.name || '').toLowerCase();
                 const id = item.dataset.id || '';
 
-                if (query === '') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                if (name.includes(query) || id.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
+                if (!q || name.includes(q) || id.includes(q)) {
+                    item.style.display = 'block';
                 } else {
-                    item.classList.add('hidden');
+                    item.style.display = 'none';
                 }
             });
-
-            list.classList.toggle('hidden', !hasVisible);
         }
 
-        function updateAssignmentVisibility() {
-            // show assignment fields only when a chief id (non-empty) is selected
-            const hasChief = !!(hiddenInput.value && hiddenInput.value.trim() !== '');
-            assignmentBlock.classList.toggle('hidden', !hasChief);
-        }
-
-        function updateDynamicFieldsVisibility() {
-            if (!statusSelect) return;
-            const selectedText = statusSelect.options[statusSelect.selectedIndex]?.text?.toLowerCase() || '';
-
-            // expected return for отпуск/декрет
-            const showExpectedReturn = selectedText.includes('отпуск') || selectedText.includes('декрет');
-            if (expectedReturn) {
-                expectedReturn.closest('div').classList.toggle('hidden', !showExpectedReturn);
-                if (!showExpectedReturn) expectedReturn.value = '';
-            }
-
-            // ended_at for уволен
-            const showEndedAt = selectedText.includes('увол'); // покрывает 'уволен', 'увольнение' и т.п.
-            if (endedAt) {
-                endedAt.closest('div').classList.toggle('hidden', !showEndedAt);
-                if (!showEndedAt) endedAt.value = '';
-            }
-        }
-
-        // initial state (useful when returning with validation errors)
-        updateAssignmentVisibility();
-        if (statusSelect) updateDynamicFieldsVisibility();
-
-        input.addEventListener('focus', () => { showList(); filterList(input.value); });
-
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            updateAssignmentVisibility();
-            showList();
-            filterList(input.value);
+        // focus
+        input.addEventListener('focus', () => {
+            open();
+            filter(input.value);
         });
 
+        // typing
+        input.addEventListener('input', () => {
+            hidden.value = ''; // сбрасываем только при ручном вводе
+            open();
+            filter(input.value);
+        });
+
+        // select
         items.forEach(item => {
             item.addEventListener('click', () => {
-                if (item.dataset.static === 'true') {
-                    const wasNotEmpty = input.value.trim() !== '' || hiddenInput.value !== '';
-                    input.value = '';
-                    hiddenInput.value = '';
-                    updateAssignmentVisibility();
+                const id = item.dataset.id || '';
+                const name = item.dataset.name || '';
 
-                    if (wasNotEmpty) { showList(); filterList(''); }
-                    else { hideList(); }
-                    return;
-                }
+                input.value = name;
+                hidden.value = id;
 
-                input.value = item.dataset.name || `ID ${item.dataset.id}`;
-                hiddenInput.value = item.dataset.id;
-                updateAssignmentVisibility();
-                hideList();
+                close();
             });
         });
 
-        document.addEventListener('click', (e) => { if (!e.target.closest('.relative')) hideList(); });
-
-        if (statusSelect) {
-            statusSelect.addEventListener('change', updateDynamicFieldsVisibility);
-        }
+        // click outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                close();
+            }
+        });
     });
 </script>
