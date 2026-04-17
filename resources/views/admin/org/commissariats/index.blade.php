@@ -53,7 +53,10 @@
                                                 </td>
                                                 {{-- начальник --}}
                                                 <td class="px-6 py-4 text-[#060606]">
-                                                    {{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}
+                                                    <a href="{{ route("employees.show",[
+                                                        "id"=>$commissariat->getChiefAttribute()->id,
+                                                        "back_url"=>url()->full()
+                                                    ]) }}">{{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
                                                 </td>
 
                                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}

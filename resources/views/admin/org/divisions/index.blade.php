@@ -46,35 +46,46 @@
                         @forelse($divisions as $division)
                                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $division->id }}</td>
-                                                <td class="px-6 py-4 text-[#060606]">{{ $division->name }}</td>
 
-                                                <td class="px-6 py-4">
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            {{ optional($division->getChiefAttribute())->getFullNameAttribute() ?? "" }}
-                                                    </span>
 
+                                                <td class="px-6 py-4 text-[#060606]">
+                                                    <a href="{{ route("divisions.show", [
+                                "id" => $division->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ $division->name }}</a>
                                                 </td>
 
                                                 <td class="px-6 py-4">
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            {{ $division->department?->name ?? '' }}
-                                                        </span>
+                                                    <a href="{{ route("employees.show", [
+                                "id" => $division->getChiefAttribute()->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ optional($division->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
                                                 </td>
 
                                                 <td class="px-6 py-4">
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            {{ $division->commissariat?->name ?? '' }}
-                                                        </span>
+                                                    @if($division->department)
+                                                                            <a href="{{ route('departments.show', [
+                                                            'id' => $division->department_id,
+                                                            'back_url' => url()->full()
+                                                        ]) }}">
+                                                                                {{ $division->department->name }}
+                                                                            </a>
+                                                    @endif
+                                                </td>
+
+                                                <td class="px-6 py-4">
+                                                    <a href="{{ route("commissariats.show", [
+                                "id" => $division->commissariat->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ $division->commissariat->name }}</a>
+
                                                 </td>
 
                                                 <td class="px-6 py-4 text-right">
                                                     <a href="{{ route('divisions.show', [
-                                                            'id' => $division->id,
-                                                            'back_url' => url()->full(),
-                                                        ]) }}"
+                                'id' => $division->id,
+                                'back_url' => url()->full(),
+                            ]) }}"
                                                         class="inline-flex items-center px-4 py-2 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746ccc]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -84,9 +95,9 @@
                                                         Подробнее
                                                     </a>
                                                     <a href="{{ route('divisions.edit', [
-                                                                        'id' => $division->id,
-                                                                        'back_url' => url()->full(),
-                                                                    ]) }}"
+                                'id' => $division->id,
+                                'back_url' => url()->full(),
+                            ]) }}"
                                                         class="mt-0.5 inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

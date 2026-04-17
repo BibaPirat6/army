@@ -323,7 +323,7 @@
                                                                 ['label' => 'Должность', 'value' => $position->position->name],
                                                                 ['label' => 'Тип должности', 'value' => $position->position->positionType->name],
                                                                 ['label' => 'Тип руководителя', 'value' => $position->position->ChiefType->name],
-                                                                ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
+                                                                // ['label' => 'Ставка', 'value' => $position->getRateValueAttribute()],
                                                                 ['label' => 'Самостоятельная', 'value' => $position->is_independent ? 'да' : 'нет'],
                                                                 ['label' => 'Статус', 'value' => $position->getStatusNameAttribute()],
                                                             ];
