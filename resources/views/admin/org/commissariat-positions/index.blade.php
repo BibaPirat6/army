@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Комиссариаты
+    Штатные должности комиссариата
 @endsection
 
 @section('content')
@@ -14,17 +14,27 @@
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-[#060606]">Комиссариаты</h1>
-                <p class="text-[#565A5B] mt-1">Список всех комиссариатов</p>
+                <div class="flex items-center mb-4">
+                    <a href="{{ $backUrl ?? route('commissariats.index') }}"
+                        class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Назад
+                    </a>
+                </div>
+                <h1 class="text-2xl font-bold text-[#060606]">Штатные должности</h1>
             </div>
-            <a href="{{ route('commissariats.create', [
-        'back_url' => route('commissariats.index'),
+            <a href="{{ route('commissariat-positions.create', [
+        'back_url' => url()->full(),
+        'commissariat_id'=>$commissariat->id
     ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Добавить комиссариат
+                Создать штатную должность
             </a>
         </div>
 
@@ -34,38 +44,25 @@
                 <table class="w-full">
                     <thead class="bg-[#565A5B]">
                         <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">ID</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Название</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Начальник</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Координаты</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Должность</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-[#e7e1e1]">Назначение</th>
                             <th class="px-6 py-4 text-right text-sm font-semibold text-[#e7e1e1]">Действия</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#BFBFBF]">
-                        @forelse($commissariats as $commissariat)
+                        @forelse($commissariatPositions as $pos)
                                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $commissariat->id }}</td>
-                                                <td class="px-6 py-4 text-[#060606]">
-                                                    <a href="{{ route("commissariat-positions.index",[
-                                                        "commissariat_id"=>$commissariat->id,
-                                                        "back_url"=>url()->full()
-                                                    ]) }}">{{ $commissariat->name }}</a>
+                                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $pos->position->name }}
                                                 </td>
-                                                {{-- начальник --}}
-                                                <td class="px-6 py-4 text-[#060606]">
-                                                    {{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}
-                                                </td>
-
-                                                <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}
-                                                    Y: {{ $commissariat->latitude ?? '*' }}
-                                                </td>
-
-
-
+                                                <td class="px-6 py-4 text-[#060606] font-medium">
+                                                    {{ $pos->activeAssignment->employee->getFullNameAttribute() }}</td>
 
                                                 <td class="px-6 py-4 text-right">
-                                                    <a href="{{ route('commissariats.show', $commissariat->id) }}"
-                                                        class="inline-flex items-center px-4 py-2 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746ccc]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                                    <a href="{{ route('commissariats.edit', [
+                                'id' => 1,
+                                'back_url' => url()->full(),
+                            ]) }}"
+                                                        class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
@@ -74,7 +71,7 @@
                                                         Подробнее
                                                     </a>
                                                     <a href="{{ route('commissariats.edit', [
-                                'id' => $commissariat->id,
+                                'id' => 1,
                                 'back_url' => url()->full(),
                             ]) }}"
                                                         class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
@@ -85,9 +82,9 @@
                                                         </svg>
                                                         Редактировать
                                                     </a>
-                                                    <form action="{{ route('commissariats.delete', $commissariat->id) }}" method="POST"
+                                                    <form action="{{ route('commissariats.delete', 1) }}" method="POST"
                                                         class="inline-block mt-0.5"
-                                                        onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \'{{ $commissariat->name }}\'?');">
+                                                        onsubmit="return confirm('Вы уверены, что хотите удалить штатную должность?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
@@ -112,8 +109,7 @@
                                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                                             </path>
                                         </svg>
-                                        <p class="text-[#565A5B] text-lg font-medium">Нет комиссариатов</p>
-                                        <p class="text-[#7F7F7F] mt-1">Создайте первый комиссариат для начала работы</p>
+                                        <p class="text-[#565A5B] text-lg font-medium">Нет штата</p>
                                     </div>
                                 </td>
                             </tr>

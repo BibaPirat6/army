@@ -117,29 +117,4 @@ class Commissariat extends Model
             ->get()
             ->unique('id');
     }
-
-    /**
-     * Статистика штата
-     */
-    public function getStaffStatsAttribute(): array
-    {
-        $total = $this->commissariatPositions()->count();
-        $occupied = $this->commissariatPositions()
-            ->whereHas('employeePositions', fn ($q) => $q->active()->occupiesRate())
-            ->count();
-        $totalRate = $this->commissariatPositions()->sum('rate_total');
-        $occupiedRate = $this->employeePositions()
-            ->active()
-            ->occupiesRate()
-            ->sum('rate');
-
-        return [
-            'total_positions' => $total,
-            'occupied_positions' => $occupied,
-            'vacant_positions' => $total - $occupied,
-            'total_rate' => (float) $totalRate,
-            'occupied_rate' => (float) $occupiedRate,
-            'available_rate' => round($totalRate - $occupiedRate, 2),
-        ];
-    }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\DivisionsController;
@@ -37,7 +38,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/employees/{id}/edit', [EmployeesController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{id}', [EmployeesController::class, 'delete'])->name('employees.delete');
-
 
     // persons columns
     Route::get('/persons-columns', [PersonsColumnsController::class, 'index'])->name('persons-columns.index');
@@ -102,8 +102,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/employee-positions/{id}', [EmployeePositionsController::class, 'update'])->name('employee-positions.update');
     Route::delete('/employee-positions/{id}', [EmployeePositionsController::class, 'delete'])->name('employee-positions.delete');
 
+    // штатные должности в комиссариате
+    Route::get('/commissariat-positions', [CommissariatPositionsController::class, 'index'])->name('commissariat-positions.index');
+    Route::get('/commissariat-positions/create', [CommissariatPositionsController::class, 'create'])->name('commissariat-positions.create');
+    Route::post('/commissariat-positions', [CommissariatPositionsController::class, 'store'])->name('commissariat-positions.store');
+    Route::get('/commissariat-positions/{id}/edit', [CommissariatPositionsController::class, 'edit'])->name('commissariat-positions.edit');
+    Route::put('/commissariat-positions/{id}', [CommissariatPositionsController::class, 'update'])->name('commissariat-positions.update');
+    Route::delete('/commissariat-positions/{id}', [CommissariatPositionsController::class, 'delete'])->name('commissariat-positions.delete');
 
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
-    Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name("structure.obsidian");
+    Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name('structure.obsidian');
 });
