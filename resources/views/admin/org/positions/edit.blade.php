@@ -14,13 +14,13 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('positions.index') }}"
+                <a href="{{ $backUrl ?? route('positions.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Назад к списку должностей
+                    Назад
                 </a>
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Редактирование должности</h1>
@@ -30,9 +30,13 @@
         <!-- Форма -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
-                <form action="{{ route('positions.update', $position->id) }}" method="POST" class="space-y-6">
+                <form action="{{ route('positions.update', [
+        "id" => $position->id,
+    ]) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PUT')
+
+                    <input type="hidden" value="{{ $backUrl }}" name="backUrl">
 
                     <!-- Название должности -->
                     <div>
@@ -52,8 +56,8 @@
 
                         {{-- visible input --}}
                         <input type="text" id="position_type_search" placeholder="Выберите тип должности" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                               outline-none transition-colors text-[#060606]" autocomplete="off"
+                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                   outline-none transition-colors text-[#060606]" autocomplete="off"
                             value="{{ old('position_type_name', $position->getPositionTypeNameAttribute()) }}">
 
                         {{-- hidden value --}}
@@ -62,7 +66,7 @@
 
                         {{-- dropdown --}}
                         <ul id="position_type_list" class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
-                               rounded-lg max-h-72 overflow-auto hidden">
+                                   rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- не выбирать --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""

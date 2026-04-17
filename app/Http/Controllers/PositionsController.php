@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\ChiefType;
 use App\Models\Commissariat;
-use App\Models\EmployeePosition;
 use App\Models\Position;
 use App\Models\PositionType;
 use Illuminate\Http\Request;
@@ -21,19 +20,21 @@ class PositionsController extends Controller
         return view('admin.org.positions.index', compact('positions', 'commissariats'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $position = Position::findOrFail($id);
+        $backUrl = $request->input('back_url');
 
-        return view('admin.org.positions.show')->with('position', $position);
+        return view('admin.org.positions.show', compact('position', 'backUrl'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $types = PositionType::all();
         $chiefTypes = ChiefType::all();
+        $backUrl = $request->input('back_url');
 
-        return view('admin.org.positions.create', compact('types', 'chiefTypes'));
+        return view('admin.org.positions.create', compact('types', 'chiefTypes', 'backUrl'));
     }
 
     public function store(Request $request)
@@ -53,16 +54,19 @@ class PositionsController extends Controller
 
         Position::create($data);
 
-        return redirect()->route('positions.index')->with('success', 'Должность успешно создана.');
+        $backUrl = $request->get('backUrl', route('positions.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Должность успешно создана.');
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $position = Position::with('positionType')->findOrFail($id);
         $types = PositionType::all();
         $chiefTypes = ChiefType::all();
+        $backUrl = $request->input('back_url');
 
-        return view('admin.org.positions.edit', compact('position', 'types', 'chiefTypes'));
+        return view('admin.org.positions.edit', compact('position', 'types', 'chiefTypes', 'backUrl'));
     }
 
     public function update(Request $request, $id)
@@ -82,14 +86,18 @@ class PositionsController extends Controller
 
         Position::where('id', $id)->update($data);
 
-        return redirect()->route('positions.index')->with('success', 'Должность успешно обновлена.');
+        $backUrl = $request->get('backUrl', route('positions.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Должность успешно обновлена.');
     }
 
-    public function delete($id)
+    public function delete(Request $request, $id)
     {
         $position = Position::findOrFail($id);
         $position->delete();
 
-        return redirect()->route('positions.index')->with('success', 'Должность успешно удалена.');
+        $backUrl = $request->get('backUrl', route('positions.index'));
+
+        return redirect()->to($backUrl)->with('success', 'Должность успешно удалена.');
     }
 }

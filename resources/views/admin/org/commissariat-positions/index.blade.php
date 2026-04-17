@@ -52,7 +52,10 @@
                     <tbody class="divide-y divide-[#BFBFBF]">
                         @forelse($commissariatPositions as $pos)
                                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $pos->position->name }}
+                                                <td class="px-6 py-4 text-[#060606] font-medium"><a href="{{ route("positions.show",[
+                                                    "id"=>$pos->id,
+                                                    "back_url"=>url()->full()
+                                                ]) }}">{{ $pos->position->name }}</a>
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] font-medium">
                                                     {{ $pos->activeAssignment->employee->getFullNameAttribute() }}</td>

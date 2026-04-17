@@ -28,7 +28,8 @@
         <!-- Форма -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">
             <div class="p-6 md:p-8">
-                <form action="{{ route('commissariat-positions.store', ['commissariat_id' => $commissariat->id]) }}" method="POST" class="space-y-6">
+                <form action="{{ route('commissariat-positions.store', ['commissariat_id' => $commissariat->id]) }}"
+                    method="POST" class="space-y-6">
                     @csrf
                     <input type="hidden" name="backUrl" value="{{ $backUrl }}">
 
@@ -37,30 +38,24 @@
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Отдел
                         </label>
-                        
-                        <input type="text" 
-                               id="department_search" 
-                               placeholder="Выберите отдел" 
-                               class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                      outline-none transition-colors text-[#060606]" 
-                               autocomplete="off">
+
+                        <input type="text" id="department_search" placeholder="Выберите отдел" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                                      outline-none transition-colors text-[#060606]"
+                            autocomplete="off">
 
                         <input type="hidden" name="department_id" id="department_id">
 
-                        <ul id="department_list" 
+                        <ul id="department_list"
                             class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
-                            
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" 
-                                data-id="" 
-                                data-name=""
+
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
                                 data-static="true">
                                 ✖ Не выбирать
                             </li>
 
                             @foreach ($departments as $department)
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" 
-                                    data-id="{{ $department->id }}"
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $department->id }}"
                                     data-name="{{ $department->name }}">
                                     {{ $department->name }}
                                     <span class="text-gray-400 text-sm">(ID: {{ $department->id }})</span>
@@ -75,32 +70,24 @@
                             Отделение
                         </label>
 
-                        <input type="text" 
-                               id="division_search" 
-                               placeholder="Выберите отделение" 
-                               class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                      outline-none transition-colors text-[#060606]" 
-                               autocomplete="off"
-                               value="{{ old('division_name', '') }}">
+                        <input type="text" id="division_search" placeholder="Выберите отделение" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                                      outline-none transition-colors text-[#060606]"
+                            autocomplete="off" value="{{ old('division_name', '') }}">
 
                         <input type="hidden" name="division_id" id="division_id" value="{{ old('division_id', '') }}">
 
                         <ul id="division_list"
                             class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" 
-                                data-id="" 
-                                data-name=""
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
                                 data-static="true">
                                 ✖ Не выбирать
                             </li>
 
                             @foreach ($divisions as $division)
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" 
-                                    data-id="{{ $division->id }}"
-                                    data-name="{{ $division->name }}" 
-                                    data-department-id="{{ $division->department_id }}"
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $division->id }}"
+                                    data-name="{{ $division->name }}" data-department-id="{{ $division->department_id }}"
                                     data-department-name="{{ $division->department?->name }}"
                                     data-commissariat-id="{{ $division->commissariat->id }}"
                                     data-commissariat-name="{{ $division->commissariat->name }}">
@@ -114,6 +101,123 @@
                             @endforeach
                         </ul>
                     </div>
+
+
+                    {{-- Должность --}}
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Должность *
+                        </label>
+
+                        {{-- Видимое поле --}}
+                        <input required type="text" id="position_search" placeholder="Выберите должность" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                      outline-none transition-colors text-[#060606]" autocomplete="off">
+
+                        {{-- Скрытое поле --}}
+                        <input type="hidden" name="position_id" id="position_id">
+
+                        {{-- Dropdown --}}
+                        <ul id="position_list" class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
+                                                   rounded-lg max-h-72 overflow-auto hidden">
+                            {{-- Кнопка очистить --}}
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
+                                data-static="true">
+                                Очистить
+                            </li>
+
+                            {{-- Список должностей (кроме начальников) --}}
+                            @foreach ($positions as $pos)
+                                @if (
+                                        optional($pos->chiefType)->name != "начальник комиссариата"
+                                        && optional($pos->chiefType)->name != "начальник отдела"
+                                        && optional($pos->chiefType)->name != "начальник отделения"
+                                    )
+                                    <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $pos->id }}"
+                                        data-name="{{ $pos->name }}">
+                                        {{ $pos->name }}
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    </div>
+
+
+                    {{-- общас ставка --}}
+                    <div>
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Общая ставка *
+                        </label>
+                        <input required type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                  outline-none transition-colors text-[#060606]" autocomplete="off"
+                            placeholder="Введите общую ставку" value="1.00" min="0.25" max="2.00" step="0.25"
+                            name="rate_total">
+                    </div>
+
+
+                    <!-- самостоятельный -->
+                    <div>
+                        <label for="is_independent" class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Самостоятельная должность *
+                        </label>
+                        <select name="is_independent" id="is_independent"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                            <option value="0" selected>Нет</option>
+                            <option value="1">Да</option>
+                        </select>
+                    </div>
+
+                    {{-- сотрудник --}}
+                       {{-- начальник --}}
+                    <div class="relative" id="chief-select">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Начальник *
+                        </label>
+
+                        {{-- visible --}}
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" required>
+
+                        {{-- hidden --}}
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" required>
+
+                        {{-- dropdown --}}
+                        <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
+                       rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="Не назначать">
+                                Очистить
+                            </li>
+
+                            @foreach ($employees as $employee)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
+                                    data-name="{{ trim($employee->getFullNameAttribute()) }}">
+                                    {{ $employee->getFullNameAttribute() }}
+                                    <span class="text-gray-400">(ID: {{ $employee->id }})</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+
+
+                     {{--  ставка --}}
+                    <div>
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            ставка *
+                        </label>
+                        <input required type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                  outline-none transition-colors text-[#060606]" autocomplete="off"
+                            placeholder="Введите общую ставку" value="1.00" min="0.25" max="2.00" step="0.25"
+                            name="rate">
+                    </div>
+
+
+
 
                     <!-- Кнопка отправки -->
                     <div class="flex justify-end pt-6">
@@ -139,20 +243,20 @@
         const departmentInput = document.getElementById('department_search');
         const departmentHidden = document.getElementById('department_id');
         const departmentList = document.getElementById('department_list');
-        
+
         const divisionInput = document.getElementById('division_search');
         const divisionHidden = document.getElementById('division_id');
         const divisionList = document.getElementById('division_list');
-        
+
         // ========== ОТДЕЛ ==========
         if (departmentInput && departmentHidden && departmentList) {
-            
+
             // Фильтрация списка отделов
             function filterDepartmentList() {
                 const query = departmentInput.value.toLowerCase().trim();
                 const items = departmentList.querySelectorAll('li:not([data-static="true"])');
                 let hasVisible = false;
-                
+
                 items.forEach(item => {
                     const name = (item.dataset.name || '').toLowerCase();
                     if (!query || name.includes(query)) {
@@ -162,13 +266,13 @@
                         item.classList.add('hidden');
                     }
                 });
-                
+
                 const staticItem = departmentList.querySelector('[data-static="true"]');
                 if (staticItem) staticItem.classList.remove('hidden');
-                
+
                 departmentList.classList.toggle('hidden', !hasVisible && query !== '');
             }
-            
+
             // Выбор отдела
             function selectDepartment(item) {
                 if (item.dataset.static === 'true') {
@@ -180,39 +284,39 @@
                     departmentInput.value = item.dataset.name || '';
                     departmentHidden.value = item.dataset.id || '';
                 }
-                
+
                 departmentList.classList.add('hidden');
-                
+
                 // Очищаем отделение при смене отдела
                 if (divisionInput && divisionHidden) {
                     divisionInput.value = '';
                     divisionHidden.value = '';
                 }
-                
+
                 // Переключаем фокус на отделение
                 if (divisionInput) {
                     setTimeout(() => divisionInput.focus(), 100);
                 }
             }
-            
+
             // Обработчики событий для отдела
             departmentInput.addEventListener('focus', () => {
                 filterDepartmentList();
                 departmentList.classList.remove('hidden');
             });
-            
+
             departmentInput.addEventListener('input', () => {
                 departmentHidden.value = '';
                 filterDepartmentList();
             });
-            
+
             departmentList.querySelectorAll('li').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
                     selectDepartment(item);
                 });
             });
-            
+
             // Enter для выбора первого отдела
             departmentInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !departmentList.classList.contains('hidden')) {
@@ -222,35 +326,35 @@
                 }
             });
         }
-        
+
         // ========== ОТДЕЛЕНИЕ ==========
         if (divisionInput && divisionHidden && divisionList) {
-            
+
             // Получаем текущий выбранный отдел
             function getCurrentDepartmentId() {
                 return departmentHidden ? departmentHidden.value : '';
             }
-            
+
             // Фильтрация списка отделений
             function filterDivisionList() {
                 const query = divisionInput.value.toLowerCase().trim();
                 const currentDepartmentId = getCurrentDepartmentId();
                 const items = divisionList.querySelectorAll('li:not([data-static="true"])');
                 let hasVisible = false;
-                
+
                 items.forEach(item => {
                     const name = (item.dataset.name || '').toLowerCase();
                     const departmentId = item.dataset.departmentId || '';
-                    
+
                     const matchesQuery = !query || name.includes(query);
-                    
+
                     // ✅ Если выбран отдел - показываем только отделения этого отдела
                     // ✅ Если отдел не выбран - показываем все отделения (включая самостоятельные)
                     let matchesDepartment = true;
                     if (currentDepartmentId) {
                         matchesDepartment = departmentId === currentDepartmentId;
                     }
-                    
+
                     if (matchesQuery && matchesDepartment) {
                         item.classList.remove('hidden');
                         hasVisible = true;
@@ -258,12 +362,12 @@
                         item.classList.add('hidden');
                     }
                 });
-                
+
                 const staticItem = divisionList.querySelector('[data-static="true"]');
                 if (staticItem) staticItem.classList.remove('hidden');
-                
+
                 divisionList.classList.toggle('hidden', !hasVisible && query !== '');
-                
+
                 // Показываем сообщение если нет отделений
                 let noItemsMsg = divisionList.querySelector('.no-items-message');
                 if (!noItemsMsg) {
@@ -272,17 +376,17 @@
                     noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет доступных отделений';
                     divisionList.appendChild(noItemsMsg);
                 }
-                
+
                 // Обновляем текст сообщения
                 noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет доступных отделений';
-                
+
                 if (!hasVisible) {
                     noItemsMsg.classList.remove('hidden');
                 } else {
                     noItemsMsg.classList.add('hidden');
                 }
             }
-            
+
             // Выбор отделения
             function selectDivision(item) {
                 if (item.dataset.static === 'true') {
@@ -293,32 +397,32 @@
                     // Выбор отделения
                     divisionInput.value = item.dataset.name || '';
                     divisionHidden.value = item.dataset.id || '';
-                    
+
                     // ✅ Если отделение НЕ самостоятельное (имеет department_id) - заполняем отдел
                     const departmentId = item.dataset.departmentId;
                     const departmentName = item.dataset.departmentName;
-                    
+
                     if (departmentId && departmentName && departmentInput && departmentHidden) {
                         departmentInput.value = departmentName;
                         departmentHidden.value = departmentId;
                     }
-                    
+
                     // ✅ Если отделение самостоятельное - очищаем отдел
                     if (!departmentId && departmentInput && departmentHidden) {
                         departmentInput.value = '';
                         departmentHidden.value = '';
                     }
                 }
-                
+
                 divisionList.classList.add('hidden');
-                
+
                 // Переключаем фокус на поле должности
                 const positionSelect = document.getElementById('position_id');
                 if (positionSelect) {
                     setTimeout(() => positionSelect.focus(), 100);
                 }
             }
-            
+
             // Обновить фильтрацию при изменении отдела
             function updateDivisionFilter() {
                 if (divisionInput.value) {
@@ -328,7 +432,7 @@
                         const selectedItem = divisionList.querySelector(`li[data-id="${selectedDivisionId}"]`);
                         const departmentId = selectedItem?.dataset.departmentId || '';
                         const currentDepartmentId = getCurrentDepartmentId();
-                        
+
                         // Если выбранное отделение не принадлежит текущему отделу - очищаем
                         if (currentDepartmentId && departmentId !== currentDepartmentId) {
                             divisionInput.value = '';
@@ -338,18 +442,18 @@
                 }
                 filterDivisionList();
             }
-            
+
             // Обработчики событий для отделения
             divisionInput.addEventListener('focus', () => {
                 filterDivisionList();
                 divisionList.classList.remove('hidden');
             });
-            
+
             divisionInput.addEventListener('input', () => {
                 divisionHidden.value = '';
                 filterDivisionList();
             });
-            
+
             divisionList.querySelectorAll('li').forEach(item => {
                 if (!item.classList.contains('no-items-message')) {
                     item.addEventListener('click', (e) => {
@@ -358,7 +462,7 @@
                     });
                 }
             });
-            
+
             // Enter для выбора первого отделения
             divisionInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !divisionList.classList.contains('hidden')) {
@@ -367,7 +471,7 @@
                     if (firstVisible) firstVisible.click();
                 }
             });
-            
+
             // Следим за изменением отдела
             if (departmentHidden) {
                 const observer = new MutationObserver(() => {
@@ -376,16 +480,16 @@
                 observer.observe(departmentHidden, { attributes: true, attributeFilter: ['value'] });
             }
         }
-        
+
         // ========== НАВИГАЦИЯ С КЛАВИАТУРЫ ==========
         function setupKeyboardNavigation(input, list) {
             if (!input || !list) return;
-            
+
             let currentHighlight = -1;
-            
+
             input.addEventListener('keydown', (e) => {
                 const items = Array.from(list.querySelectorAll('li:not(.hidden):not([data-static="true"]):not(.no-items-message)'));
-                
+
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     if (!list.classList.contains('hidden') && items.length > 0) {
@@ -408,7 +512,7 @@
                     }
                 }
             });
-            
+
             function highlightItem(items, index) {
                 items.forEach((item, i) => {
                     if (i === index) {
@@ -419,7 +523,7 @@
                     }
                 });
             }
-            
+
             input.addEventListener('blur', () => {
                 currentHighlight = -1;
                 list.querySelectorAll('li').forEach(item => {
@@ -427,11 +531,11 @@
                 });
             });
         }
-        
+
         // Активируем навигацию
         setupKeyboardNavigation(departmentInput, departmentList);
         setupKeyboardNavigation(divisionInput, divisionList);
-        
+
         // ========== ЗАКРЫТИЕ СПИСКОВ ==========
         document.addEventListener('click', (e) => {
             if (departmentList && !e.target.closest('#department_search, #department_list')?.parentElement) {
@@ -441,11 +545,161 @@
                 divisionList.classList.add('hidden');
             }
         });
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (departmentList) departmentList.classList.add('hidden');
                 if (divisionList) divisionList.classList.add('hidden');
+            }
+        });
+    });
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('position_search');
+        const hiddenInput = document.getElementById('position_id');
+        const list = document.getElementById('position_list');
+        const items = list.querySelectorAll('li');
+
+        // Показать список
+        function openList() {
+            list.classList.remove('hidden');
+        }
+
+        // Скрыть список
+        function closeList() {
+            list.classList.add('hidden');
+        }
+
+        // Фильтр списка по вводу
+        function filterList(value) {
+            const query = value.toLowerCase().trim();
+            let hasVisible = false;
+
+            items.forEach(item => {
+                if (item.dataset.static === 'true') {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                    return;
+                }
+                const name = item.dataset.name.toLowerCase();
+                if (!query || name.includes(query)) {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            list.classList.toggle('hidden', !hasVisible);
+        }
+
+        // Клик по input → показать список
+        input.addEventListener('click', () => {
+            input.removeAttribute('readonly');
+            filterList(input.value);
+            openList();
+        });
+
+        // Ввод текста → фильтр
+        input.addEventListener('input', () => {
+            hiddenInput.value = '';
+            filterList(input.value);
+        });
+
+        // Клик по элементам списка
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.dataset.static === 'true') {
+                    // Очистка
+                    input.value = '';
+                    hiddenInput.value = '';
+                    input.focus();
+                    filterList('');
+                    return;
+                }
+
+                // Выбор должности
+                input.value = item.dataset.name;
+                hiddenInput.value = item.dataset.id;
+                closeList();
+                input.setAttribute('readonly', true);
+            });
+        });
+
+        // Закрытие списка при клике вне блока
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                closeList();
+                if (!hiddenInput.value) input.value = '';
+            }
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('chief-select');
+        const input = container.querySelector('#chief_employee_search');
+        const hidden = container.querySelector('#chief_employee_id');
+        const list = container.querySelector('#chief_employee_list');
+        const items = list.querySelectorAll('li');
+
+        function open() {
+            list.classList.remove('hidden');
+        }
+
+        function close() {
+            list.classList.add('hidden');
+        }
+
+        function filter(value) {
+            const q = value.toLowerCase().trim();
+
+            items.forEach(item => {
+                const name = (item.dataset.name || '').toLowerCase();
+                const id = item.dataset.id || '';
+
+                if (!q || name.includes(q) || id.includes(q)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // focus
+        input.addEventListener('focus', () => {
+            open();
+            filter(input.value);
+        });
+
+        // typing
+        input.addEventListener('input', () => {
+            hidden.value = ''; // сбрасываем только при ручном вводе
+            open();
+            filter(input.value);
+        });
+
+        // select
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                const id = item.dataset.id || '';
+                const name = item.dataset.name || '';
+
+                input.value = name;
+                hidden.value = id;
+
+                close();
+            });
+        });
+
+        // click outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                close();
             }
         });
     });
