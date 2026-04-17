@@ -168,6 +168,8 @@ class DepartmentsController extends Controller
                 'commissariat_id'=>$data['commissariat_id']
             ]);
 
+         
+
             $oldId = (int) $data['old_chief_employee_id'];
             $newId = (int) $data['chief_employee_id'];
 

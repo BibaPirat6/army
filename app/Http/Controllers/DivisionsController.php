@@ -171,30 +171,37 @@ class DivisionsController extends Controller
                 'department_id' => $data['department_id'] ?? null,
             ]);
 
-            // Находим справочную должность "начальник отдела"
-            $chiefPositionRef = Position::where('id', $data['chief_position_id'])->first();
-            if (! $chiefPositionRef) {
-                DB::rollBack();
+            // Находим справочную должность
+            $chiefPositionRef = Position::findOrFail($data['chief_position_id']);
 
-                return back()->withErrors(['error' => 'Не найдена должность в справочнике'])->withInput();
+            // 🔍 Ищем слот по НЕИЗМЕНЯЕМЫМ ключам: position + division
+            // department_id может быть null — обрабатываем это отдельно
+            $chiefSlotQuery = CommissariatPosition::where('position_id', $chiefPositionRef->id)
+                ->where('division_id', $division->id);
+
+            // Безопасная проверка department_id (учитываем, что он может быть null)
+            if (is_null($oldDepartmentId)) {
+                $chiefSlotQuery->whereNull('department_id');
+            } else {
+                $chiefSlotQuery->where('department_id', $oldDepartmentId);
             }
 
-            // Получаем или создаём слот начальника для этого отделения (учитываем, что commissariat/department могли измениться)
-            $chiefSlot = CommissariatPosition::where([
-                'commissariat_id' => $oldCommissariatId,
-                'position_id' => $chiefPositionRef->id,
-                'department_id' => $oldDepartmentId,
-                'division_id' => $division->id,
-            ])->first();
+            $chiefSlot = $chiefSlotQuery->first();
 
+            // 🛡️ Если слот не найден — это критическая ошибка данных, но не падение кода
+            if (! $chiefSlot) {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'error' => 'Не найден слот должности для этого отделения. Обратитесь к администратору.',
+                ])->withInput();
+            }
+
+            // Обновляем привязку слота к новому комиссариату/отделу
             $chiefSlot->update([
-                 'commissariat_id'=>$data["commissariat_id"],
-                 'department_id'=>$data["department_id"],
+                'commissariat_id' => $data['commissariat_id'],
+                'department_id' => $data['department_id'] ?? null,
             ]);
-
-
-            // Убедимся, что слот загружен
-            $chiefSlot->refresh();
 
             $oldId = (int) ($data['old_chief_employee_id'] ?? 0);
             $newId = (int) $data['chief_employee_id'];

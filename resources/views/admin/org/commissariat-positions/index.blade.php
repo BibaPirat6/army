@@ -58,7 +58,11 @@
                                                 ]) }}">{{ $pos->position->name }}</a>
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] font-medium">
-                                                    {{ $pos->activeAssignment->employee->getFullNameAttribute() }}</td>
+                                                    <a href="{{ route("employees.show",[
+                                                        "id"=>$pos->activeAssignment->employee->id,
+                                                        "back_url"=>url()->full()
+                                                    ]) }}">{{ $pos->activeAssignment->employee->getFullNameAttribute() }}</a>
+                                                </td>
 
                                                 <td class="px-6 py-4 text-right">
                                                     <a href="{{ route('commissariats.edit', [
