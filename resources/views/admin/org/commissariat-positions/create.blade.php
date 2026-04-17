@@ -39,10 +39,10 @@
                             Отдел
                         </label>
 
-                        <input type="text" id="department_search" placeholder="Выберите отдел" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                                                      outline-none transition-colors text-[#060606]"
-                            autocomplete="off">
+                        <input type="text" id="department_search" placeholder="Выберите отдел"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                                              focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                                              outline-none transition-colors text-[#060606]" autocomplete="off">
 
                         <input type="hidden" name="department_id" id="department_id">
 
@@ -70,10 +70,10 @@
                             Отделение
                         </label>
 
-                        <input type="text" id="division_search" placeholder="Выберите отделение" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                                                      outline-none transition-colors text-[#060606]"
-                            autocomplete="off" value="{{ old('division_name', '') }}">
+                        <input type="text" id="division_search" placeholder="Выберите отделение"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                                              focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                                              outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ old('division_name', '') }}">
 
                         <input type="hidden" name="division_id" id="division_id" value="{{ old('division_id', '') }}">
 
@@ -102,7 +102,6 @@
                         </ul>
                     </div>
 
-
                     {{-- Должность --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
@@ -111,15 +110,16 @@
 
                         {{-- Видимое поле --}}
                         <input required type="text" id="position_search" placeholder="Выберите должность" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                                      outline-none transition-colors text-[#060606]" autocomplete="off">
+                                                              focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                              outline-none transition-colors text-[#060606]"
+                            autocomplete="off">
 
                         {{-- Скрытое поле --}}
                         <input type="hidden" name="position_id" id="position_id">
 
                         {{-- Dropdown --}}
                         <ul id="position_list" class="relative z-20 mt-1 w-full bg-white border border-[#BFBFBF]
-                                                   rounded-lg max-h-72 overflow-auto hidden">
+                                                           rounded-lg max-h-72 overflow-auto hidden">
                             {{-- Кнопка очистить --}}
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
                                 data-static="true">
@@ -142,19 +142,17 @@
                         </ul>
                     </div>
 
-
                     {{-- общас ставка --}}
                     <div>
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Общая ставка *
                         </label>
                         <input required type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                                  outline-none transition-colors text-[#060606]" autocomplete="off"
+                                                          focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                                          outline-none transition-colors text-[#060606]" autocomplete="off"
                             placeholder="Введите общую ставку" value="1.00" min="0.25" max="2.00" step="0.25"
                             name="rate_total">
                     </div>
-
 
                     <!-- самостоятельный -->
                     <div>
@@ -169,23 +167,23 @@
                     </div>
 
                     {{-- сотрудник --}}
-                       {{-- начальник --}}
+                    {{-- начальник --}}
                     <div class="relative" id="chief-select">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник *
+                            Сотрудник *
                         </label>
 
                         {{-- visible --}}
                         <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" required>
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" >
 
                         {{-- hidden --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" required>
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" >
 
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
-                       rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+                               rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
                                 data-name="Не назначать">
@@ -202,22 +200,16 @@
                         </ul>
                     </div>
 
-
-
-                     {{--  ставка --}}
-                    <div>
+                    {{-- ставка --}}
+                    <div id="rate-field"> {{-- 👈 Добавили id --}}
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             ставка *
                         </label>
-                        <input required type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                                  outline-none transition-colors text-[#060606]" autocomplete="off"
-                            placeholder="Введите общую ставку" value="1.00" min="0.25" max="2.00" step="0.25"
-                            name="rate">
+                        <input type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                      focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
+                                      outline-none transition-colors text-[#060606]" autocomplete="off"
+                            placeholder="Введите ставку" value="1.00" min="0.25" max="2.00" step="0.25" name="rate">
                     </div>
-
-
-
 
                     <!-- Кнопка отправки -->
                     <div class="flex justify-end pt-6">
@@ -646,6 +638,24 @@
         const hidden = container.querySelector('#chief_employee_id');
         const list = container.querySelector('#chief_employee_list');
         const items = list.querySelectorAll('li');
+        const rateField = document.getElementById('rate-field'); // Поле ставки
+
+        // Функция для показа/скрытия поля ставки
+        function toggleRateField() {
+            if (hidden.value && hidden.value !== '') {
+                // Если сотрудник выбран - показываем поле ставки
+                rateField.style.display = 'block';
+                // Делаем поле обязательным
+                rateField.querySelector('input').required = true;
+            } else {
+                // Если сотрудник не выбран - скрываем поле ставки
+                rateField.style.display = 'none';
+                // Убираем обязательность
+                rateField.querySelector('input').required = false;
+                // Очищаем значение
+                rateField.querySelector('input').value = '';
+            }
+        }
 
         function open() {
             list.classList.remove('hidden');
@@ -681,6 +691,7 @@
             hidden.value = ''; // сбрасываем только при ручном вводе
             open();
             filter(input.value);
+            toggleRateField(); // Скрываем поле при очистке
         });
 
         // select
@@ -693,6 +704,7 @@
                 hidden.value = id;
 
                 close();
+                toggleRateField(); // Показываем или скрываем поле
             });
         });
 
@@ -702,5 +714,9 @@
                 close();
             }
         });
+
+        // Инициализация при загрузке страницы
+        toggleRateField();
     });
 </script>
+

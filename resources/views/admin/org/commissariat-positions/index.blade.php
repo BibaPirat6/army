@@ -58,10 +58,14 @@
                                                 ]) }}">{{ $pos->position->name }}</a>
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] font-medium">
+                                                    @if (!empty($pos->activeAssignment->employee))                                                        
                                                     <a href="{{ route("employees.show",[
                                                         "id"=>$pos->activeAssignment->employee->id,
                                                         "back_url"=>url()->full()
                                                     ]) }}">{{ $pos->activeAssignment->employee->getFullNameAttribute() }}</a>
+                                                    @else
+                                                        <a href="/" class="text-[#901]">ВАКАНТ</a>
+                                                    @endif
                                                 </td>
 
                                                 <td class="px-6 py-4 text-right">
@@ -69,7 +73,7 @@
                                 'id' => 1,
                                 'back_url' => url()->full(),
                             ]) }}"
-                                                        class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                                        class="inline-flex items-center px-4 py-2 bg-[#a19398] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
@@ -89,7 +93,10 @@
                                                         </svg>
                                                         Редактировать
                                                     </a>
-                                                    <form action="{{ route('commissariats.delete', 1) }}" method="POST"
+                                                    <form action="{{ route('commissariats.delete', [
+                                                    "id"=>1,
+                                                    "back_url"=>url()->full()
+                                                    ]) }}" method="POST"
                                                         class="inline-block mt-0.5"
                                                         onsubmit="return confirm('Вы уверены, что хотите удалить штатную должность?');">
                                                         @csrf
