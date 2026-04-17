@@ -13,7 +13,7 @@
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
             <div class="flex items-center mb-4">
-                <a href="{{ route('position-types.index') }}"
+                <a href="{{ $backUrl ?? route('position-types.index') }}"
                     class="inline-flex items-center text-[#A60644] font-medium hover:text-[#A60644]/80 transition-colors duration-200">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -32,6 +32,8 @@
                 <form action="{{ route('position-types.update', $type->id) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PUT')
+
+                    <input type="hidden" value="{{ $backUrl }}" name="backUrl">
 
                     <!-- Название типа должности -->
                     <div>

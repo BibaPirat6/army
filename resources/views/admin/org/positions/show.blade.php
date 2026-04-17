@@ -31,7 +31,10 @@
                     </div>
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Тип должности</span>
-                        <span class="text-[#060606]">{{ $position->getPositionTypeNameAttribute() }}</span>
+                        <span class="text-[#060606]"><a href="{{ route("position-types.show", [
+        "id" => $position->positionType->id,
+        "back_url" => url()->full()
+    ]) }}">{{ $position->getPositionTypeNameAttribute() }}</a></span>
                     </div>
                     <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                         <span class="font-medium text-[#565A5B]">Тип начальства</span>
@@ -44,9 +47,9 @@
 
                         <!-- Редактировать -->
                         <a href="{{ route('positions.edit', [
-                            "id"=>$position->id,
-                            "back_url"=>url()->full()
-                        ]) }}"
+        "id" => $position->id,
+        "back_url" => url()->full()
+    ]) }}"
                             class="group/action flex-1 p-2 rounded-lg bg-[#A60644] text-[#fff] hover:bg-[#A60644] hover:text-white transition-all duration-200 text-center"
                             title="Редактировать">
                             <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -59,9 +62,9 @@
 
                         <!-- Удалить -->
                         <form action="{{ route('positions.delete', [
-                            "id"=>$position->id,
-                            "back_url"=>url()->full()
-                        ]) }}" method="POST"
+        "id" => $position->id,
+        "back_url" => url()->full()
+    ]) }}" method="POST"
                             onsubmit="return confirm('Вы уверены, что хотите удалить должность «{{ $position->name }}»?');"
                             class="flex-1 inline-block"> <!-- flex-1 заставит форму занять оставшееся место (50%) -->
                             @csrf

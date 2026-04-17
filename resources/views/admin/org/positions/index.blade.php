@@ -62,7 +62,10 @@
                                                     {{ $position->name }}
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    <span class="text-sm text-[#565A5B]">{{ $position->getPositionTypeNameAttribute() }}</span>
+                                                    <span class="text-sm text-[#565A5B]"><a href="{{ route("position-types.show", [
+                                                        "id"=>$position->positionType->id,
+                                                        "back_url"=>url()->full()
+                                                    ]) }}">{{ $position->getPositionTypeNameAttribute() }}</a></span>
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
                                                     <span class="text-sm text-[#565A5B]">
