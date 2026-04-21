@@ -108,13 +108,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/create', [CommissariatPositionsController::class, 'create'])->name('create');
         Route::get('/{id}', [CommissariatPositionsController::class, 'show'])->name('show');
         Route::post('/', [CommissariatPositionsController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [CommissariatPositionsController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [CommissariatPositionsController::class, 'update'])->name('update');
         Route::delete('/{id}', [CommissariatPositionsController::class, 'delete'])->name('delete');
 
         // добавление сотрудников (более семантичное название)
         Route::get('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignForm'])->name('assign.form');
         Route::post('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignEmployee'])->name('assign');
+        Route::delete('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignEmployee'])->name('assign');
     });
 
     // структуры

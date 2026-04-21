@@ -33,12 +33,22 @@
                     <div>
                         <div class="mb-4">
                             <label class="text-sm font-semibold text-[#565A5B]">Должность</label>
-                            <p class="text-lg font-bold text-[#060606]">{{ $commissariatPosition->position->name }}</p>
+                            <p class="text-lg font-bold text-[#060606]">
+                                <a href="{{ route("positions.show", [
+                                    "id"=>$commissariatPosition->position->id,
+                                    "back_url"=>url()->full()
+                                ]) }}">{{ $commissariatPosition->position->name }}</a>
+                            </p>
                         </div>
                         
                         <div class="mb-4">
                             <label class="text-sm font-semibold text-[#565A5B]">Тип должности</label>
-                            <p class="text-[#060606]">{{ $commissariatPosition->position->positionType->name ?? 'Не указан' }}</p>
+                            <p class="text-[#060606]">
+                                <a href="{{ route("position-types.show",[
+                                    "id"=>$commissariatPosition->position->positionType->id,
+                                    "back_url"=>url()->full()
+                                ]) }}">{{ $commissariatPosition->position->positionType->name ?? 'Не указан' }}</a>
+                            </p>
                         </div>
                         
                         <div class="mb-4">
@@ -71,20 +81,35 @@
                     <div>
                         <div class="mb-4">
                             <label class="text-sm font-semibold text-[#565A5B]">Комиссариат</label>
-                            <p class="text-[#060606]">{{ $commissariatPosition->commissariat->name }}</p>
+                            <p class="text-[#060606]">
+                                <a href="{{ route("commissariats.show",[
+                                    "id"=>$commissariatPosition->commissariat->id,
+                                    "back_url"=>url()->full()
+                                ]) }}">{{ $commissariatPosition->commissariat->name }}</a>
+                            </p>
                         </div>
                         
                         @if($commissariatPosition->department)
                         <div class="mb-4">
                             <label class="text-sm font-semibold text-[#565A5B]">Отдел</label>
-                            <p class="text-[#060606]">{{ $commissariatPosition->department->name }}</p>
+                            <p class="text-[#060606]">
+                                <a href="{{ route("departments.show",[
+                                    "id"=>$commissariatPosition->department->id,
+                                    "back_url"=>url()->full()
+                                ]) }}">{{ $commissariatPosition->department->name }}</a>
+                            </p>
                         </div>
                         @endif
                         
                         @if($commissariatPosition->division)
                         <div class="mb-4">
                             <label class="text-sm font-semibold text-[#565A5B]">Отделение</label>
-                            <p class="text-[#060606]">{{ $commissariatPosition->division->name }}</p>
+                            <p class="text-[#060606]">
+                                  <a href="{{ route("divisions.show",[
+                                    "id"=>$commissariatPosition->division->id,
+                                    "back_url"=>url()->full()
+                                ]) }}">{{ $commissariatPosition->division->name }}</a>
+                            </p>
                         </div>
                         @endif
                     </div>
@@ -201,9 +226,10 @@
                                 <td class="px-6 py-4 font-medium">
                                     {{ number_format($assignment->rate, 2) }}
                                 </td>
+                                
                                 <td class="px-6 py-4">
                                     <span class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium" 
-                                          style="background-color: {{ $assignment->employeePositionStatus->color }}20; color: {{ $assignment->employeePositionStatus->color }}">
+                                          style="background-color: #000020; color: #{{ $assignment->employeePositionStatus->color }}">
                                         {{ $assignment->employeePositionStatus->name }}
                                     </span>
                                 </td>
