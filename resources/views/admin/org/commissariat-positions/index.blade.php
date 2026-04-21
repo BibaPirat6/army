@@ -28,7 +28,7 @@
             </div>
             <a href="{{ route('commissariat-positions.create', [
         'back_url' => url()->full(),
-        'commissariat_id'=>$commissariat->id
+        'commissariat_id' => $commissariat->id
     ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,27 +52,28 @@
                     <tbody class="divide-y divide-[#BFBFBF]">
                         @forelse($commissariatPositions as $pos)
                                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                <td class="px-6 py-4 text-[#060606] font-medium"><a href="{{ route("positions.show",[
-                                                    "id"=>$pos->id,
-                                                    "back_url"=>url()->full()
-                                                ]) }}">{{ $pos->position->name }}</a>
+                                                <td class="px-6 py-4 text-[#060606] font-medium"><a href="{{ route("positions.show", [
+                                "id" => $pos->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ $pos->position->name }}</a>
                                                 </td>
                                                 <td class="px-6 py-4 text-[#060606] font-medium">
-                                                    @if (!empty($pos->activeAssignment->employee))                                                        
-                                                    <a href="{{ route("employees.show",[
-                                                        "id"=>$pos->activeAssignment->employee->id,
-                                                        "back_url"=>url()->full()
-                                                    ]) }}">{{ $pos->activeAssignment->employee->getFullNameAttribute() }}</a>
+                                                    @if (!empty($pos->activeAssignment->employee))
+                                                                            <a
+                                                                                href="{{ route("employees.show", [
+                                                            "id" => $pos->activeAssignment->employee->id,
+                                                            "back_url" => url()->full()
+                                                        ]) }}">{{ $pos->activeAssignment->employee->getFullNameAttribute() }}</a>
                                                     @else
                                                         <a href="/" class="text-[#901]">ВАКАНТ</a>
                                                     @endif
                                                 </td>
 
                                                 <td class="px-6 py-4 text-right">
-                                                    <a href="{{ route('commissariats.edit', [
-                                'id' => 1,
-                                'back_url' => url()->full(),
-                            ]) }}"
+                                                    {{-- <a href="{{ route('commissariats.edit', [
+                                                        'id' => 1,
+                                                        'back_url' => url()->full(),
+                                                    ]) }}"
                                                         class="inline-flex items-center px-4 py-2 bg-[#a19398] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,7 +81,7 @@
                                                             </path>
                                                         </svg>
                                                         Подробнее
-                                                    </a>
+                                                    </a> --}}
                                                     <a href="{{ route('commissariats.edit', [
                                 'id' => 1,
                                 'back_url' => url()->full(),
@@ -93,11 +94,10 @@
                                                         </svg>
                                                         Редактировать
                                                     </a>
-                                                    <form action="{{ route('commissariats.delete', [
-                                                    "id"=>1,
-                                                    "back_url"=>url()->full()
-                                                    ]) }}" method="POST"
-                                                        class="inline-block mt-0.5"
+                                                    <form action="{{ route('commissariat-positions.delete', [
+                                "id" => $pos->id,
+                                "back_url" => url()->full()
+                            ]) }}" method="POST" class="inline-block mt-0.5"
                                                         onsubmit="return confirm('Вы уверены, что хотите удалить штатную должность?');">
                                                         @csrf
                                                         @method('DELETE')

@@ -114,4 +114,28 @@ class CommissariatPositionsController extends Controller
             return back()->withErrors(['error' => 'Ошибка создания: '.$e->getMessage()])->withInput();
         }
     }
+
+    public function delete(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            // Находим штатную должность
+            $commissariatPosition = CommissariatPosition::findOrFail($id);
+            // Удаляем все назначения сотрудников на эту должность
+            EmployeePosition::where('commissariat_position_id', $commissariatPosition->id)->delete();
+
+            // Удаляем саму штатную должность
+            $commissariatPosition->delete();
+
+            DB::commit();
+
+            $backUrl = $request->get('back_url', route('commissariat-positions.index'));
+
+            return redirect()->to($backUrl)->with('success', 'Штатная должность успешно удалена + удалены сотрудники на этой штатной должности.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Ошибка удаления: '.$e->getMessage()])->withInput();
+        }
+    }
 }

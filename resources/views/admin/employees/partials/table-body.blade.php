@@ -21,7 +21,10 @@
 
             <!-- Персона -->
             <td class="px-4 py-3 align-top">
-                {{ $employee->getFullNameAttribute() }}
+                <a href="{{ route("employees.show", [
+            "id" => $employee->id,
+            "back_url" => url()->full()
+        ]) }}"> {{ $employee->getFullNameAttribute() }}</a>
             </td>
 
             <!-- Должности -->
@@ -58,7 +61,7 @@
                         <!-- Меню -->
                         <div
                             class="dropdown-menu absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
-                                    p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
+                                            p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
 
                             <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
                                 class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"
