@@ -167,10 +167,9 @@
         <!-- Кнопка назначения (показываем только если есть вакансия) -->
         @if($hasVacancy)
         <div class="mb-6">
-            <a href="{{ route('commissariat-positions.assign.form', [
+            <a href="{{ route('commissariat-positions.assign.create', [
                 'id' => $commissariatPosition->id,
                 'back_url' => url()->full(),
-                'commissariat_id' => $commissariatPosition->commissariat_id
             ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,8 +232,8 @@
                                         {{ $assignment->employeePositionStatus->name }}
                                     </span>
                                 </td>
-                                {{-- <td class="px-6 py-4">
-                                    @if($assignment->status->occupies_rate)
+                                <td class="px-6 py-4">
+                                    @if($assignment->employeePositionStatus->occupies_rate)
                                         <span class="inline-flex items-center text-green-600">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -249,13 +248,17 @@
                                             Нет
                                         </span>
                                     @endif
-                                </td> --}}
+                                </td>
                                 <td class="px-6 py-4 text-sm text-[#565A5B]">
                                     {{ $assignment->created_at->format('d.m.Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end gap-2">
-                                        <a href="{{ route('employee-positions.edit', $assignment->id) }}"
+                                        <a href="{{ route('commissariat-positions.assign.edit', [
+                                            "id"=> $commissariatPosition->id,
+                                            "employeePositionId"=>$assignment->id,
+                                            "back_url"=>url()->full()
+                                        ]) }}"
                                             class="inline-flex items-center px-3 py-1 bg-[#A60644] text-white text-sm rounded-lg hover:bg-[#A60644]/80">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -263,7 +266,11 @@
                                             Изменить
                                         </a>
                                         
-                                        {{-- <form action="{{ route('commissariat-positions.assignments.destroy', $assignment->id) }}" 
+                                        <form action="{{ route('commissariat-positions.assign.delete', [
+                                            "id"=>$commissariatPosition->id,
+                                            "employeePositionId"=>$assignment->id,
+                                            "back_url"=>url()->full()
+                                        ]) }}" 
                                               method="POST" class="inline-block"
                                               onsubmit="return confirm('Вы уверены, что хотите удалить это назначение?');">
                                             @csrf
@@ -275,7 +282,7 @@
                                                 </svg>
                                                 Удалить
                                             </button>
-                                        </form> --}}
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

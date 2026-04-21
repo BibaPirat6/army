@@ -20,13 +20,43 @@ class CommissariatPositionsController extends Controller
         $commissariat = Commissariat::findOrFail($request->input('commissariat_id'));
 
         $commissariatPositions = $commissariat->commissariatPositions()
-            ->with(['position.chiefType', 'activeAssignment.employee.person', 'department', 'division'])
+            ->with([
+                'position.chiefType',
+                'department',
+                'division',
+                'employeePositions' => function ($query) {
+                    // Загружаем только активных сотрудников (которые занимают ставку)
+                    $query->with(['employee', 'employeePositionStatus'])
+                        ->whereHas('employeePositionStatus', function ($q) {
+                            $q->where('occupies_rate', true);
+                        })
+                        ->orderBy('id', 'desc');
+                },
+                'employeePositions.employee',
+            ])
             ->get()
             ->sortBy(function ($item) {
-                // Создаем вес для сортировки
                 return $this->getSortWeight($item);
             })
-            ->values(); // Сбрасываем ключи после сортировки
+            ->values();
+
+        // Добавляем вычисляемые поля для каждой должности
+        foreach ($commissariatPositions as $position) {
+            // Сумма всех ставок занятых активными сотрудниками
+            $position->occupied_rate = $position->employeePositions->sum('rate');
+            // Свободные ставки
+            $position->available_rate = $position->rate_total - $position->occupied_rate;
+            // Есть ли вакансия
+            $position->has_vacancy = $position->available_rate > 0;
+            // Список сотрудников для отображения
+            $position->employees_list = $position->employeePositions->map(function ($assignment) {
+                return [
+                    'name' => $assignment->employee->getFullNameAttribute(),
+                    'rate' => $assignment->rate,
+                    'employee_id' => $assignment->employee->id,
+                ];
+            });
+        }
 
         $backUrl = $request->input('back_url');
 
@@ -207,4 +237,5 @@ class CommissariatPositionsController extends Controller
             return back()->withErrors(['error' => 'Ошибка удаления: '.$e->getMessage()])->withInput();
         }
     }
+
 }

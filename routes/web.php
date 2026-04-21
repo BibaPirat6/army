@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssignEmployeeController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
@@ -111,9 +112,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::delete('/{id}', [CommissariatPositionsController::class, 'delete'])->name('delete');
 
         // добавление сотрудников (более семантичное название)
-        Route::get('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignForm'])->name('assign.form');
-        Route::post('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignEmployee'])->name('assign');
-        Route::delete('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignEmployee'])->name('assign');
+        Route::get('/{id}/assign-employee/create', [AssignEmployeeController::class, 'create'])->name('assign.create');
+        Route::post('/{id}/assign-employee', [AssignEmployeeController::class, 'store'])->name('assign.store');
+        Route::get('/{id}/assign-employee/{employeePositionId}/edit', [AssignEmployeeController::class, 'edit'])->name('assign.edit');
+        Route::put('/{id}/assign-employee/{employeePositionId}', [AssignEmployeeController::class, 'update'])->name('assign.update');
+        Route::delete('/{id}/assign-employee/{employeePositionId}', [AssignEmployeeController::class, 'delete'])->name('assign.delete');
     });
 
     // структуры
