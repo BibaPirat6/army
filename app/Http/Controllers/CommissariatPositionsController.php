@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
+use App\Models\EmployeePositionStatus;
 use App\Models\Position;
 use DB;
 use Illuminate\Http\Request;
@@ -52,15 +53,83 @@ class CommissariatPositionsController extends Controller
         return 400;
     }
 
+    /**
+     * Детальный просмотр штатной должности со всеми назначениями
+     */
+    public function show(Request $request, $id)
+    {
+        // Загружаем штатную должность со всеми связями
+        $commissariatPosition = CommissariatPosition::with([
+            'commissariat',
+            'department',
+            'division',
+            'position',
+            'position.positionType',
+            'position.chiefType',
+            'employeePositions' => function ($query) {
+                // Загружаем все назначения с сортировкой по ID
+                $query->with(['employee', 'employeePositionStatus']) // Используем правильные названия отношений
+                    ->orderBy('id', 'desc');
+            },
+        ])->findOrFail($id);
+
+        // Получаем общую сумму занятых ставок (только активные, занимающие ставку)
+        $occupiedRate = $commissariatPosition->employeePositions()
+            ->whereHas('employeePositionStatus', function ($query) { // Используем правильное имя отношения
+                $query->where('occupies_rate', true);
+            })
+            ->sum('rate');
+
+        $availableRate = $commissariatPosition->rate_total - $occupiedRate;
+
+        // Проверяем, есть ли вакансия (доступные ставки)
+        $hasVacancy = $availableRate > 0;
+
+        // Получаем все статусы для фильтрации
+        $allStatuses = EmployeePositionStatus::all();
+
+        // Статистика по назначениям
+        $activeAssignmentsCount = 0;
+        foreach ($commissariatPosition->employeePositions as $assignment) {
+            if ($assignment->employeePositionStatus && $assignment->employeePositionStatus->occupies_rate) {
+                $activeAssignmentsCount++;
+            }
+        }
+
+        $statistics = [
+            'total_assignments' => $commissariatPosition->employeePositions->count(),
+            'active_assignments' => $activeAssignmentsCount,
+            'occupied_rate' => $occupiedRate,
+            'available_rate' => $availableRate,
+            'total_rate' => $commissariatPosition->rate_total,
+            'vacancy_percent' => $commissariatPosition->rate_total > 0
+                ? round(($availableRate / $commissariatPosition->rate_total) * 100, 2)
+                : 0,
+        ];
+
+        $backUrl = $request->input('back_url');
+
+        return view('admin.org.commissariat-positions.show', compact(
+            'commissariatPosition',
+            'hasVacancy',
+            'availableRate',
+            'occupiedRate',
+            'statistics',
+            'allStatuses',
+            'backUrl'
+        ));
+    }
+
     public function create(Request $request)
     {
         $commissariat = Commissariat::findOrFail($request->input('commissariat_id'));
         $departments = Department::where('commissariat_id', $commissariat->id)->get();
         $divisions = Division::where('commissariat_id', $commissariat->id)->get();
         $employees = Employee::all();
-        $positions = Position::whereHas('chiefType', function ($query) {
-            $query->where('name', 'работник');
-        })->get();
+        // $positions = Position::whereHas('chiefType', function ($query) {
+        //     $query->where('name', 'работник');
+        // })->get();
+        $positions = Position::all();
 
         $backUrl = $request->get('back_url');
 
@@ -112,6 +181,85 @@ class CommissariatPositionsController extends Controller
             DB::rollBack();
 
             return back()->withErrors(['error' => 'Ошибка создания: '.$e->getMessage()])->withInput();
+        }
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $commissariatPosition = CommissariatPosition::with([
+            'position',
+            'department',
+            'division',
+            'employeePositions.employee',
+        ])->findOrFail($id);
+
+        $commissariat = $commissariatPosition->commissariat;
+        $departments = Department::where('commissariat_id', $commissariat->id)->get();
+        $divisions = Division::where('commissariat_id', $commissariat->id)->get();
+        $employees = Employee::all();
+        $positions = Position::all();
+        $employeePositionStatuses = EmployeePositionStatus::all();
+
+        $backUrl = $request->get('back_url');
+
+        return view('admin.org.commissariat-positions.edit', compact(
+            'commissariatPosition',
+            'commissariat',
+            'departments',
+            'divisions',
+            'employees',
+            'positions',
+            'backUrl',
+            'employeePositionStatuses'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        dd($request->all());
+        $data = $request->validate([
+            'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
+            'department_id' => 'sometimes|nullable|integer|min:1|exists:departments,id',
+            'division_id' => 'sometimes|nullable|integer|min:1|exists:divisions,id',
+            'position_id' => 'required|integer|min:1|exists:positions,id',
+            'rate_total' => 'required|numeric|min:0.25|max:2.00',
+            'is_independent' => 'required|boolean',
+            'assignments' => 'sometimes|array',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $commissariatPosition = CommissariatPosition::findOrFail($id);
+            $commissariatPosition->update([
+                'department_id' => $data['department_id'] ?? null,
+                'division_id' => $data['division_id'] ?? null,
+                'position_id' => $data['position_id'],
+                'rate_total' => $data['rate_total'],
+                'is_independent' => $data['is_independent'],
+            ]);
+
+            // Обновляем назначения сотрудников
+            if (isset($data['assignments'])) {
+                foreach ($data['assignments'] as $assignmentId => $assignmentData) {
+                    EmployeePosition::where('id', $assignmentId)
+                        ->update([
+                            'employee_id' => $assignmentData['employee_id'],
+                            'rate' => $assignmentData['rate'],
+                            'employee_position_status_id' => $assignmentData['employee_position_status_id'],
+                        ]);
+                }
+            }
+
+            DB::commit();
+
+            $backUrl = $request->get('back_url', route('commissariat-positions.index'));
+
+            return redirect()->to($backUrl)->with('success', 'Штатная должность успешно обновлена.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Ошибка обновления: '.$e->getMessage()])->withInput();
         }
     }
 

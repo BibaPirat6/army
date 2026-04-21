@@ -10,17 +10,12 @@ class EmployeePosition extends Model
 {
     protected $table = 'employee_positions';
 
-    public $timestamps = false; 
 
     protected $fillable = [
         'employee_id',
         'commissariat_position_id',
         'rate',
         'employee_position_status_id',
-        'started_at',
-        'ended_at',
-        'is_active',
-        'expected_return_at',
     ];
 
     protected $casts = [

@@ -103,12 +103,19 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/employee-positions/{id}', [EmployeePositionsController::class, 'delete'])->name('employee-positions.delete');
 
     // штатные должности в комиссариате
-    Route::get('/commissariat-positions', [CommissariatPositionsController::class, 'index'])->name('commissariat-positions.index');
-    Route::get('/commissariat-positions/create', [CommissariatPositionsController::class, 'create'])->name('commissariat-positions.create');
-    Route::post('/commissariat-positions', [CommissariatPositionsController::class, 'store'])->name('commissariat-positions.store');
-    Route::get('/commissariat-positions/{id}/edit', [CommissariatPositionsController::class, 'edit'])->name('commissariat-positions.edit');
-    Route::put('/commissariat-positions/{id}', [CommissariatPositionsController::class, 'update'])->name('commissariat-positions.update');
-    Route::delete('/commissariat-positions/{id}', [CommissariatPositionsController::class, 'delete'])->name('commissariat-positions.delete');
+    Route::prefix('commissariat-positions')->name('commissariat-positions.')->group(function () {
+        Route::get('/', [CommissariatPositionsController::class, 'index'])->name('index');
+        Route::get('/create', [CommissariatPositionsController::class, 'create'])->name('create');
+        Route::get('/{id}', [CommissariatPositionsController::class, 'show'])->name('show');
+        Route::post('/', [CommissariatPositionsController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CommissariatPositionsController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [CommissariatPositionsController::class, 'update'])->name('update');
+        Route::delete('/{id}', [CommissariatPositionsController::class, 'delete'])->name('delete');
+
+        // добавление сотрудников (более семантичное название)
+        Route::get('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignForm'])->name('assign.form');
+        Route::post('/{id}/assign-employee', [CommissariatPositionsController::class, 'assignEmployee'])->name('assign');
+    });
 
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');

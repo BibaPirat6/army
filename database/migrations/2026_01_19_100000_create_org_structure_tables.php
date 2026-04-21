@@ -104,6 +104,7 @@ return new class extends Migration
             $table->foreignId('commissariat_position_id')->constrained()->cascadeOnDelete();
             $table->decimal('rate', 4, 2)->default(1.00);
             $table->foreignId('employee_position_status_id')->default(1)->constrained()->cascadeOnDelete();
+            $table->timestamps();
         });
 
     }
