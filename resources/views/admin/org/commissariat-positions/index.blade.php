@@ -9,6 +9,7 @@
         @include('includes.success', ['success' => session('success')])
     @endif
 
+
     <div class="w-full p-6 mx-auto">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
@@ -26,16 +27,17 @@
                 <h1 class="text-2xl font-bold text-[#060606]">Штатные должности</h1>
                 <p class="text-[#565A5B] mt-1">{{ $commissariat->name }}</p>
             </div>
-            <a href="{{ route('commissariat-positions.create', [
-                'back_url' => url()->full(),
-                'commissariat_id' => $commissariat->id
-            ]) }}"
-                class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Создать штатную должность
-            </a>
+          <a href="{{ route('commissariat-positions.create', [
+    'back_url' => url()->full(),
+    'commissariat_id' => $commissariat->id,
+    'employeeId' => $employeeId ?? null
+]) }}"
+    class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+    Создать штатную должность
+</a>
         </div>
 
         <!-- Таблица -->
@@ -148,7 +150,8 @@
                                             <a href="{{ route('commissariat-positions.assign.create', [
                                                 'id' => $pos->id,
                                                 'back_url' => url()->full(),
-                                                'commissariat_id' => $commissariat->id
+                                                'commissariat_id' => $commissariat->id,
+                                                'employeeId' => $employeeId ?? null
                                             ]) }}"
                                                 class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm hover:shadow-md">
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,12 +161,13 @@
                                             </a>
                                         @endif
                                         
-                                        <!-- Кнопка подробнее -->
-                                        <a href="{{ route('commissariat-positions.show', [
+                                    <!-- Кнопка подробнее -->
+                                        <a href="{{ route('commissariat-positions.show', array_filter([
                                             'id' => $pos->id,
                                             'back_url' => url()->full(),
-                                            'commissariat_id' => $commissariat->id
-                                        ]) }}"
+                                            'commissariat_id' => $commissariat->id,
+                                            'employeeId' => $employeeId ?? null
+                                        ])) }}"
                                             class="inline-flex items-center px-3 py-2 bg-[#446ca4] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -172,7 +176,6 @@
                                             </svg>
                                             Подробнее
                                         </a>
-
                                         
                                         <!-- Кнопка удаления -->
                                         <form action="{{ route('commissariat-positions.delete', [

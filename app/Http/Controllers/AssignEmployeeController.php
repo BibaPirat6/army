@@ -17,7 +17,25 @@ class AssignEmployeeController extends Controller
         $employees = Employee::all();
         $employeePositionStatuses = EmployeePositionStatus::all();
 
-        return view('admin.org.commissariat-positions.assign-employee.create', compact('commissariatPosition', 'backUrl', 'employees', 'employeePositionStatuses'));
+        $employeeId = $request->input('employeeId');
+        $employee = null;
+
+        // Проверяем, передан ли employeeId, и находим сотрудника только если он передан
+        if ($employeeId) {
+            try {
+                $employee = Employee::findOrFail($employeeId);
+            } catch (\Exception $e) {
+                $employee = null;
+            }
+        }
+
+        return view('admin.org.commissariat-positions.assign-employee.create', compact(
+            'commissariatPosition',
+            'backUrl',
+            'employees',
+            'employeePositionStatuses',
+            'employee'
+        ));
     }
 
     /**

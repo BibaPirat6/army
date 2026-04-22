@@ -9,6 +9,7 @@
         @include('includes.errors', ['errors' => $errors])
     @endif
 
+
     <div class="max-w-2xl p-6 mx-auto">
         <!-- Заголовок и ссылка назад -->
         <div class="mb-8">
@@ -67,39 +68,38 @@
                     </div>
 
                          {{-- сотрудник --}}
-                    {{-- начальник --}}
-                    <div class="relative" id="chief-select">
-                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Сотрудник *
-                        </label>
+                  {{-- Сотрудник --}}
+<div class="relative" id="chief-select">
+    <label class="block text-sm font-medium text-[#565A5B] mb-2">
+        Сотрудник <span class="text-red-500">*</span>
+    </label>
 
-                        {{-- visible --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" >
+    {{-- visible --}}
+    <input type="text" id="chief_employee_search" 
+        placeholder="Начните вводить ФИО" 
+        autocomplete="off"
+        value="{{ $employee ? trim($employee->getFullNameAttribute()) : old('chief_employee_name', '') }}"
+        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
-                        {{-- hidden --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" >
+    {{-- hidden --}}
+    <input type="hidden" name="chief_employee_id" id="chief_employee_id" 
+        value="{{ $employee ? $employee->id : old('chief_employee_id', '') }}">
 
-                        {{-- dropdown --}}
-                        <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
-                               rounded-lg max-h-72 overflow-auto hidden shadow-lg">
-
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
-                                data-name="Не назначать">
-                                Очистить
-                            </li>
-
-                            @foreach ($employees as $employee)
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $employee->id }}"
-                                    data-name="{{ trim($employee->getFullNameAttribute()) }}">
-                                    {{ $employee->getFullNameAttribute() }}
-                                    <span class="text-gray-400">(ID: {{ $employee->id }})</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
+    {{-- dropdown --}}
+    <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+        <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name="" data-static="true">
+            Очистить
+        </li>
+        @foreach ($employees as $emp)
+            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 {{ $employee && $employee->id == $emp->id ? 'bg-gray-100' : '' }}" 
+                data-id="{{ $emp->id }}"
+                data-name="{{ trim($emp->getFullNameAttribute()) }}">
+                {{ $emp->getFullNameAttribute() }}
+                <span class="text-gray-400">(ID: {{ $emp->id }})</span>
+            </li>
+        @endforeach
+    </ul>
+</div>
 
                     <!-- Ставка -->
                     <div>
@@ -110,7 +110,7 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]" 
                             autocomplete="off"
                             placeholder="Введите ставку" 
-                            value="{{ old('rate', 1.00) }}" 
+                            value="{{ old('rate', min($availableRate, 1.00)) }}" 
                             min="0.25" 
                             max="{{ $availableRate }}" 
                             step="0.25" 
@@ -119,7 +119,12 @@
                         @error('rate')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
-                        <p class="mt-1 text-xs text-gray-500">Минимум: 0.25, Максимум: {{ number_format($availableRate, 2) }}, шаг: 0.25</p>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Минимум: 0.25, Максимум: {{ number_format($availableRate, 2) }}, шаг: 0.25
+                            @if($availableRate < 0.25)
+                                <span class="text-red-500 block">Внимание! Доступно менее 0.25 ставки. Назначение невозможно.</span>
+                            @endif
+                        </p>
                     </div>
 
                     <!-- Статус сотрудника на должности -->
@@ -198,91 +203,81 @@
 @endpush
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('chief-select');
         const input = container.querySelector('#chief_employee_search');
         const hidden = container.querySelector('#chief_employee_id');
         const list = container.querySelector('#chief_employee_list');
         const items = list.querySelectorAll('li');
-        const rateField = document.getElementById('rate-field'); // Поле ставки
+        const form = document.querySelector('form');
 
-        // Функция для показа/скрытия поля ставки
-        function toggleRateField() {
-            if (hidden.value && hidden.value !== '') {
-                // Если сотрудник выбран - показываем поле ставки
-                rateField.style.display = 'block';
-                // Делаем поле обязательным
-                rateField.querySelector('input').required = true;
-            } else {
-                // Если сотрудник не выбран - скрываем поле ставки
-                rateField.style.display = 'none';
-                // Убираем обязательность
-                rateField.querySelector('input').required = false;
-                // Очищаем значение
-                rateField.querySelector('input').value = '';
-            }
-        }
-
-        function open() {
+        function openList() {
             list.classList.remove('hidden');
         }
 
-        function close() {
+        function closeList() {
             list.classList.add('hidden');
         }
 
-        function filter(value) {
-            const q = value.toLowerCase().trim();
+        function filterList(value) {
+            const query = value.toLowerCase().trim();
+            let hasVisible = false;
 
             items.forEach(item => {
+                if (item.dataset.static === 'true') {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
+                    return;
+                }
                 const name = (item.dataset.name || '').toLowerCase();
                 const id = item.dataset.id || '';
-
-                if (!q || name.includes(q) || id.includes(q)) {
-                    item.style.display = 'block';
+                
+                if (!query || name.includes(query) || id.includes(query)) {
+                    item.classList.remove('hidden');
+                    hasVisible = true;
                 } else {
-                    item.style.display = 'none';
+                    item.classList.add('hidden');
                 }
             });
+
+            list.classList.toggle('hidden', !hasVisible);
         }
 
-        // focus
+
         input.addEventListener('focus', () => {
-            open();
-            filter(input.value);
-        });
-
-        // typing
-        input.addEventListener('input', () => {
-            hidden.value = ''; // сбрасываем только при ручном вводе
-            open();
-            filter(input.value);
-            toggleRateField(); // Скрываем поле при очистке
-        });
-
-        // select
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                const id = item.dataset.id || '';
-                const name = item.dataset.name || '';
-
-                input.value = name;
-                hidden.value = id;
-
-                close();
-                toggleRateField(); // Показываем или скрываем поле
-            });
-        });
-
-        // click outside
-        document.addEventListener('click', (e) => {
-            if (!container.contains(e.target)) {
-                close();
+            if (!input.readOnly) {
+                filterList(input.value);
+                openList();
             }
         });
 
-        // Инициализация при загрузке страницы
-        toggleRateField();
+        input.addEventListener('input', () => {
+            if (!input.readOnly) {
+                hidden.value = '';
+                filterList(input.value);
+                openList();
+            }
+        });
+
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.dataset.static === 'true') {
+                    input.value = '';
+                    hidden.value = '';
+                    input.removeAttribute('readonly');
+                } else {
+                    input.value = item.dataset.name;
+                    hidden.value = item.dataset.id;
+                    input.setAttribute('readonly', true);
+                }
+                closeList();
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                closeList();
+            }
+        });
     });
 </script>
-

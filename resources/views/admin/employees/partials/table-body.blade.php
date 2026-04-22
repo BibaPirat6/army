@@ -30,63 +30,95 @@
             <!-- Должности -->
             <td class="px-4 py-3 align-top">
                 @if ($employee->employeePositions->count() > 0)
-                    <ul class="text-[#565A5B] text-xs space-y-1">
-                        @foreach ($employee->employeePositions as $ep)
-                            <li>ID: {{ $ep->id }} | {{ $ep->position->name }} (ставка:
-                                {{ $ep->getRateValueAttribute() }})
-                                <br>
-                                Тип: {{ $ep->position->positionType->name }}
-                                @if ($ep->is_independent)
-                                    (Самостоятельная должность)
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
+                        <div class="space-y-2">
+                            @foreach ($employee->employeePositions as $ep)
+                                    <div class="group relative">
+                                        <!-- Ссылка на редактирование назначения -->
+                                        <a href="{{ route('commissariat-positions.assign.edit', [
+                                    'id' => $ep->commissariat_position_id,
+                                    'employeePositionId' => $ep->id,
+                                    'back_url' => url()->full()
+                                ]) }}" class="block hover:bg-gray-50 rounded-lg transition-colors duration-150 p-2 -m-2">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1">
+                                                    <!-- Название должности -->
+                                                    <div class="font-medium text-[#060606] text-sm">
+                                                        {{ $ep->commissariatPosition->position->name }}
+                                                    </div>
 
-                    {{-- меню кнопок --}}
-                    <div class="relative inline-block text-left">
-                        <!-- Кнопка-триггер -->
-                        <button
-                            class="dropdown-btn p-1.5 text-gray-500 hover:text-[#A60644] hover:bg-gray-100 rounded-full transition-colors"
-                            title="Действия">
-                            <svg class="w-6 h-6 text-[#A60644] hover:text-[#c20c54] active:scale-95 transition-all duration-150 cursor-pointer"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M9 12l2 2 4-4m3 7h.01" />
-                            </svg>
-                        </button>
+                                                    <!-- Ставка -->
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                                            @if($ep->employeePositionStatus->occupies_rate)
+                                                                bg-green-100 text-green-800
+                                                            @else
+                                                                bg-gray-100 text-gray-600
+                                                            @endif">
+                                                            ставка: {{ number_format($ep->rate, 2) }}
+                                                        </span>
 
-                        <!-- Меню -->
-                        <div
-                            class="dropdown-menu absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-white border border-gray-200 rounded-md shadow-lg z-50 
-                                            p-1 flex flex-row gap-0.5 min-w-[40px] hidden opacity-0 scale-95 transition-all duration-200">
+                                                        <!-- Статус -->
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs"
+                                                            style="background-color: {{ $ep->employeePositionStatus->color }}20; color: {{ $ep->employeePositionStatus->color }}">
+                                                            {{ $ep->employeePositionStatus->name }}
+                                                        </span>
+                                                    </div>
 
-                            <a href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"
-                                title="Назначить">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <!-- Дополнительная информация -->
+                                                    <div class="text-xs text-gray-400 mt-1">
+                                                        {{ $ep->commissariatPosition->commissariat->name }}
+                                                        @if($ep->commissariatPosition->department)
+                                                            / {{ $ep->commissariatPosition->department->name }}
+                                                        @endif
+                                                        @if($ep->commissariatPosition->division)
+                                                            / {{ $ep->commissariatPosition->division->name }}
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <!-- Иконка перехода -->
+                                                <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] transition-colors ml-2"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
+                                        </a>
+                                    </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Кнопка добавления новой должности -->
+                        <div class="mt-3 pt-2 border-t border-gray-200">
+                            <a href="{{ route('employee-positions.create', [
+                        'id' => $employee->id,
+                        'back_url' => url()->full()
+                    ]) }}"
+                                class="inline-flex items-center text-xs text-[#A60644] hover:text-[#A60644]/80 font-medium transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
+                                Назначить на должность
                             </a>
-
-                            <a href="{{ route('employee-positions.edit', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                class="p-2 text-gray-600 hover:text-[#A60644] hover:bg-gray-100 rounded transition-colors"
-                                title="Изменить">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </a>
-
-                            <div class="border-l border-gray-200 mx-1"></div>
                         </div>
-                    </div>
                 @else
-                    <span class="text-[#A60644] italic text-xs"><a
-                            href="{{ route('employee-positions.create', ['id' => $employee->id, 'back_url' => url()->full()]) }}">Не
-                            назначены</a></span>
+                        <div class="text-center py-4">
+                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <p class="text-[#565A5B] text-sm mb-2">Нет назначений</p>
+                            <a href="{{ route('employee-positions.create', [
+                        'id' => $employee->id,
+                        'back_url' => url()->full()
+                    ]) }}"
+                                class="inline-flex items-center px-3 py-1.5 bg-[#A60644] text-white text-xs font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                Назначить на должность
+                            </a>
+                        </div>
                 @endif
             </td>
 

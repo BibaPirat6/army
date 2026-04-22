@@ -59,8 +59,9 @@ class CommissariatPositionsController extends Controller
         }
 
         $backUrl = $request->input('back_url');
+        $employeeId = $request->input('employeeId');
 
-        return view('admin.org.commissariat-positions.index', compact('commissariat', 'commissariatPositions', 'backUrl'));
+        return view('admin.org.commissariat-positions.index', compact('commissariat', 'commissariatPositions', 'backUrl', 'employeeId'));
     }
 
     /**
@@ -85,7 +86,9 @@ class CommissariatPositionsController extends Controller
 
     /**
      * Детальный просмотр штатной должности со всеми назначениями
-     */
+     */ /**
+ * Детальный просмотр штатной должности со всеми назначениями
+ */
     public function show(Request $request, $id)
     {
         // Загружаем штатную должность со всеми связями
@@ -98,14 +101,14 @@ class CommissariatPositionsController extends Controller
             'position.chiefType',
             'employeePositions' => function ($query) {
                 // Загружаем все назначения с сортировкой по ID
-                $query->with(['employee', 'employeePositionStatus']) // Используем правильные названия отношений
+                $query->with(['employee', 'employeePositionStatus'])
                     ->orderBy('id', 'desc');
             },
         ])->findOrFail($id);
 
         // Получаем общую сумму занятых ставок (только активные, занимающие ставку)
         $occupiedRate = $commissariatPosition->employeePositions()
-            ->whereHas('employeePositionStatus', function ($query) { // Используем правильное имя отношения
+            ->whereHas('employeePositionStatus', function ($query) {
                 $query->where('occupies_rate', true);
             })
             ->sum('rate');
@@ -138,6 +141,15 @@ class CommissariatPositionsController extends Controller
         ];
 
         $backUrl = $request->input('back_url');
+        $employeeId = $request->input('employeeId');
+
+        // Проверяем, существует ли сотрудник с таким ID (если передан)
+        if ($employeeId) {
+            $employeeExists = Employee::where('id', $employeeId)->exists();
+            if (! $employeeExists) {
+                $employeeId = null;
+            }
+        }
 
         return view('admin.org.commissariat-positions.show', compact(
             'commissariatPosition',
@@ -146,7 +158,8 @@ class CommissariatPositionsController extends Controller
             'occupiedRate',
             'statistics',
             'allStatuses',
-            'backUrl'
+            'backUrl',
+            'employeeId'
         ));
     }
 
@@ -156,14 +169,31 @@ class CommissariatPositionsController extends Controller
         $departments = Department::where('commissariat_id', $commissariat->id)->get();
         $divisions = Division::where('commissariat_id', $commissariat->id)->get();
         $employees = Employee::all();
-        // $positions = Position::whereHas('chiefType', function ($query) {
-        //     $query->where('name', 'работник');
-        // })->get();
         $positions = Position::all();
 
         $backUrl = $request->get('back_url');
 
-        return view('admin.org.commissariat-positions.create', compact('commissariat', 'departments', 'divisions', 'employees', 'positions', 'backUrl'));
+        $employeeId = $request->input('employeeId');
+        $employee = null;
+
+        // Проверяем, передан ли employeeId, и находим сотрудника только если он передан
+        if ($employeeId) {
+            try {
+                $employee = Employee::findOrFail($employeeId);
+            } catch (\Exception $e) {
+                $employee = null;
+            }
+        }
+
+        return view('admin.org.commissariat-positions.create', compact(
+            'commissariat',
+            'departments',
+            'divisions',
+            'employees',
+            'positions',
+            'backUrl',
+            'employee'
+        ));
     }
 
     public function store(Request $request)
@@ -237,5 +267,4 @@ class CommissariatPositionsController extends Controller
             return back()->withErrors(['error' => 'Ошибка удаления: '.$e->getMessage()])->withInput();
         }
     }
-
 }
