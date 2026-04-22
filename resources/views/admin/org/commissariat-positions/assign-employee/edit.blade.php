@@ -107,16 +107,17 @@
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Ставка <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" 
+                       <input type="number" 
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]" 
                             autocomplete="off"
                             placeholder="Введите ставку" 
                             value="{{ old('rate', $employeePosition->rate) }}" 
                             min="0.25" 
-                            max="{{ $availableRate + ($employeePosition->employeePositionStatus->occupies_rate ? $employeePosition->rate : 0) }}" 
+                            max="{{ $maxRateForInput }}" 
                             step="0.25" 
                             name="rate"
-                            required>
+                            required
+                        >
                         @error('rate')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -187,49 +188,62 @@
         
         // Получаем максимальную ставку из атрибута
         let maxRate = parseFloat(rateInput?.getAttribute('max') || 0);
+        
+        // Сохраняем значение ставки для случаев, когда статус не занимает ставку
+        let savedRateValue = originalRate;
 
         // Функция для показа/скрытия поля ставки
         function toggleRateField() {
             if (hidden.value && hidden.value !== '') {
                 rateField.style.display = 'block';
-                if (rateInput) rateInput.required = true;
             } else {
                 rateField.style.display = 'none';
                 if (rateInput) {
-                    rateInput.required = false;
                     rateInput.value = '';
                 }
             }
         }
 
-        // Функция обновления max ставки в зависимости от статуса
-        function updateMaxRate() {
+        // Функция обновления состояния поля ставки в зависимости от статуса
+        function updateRateFieldState() {
             const selectedOption = statusSelect?.options[statusSelect.selectedIndex];
             const occupiesRate = selectedOption?.dataset.occupiesRate === '1';
             
-            if (rateInput) {
-                if (occupiesRate) {
-                    // Если статус занимает ставку - показываем и активируем поле
-                    rateField.style.display = 'block';
-                    rateInput.disabled = false;
-                    rateInput.required = true;
-                    rateInput.max = maxRate;
-                    
-                    // Если текущее значение 0 или меньше минимума, ставим минимум
-                    let currentValue = parseFloat(rateInput.value);
-                    if (isNaN(currentValue) || currentValue < 0.25) {
-                        rateInput.value = 0.25;
-                    }
-                    if (currentValue > maxRate) {
-                        rateInput.value = maxRate;
-                    }
-                } else {
-                    // Если статус НЕ занимает ставку - скрываем поле или делаем его неактивным
-                    rateField.style.display = 'block';
-                    rateInput.disabled = true;
-                    rateInput.required = false;
-                    rateInput.value = 0;
+            if (!rateInput) return;
+            
+            if (occupiesRate) {
+                // Статус занимает ставку - поле активно, можно редактировать
+                rateInput.disabled = false;
+                rateInput.required = true;
+                rateInput.max = maxRate;
+                
+                // Восстанавливаем сохраненное значение ставки, если оно было
+                if (savedRateValue > 0) {
+                    rateInput.value = savedRateValue;
+                } else if (!rateInput.value || rateInput.value == 0) {
+                    rateInput.value = 0.25;
                 }
+                
+                // Проверяем, что значение не превышает max
+                let currentValue = parseFloat(rateInput.value);
+                if (currentValue > maxRate) {
+                    rateInput.value = maxRate;
+                    savedRateValue = maxRate;
+                }
+                if (currentValue < 0.25) {
+                    rateInput.value = 0.25;
+                    savedRateValue = 0.25;
+                }
+            } else {
+                // Статус НЕ занимает ставку - поле отключено, но сохраняем значение
+                rateInput.disabled = true;
+                rateInput.required = false;
+                // Сохраняем текущее значение перед отключением
+                if (rateInput.value && parseFloat(rateInput.value) > 0) {
+                    savedRateValue = parseFloat(rateInput.value);
+                }
+                // Показываем сохраненное значение (оно не будет отправлено на сервер, т.к. поле disabled)
+                rateInput.value = savedRateValue;
             }
         }
 
@@ -241,11 +255,15 @@
             if (isNaN(value)) value = 0.25;
             if (value < 0.25) {
                 rateInput.value = 0.25;
+                savedRateValue = 0.25;
                 alert('Минимальная ставка: 0.25');
             }
             if (value > maxRate) {
                 rateInput.value = maxRate;
+                savedRateValue = maxRate;
                 alert('Максимальная доступная ставка: ' + maxRate.toFixed(2));
+            } else {
+                savedRateValue = parseFloat(rateInput.value);
             }
         }
 
@@ -287,7 +305,7 @@
                 hidden.value = id;
                 close();
                 toggleRateField();
-                updateMaxRate(); // Обновляем при смене сотрудника
+                updateRateFieldState();
             });
         });
 
@@ -310,24 +328,24 @@
                 const occupiesRate = selectedOption?.dataset.occupiesRate === '1';
                 
                 if (!occupiesRate) {
-                    // Если статус не занимает ставку
-                    if (confirm('Выбранный статус НЕ занимает ставку.\n\nСтавка будет установлена в 0.\nПродолжить?')) {
-                        updateMaxRate();
+                    // Статус не занимает ставку - просто отключаем поле, но не меняем значение
+                    if (confirm('Выбранный статус НЕ занимает ставку.\n\nСтавка будет сохранена, но не будет влиять на занятость.\nПродолжить?')) {
+                        updateRateFieldState();
                     } else {
                         // Возвращаем предыдущий статус
                         this.value = originalStatusId;
-                        updateMaxRate();
+                        updateRateFieldState();
                     }
                 } else {
-                    // Если статус занимает ставку
-                    updateMaxRate();
+                    // Статус занимает ставку - активируем поле
+                    updateRateFieldState();
                 }
             });
         }
 
         // Инициализация
         toggleRateField();
-        updateMaxRate();
+        updateRateFieldState();
     });
 </script>
 @endpush
