@@ -106,7 +106,6 @@
 
 <body style="background: #f4f0f0">
     {{-- tetris --}}
-    <a href="{{ route("tetris.index") }}" class="fixed top-0 left-0 w-1 h-1 z-[9999]"></a>
 
     <nav class="navigation fixed top-0 left-0 right-0 z-[900] bg-[#e7e1e1] border-b border-[#BFBFBF] shadow-lg">
         <ul class="main-nav flex list-none m-0 p-0 gap-5 items-center px-5 py-3">

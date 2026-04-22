@@ -72,4 +72,55 @@ class Employee extends Model
             $this->person->patronymic,
         ])->filter()->implode(' ') ?: 'Без ФИО';
     }
+
+
+
+     /**
+     * Получить ID текущего статуса сотрудника (активное назначение)
+     * Возвращает employee_position_status_id из активного назначения
+     */
+    public function getCurrentEmployeePositionStatusId()
+    {
+        // Получаем активное назначение сотрудника (которое занимает ставку)
+        $activePosition = $this->employeePositions()
+            ->whereHas('employeePositionStatus', function($query) {
+                $query->where('occupies_rate', true);
+            })
+            ->first();
+        
+        if ($activePosition) {
+            return $activePosition->employee_position_status_id;
+        }
+        
+        // Если нет активного назначения, возвращаем статус по умолчанию (например, 1 - работает)
+        return 1;
+    }
+    
+    /**
+     * Получить текущую должность сотрудника
+     */
+    public function getCurrentPosition()
+    {
+        $activePosition = $this->employeePositions()
+            ->whereHas('employeePositionStatus', function($query) {
+                $query->where('occupies_rate', true);
+            })
+            ->with('commissariatPosition.position')
+            ->first();
+        
+        if ($activePosition && $activePosition->commissariatPosition) {
+            return $activePosition->commissariatPosition->position;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Получить название текущей должности
+     */
+    public function getCurrentPositionName()
+    {
+        $position = $this->getCurrentPosition();
+        return $position ? $position->name : null;
+    }
 }

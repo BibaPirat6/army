@@ -124,7 +124,4 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
     Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name('structure.obsidian');
 
-
-    // tetris
-    Route::get('/tetris',[TetrisController::class, 'index'])->name('tetris.index');
 });

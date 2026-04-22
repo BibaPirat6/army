@@ -19,6 +19,17 @@
         Назад
     </a>
 
+    <div class="fixed bottom-5 right-5 z-[1000] flex flex-col gap-3">
+        <!-- Зеленая кнопка - Штат -->
+        <a href="{{ route("commissariat-positions.index", [
+        "commissariat_id" => $commissariat->id,
+        "back_url" => url()->full()
+    ]) }}"
+            class="px-4 py-2.5 rounded-xl bg-[#1ba606] text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
+            Штатные должности
+        </a>
+    </div>
+
 
     <div id="app">
         <structure-graph :nodes="{{ json_encode($graphData['nodes']) }}" :links="{{ json_encode($graphData['links']) }}"

@@ -18,7 +18,7 @@
         "back_url" => url()->full()
     ]) }}"
             class="px-4 py-2.5 rounded-xl bg-[#1ba606] text-white text-sm font-medium hover:bg-green-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
-            Штатное расписание
+            Штатные должности
         </a>
         
         <!-- Розовая кнопка - Узловая структура -->
