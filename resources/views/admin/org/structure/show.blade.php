@@ -13,6 +13,15 @@
     <div class="fixed bottom-5 right-5 z-[1000] flex flex-col gap-3">
 
         <!-- Розовая кнопка -->
+        <a href="{{ route("commissariat-positions.index", [
+        "commissariat_id" => $commissariat->id,
+        "back_url" => url()->full()
+    ]) }}"
+            class="px-4 py-2.5 rounded-xl bg-[#1ba606] text-white text-sm font-medium hover:bg-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 text-center">
+            Штат
+        </a>
+        
+        <!-- Розовая кнопка -->
         <a href="{{ route("structure.obsidian", [
         "id" => $commissariat->id,
         "back_url" => url()->full()
@@ -33,9 +42,6 @@
         </button>
 
     </div>
-
-
-
 
     {{-- Кнопка назад --}}
     <a href="{{ route('structure.index') }}"
@@ -71,10 +77,6 @@
                     <a href="{{ route('divisions.create', ['commissariat_id' => $commissariat->id, 'back_url' => url()->full()]) }}"
                         class="block px-4 py-2.5 text-[#060606] rounded-lg hover:bg-[#A60644]/10 hover:text-[#A60644] transition-colors">Отделение</a>
                 </li>
-                <li class="mb-0">
-                    <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'back_url' => url()->full()]) }}"
-                        class="block px-4 py-2.5 text-[#060606] rounded-lg hover:bg-[#A60644]/10 hover:text-[#A60644] transition-colors">Сотрудник</a>
-                </li>
             </ul>
         </div>
     </div>
@@ -102,10 +104,8 @@
                                 @endif
                             </div>
                             <div class="relative group">
-                                <!-- Сам значок -->
                                 <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center 
-                                                                            hover:bg-[#A60644] hover:scale-110 hover:shadow-md 
-                                                                            transition-all duration-200 cursor-pointer">
+                                    hover:bg-[#A60644] hover:scale-110 hover:shadow-md transition-all duration-200 cursor-pointer">
                                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -125,11 +125,6 @@
 
                     {{-- ОТДЕЛЫ И ОСТАЛЬНЫЕ КАРТОЧКИ В ОДНУ ЛИНИЮ --}}
                     <div class="departments-container">
-
-
-
-
-
 
                         {{-- Карточки отделов --}}
                         @foreach ($commissariat->departments as $department)
@@ -170,6 +165,7 @@
                                 {{-- Отделения отдела и сотрудники отдела --}}
                                 <div class="p-4 space-y-3 flex-1 overflow-y-auto custom-scroll smooth-content"
                                     style="max-height: 400px;">
+                                    
                                     {{-- Кнопка добавления отделения --}}
                                     <a href="{{ route('divisions.create', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'back_url' => url()->full()]) }}"
                                         class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644] text-white font-medium rounded-xl hover:bg-[#A60644]/80 transition-all duration-200 shadow-md hover:shadow-lg">
@@ -180,44 +176,26 @@
                                         Добавить отделение
                                     </a>
 
-
-                                    {{-- Кнопка добавления сотрудника в отдел --}}
-                                    <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'back_url' => url()->full()]) }}"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        Создать сотрудника
-                                    </a>
-                                    {{-- назначение сотрудника --}}
-                                    <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'back_url' => url()->full()]) }}"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        Назначить сотрудника
-                                    </a>
-
-
-                                    {{-- Сотрудники отдела (не в отделениях, исключая начальника отдела) --}}
+                                    {{-- Сотрудники отдела (через штатные должности) --}}
                                     @php
-                                        // Получаем ID начальника отдела
                                         $departmentChiefId = optional($department->getChiefAttribute())->id;
-
-                                        // Берём позиции, привязанные напрямую к отделу (без division), не самостоятельные,
-                                        // исключая позицию начальника отдела, затем мапим на employee и убираем дубликаты.
-                                        $departmentEmployees = $department->employeePositions()
+                                        
+                                        // Получаем всех сотрудников отдела через штатные должности
+                                        $departmentEmployees = $department->commissariatPositions()
                                             ->whereNull('division_id')
-                                            ->where('employee_id', '!=', $departmentChiefId)
-                                            ->with('employee.person')
+                                            ->with(['employeePositions' => function($q) {
+                                                $q->whereHas('employeePositionStatus', function($sq) {
+                                                    $sq->where('occupies_rate', true);
+                                                })->with('employee.person');
+                                            }])
                                             ->get()
-                                            ->map(function ($pos) {
-                                                return $pos->employee;
+                                            ->flatMap(function($cp) {
+                                                return $cp->employeePositions;
                                             })
-                                            ->filter() // убрать null
-                                            ->unique('id')
+                                            ->filter(function($ep) use ($departmentChiefId) {
+                                                return $ep->employee && $ep->employee->id != $departmentChiefId;
+                                            })
+                                            ->unique('employee.id')
                                             ->values();
                                     @endphp
 
@@ -225,24 +203,18 @@
                                         <div class="bg-[#f5f5f5] rounded-xl p-3 border border-[#A60644]/20">
                                             <div class="flex items-center gap-2 mb-2">
                                                 <div class="w-1 h-4 bg-[#A60644] rounded-full"></div>
-                                                <h4 class="font-bold text-[#060606] text-sm uppercase tracking-wide">Сотрудники
-                                                    отдела</h4>
+                                                <h4 class="font-bold text-[#060606] text-sm uppercase tracking-wide">Сотрудники отдела</h4>
                                             </div>
                                             <div class="space-y-1.5">
-                                                @foreach ($departmentEmployees as $employee)
-                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                                                    hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
-
+                                                @foreach ($departmentEmployees as $employeePosition)
+                                                    <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
-                                                            {{ $employee->getFullNameAttribute() ?? 'Нет данных' }}
+                                                            {{ $employeePosition->employee->getFullNameAttribute() ?? 'Нет данных' }}
                                                         </span>
-
-                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 5l7 7-7 7"></path>
-                                                        </svg>
+                                                        <span class="text-xs text-gray-400">
+                                                            ставка: {{ number_format($employeePosition->rate, 2) }}
+                                                        </span>
                                                     </a>
                                                 @endforeach
                                             </div>
@@ -253,19 +225,27 @@
                                     @if($department->divisions->count() > 0)
                                         @foreach ($department->divisions as $division)
                                             @php
-                                                // Получаем ID начальника отделения (если есть)
                                                 $divisionChiefId = optional($division->getChiefAttribute())->id;
-
-                                                // Получаем всех сотрудников отделения, исключая начальника
-                                                $divisionEmployees = $division->employeePositions
-                                                    ->filter(function ($position) use ($divisionChiefId) {
-                                                        return $position->employee && $position->employee->id != $divisionChiefId;
+                                                
+                                                // Получаем сотрудников отделения через штатные должности
+                                                $divisionEmployees = $division->commissariatPositions()
+                                                    ->with(['employeePositions' => function($q) {
+                                                        $q->whereHas('employeePositionStatus', function($sq) {
+                                                            $sq->where('occupies_rate', true);
+                                                        })->with('employee.person');
+                                                    }])
+                                                    ->get()
+                                                    ->flatMap(function($cp) {
+                                                        return $cp->employeePositions;
                                                     })
+                                                    ->filter(function($ep) use ($divisionChiefId) {
+                                                        return $ep->employee && $ep->employee->id != $divisionChiefId;
+                                                    })
+                                                    ->unique('employee.id')
                                                     ->values();
                                             @endphp
 
-                                            <div
-                                                class="bg-[#f5f5f5] rounded-xl p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/30 transition-all duration-200">
+                                            <div class="bg-[#f5f5f5] rounded-xl p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/30 transition-all duration-200">
                                                 <div class="flex items-center justify-between mb-2">
                                                     <h4 class="font-bold text-[#060606] text-sm uppercase tracking-wide">
                                                         {{ $division->name }}
@@ -292,49 +272,24 @@
                                                     @endif
                                                 </div>
 
-                                                {{-- Сотрудники отделения (исключая начальника) --}}
+                                                {{-- Сотрудники отделения --}}
                                                 @if($divisionEmployees->count() > 0)
                                                     <div class="mt-2 space-y-1.5">
                                                         @foreach ($divisionEmployees as $employeePosition)
                                                             <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
-                                                                class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
-
+                                                                class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
                                                                 <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                                     {{ optional($employeePosition->employee)->getFullNameAttribute() ?? 'Нет данных' }}
                                                                 </span>
-
-                                                                <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
-                                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                        d="M9 5l7 7-7 7"></path>
-                                                                </svg>
+                                                                <span class="text-xs text-gray-400">
+                                                                    ставка: {{ number_format($employeePosition->rate, 2) }}
+                                                                </span>
                                                             </a>
                                                         @endforeach
                                                     </div>
                                                 @else
                                                     <div class="text-center text-[#565A5B] py-2 text-xs italic">Нет сотрудников</div>
                                                 @endif
-
-                                                {{-- Кнопка добавления сотрудника в отделение --}}
-                                                <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
-                                                    class="add-employee-btn mt-3 w-full inline-flex items-center justify-center gap-2 px-3 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-all duration-200 shadow-md hover:shadow-lg">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M12 4v16m8-8H4"></path>
-                                                    </svg>
-                                                    Слздать сотрудника
-                                                </a>
-
-                                                {{-- назначение сотрудника --}}
-                                                <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'department_id' => $department->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
-                                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M12 4v16m8-8H4"></path>
-                                                    </svg>
-                                                    Назначить сотрудника
-                                                </a>
                                             </div>
                                         @endforeach
                                     @else
@@ -344,80 +299,75 @@
                             </div>
                         @endforeach
 
-
-
-
-
-
                         {{-- ОБЪЕДИНЕННАЯ КАРТОЧКА СОТРУДНИКОВ (комиссариат + самостоятельные) --}}
                         @php
-                            // Получаем ID начальника комиссариата
                             $commissariatChiefId = optional($commissariat->getChiefAttribute())->id;
-
-                            // Фильтрующая функция для исключения начальника
-                            $filterChief = fn($employee) => $employee && $employee->id != $commissariatChiefId;
-
-                            // Получаем штатных сотрудников, исключая начальника комиссариата
-                            $employeesNotIndependent = ($commissariat?->employeesNotIndependent() ?? collect())
-                                ->filter($filterChief)
+                            
+                            // Получаем сотрудников комиссариата (без отдела и отделения, не начальник)
+                            $commissariatEmployees = $commissariat->commissariatPositions()
+                                ->whereNull('department_id')
+                                ->whereNull('division_id')
+                                ->with(['employeePositions' => function($q) {
+                                    $q->whereHas('employeePositionStatus', function($sq) {
+                                        $sq->where('occupies_rate', true);
+                                    })->with('employee.person');
+                                }])
+                                ->get()
+                                ->flatMap(function($cp) {
+                                    return $cp->employeePositions;
+                                })
+                                ->filter(function($ep) use ($commissariatChiefId) {
+                                    return $ep->employee && $ep->employee->id != $commissariatChiefId;
+                                })
+                                ->unique('employee.id')
+                                ->values();
+                                
+                            // Получаем самостоятельных сотрудников (is_independent = true)
+                            $independentEmployees = $commissariat->commissariatPositions()
+                                ->where('is_independent', true)
+                                ->with(['employeePositions' => function($q) {
+                                    $q->whereHas('employeePositionStatus', function($sq) {
+                                        $sq->where('occupies_rate', true);
+                                    })->with('employee.person');
+                                }])
+                                ->get()
+                                ->flatMap(function($cp) {
+                                    return $cp->employeePositions;
+                                })
+                                ->filter(function($ep) use ($commissariatChiefId) {
+                                    return $ep->employee && $ep->employee->id != $commissariatChiefId;
+                                })
+                                ->unique('employee.id')
                                 ->values();
 
-                            // Получаем самостоятельных сотрудников, исключая начальника комиссариата
-                            $employeesIndependent = ($commissariat?->employeesIndependent() ?? collect())
-                                ->filter($filterChief)
-                                ->values();
-
-                            $hasEmployees = $employeesNotIndependent->count() > 0 || $employeesIndependent->count() > 0;
+                            $hasEmployees = $commissariatEmployees->count() > 0 || $independentEmployees->count() > 0;
                         @endphp
 
                         @if($hasEmployees)
-                            <div
-                                class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover">
+                            <div class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover">
                                 <div class="bg-gradient-to-r from-[#060606] to-[#1a1a1a] px-5 py-3">
                                     <h3 class="text-white font-bold text-lg">Сотрудники</h3>
                                     <p class="text-white/60 text-xs mt-1">Комиссариат и самостоятельные</p>
                                 </div>
                                 <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                                    <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'back_url' => url()->full()]) }}"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        Создать сотрудника
-                                    </a>
-                                    {{-- назначение сотрудника --}}
-                                    <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'back_url' => url()->full()]) }}"
-                                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        Назначить сотрудника
-                                    </a>
+
                                     {{-- Сотрудники комиссариата --}}
-                                    @if($employeesNotIndependent->count() > 0)
+                                    @if($commissariatEmployees->count() > 0)
                                         <div>
-                                            <div
-                                                class="text-xs font-semibold text-[#565A5B] uppercase tracking-wider mb-2 flex items-center gap-2">
+                                            <div class="text-xs font-semibold text-[#565A5B] uppercase tracking-wider mb-2 flex items-center gap-2">
                                                 <div class="w-1 h-4 bg-[#A60644] rounded-full"></div>
                                                 Штатные сотрудники
                                             </div>
                                             <div class="space-y-2">
-                                                @foreach ($employeesNotIndependent as $employee)
-                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
-
+                                                @foreach ($commissariatEmployees as $employeePosition)
+                                                    <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
-                                                            {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
+                                                            {{ $employeePosition->employee->getFullNameAttribute() ?? "Нет данных" }}
                                                         </span>
-
-                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 5l7 7-7 7"></path>
-                                                        </svg>
+                                                        <span class="text-xs text-gray-400">
+                                                            ставка: {{ number_format($employeePosition->rate, 2) }}
+                                                        </span>
                                                     </a>
                                                 @endforeach
                                             </div>
@@ -425,48 +375,59 @@
                                     @endif
 
                                     {{-- Самостоятельные сотрудники --}}
-                                    @if($employeesIndependent->count() > 0)
+                                    @if($independentEmployees->count() > 0)
                                         <div>
-                                            <div
-                                                class="text-xs font-semibold text-[#565A5B] uppercase tracking-wider mb-2 flex items-center gap-2 mt-3">
+                                            <div class="text-xs font-semibold text-[#565A5B] uppercase tracking-wider mb-2 flex items-center gap-2 mt-3">
                                                 <div class="w-1 h-4 bg-[#A60644] rounded-full"></div>
                                                 Самостоятельные сотрудники
                                             </div>
                                             <div class="space-y-2">
-                                                @foreach ($employeesIndependent as $employee)
-                                                    <a href="{{ route('employees.show', ['id' => $employee->id, 'back_url' => url()->full()]) }}"
-                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                                                                                                                                                                                                                hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
-
+                                                @foreach ($independentEmployees as $employeePosition)
+                                                    <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
+                                                        class="group flex items-center justify-between w-full bg-white rounded-lg p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 hover:shadow-md transition-all duration-200 cursor-pointer">
                                                         <span class="text-sm text-[#060606] font-medium truncate min-w-0">
-                                                            {{ $employee->getFullNameAttribute() ?? "Нет данных" }}
+                                                            {{ $employeePosition->employee->getFullNameAttribute() ?? "Нет данных" }}
                                                         </span>
-
-                                                        <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 5l7 7-7 7"></path>
-                                                        </svg>
+                                                        <span class="text-xs text-gray-400">
+                                                            ставка: {{ number_format($employeePosition->rate, 2) }}
+                                                        </span>
                                                     </a>
                                                 @endforeach
                                             </div>
                                         </div>
                                     @endif
-
-
                                 </div>
                             </div>
                         @endif
 
                         {{-- САМОСТОЯТЕЛЬНЫЕ ОТДЕЛЕНИЯ (вне отделов) --}}
                         @php
-                            $divisionsIndependent = $commissariat?->divisionsIntependent() ?? collect();
+                            $divisionsIndependent = $commissariat->divisions()->whereNull('department_id')->get();
                         @endphp
 
                         @if($divisionsIndependent->count() > 0)
                             @foreach ($divisionsIndependent as $division)
-                                <div
-                                    class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover flex flex-col">
+                                @php
+                                    $divisionChiefId = optional($division->getChiefAttribute())->id;
+                                    
+                                    $divisionEmployees = $division->commissariatPositions()
+                                        ->with(['employeePositions' => function($q) {
+                                            $q->whereHas('employeePositionStatus', function($sq) {
+                                                $sq->where('occupies_rate', true);
+                                            })->with('employee.person');
+                                        }])
+                                        ->get()
+                                        ->flatMap(function($cp) {
+                                            return $cp->employeePositions;
+                                        })
+                                        ->filter(function($ep) use ($divisionChiefId) {
+                                            return $ep->employee && $ep->employee->id != $divisionChiefId;
+                                        })
+                                        ->unique('employee.id')
+                                        ->values();
+                                @endphp
+
+                                <div class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover flex flex-col">
                                     <div class="bg-gradient-to-r from-[#7F7F7F] to-[#5a5a5a] px-5 py-3 flex-shrink-0">
                                         <h3 class="text-white font-bold text-lg uppercase tracking-wide">{{ $division->name }}</h3>
                                         <p class="text-white/70 text-xs mt-1">Самостоятельное отделение</p>
@@ -497,67 +458,27 @@
                                         </div>
                                     </div>
 
-                                    {{-- Сотрудники отделения (исключая начальника) --}}
+                                    {{-- Сотрудники отделения --}}
                                     <div class="p-4 space-y-3 flex-1 overflow-y-auto custom-scroll smooth-content"
                                         style="max-height: 400px;">
-                                        @php
-                                            // Получаем ID начальника отделения (если есть)
-                                            $chiefEmployeeId = optional($division->getChiefAttribute())->id;
 
-                                            // Получаем всех сотрудников отделения, исключая начальника
-                                            $regularEmployees = $division->employeePositions
-                                                ->filter(function ($position) use ($chiefEmployeeId) {
-                                                    return $position->employee && $position->employee->id != $chiefEmployeeId;
-                                                })
-                                                ->values();
-                                        @endphp
-
-                                        @if($regularEmployees->count() > 0)
-                                            @foreach ($regularEmployees as $employeePosition)
-
-                                                @php
-                                                    $statusColor = $employeePosition->employeePositionStatus->color ?? '#f5f5f5';
-                                                @endphp
-
+                                        @if($divisionEmployees->count() > 0)
+                                            @foreach ($divisionEmployees as $employeePosition)
                                                 <a href="{{ route('employees.show', ['id' => $employeePosition->employee->id, 'back_url' => url()->full()]) }}"
-                                                    class="group flex items-center justify-between w-full rounded-lg p-3 border border-[#BFBFBF]/20 
-                                                                            hover:border-[#A60644]/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-                                                    style="background-color: {{ $statusColor }};">
-
+                                                    class="group flex items-center justify-between w-full rounded-lg p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                                                    style="background-color: {{ $employeePosition->employeePositionStatus->color ?? '#f5f5f5' }}20;">
                                                     <span class="text-sm text-[#060606] font-medium truncate min-w-0">
                                                         {{ optional($employeePosition->employee)->getFullNameAttribute() ?? "Нет данных" }}
                                                     </span>
-
-                                                    <svg class="w-4 h-4 text-gray-400 group-hover:text-[#A60644] group-hover:translate-x-1 transition-all duration-200 flex-shrink-0 ml-2"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M9 5l7 7-7 7"></path>
-                                                    </svg>
+                                                    <span class="text-xs text-gray-400">
+                                                        ставка: {{ number_format($employeePosition->rate, 2) }}
+                                                    </span>
                                                 </a>
                                             @endforeach
                                         @else
                                             <div class="text-center text-[#565A5B] py-4 italic">Нет сотрудников</div>
                                         @endif
 
-
-                                        {{-- Кнопка добавления сотрудника --}}
-                                        <a href="{{ route('employees.create', ['commissariat_id' => $commissariat->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
-                                            class="add-employee-btn w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#A60644] text-white font-medium rounded-xl hover:bg-[#A60644]/80 transition-all duration-200 shadow-md hover:shadow-lg mt-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v16m8-8H4"></path>
-                                            </svg>
-                                            Создать сотрудника
-                                        </a>
-                                        {{-- назначение сотрудника --}}
-                                        <a href="{{ route('employee-positions.add', ['commissariat_id' => $commissariat->id, 'division_id' => $division->id, 'back_url' => url()->full()]) }}"
-                                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#A60644]/10 text-[#A60644] text-sm font-medium rounded-lg hover:bg-[#A60644] hover:text-white transition-all duration-200">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v16m8-8H4"></path>
-                                            </svg>
-                                            Назначить сотрудника
-                                        </a>
                                     </div>
                                 </div>
                             @endforeach
@@ -565,4 +486,6 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 @endsection

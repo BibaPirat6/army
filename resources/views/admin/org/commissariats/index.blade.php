@@ -46,17 +46,18 @@
                                             <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
                                                 <td class="px-6 py-4 text-[#060606] font-medium">{{ $commissariat->id }}</td>
                                                 <td class="px-6 py-4 text-[#060606]">
-                                                    <a href="{{ route("commissariat-positions.index",[
-                                                        "commissariat_id"=>$commissariat->id,
-                                                        "back_url"=>url()->full()
-                                                    ]) }}">{{ $commissariat->name }}</a>
+                                                    <a href="{{ route("commissariat-positions.index", [
+                                "commissariat_id" => $commissariat->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ $commissariat->name }}</a>
                                                 </td>
                                                 {{-- начальник --}}
                                                 <td class="px-6 py-4 text-[#060606]">
-                                                    <a href="{{ route("employees.show",[
-                                                        "id"=>$commissariat->getChiefAttribute()->id,
-                                                        "back_url"=>url()->full()
-                                                    ]) }}">{{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
+                                                    <a
+                                                        href="{{ route("employees.show", [
+                                "id" => $commissariat->getChiefAttribute()->id,
+                                "back_url" => url()->full()
+                            ]) }}">{{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
                                                 </td>
 
                                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}
