@@ -13,6 +13,7 @@ use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
+use App\Http\Controllers\TetrisController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -122,4 +123,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
     Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name('structure.obsidian');
+
+
+    // tetris
+    Route::get('/tetris',[TetrisController::class, 'index'])->name('tetris.index');
 });
