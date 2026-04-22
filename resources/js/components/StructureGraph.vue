@@ -21,6 +21,13 @@
                     </path>
                 </svg>
             </button>
+            <button @click="fitToScreen" class="control-btn" title="Вписать в экран">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4">
+                    </path>
+                </svg>
+            </button>
         </div>
     </div>
 </template>
@@ -115,21 +122,41 @@ export default {
                 if (typeof link.target === 'string') link.target = nodeMap.get(link.target);
             });
 
-            this.calculateInitialPositions(simulationNodes, simulationLinks);
+            // Устанавливаем начальные позиции для лучшего расположения
+            this.setInitialPositions(simulationNodes, simulationLinks);
 
             this.simulation = d3.forceSimulation(simulationNodes)
-                .force('link', d3.forceLink(simulationLinks).id(d => d.id).distance(120).strength(0.5))
-                .force('charge', d3.forceManyBody().strength(d => {
-                    if (d.type === 'commissariat') return -500;
-                    if (d.type === 'department') return -300;
-                    if (d.type === 'division') return -200;
-                    if (d.type === 'group') return -150;
-                    return -100;
-                }))
+                .force('link', d3.forceLink(simulationLinks)
+                    .id(d => d.id)
+                    .distance(d => {
+                        if (d.source.type === 'commissariat') return 220;
+                        if (d.source.type === 'department') return 160;
+                        if (d.source.type === 'division') return 130;
+                        if (d.source.type === 'group') return 100;
+                        return 120;
+                    })
+                    .strength(0.6))
+                .force('charge', d3.forceManyBody()
+                    .strength(d => {
+                        if (d.type === 'commissariat') return -800;
+                        if (d.type === 'department') return -500;
+                        if (d.type === 'division') return -350;
+                        if (d.type === 'group') return -200;
+                        if (d.type === 'position') return -150;
+                        return -120;
+                    }))
                 .force('center', d3.forceCenter(this.width / 2, this.height / 2))
-                .force('collision', d3.forceCollide().radius(50))
-                .alphaDecay(0.02);
+                .force('collision', d3.forceCollide().radius(d => {
+                    if (d.type === 'commissariat') return 80;
+                    if (d.type === 'department') return 65;
+                    if (d.type === 'division') return 55;
+                    if (d.type === 'group') return 45;
+                    return 40;
+                }))
+                .alphaDecay(0.03)
+                .velocityDecay(0.4);
 
+            // Фиксируем комиссариат в центре
             const mainNode = simulationNodes.find(n => n.type === 'commissariat');
             if (mainNode) {
                 mainNode.fx = this.width / 2;
@@ -138,6 +165,77 @@ export default {
 
             this.draw(simulationNodes, simulationLinks);
             this.simulation.on('tick', () => this.updatePositions());
+            
+            // Через 3 секунды разблокируем комиссариат
+            setTimeout(() => {
+                if (mainNode && this.simulation) {
+                    mainNode.fx = null;
+                    mainNode.fy = null;
+                }
+            }, 3000);
+        },
+
+        setInitialPositions(nodes, links) {
+            const centerX = this.width / 2;
+            const centerY = this.height / 2;
+
+            // Комиссариат в центре
+            const commissariat = nodes.find(n => n.type === 'commissariat');
+            if (commissariat) {
+                commissariat.x = centerX;
+                commissariat.y = centerY;
+            }
+
+            // Отделы вокруг комиссариата
+            const departments = nodes.filter(n => n.type === 'department');
+            const deptRadius = 280;
+            departments.forEach((dept, i) => {
+                const angle = (i / Math.max(departments.length, 1)) * Math.PI * 2;
+                dept.x = centerX + Math.cos(angle) * deptRadius;
+                dept.y = centerY + Math.sin(angle) * deptRadius;
+            });
+
+            // Отделения вокруг своих отделов
+            const divisions = nodes.filter(n => n.type === 'division');
+            divisions.forEach(div => {
+                const parentDept = nodes.find(d => 
+                    links.some(l => l.source === d && l.target === div)
+                );
+                if (parentDept) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 160;
+                    div.x = parentDept.x + Math.cos(angle) * radius;
+                    div.y = parentDept.y + Math.sin(angle) * radius;
+                }
+            });
+
+            // Группы (Штатные должности) вокруг своих родителей
+            const groups = nodes.filter(n => n.type === 'group');
+            groups.forEach(group => {
+                const parent = nodes.find(p => 
+                    links.some(l => l.source === p && l.target === group)
+                );
+                if (parent) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 130;
+                    group.x = parent.x + Math.cos(angle) * radius;
+                    group.y = parent.y + Math.sin(angle) * radius;
+                }
+            });
+
+            // Должности вокруг своих групп
+            const positions = nodes.filter(n => n.type === 'position');
+            positions.forEach(pos => {
+                const parentGroup = nodes.find(g => 
+                    links.some(l => l.source === g && l.target === pos)
+                );
+                if (parentGroup) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = 100;
+                    pos.x = parentGroup.x + Math.cos(angle) * radius;
+                    pos.y = parentGroup.y + Math.sin(angle) * radius;
+                }
+            });
         },
 
         draw(nodesData, linksData) {
@@ -172,7 +270,7 @@ export default {
 
                 if (d.type === 'group') {
                     nodeGroup.append('rect')
-                        .attr('x', -45).attr('y', -20).attr('width', 90).attr('height', 40)
+                        .attr('x', -50).attr('y', -22).attr('width', 100).attr('height', 44)
                         .attr('rx', 10).attr('fill', this.getNodeColor(d))
                         .attr('stroke', '#060606').attr('stroke-width', 2).attr('stroke-dasharray', '4,2');
                     nodeGroup.append('text')
@@ -181,10 +279,10 @@ export default {
                         .text(() => d.name.length > 14 ? d.name.substring(0, 11) + '...' : d.name);
                 } else {
                     let radius = 28, iconText = '●', textDy = '2.2em';
-                    if (d.type === 'commissariat') { radius = 48; iconText = '★'; textDy = '2.5em'; }
-                    else if (d.type === 'department') { radius = 40; iconText = '◆'; textDy = '2.3em'; }
-                    else if (d.type === 'division') { radius = 34; iconText = '●'; textDy = '2.2em'; }
-                    else if (d.type === 'position') { radius = 32; iconText = '📋'; textDy = '2.3em'; }
+                    if (d.type === 'commissariat') { radius = 52; iconText = '★'; textDy = '2.6em'; }
+                    else if (d.type === 'department') { radius = 42; iconText = '◆'; textDy = '2.4em'; }
+                    else if (d.type === 'division') { radius = 36; iconText = '●'; textDy = '2.3em'; }
+                    else if (d.type === 'position') { radius = 34; iconText = '📋'; textDy = '2.4em'; }
 
                     nodeGroup.append('title').text(() => {
                         if (d.type === 'position') {
@@ -199,7 +297,7 @@ export default {
 
                     nodeGroup.append('text')
                         .attr('text-anchor', 'middle').attr('dy', '0.35em')
-                        .attr('fill', 'white').style('font-size', '16px').style('font-weight', 'bold')
+                        .attr('fill', 'white').style('font-size', '18px').style('font-weight', 'bold')
                         .text(iconText);
 
                     nodeGroup.append('text')
@@ -240,6 +338,27 @@ export default {
             }
         },
 
+        fitToScreen() {
+            if (!this.nodeElements) return;
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            this.nodeElements.each(function(d) {
+                minX = Math.min(minX, d.x);
+                minY = Math.min(minY, d.y);
+                maxX = Math.max(maxX, d.x);
+                maxY = Math.max(maxY, d.y);
+            });
+            const padding = 80;
+            const scale = Math.min(
+                this.width / (maxX - minX + padding * 2),
+                this.height / (maxY - minY + padding * 2),
+                1.5
+            );
+            const translateX = (this.width - (minX + maxX) * scale) / 2;
+            const translateY = (this.height - (minY + maxY) * scale) / 2;
+            const transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale);
+            this.svg.transition().duration(500).call(this.zoomBehavior.transform, transform);
+        },
+
         handleResize() {
             this.width = window.innerWidth;
             this.height = window.innerHeight;
@@ -250,32 +369,6 @@ export default {
                     this.simulation.alpha(0.3).restart();
                 }
             }
-        },
-
-        calculateInitialPositions(simulationNodes, simulationLinks) {
-            const centerX = this.width / 2;
-            const centerY = this.height / 2;
-
-            const mainNode = simulationNodes.find(n => n.type === 'commissariat');
-            if (mainNode) {
-                mainNode.x = centerX;
-                mainNode.y = centerY;
-            }
-
-            const radius = 250;
-            const departments = simulationNodes.filter(n => n.type === 'department');
-            departments.forEach((dept, i) => {
-                const angle = (i / Math.max(departments.length, 1)) * Math.PI * 2;
-                dept.x = centerX + Math.cos(angle) * radius;
-                dept.y = centerY + Math.sin(angle) * radius;
-            });
-
-            simulationNodes.forEach(node => {
-                if (!node.x) {
-                    node.x = centerX + (Math.random() - 0.5) * 400;
-                    node.y = centerY + (Math.random() - 0.5) * 300;
-                }
-            });
         }
     }
 };

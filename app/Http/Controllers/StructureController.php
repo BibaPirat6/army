@@ -40,17 +40,7 @@ class StructureController extends Controller
             'url' => route('commissariats.show', $commissariat->id),
         ];
 
-        // ========== ОБЩИЙ УЗЕЛ ДЛЯ СОТРУДНИКОВ КОМИССАРИАТА ==========
-        $employeesGroupId = 'group_employees_'.$commissariat->id;
-        $nodes[] = [
-            'id' => $employeesGroupId,
-            'name' => 'Сотрудники',
-            'type' => 'group',
-            'isGroup' => true,
-        ];
-        $links[] = ['source' => $commissariatId, 'target' => $employeesGroupId];
-
-        // ========== ШТАТНЫЕ ДОЛЖНОСТИ КОМИССАРИАТА (прямые, без отдела/отделения) ==========
+        // ========== ПРЯМЫЕ ШТАТНЫЕ ДОЛЖНОСТИ КОМИССАРИАТА (department_id = null, division_id = null) ==========
         $commissariatPositions = $commissariat->commissariatPositions()
             ->whereNull('department_id')
             ->whereNull('division_id')
@@ -59,58 +49,18 @@ class StructureController extends Controller
             }])
             ->get();
 
-        foreach ($commissariatPositions as $position) {
-            $activeAssignments = $position->employeePositions;
-            $occupiedRate = $activeAssignments->sum('rate');
-            $availableRate = $position->rate_total - $occupiedRate;
-            $isFullyOccupied = $availableRate <= 0;
-
-            $positionId = 'position_'.$position->id;
+        // Если есть прямые должности, создаем узел "Штатные должности"
+        if ($commissariatPositions->count() > 0) {
+            $positionsGroupId = 'group_positions_'.$commissariat->id;
             $nodes[] = [
-                'id' => $positionId,
-                'name' => $position->position->name,
-                'type' => 'position',
-                'isFullyOccupied' => $isFullyOccupied,
-                'availableRate' => $availableRate,
-                'totalRate' => $position->rate_total,
-                'occupiedRate' => $occupiedRate,
-                'color' => $isFullyOccupied ? '#4CAF50' : '#F44336',
-                'url' => route('commissariat-positions.show', $position->id),
-                'commissariatId' => $commissariat->id,
-            ];
-            $links[] = ['source' => $employeesGroupId, 'target' => $positionId];
-        }
-
-        // ========== ОТДЕЛЫ ==========
-        foreach ($commissariat->departments as $department) {
-            $deptId = 'department_'.$department->id;
-            $nodes[] = [
-                'id' => $deptId,
-                'name' => $department->name,
-                'type' => 'department',
-                'url' => route('departments.show', $department->id),
-            ];
-            $links[] = ['source' => $commissariatId, 'target' => $deptId];
-
-            // Узел сотрудников отдела
-            $deptEmployeesGroupId = 'group_dept_employees_'.$department->id;
-            $nodes[] = [
-                'id' => $deptEmployeesGroupId,
-                'name' => 'Сотрудники',
+                'id' => $positionsGroupId,
+                'name' => 'Штатные должности',
                 'type' => 'group',
                 'isGroup' => true,
             ];
-            $links[] = ['source' => $deptId, 'target' => $deptEmployeesGroupId];
+            $links[] = ['source' => $commissariatId, 'target' => $positionsGroupId];
 
-            // Штатные должности отдела (без отделения)
-            $departmentPositions = $department->commissariatPositions()
-                ->whereNull('division_id')
-                ->with(['position', 'employeePositions' => function ($q) {
-                    $q->whereIn('employee_position_status_id', [1, 2, 3]);
-                }])
-                ->get();
-
-            foreach ($departmentPositions as $position) {
+            foreach ($commissariatPositions as $position) {
                 $activeAssignments = $position->employeePositions;
                 $occupiedRate = $activeAssignments->sum('rate');
                 $availableRate = $position->rate_total - $occupiedRate;
@@ -129,11 +79,70 @@ class StructureController extends Controller
                     'url' => route('commissariat-positions.show', $position->id),
                     'commissariatId' => $commissariat->id,
                 ];
-                $links[] = ['source' => $deptEmployeesGroupId, 'target' => $positionId];
+                $links[] = ['source' => $positionsGroupId, 'target' => $positionId];
+            }
+        }
+
+        // ========== ОТДЕЛЫ ==========
+        $departments = $commissariat->departments;
+        $deptCount = $departments->count();
+
+        foreach ($departments as $index => $department) {
+            $deptId = 'department_'.$department->id;
+            $nodes[] = [
+                'id' => $deptId,
+                'name' => $department->name,
+                'type' => 'department',
+                'url' => route('departments.show', $department->id),
+            ];
+            $links[] = ['source' => $commissariatId, 'target' => $deptId];
+
+            // Штатные должности отдела (department_id = id отдела, division_id = null)
+            $departmentPositions = $department->commissariatPositions()
+                ->whereNull('division_id')
+                ->with(['position', 'employeePositions' => function ($q) {
+                    $q->whereIn('employee_position_status_id', [1, 2, 3]);
+                }])
+                ->get();
+
+            if ($departmentPositions->count() > 0) {
+                $deptPositionsGroupId = 'group_dept_positions_'.$department->id;
+                $nodes[] = [
+                    'id' => $deptPositionsGroupId,
+                    'name' => 'Штатные должности',
+                    'type' => 'group',
+                    'isGroup' => true,
+                ];
+                $links[] = ['source' => $deptId, 'target' => $deptPositionsGroupId];
+
+                foreach ($departmentPositions as $position) {
+                    $activeAssignments = $position->employeePositions;
+                    $occupiedRate = $activeAssignments->sum('rate');
+                    $availableRate = $position->rate_total - $occupiedRate;
+                    $isFullyOccupied = $availableRate <= 0;
+
+                    $positionId = 'position_'.$position->id;
+                    $nodes[] = [
+                        'id' => $positionId,
+                        'name' => $position->position->name,
+                        'type' => 'position',
+                        'isFullyOccupied' => $isFullyOccupied,
+                        'availableRate' => $availableRate,
+                        'totalRate' => $position->rate_total,
+                        'occupiedRate' => $occupiedRate,
+                        'color' => $isFullyOccupied ? '#4CAF50' : '#F44336',
+                        'url' => route('commissariat-positions.show', $position->id),
+                        'commissariatId' => $commissariat->id,
+                    ];
+                    $links[] = ['source' => $deptPositionsGroupId, 'target' => $positionId];
+                }
             }
 
             // ========== ОТДЕЛЕНИЯ ОТДЕЛА ==========
-            foreach ($department->divisions as $division) {
+            $divisions = $department->divisions;
+            $divCount = $divisions->count();
+
+            foreach ($divisions as $divIndex => $division) {
                 $divId = 'division_'.$division->id;
                 $nodes[] = [
                     'id' => $divId,
@@ -143,22 +152,78 @@ class StructureController extends Controller
                 ];
                 $links[] = ['source' => $deptId, 'target' => $divId];
 
-                // Узел сотрудников отделения
-                $divEmployeesGroupId = 'group_div_employees_'.$division->id;
-                $nodes[] = [
-                    'id' => $divEmployeesGroupId,
-                    'name' => 'Сотрудники',
-                    'type' => 'group',
-                    'isGroup' => true,
-                ];
-                $links[] = ['source' => $divId, 'target' => $divEmployeesGroupId];
-
-                // Штатные должности отделения
+                // Штатные должности отделения (division_id = id отделения)
                 $divisionPositions = $division->commissariatPositions()
                     ->with(['position', 'employeePositions' => function ($q) {
                         $q->whereIn('employee_position_status_id', [1, 2, 3]);
                     }])
                     ->get();
+
+                if ($divisionPositions->count() > 0) {
+                    $divPositionsGroupId = 'group_div_positions_'.$division->id;
+                    $nodes[] = [
+                        'id' => $divPositionsGroupId,
+                        'name' => 'Штатные должности',
+                        'type' => 'group',
+                        'isGroup' => true,
+                    ];
+                    $links[] = ['source' => $divId, 'target' => $divPositionsGroupId];
+
+                    foreach ($divisionPositions as $position) {
+                        $activeAssignments = $position->employeePositions;
+                        $occupiedRate = $activeAssignments->sum('rate');
+                        $availableRate = $position->rate_total - $occupiedRate;
+                        $isFullyOccupied = $availableRate <= 0;
+
+                        $positionId = 'position_'.$position->id;
+                        $nodes[] = [
+                            'id' => $positionId,
+                            'name' => $position->position->name,
+                            'type' => 'position',
+                            'isFullyOccupied' => $isFullyOccupied,
+                            'availableRate' => $availableRate,
+                            'totalRate' => $position->rate_total,
+                            'occupiedRate' => $occupiedRate,
+                            'color' => $isFullyOccupied ? '#4CAF50' : '#F44336',
+                            'url' => route('commissariat-positions.show', $position->id),
+                            'commissariatId' => $commissariat->id,
+                        ];
+                        $links[] = ['source' => $divPositionsGroupId, 'target' => $positionId];
+                    }
+                }
+            }
+        }
+
+        // ========== САМОСТОЯТЕЛЬНЫЕ ОТДЕЛЕНИЯ (вне отделов, department_id = null) ==========
+        $divisionsIndependent = $commissariat->divisions()->whereNull('department_id')->get();
+
+        foreach ($divisionsIndependent as $division) {
+            $divId = 'division_independent_'.$division->id;
+            $nodes[] = [
+                'id' => $divId,
+                'name' => $division->name,
+                'type' => 'division',
+                'isIndependent' => true,
+                'url' => route('divisions.show', $division->id),
+            ];
+            $links[] = ['source' => $commissariatId, 'target' => $divId];
+
+            // Штатные должности самостоятельного отделения
+            $divisionPositions = $division->commissariatPositions()
+                ->with(['position', 'employeePositions' => function ($q) {
+                    $q->whereIn('employee_position_status_id', [1, 2, 3]);
+                }])
+                ->get();
+
+            if ($divisionPositions->count() > 0) {
+                $divPositionsGroupId = 'group_div_positions_'.$division->id;
+                $nodes[] = [
+                    'id' => $divPositionsGroupId,
+                    'name' => 'Штатные должности',
+                    'type' => 'group',
+                    'isGroup' => true,
+                ];
+                $links[] = ['source' => $divId, 'target' => $divPositionsGroupId];
 
                 foreach ($divisionPositions as $position) {
                     $activeAssignments = $position->employeePositions;
@@ -179,62 +244,8 @@ class StructureController extends Controller
                         'url' => route('commissariat-positions.show', $position->id),
                         'commissariatId' => $commissariat->id,
                     ];
-                    $links[] = ['source' => $divEmployeesGroupId, 'target' => $positionId];
+                    $links[] = ['source' => $divPositionsGroupId, 'target' => $positionId];
                 }
-            }
-        }
-
-        // ========== САМОСТОЯТЕЛЬНЫЕ ОТДЕЛЕНИЯ (вне отделов) ==========
-        $divisionsIndependent = $commissariat->divisions()->whereNull('department_id')->get();
-
-        foreach ($divisionsIndependent as $division) {
-            $divId = 'division_independent_'.$division->id;
-            $nodes[] = [
-                'id' => $divId,
-                'name' => $division->name,
-                'type' => 'division',
-                'isIndependent' => true,
-                'url' => route('divisions.show', $division->id),
-            ];
-            $links[] = ['source' => $commissariatId, 'target' => $divId];
-
-            // Узел сотрудников самостоятельного отделения
-            $divEmployeesGroupId = 'group_div_employees_'.$division->id;
-            $nodes[] = [
-                'id' => $divEmployeesGroupId,
-                'name' => 'Сотрудники',
-                'type' => 'group',
-                'isGroup' => true,
-            ];
-            $links[] = ['source' => $divId, 'target' => $divEmployeesGroupId];
-
-            // Штатные должности самостоятельного отделения
-            $divisionPositions = $division->commissariatPositions()
-                ->with(['position', 'employeePositions' => function ($q) {
-                    $q->whereIn('employee_position_status_id', [1, 2, 3]);
-                }])
-                ->get();
-
-            foreach ($divisionPositions as $position) {
-                $activeAssignments = $position->employeePositions;
-                $occupiedRate = $activeAssignments->sum('rate');
-                $availableRate = $position->rate_total - $occupiedRate;
-                $isFullyOccupied = $availableRate <= 0;
-
-                $positionId = 'position_'.$position->id;
-                $nodes[] = [
-                    'id' => $positionId,
-                    'name' => $position->position->name,
-                    'type' => 'position',
-                    'isFullyOccupied' => $isFullyOccupied,
-                    'availableRate' => $availableRate,
-                    'totalRate' => $position->rate_total,
-                    'occupiedRate' => $occupiedRate,
-                    'color' => $isFullyOccupied ? '#4CAF50' : '#F44336',
-                    'url' => route('commissariat-positions.show', $position->id),
-                    'commissariatId' => $commissariat->id,
-                ];
-                $links[] = ['source' => $divEmployeesGroupId, 'target' => $positionId];
             }
         }
 
