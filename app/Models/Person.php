@@ -191,4 +191,20 @@ class Person extends Model
 
         return $item;
     }
+
+
+       /**
+     * Аксессор для получения полного ФИО
+     */
+    public function getFullNameAttribute(): string
+    {
+        $parts = array_filter([
+            $this->фамилия ?? '',
+            $this->имя ?? '',
+            $this->отчество ?? ''
+        ]);
+        
+        return !empty($parts) ? implode(' ', $parts) : '-';
+    }
+    
 }
