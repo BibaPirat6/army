@@ -13,7 +13,7 @@ class EmployeePositionsController extends Controller
         $employee = Employee::findOrFail($id);
         $commissariats = Commissariat::all();
 
-        $backUrl = $request->get('backUrl');
+        $backUrl = $request->get('back_url');
 
         // Передаем все переменные явно, а не через compact
         return view('admin.org.employee-positions.create', [

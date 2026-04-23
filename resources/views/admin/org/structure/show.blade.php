@@ -95,23 +95,17 @@
                         <div class="line horizontal"></div>
                     </div>
 
-                    {{-- ОТДЕЛЫ И ОСТАЛЬНЫЕ КАРТОЧКИ В ОДНУ ЛИНИЮ --}}
+                    {{-- ОТДЕЛЫ И ШТАТНЫЕ ДОЛЖНОСТИ --}}
                     <div class="departments-container">
 
                         {{-- Карточки отделов --}}
                         @foreach ($commissariat->departments as $department)
                             @php
-                                // Получаем ВСЕ штатные должности отдела (без отделений)
+                                // Получаем штатные должности отдела (без отделений)
                                 $departmentPositions = $department->commissariatPositions()
                                     ->whereNull('division_id')
-                                    ->with(['position', 'employeePositions' => function($q) {
-                                        $q->with(['employee.person', 'employeePositionStatus']);
-                                    }])
+                                    ->with(['position'])
                                     ->get();
-                                
-                                // Получаем начальника отдела
-                                $departmentChief = $department->getChiefAttribute();
-                                $departmentChiefId = optional($departmentChief)->id;
                             @endphp
 
                             <div
@@ -128,12 +122,12 @@
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
                                             <div class="text-xs text-[#565A5B] uppercase tracking-wider">Начальник отдела</div>
-                                            @if($departmentChief)
+                                            @php
+                                                $deptChief = $department->getChiefAttribute();
+                                            @endphp
+                                            @if($deptChief)
                                                 <div class="text-[#060606] font-semibold">
-                                                    {{ $departmentChief->getFullNameAttribute() ?? "" }}
-                                                </div>
-                                                <div class="text-xs text-gray-400 mt-0.5">
-                                                    {{-- {{ $departmentChief->getCurrentPositionName() ?? '' }} --}}
+                                                    {{ $deptChief->getFullNameAttribute() ?? "" }}
                                                 </div>
                                             @else
                                                 <div class="text-[#565A5B] italic text-sm">Не назначен</div>
@@ -157,62 +151,24 @@
                                     
                                     @forelse($departmentPositions as $position)
                                         @php
-                                            // Считаем ТОЛЬКО активные назначения (которые занимают ставку)
                                             $activeAssignments = $position->employeePositions->filter(function($ep) {
                                                 return $ep->employeePositionStatus && $ep->employeePositionStatus->occupies_rate;
                                             });
-                                            
                                             $occupiedRate = $activeAssignments->sum('rate');
                                             $availableRate = $position->rate_total - $occupiedRate;
                                             $hasVacancy = $availableRate > 0;
                                         @endphp
 
-                                        <div class="bg-[#f5f5f5] rounded-xl p-3 border {{ $hasVacancy ? 'border-green-400 bg-green-50' : 'border-[#BFBFBF]/20' }} transition-all duration-200">
-                                            <div class="flex items-start justify-between mb-2">
-                                                <div class="flex-1">
-                                                    <div class="font-bold text-[#060606] text-sm">
-                                                        {{ $position->position->name }}
-                                                    </div>
-                                                    <div class="flex items-center gap-2 mt-1">
-                                                        <span class="text-xs text-gray-500">
-                                                            ставок: {{ number_format($position->rate_total, 2) }}
-                                                        </span>
-                                                        <span class="text-xs {{ $hasVacancy ? 'text-green-600' : 'text-orange-600' }}">
-                                                            (занято: {{ number_format($occupiedRate, 2) }} | свободно: {{ number_format($availableRate, 2) }})
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                @if($hasVacancy)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                        </svg>
-                                                        Вакансия
-                                                    </span>
-                                                @endif
+                                        <a href="{{ route('commissariat-positions.show', array_filter([
+                                            'id' => $position->id,
+                                            'back_url' => url()->full(),
+                                            'commissariat_id' => $commissariat->id
+                                        ])) }}"
+                                            class="block rounded-xl p-3 transition-all duration-200 cursor-pointer hover:shadow-md {{ $hasVacancy ? 'bg-red-50 border border-red-400 hover:bg-red-100' : 'bg-green-50 border border-green-400 hover:bg-green-100' }}">
+                                            <div class="font-bold text-[#060606] text-sm">
+                                                {{ $position->position->name }}
                                             </div>
-
-                                            {{-- Назначения на эту должность --}}
-                                            @if($activeAssignments->count() > 0)
-                                                <div class="mt-2 space-y-1.5">
-                                                    @foreach($activeAssignments as $assignment)
-                                                        <a href="{{ route('employees.show', ['id' => $assignment->employee->id, 'back_url' => url()->full()]) }}"
-                                                            class="group flex items-center justify-between w-full bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 transition-all duration-200 cursor-pointer">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="text-sm text-[#060606] font-medium truncate">
-                                                                    {{ $assignment->employee->getFullNameAttribute() ?? 'Нет данных' }}
-                                                                </div>
-                                                            </div>
-                                                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium ml-2 flex-shrink-0">
-                                                                ставка: {{ number_format($assignment->rate, 2) }}
-                                                            </span>
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <div class="text-center text-[#565A5B] py-2 text-xs italic mt-2">Нет назначений</div>
-                                            @endif
-                                        </div>
+                                        </a>
                                     @empty
                                         <div class="text-center text-[#565A5B] py-4 italic">Нет штатных должностей</div>
                                     @endforelse
@@ -222,13 +178,9 @@
                                         @foreach ($department->divisions as $division)
                                             @php
                                                 $divisionPositions = $division->commissariatPositions()
-                                                    ->with(['position', 'employeePositions' => function($q) {
-                                                        $q->with(['employee.person', 'employeePositionStatus']);
-                                                    }])
+                                                    ->with(['position'])
                                                     ->get();
-                                                
                                                 $divisionChief = $division->getChiefAttribute();
-                                                $divisionChiefId = optional($divisionChief)->id;
                                             @endphp
 
                                             <div class="bg-[#f5f5f5] rounded-xl p-3 border border-[#BFBFBF]/20 hover:border-[#A60644]/30 transition-all duration-200">
@@ -253,9 +205,6 @@
                                                         <div class="text-[#060606] font-medium text-sm">
                                                             {{ $divisionChief->getFullNameAttribute() ?? "" }}
                                                         </div>
-                                                        <div class="text-xs text-gray-400">
-                                                            {{-- {{ $divisionChief->getCurrentPositionName() ?? '' }} --}}
-                                                        </div>
                                                     @else
                                                         <div class="text-[#565A5B] italic text-xs">Не назначен</div>
                                                     @endif
@@ -267,50 +216,21 @@
                                                         $activeAssignments = $position->employeePositions->filter(function($ep) {
                                                             return $ep->employeePositionStatus && $ep->employeePositionStatus->occupies_rate;
                                                         });
-                                                        
                                                         $occupiedRate = $activeAssignments->sum('rate');
                                                         $availableRate = $position->rate_total - $occupiedRate;
                                                         $hasVacancy = $availableRate > 0;
                                                     @endphp
 
-                                                    <div class="mt-3 bg-white rounded-lg p-2 border {{ $hasVacancy ? 'border-green-400 bg-green-50' : 'border-[#BFBFBF]/20' }}">
-                                                        <div class="flex items-start justify-between">
-                                                            <div class="flex-1">
-                                                                <div class="font-medium text-[#060606] text-xs">
-                                                                    {{ $position->position->name }}
-                                                                </div>
-                                                                <div class="flex items-center gap-2 mt-0.5">
-                                                                    <span class="text-xs text-gray-500">
-                                                                        {{ number_format($position->rate_total, 2) }} став.
-                                                                    </span>
-                                                                    @if($hasVacancy)
-                                                                        <span class="text-xs text-green-600">свободно {{ number_format($availableRate, 2) }}</span>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                            @if($hasVacancy)
-                                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                    Вакант
-                                                                </span>
-                                                            @endif
+                                                    <a href="{{ route('commissariat-positions.show', array_filter([
+                                                        'id' => $position->id,
+                                                        'back_url' => url()->full(),
+                                                        'commissariat_id' => $commissariat->id
+                                                    ])) }}"
+                                                        class="block mt-2 rounded-lg p-2 transition-all duration-200 cursor-pointer hover:shadow-md {{ $hasVacancy ? 'bg-red-50 border border-red-400 hover:bg-red-100' : 'bg-green-50 border border-green-400 hover:bg-green-100' }}">
+                                                        <div class="font-medium text-[#060606] text-xs">
+                                                            {{ $position->position->name }}
                                                         </div>
-
-                                                        @if($activeAssignments->count() > 0)
-                                                            <div class="mt-2 space-y-1">
-                                                                @foreach($activeAssignments as $assignment)
-                                                                    <a href="{{ route('employees.show', ['id' => $assignment->employee->id, 'back_url' => url()->full()]) }}"
-                                                                        class="group flex items-center justify-between w-full bg-white rounded p-1.5 hover:bg-[#A60644]/5 transition-all duration-200 cursor-pointer">
-                                                                        <span class="text-xs text-[#060606] truncate">
-                                                                            {{ $assignment->employee->getFullNameAttribute() ?? 'Нет данных' }}
-                                                                        </span>
-                                                                        <span class="text-xs text-gray-500">
-                                                                            ставка: {{ number_format($assignment->rate, 2) }}
-                                                                        </span>
-                                                                    </a>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                                    </a>
                                                 @empty
                                                     <div class="text-center text-[#565A5B] py-2 text-xs italic">Нет штатных должностей</div>
                                                 @endforelse
@@ -323,158 +243,41 @@
 
                         {{-- КАРТОЧКА ШТАТНЫХ ДОЛЖНОСТЕЙ КОМИССАРИАТА --}}
                         @php
-                            // Получаем ВСЕ штатные должности комиссариата (без отдела и отделения)
                             $commissariatPositions = $commissariat->commissariatPositions()
                                 ->whereNull('department_id')
                                 ->whereNull('division_id')
-                                ->where('is_independent', false)
-                                ->with(['position', 'employeePositions' => function($q) {
-                                    $q->with(['employee.person', 'employeePositionStatus']);
-                                }])
+                                ->with(['position'])
                                 ->get();
-                            
-                            // Получаем самостоятельные должности
-                            $independentPositions = $commissariat->commissariatPositions()
-                                ->where('is_independent', true)
-                                ->with(['position', 'employeePositions' => function($q) {
-                                    $q->with(['employee.person', 'employeePositionStatus']);
-                                }])
-                                ->get();
-                            
-                            $hasAnyPositions = $commissariatPositions->count() > 0 || $independentPositions->count() > 0;
                         @endphp
 
-                        @if($hasAnyPositions)
+                        @if($commissariatPositions->count() > 0)
                             <div class="department-card w-[340px] bg-white rounded-2xl shadow-xl border border-[#BFBFBF]/30 overflow-hidden card-hover">
                                 <div class="bg-gradient-to-r from-[#060606] to-[#1a1a1a] px-5 py-3">
                                     <h3 class="text-white font-bold text-lg">Штатные должности</h3>
                                     <p class="text-white/60 text-xs mt-1">Комиссариат</p>
                                 </div>
                                 <div class="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-
-                                    {{-- Обычные должности --}}
                                     @foreach($commissariatPositions as $position)
                                         @php
                                             $activeAssignments = $position->employeePositions->filter(function($ep) {
                                                 return $ep->employeePositionStatus && $ep->employeePositionStatus->occupies_rate;
                                             });
-                                            
                                             $occupiedRate = $activeAssignments->sum('rate');
                                             $availableRate = $position->rate_total - $occupiedRate;
                                             $hasVacancy = $availableRate > 0;
                                         @endphp
 
-                                        <div class="bg-[#f5f5f5] rounded-xl p-3 border {{ $hasVacancy ? 'border-green-400 bg-green-50' : 'border-[#BFBFBF]/20' }} transition-all duration-200">
-                                            <div class="flex items-start justify-between mb-2">
-                                                <div class="flex-1">
-                                                    <div class="font-bold text-[#060606] text-sm">
-                                                        {{ $position->position->name }}
-                                                    </div>
-                                                    <div class="flex items-center gap-2 mt-1">
-                                                        <span class="text-xs text-gray-500">
-                                                            ставок: {{ number_format($position->rate_total, 2) }}
-                                                        </span>
-                                                        <span class="text-xs {{ $hasVacancy ? 'text-green-600' : 'text-orange-600' }}">
-                                                            (занято: {{ number_format($occupiedRate, 2) }} | свободно: {{ number_format($availableRate, 2) }})
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                @if($hasVacancy)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                        <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                        </svg>
-                                                        Вакансия
-                                                    </span>
-                                                @endif
+                                        <a href="{{ route('commissariat-positions.show', array_filter([
+                                            'id' => $position->id,
+                                            'back_url' => url()->full(),
+                                            'commissariat_id' => $commissariat->id
+                                        ])) }}"
+                                            class="block rounded-xl p-3 transition-all duration-200 cursor-pointer hover:shadow-md {{ $hasVacancy ? 'bg-red-50 border border-red-400 hover:bg-red-100' : 'bg-green-50 border border-green-400 hover:bg-green-100' }}">
+                                            <div class="font-bold text-[#060606] text-sm">
+                                                {{ $position->position->name }}
                                             </div>
-
-                                            @if($activeAssignments->count() > 0)
-                                                <div class="mt-2 space-y-1.5">
-                                                    @foreach($activeAssignments as $assignment)
-                                                        <a href="{{ route('employees.show', ['id' => $assignment->employee->id, 'back_url' => url()->full()]) }}"
-                                                            class="group flex items-center justify-between w-full bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 transition-all duration-200 cursor-pointer">
-                                                            <div class="flex-1 min-w-0">
-                                                                <div class="text-sm text-[#060606] font-medium truncate">
-                                                                    {{ $assignment->employee->getFullNameAttribute() ?? 'Нет данных' }}
-                                                                </div>
-                                                            </div>
-                                                            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium ml-2 flex-shrink-0">
-                                                                ставка: {{ number_format($assignment->rate, 2) }}
-                                                            </span>
-                                                        </a>
-                                                    @endforeach
-                                                </div>
-                                            @else
-                                                <div class="text-center text-[#565A5B] py-2 text-xs italic mt-2">Нет назначений</div>
-                                            @endif
-                                        </div>
+                                        </a>
                                     @endforeach
-
-                                    {{-- Самостоятельные должности --}}
-                                    @if($independentPositions->count() > 0)
-                                        <div class="mt-3 pt-2 border-t border-[#BFBFBF]/30">
-                                            <div class="text-xs font-semibold text-[#565A5B] uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                <div class="w-1 h-4 bg-[#A60644] rounded-full"></div>
-                                                Самостоятельные должности
-                                            </div>
-                                            
-                                            @foreach($independentPositions as $position)
-                                                @php
-                                                    $activeAssignments = $position->employeePositions->filter(function($ep) {
-                                                        return $ep->employeePositionStatus && $ep->employeePositionStatus->occupies_rate;
-                                                    });
-                                                    
-                                                    $occupiedRate = $activeAssignments->sum('rate');
-                                                    $availableRate = $position->rate_total - $occupiedRate;
-                                                    $hasVacancy = $availableRate > 0;
-                                                @endphp
-
-                                                <div class="bg-[#f5f5f5] rounded-xl p-3 border {{ $hasVacancy ? 'border-green-400 bg-green-50' : 'border-[#BFBFBF]/20' }} transition-all duration-200 mb-2">
-                                                    <div class="flex items-start justify-between mb-2">
-                                                        <div class="flex-1">
-                                                            <div class="font-bold text-[#060606] text-sm">
-                                                                {{ $position->position->name }}
-                                                            </div>
-                                                            <div class="flex items-center gap-2 mt-1">
-                                                                <span class="text-xs text-gray-500">
-                                                                    ставок: {{ number_format($position->rate_total, 2) }}
-                                                                </span>
-                                                                <span class="text-xs {{ $hasVacancy ? 'text-green-600' : 'text-orange-600' }}">
-                                                                    (занято: {{ number_format($occupiedRate, 2) }} | свободно: {{ number_format($availableRate, 2) }})
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        @if($hasVacancy)
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                Вакансия
-                                                            </span>
-                                                        @endif
-                                                    </div>
-
-                                                    @if($activeAssignments->count() > 0)
-                                                        <div class="mt-2 space-y-1.5">
-                                                            @foreach($activeAssignments as $assignment)
-                                                                <a href="{{ route('employees.show', ['id' => $assignment->employee->id, 'back_url' => url()->full()]) }}"
-                                                                    class="group flex items-center justify-between w-full bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 transition-all duration-200 cursor-pointer">
-                                                                    <div class="flex-1 min-w-0">
-                                                                        <div class="text-sm text-[#060606] font-medium truncate">
-                                                                            {{ $assignment->employee->getFullNameAttribute() ?? 'Нет данных' }}
-                                                                        </div>
-                                                                    </div>
-                                                                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium ml-2 flex-shrink-0">
-                                                                        ставка: {{ number_format($assignment->rate, 2) }}
-                                                                    </span>
-                                                                </a>
-                                                            @endforeach
-                                                        </div>
-                                                    @else
-                                                        <div class="text-center text-[#565A5B] py-2 text-xs italic mt-2">Нет назначений</div>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -488,11 +291,8 @@
                             @foreach ($divisionsIndependent as $division)
                                 @php
                                     $divisionPositions = $division->commissariatPositions()
-                                        ->with(['position', 'employeePositions' => function($q) {
-                                            $q->with(['employee.person', 'employeePositionStatus']);
-                                        }])
+                                        ->with(['position'])
                                         ->get();
-                                    
                                     $divisionChief = $division->getChiefAttribute();
                                 @endphp
 
@@ -510,9 +310,6 @@
                                                 @if($divisionChief)
                                                     <div class="text-[#060606] font-semibold">
                                                         {{ $divisionChief->getFullNameAttribute() ?? "" }}
-                                                    </div>
-                                                    <div class="text-xs text-gray-400">
-                                                        {{-- {{ $divisionChief->getCurrentPositionName() ?? '' }} --}}
                                                     </div>
                                                 @else
                                                     <div class="text-[#565A5B] italic text-sm">Не назначен</div>
@@ -539,54 +336,21 @@
                                                 $activeAssignments = $position->employeePositions->filter(function($ep) {
                                                     return $ep->employeePositionStatus && $ep->employeePositionStatus->occupies_rate;
                                                 });
-                                                
                                                 $occupiedRate = $activeAssignments->sum('rate');
                                                 $availableRate = $position->rate_total - $occupiedRate;
                                                 $hasVacancy = $availableRate > 0;
                                             @endphp
 
-                                            <div class="bg-[#f5f5f5] rounded-xl p-3 border {{ $hasVacancy ? 'border-green-400 bg-green-50' : 'border-[#BFBFBF]/20' }} transition-all duration-200">
-                                                <div class="flex items-start justify-between mb-2">
-                                                    <div class="flex-1">
-                                                        <div class="font-bold text-[#060606] text-sm">
-                                                            {{ $position->position->name }}
-                                                        </div>
-                                                        <div class="flex items-center gap-2 mt-1">
-                                                            <span class="text-xs text-gray-500">
-                                                                ставок: {{ number_format($position->rate_total, 2) }}
-                                                            </span>
-                                                            <span class="text-xs {{ $hasVacancy ? 'text-green-600' : 'text-orange-600' }}">
-                                                                (занято: {{ number_format($occupiedRate, 2) }} | свободно: {{ number_format($availableRate, 2) }})
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    @if($hasVacancy)
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                            Вакансия
-                                                        </span>
-                                                    @endif
+                                            <a href="{{ route('commissariat-positions.show', array_filter([
+                                                'id' => $position->id,
+                                                'back_url' => url()->full(),
+                                                'commissariat_id' => $commissariat->id
+                                            ])) }}"
+                                                class="block rounded-xl p-3 transition-all duration-200 cursor-pointer hover:shadow-md {{ $hasVacancy ? 'bg-red-50 border border-red-400 hover:bg-red-100' : 'bg-green-50 border border-green-400 hover:bg-green-100' }}">
+                                                <div class="font-bold text-[#060606] text-sm">
+                                                    {{ $position->position->name }}
                                                 </div>
-
-                                                @if($activeAssignments->count() > 0)
-                                                    <div class="mt-2 space-y-1.5">
-                                                        @foreach($activeAssignments as $assignment)
-                                                            <a href="{{ route('employees.show', ['id' => $assignment->employee->id, 'back_url' => url()->full()]) }}"
-                                                                class="group flex items-center justify-between w-full bg-white rounded-lg p-2 border border-[#BFBFBF]/20 hover:border-[#A60644]/50 hover:bg-[#A60644]/5 transition-all duration-200 cursor-pointer">
-                                                                <div class="flex-1 min-w-0">
-                                                                    <div class="text-sm text-[#060606] font-medium truncate">
-                                                                        {{ $assignment->employee->getFullNameAttribute() ?? 'Нет данных' }}
-                                                                    </div>
-                                                                </div>
-                                                                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium ml-2 flex-shrink-0">
-                                                                    ставка: {{ number_format($assignment->rate, 2) }}
-                                                                </span>
-                                                            </a>
-                                                        @endforeach
-                                                    </div>
-                                                @else
-                                                    <div class="text-center text-[#565A5B] py-2 text-xs italic mt-2">Нет назначений</div>
-                                                @endif
-                                            </div>
+                                            </a>
                                         @empty
                                             <div class="text-center text-[#565A5B] py-4 italic">Нет штатных должностей</div>
                                         @endforelse
