@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Services\JsonColumnService;
 use Hash;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 // сервисы
 
@@ -101,7 +100,6 @@ class EmployeesController extends Controller
         ]);
 
         $columns = Person::getAllColumns();
-
         $personData = [];
 
         foreach ($columns as $column) {
@@ -109,20 +107,20 @@ class EmployeesController extends Controller
             $type = $column['type'];
             $value = $request->input($name);
             $comment = $column['comment'] ?? null;
+            $nullable = $column['nullable'];
+            $default = $column['default'];
 
             // исключаем системные поля
-            if (in_array($name, ['id', 'created_at', 'updated_at'])) {
+            if (in_array($name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
                 continue;
             }
 
+            // ========== 1. ФАЙЛЫ ==========
             if (str_contains($type, 'longtext') && in_array($comment, ['file', 'multiple', 'single'])) {
-                // Используем сервис для обработки файлов
                 $uploadedFiles = $this->jsonService->handleFiles(
                     $request->file($name),
                     $name
                 );
-
-                // Сохраняем как JSON массив
                 $personData[$name] = $uploadedFiles !== null
                     ? json_encode($uploadedFiles, JSON_UNESCAPED_SLASHES)
                     : null;
@@ -130,55 +128,92 @@ class EmployeesController extends Controller
                 continue;
             }
 
-            // 👇 Обработка JSON списка (по комментарию 'json')
+            // ========== 2. JSON СПИСКИ ==========
             if (str_contains($type, 'longtext') && $comment === 'json') {
-                if ($value === null || trim((string) $value) === '') {
+                if ($value === null || trim((string) $value) === '' || trim((string) $value) === '[]') {
                     $personData[$name] = null;
                 } else {
-                    $personData[$name] = json_encode(
-                        $this->jsonService->parseLines($value),
-                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                    );
+                    // Если пришла JSON строка, декодируем
+                    if (is_string($value) && str_starts_with($value, '[')) {
+                        $decoded = json_decode($value, true);
+                        if (is_array($decoded)) {
+                            $value = implode("\n", $decoded);
+                        }
+                    }
+                    // Разбиваем строку по переносам строк
+                    $lines = explode("\n", $value);
+                    $lines = array_filter(array_map('trim', $lines), fn ($line) => $line !== '');
+                    $personData[$name] = json_encode(array_values($lines), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 }
 
                 continue;
             }
 
-            $nullable = $column['nullable'];
-            $default = $column['default'];
+            // ========== 3. BOOLEAN ПОЛЯ ==========
+            if (str_contains($type, 'tinyint(1)') || $type === 'boolean') {
+                $personData[$name] = ($value === '1' || $value === 1 || $value === true) ? 1 : 0;
 
-            if ($value === null || $value === '') {
+                continue;
+            }
 
-                // если можно NULL → ставим NULL
-                if ($nullable) {
-                    $personData[$name] = null;
-                }
-
-                // если есть DEFAULT → не передаём поле вообще (MySQL сам подставит)
-                elseif ($default !== null) {
-                    continue;
-                }
-
-                // если NOT NULL и нет DEFAULT → ставим безопасное значение
-                else {
-                    if (str_contains($type, 'int')) {
-                        $personData[$name] = 0;
-                    } elseif (str_contains($type, 'decimal')) {
-                        $personData[$name] = 0;
-                    } elseif (str_contains($type, 'date')) {
-                        $personData[$name] = now();
-                    } else {
-                        $personData[$name] = '';
+            // ========== 4. DATE ПОЛЯ ==========
+            if (str_contains($type, 'date')) {
+                if (empty($value)) {
+                    $personData[$name] = $nullable ? null : ($default ?? null);
+                } else {
+                    try {
+                        $date = \Carbon\Carbon::parse($value);
+                        $personData[$name] = $date->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $personData[$name] = $nullable ? null : ($default ?? null);
                     }
                 }
 
                 continue;
-            } elseif (str_contains($type, 'int')) {
-                $personData[$name] = (int) $value;
-            } elseif (str_contains($type, 'decimal')) {
-                $personData[$name] = (float) $value;
-            } elseif (str_contains($type, 'date')) {
-                $personData[$name] = $value;
+            }
+
+            // ========== 5. DECIMAL (числа с плавающей точкой) ==========
+            if (str_contains($type, 'decimal') || str_contains($type, 'float') || str_contains($type, 'double')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : 0;
+                } else {
+                    $personData[$name] = (float) str_replace(',', '.', $value);
+                }
+
+                continue;
+            }
+
+            // ========== 6. INTEGER (целые числа, кроме tinyint(1)) ==========
+            if (str_contains($type, 'int') && ! str_contains($type, 'tinyint(1)')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : 0;
+                } else {
+                    $personData[$name] = (int) $value;
+                }
+
+                continue;
+            }
+
+            // ========== 7. TEXTAREA / TEXT / LONGTEXT ==========
+            if (str_contains($type, 'text') || str_contains($type, 'longtext') || str_contains($type, 'mediumtext')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : '';
+                } else {
+                    $personData[$name] = $value;
+                }
+
+                continue;
+            }
+
+            // ========== 8. ОБЫЧНЫЕ ПОЛЯ (varchar, char и т.д.) ==========
+            if ($value === null || $value === '') {
+                if ($nullable) {
+                    $personData[$name] = null;
+                } elseif ($default !== null) {
+                    continue;
+                } else {
+                    $personData[$name] = '';
+                }
             } else {
                 $personData[$name] = $value;
             }
@@ -288,9 +323,7 @@ class EmployeesController extends Controller
 
         // person
         $person = $employee->person;
-
         $columns = Person::getAllColumns();
-
         $personData = [];
 
         foreach ($columns as $column) {
@@ -298,16 +331,17 @@ class EmployeesController extends Controller
             $type = $column['type'];
             $value = $request->input($name);
             $comment = $column['comment'] ?? null;
+            $nullable = $column['nullable'];
+            $default = $column['default'];
 
             // исключаем системные поля
-            if (in_array($name, ['id', 'created_at', 'updated_at'])) {
+            if (in_array($name, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
                 continue;
             }
 
-            // ========== файлы (редактирование) ==========
+            // ========== 1. ФАЙЛЫ (редактирование) ==========
             if (str_contains($type, 'longtext') && in_array($comment, ['file', 'multiple', 'single'])) {
-
-                // индексы/пути отмеченных для удаления (формат из шаблона)
+                // индексы/пути отмеченных для удаления
                 $removedIndexes = (array) $request->input("removed_{$name}_indexes", []);
                 $removedPaths = (array) $request->input("removed_{$name}_existing_paths", []);
 
@@ -317,23 +351,20 @@ class EmployeesController extends Controller
                     $existingFiles = json_decode($person->$name, true) ?? [];
                 }
 
-                // сначала обрабатываем удаление отмеченных существующих файлов
+                // обрабатываем удаление отмеченных существующих файлов
                 if (! empty($removedIndexes)) {
-                    // удаляем по индексам (если индекс существует) и по пути (если передан)
                     foreach ($removedIndexes as $idx) {
                         if (isset($existingFiles[$idx])) {
-                            // попытка удалить физически (без фатальной ошибки)
                             try {
                                 if (! empty($existingFiles[$idx])) {
                                     Storage::disk('public')->delete($existingFiles[$idx]);
                                 }
                             } catch (\Throwable $e) {
-                                // silent — не ломаем обновление из-за удаления файла
+                                // silent
                             }
                             unset($existingFiles[$idx]);
                         }
                     }
-                    // если также передали пути — пробуем удалить их (дополнительно)
                     foreach ($removedPaths as $p) {
                         try {
                             if (! empty($p)) {
@@ -342,45 +373,44 @@ class EmployeesController extends Controller
                         } catch (\Throwable $e) {
                         }
                     }
-
-                    // переиндексируем массив существующих файлов
                     $existingFiles = array_values($existingFiles);
                 }
 
-                // обработка новых загруженных файлов (если есть поле в запросе)
+                // обработка новых загруженных файлов
                 $newFiles = $this->jsonService->handleFiles(
                     $request->file($name),
                     $name
                 );
 
-                // Если поле с файлами вообще отсутствует в запросе -> newFiles === null (ничего менять)
-                // Если newFiles === null и не было removals → ничего не меняем (оставляем старое значение)
                 if ($newFiles === null && empty($removedIndexes)) {
                     continue;
                 }
 
-                // Нормализуем newFiles к массиву (если null -> пустой массив)
                 $newFiles = $newFiles === null ? [] : (is_array($newFiles) ? $newFiles : []);
-
-                // объединяем оставшиеся существующие и новые
                 $finalFiles = array_merge($existingFiles, $newFiles);
 
                 if (! empty($finalFiles)) {
                     $personData[$name] = json_encode($finalFiles, JSON_UNESCAPED_SLASHES);
                 } else {
-                    // если итог пустой — смотрим nullable колонки
-                    $personData[$name] = $column['nullable'] ? null : json_encode([], JSON_UNESCAPED_SLASHES);
+                    $personData[$name] = $nullable ? null : json_encode([], JSON_UNESCAPED_SLASHES);
                 }
 
                 continue;
             }
 
-            // ========== json-списки ==========
+            // ========== 2. JSON СПИСКИ ==========
             if (str_contains($type, 'longtext') && $comment === 'json') {
-                if ($value === null || trim((string) $value) === '') {
-                    $personData[$name] = $column['nullable'] ? null : json_encode([], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                if ($value === null || trim((string) $value) === '' || trim((string) $value) === '[]') {
+                    $personData[$name] = $nullable ? null : json_encode([], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 } else {
-                    // Разбиваем строку по переносам строк и удаляем пустые значения
+                    // Если пришла JSON строка, декодируем
+                    if (is_string($value) && str_starts_with($value, '[')) {
+                        $decoded = json_decode($value, true);
+                        if (is_array($decoded)) {
+                            $value = implode("\n", $decoded);
+                        }
+                    }
+                    // Разбиваем строку по переносам строк
                     $lines = explode("\n", $value);
                     $lines = array_filter(array_map('trim', $lines), fn ($line) => $line !== '');
                     $personData[$name] = json_encode(array_values($lines), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -389,38 +419,71 @@ class EmployeesController extends Controller
                 continue;
             }
 
-            // обычные поля — стандартная логика
-            $nullable = $column['nullable'];
-            $default = $column['default'];
+            // ========== 3. BOOLEAN ПОЛЯ ==========
+            if (str_contains($type, 'tinyint(1)') || $type === 'boolean') {
+                $personData[$name] = ($value === '1' || $value === 1 || $value === true) ? 1 : 0;
 
-            if ($value === null || $value === '') {
+                continue;
+            }
 
-                if ($nullable) {
-                    $personData[$name] = null;
-                } elseif ($default !== null) {
-                    continue;
+            // ========== 4. DATE ПОЛЯ ==========
+            if (str_contains($type, 'date')) {
+                if (empty($value)) {
+                    $personData[$name] = $nullable ? null : ($default ?? null);
                 } else {
-                    if (str_contains($type, 'int')) {
-                        $personData[$name] = 0;
-                    } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
-                        $personData[$name] = 0;
-                    } elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
-                        $personData[$name] = now();
-                    } else {
-                        $personData[$name] = '';
+                    try {
+                        $date = \Carbon\Carbon::parse($value);
+                        $personData[$name] = $date->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $personData[$name] = $nullable ? null : ($default ?? null);
                     }
                 }
 
                 continue;
             }
 
-            // типизация
-            if (str_contains($type, 'int')) {
-                $personData[$name] = (int) $value;
-            } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
-                $personData[$name] = (float) $value;
-            } elseif (str_contains($type, 'date') || str_contains($type, 'time')) {
-                $personData[$name] = $value;
+            // ========== 5. DECIMAL (числа с плавающей точкой) ==========
+            if (str_contains($type, 'decimal') || str_contains($type, 'float') || str_contains($type, 'double')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : 0;
+                } else {
+                    $personData[$name] = (float) str_replace(',', '.', $value);
+                }
+
+                continue;
+            }
+
+            // ========== 6. INTEGER (целые числа, кроме tinyint(1)) ==========
+            if (str_contains($type, 'int') && ! str_contains($type, 'tinyint(1)')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : 0;
+                } else {
+                    $personData[$name] = (int) $value;
+                }
+
+                continue;
+            }
+
+            // ========== 7. TEXTAREA / TEXT / LONGTEXT ==========
+            if (str_contains($type, 'text') || str_contains($type, 'longtext') || str_contains($type, 'mediumtext')) {
+                if ($value === null || $value === '') {
+                    $personData[$name] = $nullable ? null : '';
+                } else {
+                    $personData[$name] = $value;
+                }
+
+                continue;
+            }
+
+            // ========== 8. ОБЫЧНЫЕ ПОЛЯ (varchar, char и т.д.) ==========
+            if ($value === null || $value === '') {
+                if ($nullable) {
+                    $personData[$name] = null;
+                } elseif ($default !== null) {
+                    continue;
+                } else {
+                    $personData[$name] = '';
+                }
             } else {
                 $personData[$name] = $value;
             }

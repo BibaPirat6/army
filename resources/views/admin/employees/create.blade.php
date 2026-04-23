@@ -46,6 +46,9 @@
                             $value = old($name) ?? ($column['default'] !== null ? $column['default'] : '');
                             $isNullable = $column["nullable"];
                             
+                            // Нормализуем тип для проверки (убираем скобки и содержимое)
+                            $normalizedType = preg_replace('/\(.*\)/', '', $type);
+                            
                             // ПОРЯДОК ПРОВЕРОК ВАЖЕН!
                             // 1. Сначала проверяем комментарий file (даже для longtext)
                             $isFile = $comment === 'file';
@@ -53,30 +56,57 @@
                             // 2. Затем проверяем json
                             $isJson = !$isFile && $comment === 'json';
                             
-                            // 3. Затем boolean
+                            // 3. Затем boolean (tinyint(1) или boolean)
                             $isBoolean = !$isFile && !$isJson && (str_contains($type, 'tinyint(1)') || $type === 'boolean');
                             
                             // 4. Затем date
-                            $isDate = !$isFile && !$isJson && str_contains($type, 'date');
+                            $isDate = !$isFile && !$isJson && !$isBoolean && str_contains($type, 'date');
                             
                             // 5. Затем textarea (для text, longtext и т.д., но не для file и json)
-                            $isTextarea = !$isFile && !$isJson && (str_contains($type, 'text'));
+                            $isTextarea = !$isFile && !$isJson && !$isBoolean && !$isDate && (
+                                str_contains($type, 'text') || 
+                                str_contains($type, 'longtext') || 
+                                str_contains($type, 'mediumtext')
+                            );
+                            
+                            // 6. Затем decimal (числа с плавающей точкой) - проверяем normalized type
+                            $isDecimal = !$isFile && !$isJson && !$isBoolean && !$isDate && !$isTextarea && (
+                                str_contains($normalizedType, 'decimal') || 
+                                str_contains($normalizedType, 'float') || 
+                                str_contains($normalizedType, 'double')
+                            );
+                            
+                            // 7. Затем integer (целые числа)
+                            $isInteger = !$isFile && !$isJson && !$isBoolean && !$isDate && !$isTextarea && !$isDecimal && 
+                                str_contains($normalizedType, 'int');
                             
                             // Определяем input type для обычных полей
                             $inputType = match (true) {
                                 $isDate => 'date',
-                                str_contains($type, 'int') && !$isBoolean => 'number',
-                                str_contains($type, 'decimal') => 'number',
+                                $isDecimal || $isInteger => 'number',
                                 default => 'text',
                             };
-                            
-                            $step = str_contains($type, 'decimal') ? 'step="0.01"' : '';
                             
                             // Для JSON полей декодируем значение
                             $jsonValue = [];
                             if ($isJson && $value) {
                                 $jsonValue = is_string($value) ? json_decode($value, true) : (array)$value;
                                 if (!is_array($jsonValue)) $jsonValue = [];
+                            }
+                            
+                            // Для date полей форматируем значение
+                            $dateValue = '';
+                            if ($isDate && !empty($value)) {
+                                try {
+                                    $dateValue = \Carbon\Carbon::parse($value)->format('Y-m-d');
+                                } catch (\Exception $e) {
+                                    $dateValue = $value;
+                                }
+                            }
+                            
+                            // Для decimal/float полей форматируем значение (точки вместо запятых)
+                            if ($isDecimal && !empty($value) && !is_numeric($value)) {
+                                $value = str_replace(',', '.', $value);
                             }
                         @endphp
 
@@ -126,12 +156,37 @@
                                     <option value="1" {{ old($name, $value) == '1' ? 'selected' : '' }}>Да</option>
                                     <option value="0" {{ old($name, $value) == '0' ? 'selected' : '' }}>Нет</option>
                                 </select>
+                            @elseif ($isDecimal)
+                                {{-- Decimal поле (числа с плавающей точкой) --}}
+                                <input id="{{ $name }}" name="{{ $name }}" type="number" 
+                                    value="{{ $value }}"
+                                    step="0.01"
+                                    min="0"
+                                    max="999999.99"
+                                    placeholder="Введите {{ $name }}" 
+                                    {{ $isNullable ? "" : "required" }}
+                                    class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">
+                            @elseif ($isInteger)
+                                {{-- Integer поле (целое число) --}}
+                                <input id="{{ $name }}" name="{{ $name }}" type="number" 
+                                    value="{{ $value }}"
+                                    step="1"
+                                    placeholder="Введите {{ $name }}" 
+                                    {{ $isNullable ? "" : "required" }}
+                                    class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">
                             @elseif ($isTextarea)
+                                {{-- Textarea поле --}}
                                 <textarea id="{{ $name }}" name="{{ $name }}" rows="3" placeholder="Введите {{ $name }}" {{ $isNullable ? "" : "required" }}
                                     class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">{{ $value }}</textarea>
+                            @elseif ($isDate)
+                                {{-- Date поле --}}
+                                <input id="{{ $name }}" name="{{ $name }}" type="date" value="{{ $dateValue }}"
+                                    placeholder="Введите {{ $name }}" {{ $isNullable ? "" : "required" }}
+                                    class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">
                             @else
+                                {{-- Обычное текстовое поле --}}
                                 <input id="{{ $name }}" name="{{ $name }}" type="{{ $inputType }}" value="{{ safe_value($value) }}"
-                                    placeholder="Введите {{ $name }}" {{ $step }} {{ $isNullable ? "" : "required" }}
+                                    placeholder="Введите {{ $name }}" {{ $isNullable ? "" : "required" }}
                                     class="px-3 py-2 bg-white border border-[#BFBFBF] rounded-lg text-sm focus:border-[#A60644] focus:ring-1 focus:ring-[#A60644]">
                             @endif
                         </div>
@@ -303,7 +358,6 @@
         const tagsContainer = container.querySelector('.json-tags-list');
         const hiddenInput = container.querySelector('.json-hidden');
         
-        // Получаем текущий массив
         let currentValue = [];
         try {
             currentValue = JSON.parse(hiddenInput.value || '[]');
@@ -311,12 +365,10 @@
             currentValue = [];
         }
         
-        // Добавляем новое значение если его нет
         if (!currentValue.includes(value)) {
             currentValue.push(value);
             hiddenInput.value = JSON.stringify(currentValue);
             
-            // Добавляем тег в UI
             const tag = document.createElement('span');
             tag.className = 'json-tag inline-flex items-center gap-1 px-2 py-1 bg-[#A60644]/10 text-[#A60644] rounded-lg text-sm';
             tag.innerHTML = `
@@ -339,7 +391,6 @@
         const value = tag.childNodes[0]?.nodeValue?.trim() || '';
         const hiddenInput = container.querySelector('.json-hidden');
         
-        // Получаем текущий массив
         let currentValue = [];
         try {
             currentValue = JSON.parse(hiddenInput.value || '[]');
@@ -347,14 +398,12 @@
             currentValue = [];
         }
         
-        // Удаляем значение
         const index = currentValue.indexOf(value);
         if (index !== -1) {
             currentValue.splice(index, 1);
             hiddenInput.value = JSON.stringify(currentValue);
         }
         
-        // Удаляем тег из UI
         tag.remove();
     }
 

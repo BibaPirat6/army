@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('отчество')->nullable();
             // новые
             $table->boolean('участие_в_боевых_действиях')->default(false);
-            $table->integer('дата_рождения')->nullable();
+            $table->date('дата_рождения')->nullable();
             $table->boolean('наличие_среднего_образования')->default(false);
             $table->boolean('наличие_высшего_образования')->default(false);
             $table->timestamps();
