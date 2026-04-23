@@ -1,34 +1,6 @@
 <template>
     <div class="graph-container">
         <div ref="svgContainer" class="svg-container"></div>
-
-        <!-- Управление -->
-        <div class="controls">
-            <button @click="zoomIn" class="control-btn" title="Приблизить">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-            </button>
-            <button @click="zoomOut" class="control-btn" title="Отдалить">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                </svg>
-            </button>
-            <button @click="resetView" class="control-btn" title="Сбросить вид">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                    </path>
-                </svg>
-            </button>
-            <button @click="fitToScreen" class="control-btn" title="Вписать в экран">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4">
-                    </path>
-                </svg>
-            </button>
-        </div>
     </div>
 </template>
 
@@ -320,44 +292,6 @@ export default {
             this.nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
         },
 
-        zoomIn() {
-            if (this.svg && this.zoomBehavior) {
-                this.svg.transition().duration(150).call(this.zoomBehavior.scaleBy, 1.2);
-            }
-        },
-
-        zoomOut() {
-            if (this.svg && this.zoomBehavior) {
-                this.svg.transition().duration(150).call(this.zoomBehavior.scaleBy, 0.8);
-            }
-        },
-
-        resetView() {
-            if (this.svg && this.zoomBehavior) {
-                this.svg.transition().duration(500).call(this.zoomBehavior.transform, d3.zoomIdentity);
-            }
-        },
-
-        fitToScreen() {
-            if (!this.nodeElements) return;
-            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-            this.nodeElements.each(function(d) {
-                minX = Math.min(minX, d.x);
-                minY = Math.min(minY, d.y);
-                maxX = Math.max(maxX, d.x);
-                maxY = Math.max(maxY, d.y);
-            });
-            const padding = 80;
-            const scale = Math.min(
-                this.width / (maxX - minX + padding * 2),
-                this.height / (maxY - minY + padding * 2),
-                1.5
-            );
-            const translateX = (this.width - (minX + maxX) * scale) / 2;
-            const translateY = (this.height - (minY + maxY) * scale) / 2;
-            const transform = d3.zoomIdentity.translate(translateX, translateY).scale(scale);
-            this.svg.transition().duration(500).call(this.zoomBehavior.transform, transform);
-        },
 
         handleResize() {
             this.width = window.innerWidth;

@@ -97,20 +97,6 @@ class EmployeePositionSeeder extends Seeder
                 $rateOptions = [0.25, 0.5, 0.75, 1.0];
                 $rate = ($pos->chief_type_id !== null) ? 1.0 : $rateOptions[array_rand($rateOptions)];
 
-                // дата начала/окончания/ожидаемого возвращения
-                $startedAt = $this->generateStartDate($statusName);
-                $endedAt = null;
-                $expectedReturnAt = null;
-                $isActive = true;
-
-                if ($statusName === 'уволен') {
-                    $isActive = false;
-                    $endedAt = $startedAt->copy()->addMonths(rand(3, 24));
-                } elseif ($statusName === 'отпуск') {
-                    $expectedReturnAt = $startedAt->copy()->addDays(rand(7, 56));
-                } elseif ($statusName === 'декрет') {
-                    $expectedReturnAt = $startedAt->copy()->addMonths(rand(18, 36));
-                }
 
                 // Вставляем назначение
                 DB::table('employee_positions')->insert([
@@ -118,10 +104,8 @@ class EmployeePositionSeeder extends Seeder
                     'commissariat_position_id' => $pos->id,
                     'rate' => round($rate, 2),
                     'employee_position_status_id' => $statusId,
-                    'started_at' => $startedAt,
-                    'ended_at' => $endedAt,
-                    'is_active' => $isActive,
-                    'expected_return_at' => $expectedReturnAt,
+                    "created_at"=>now(),
+                    "updated_at"=>now(),
                 ]);
 
                 $totalAssigned++;

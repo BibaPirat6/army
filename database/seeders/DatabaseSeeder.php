@@ -25,12 +25,12 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             
             EmployeePositionStatusSeeder::class,
-            // CommissariatSeeder::class,
-            // DepartmentSeeder::class,
-            // DivisionSeeder::class,
+            CommissariatSeeder::class,
+            DepartmentSeeder::class,
+            DivisionSeeder::class,
 
-            // CommissariatPositionSeeder::class,
-            // EmployeePositionSeeder::class,
+            CommissariatPositionSeeder::class,
+            EmployeePositionSeeder::class,
         ]);
     }
 }
