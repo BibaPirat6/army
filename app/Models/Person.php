@@ -13,11 +13,11 @@ class Person extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'дата_рождения' => 'date',
         'combat_veteran' => 'boolean',
         'has_secondary_education' => 'boolean',
         'has_higher_education' => 'boolean',
     ];
-    
 
     /**
      * Колонки которые НИКОГДА не должны выводиться (системные)
@@ -27,7 +27,7 @@ class Person extends Model
     /**
      * Колонки которые могут выводиться опционально (ФИО)
      */
-    protected static $systemColumns = ['first_name', 'last_name', 'patronymic', 'участие_в_боевых_действиях', 'возраст', 'наличие_среднего_образования','наличие_высшего_образования'];
+    protected static $systemColumns = ['имя', 'фамилия', 'отчество', 'участие_в_боевых_действиях', 'дата_рождения', 'наличие_среднего_образования', 'наличие_высшего_образования'];
 
     public function employee()
     {
@@ -37,7 +37,7 @@ class Person extends Model
     /**
      * Получить колонки таблицы
      *
-     * @param  bool  $includeSystem  - включать ли системные колонки (first_name, last_name, patronymic)
+     * @param  bool  $includeSystem  - включать ли системные колонки (имя, фамилия, отчество)
      * @param  array  $additionalExclude  - дополнительные колонки для исключения
      */
     public static function getTableColumns(
@@ -130,11 +130,10 @@ class Person extends Model
         return self::getTableColumns($table, true);
     }
 
-
     /**
      * Возвращает подробную информацию об одной колонке таблицы
      *
-     * @param  string  $columnName  имя колонки (например 'first_name')
+     * @param  string  $columnName  имя колонки (например 'имя')
      * @param  array  $fields  какие поля вернуть (по умолчанию основные)
      * @return array|null информация о колонке или null, если колонка не найдена
      */

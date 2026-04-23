@@ -24,8 +24,8 @@
             </div>
             <h1 class="text-2xl font-bold text-[#060606]">Назначение должности</h1>
             <p class="text-[#565A5B] mt-1">
-                Сотрудник: <span class="font-semibold text-[#A60644]">{{ $employee->person->last_name ?? '' }}
-                    {{ $employee->person->first_name ?? '' }}</span>
+                Сотрудник: <span class="font-semibold text-[#A60644]">{{ $employee->person->фамилия ?? '' }}
+                    {{ $employee->person->имя ?? '' }}</span>
             </p>
         </div>
 

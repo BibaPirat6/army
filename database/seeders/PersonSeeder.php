@@ -14,9 +14,9 @@ class PersonSeeder extends Seeder
     {
         // Базовые 3 персоны (как в оригинале)
         $persons = [
-            ['last_name' => 'Иванов', 'first_name' => 'Иван', 'patronymic' => 'Иванович'],
-            ['last_name' => 'Димончик', 'first_name' => 'Иван', 'patronymic' => 'Иванович'],
-            ['last_name' => 'Дениска', 'first_name' => 'Иван', 'patronymic' => 'Иванович'],
+            ['фамилия' => 'Иванов', 'имя' => 'Иван', 'отчество' => 'Иванович'],
+            ['фамилия' => 'Димончик', 'имя' => 'Иван', 'отчество' => 'Иванович'],
+            ['фамилия' => 'Дениска', 'имя' => 'Иван', 'отчество' => 'Иванович'],
         ];
 
         // Списки для генерации
@@ -37,7 +37,7 @@ class PersonSeeder extends Seeder
             'Фёдор', 'Леонид', 'Эдуард', 'Юрий', 'Аркадий', 'Вячеслав', 'Геннадий', 'Анатолий', 'Илья'
         ];
 
-        $patronymics = [
+        $отчествоs = [
             'Александрович', 'Дмитриевич', 'Сергеевич', 'Алексеевич', 'Андреевич', 'Максимович',
             'Михайлович', 'Владимирович', 'Артёмович', 'Егорович', 'Игоревич', 'Олегович', 'Романович',
             'Павлович', 'Антонович', 'Денисович', 'Кириллович', 'Никитич', 'Васильевич', 'Константинович'
@@ -46,9 +46,9 @@ class PersonSeeder extends Seeder
         // Генерируем ещё 57 персон
         for ($i = 0; $i < 57; $i++) {
             $persons[] = [
-                'last_name'  => $lastNames[$i % count($lastNames)],
-                'first_name' => $firstNames[$i % count($firstNames)],
-                'patronymic' => $patronymics[$i % count($patronymics)],
+                'фамилия'  => $lastNames[$i % count($lastNames)],
+                'имя' => $firstNames[$i % count($firstNames)],
+                'отчество' => $отчествоs[$i % count($отчествоs)],
             ];
         }
 
@@ -57,9 +57,9 @@ class PersonSeeder extends Seeder
         $now = now();
         foreach ($persons as $p) {
             $data[] = [
-                'last_name'  => $p['last_name'],
-                'first_name' => $p['first_name'],
-                'patronymic' => $p['patronymic'],
+                'фамилия'  => $p['фамилия'],
+                'имя' => $p['имя'],
+                'отчество' => $p['отчество'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

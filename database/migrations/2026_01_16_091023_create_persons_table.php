@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,14 +13,29 @@ return new class extends Migration
     {
         Schema::create('persons', function (Blueprint $table) {
             $table->id();
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('patronymic')->nullable();
+            $table->string('имя');
+            $table->string('фамилия');
+            $table->string('отчество')->nullable();
             // новые
             $table->boolean('участие_в_боевых_действиях')->default(false);
-            $table->integer('возраст')->nullable();
+            $table->integer('дата_рождения')->nullable();
             $table->boolean('наличие_среднего_образования')->default(false);
             $table->boolean('наличие_высшего_образования')->default(false);
+            $table->timestamps();
+        });
+
+        // дети для персон
+        Schema::create('children', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('person_id')
+                ->constrained('persons')
+                ->onDelete('cascade');
+            $table->string('имя');
+            $table->string('фамилия');  
+            $table->string('отчество')->nullable();
+            $table->date('дата_рождения')->nullable();
+            $table->enum('пол', ['мужской', 'женский'])->nullable();
+
             $table->timestamps();
         });
     }

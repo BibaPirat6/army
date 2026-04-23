@@ -54,7 +54,7 @@
                                     Имя колонки *
                                 </label>
                                 <input type="text" name="column_name" id="column_name" required
-                                    placeholder="Пол, возраст, паспорт" value="{{ old('column_name', $column["name"]) }}"
+                                    placeholder="Пол, дата_рождения, паспорт" value="{{ old('column_name', $column["name"]) }}"
                                     class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
                                                                                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
                                                                                       outline-none transition-colors text-[#060606]">

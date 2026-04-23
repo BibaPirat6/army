@@ -67,9 +67,9 @@ class Employee extends Model
         }
 
         return collect([
-            $this->person->last_name,
-            $this->person->first_name,
-            $this->person->patronymic,
+            $this->person->фамилия,
+            $this->person->имя,
+            $this->person->отчество,
         ])->filter()->implode(' ') ?: 'Без ФИО';
     }
 
