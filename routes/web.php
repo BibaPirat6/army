@@ -7,14 +7,15 @@ use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
+use App\Http\Controllers\ExcelExportController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
-use App\Http\Controllers\TetrisController;
 use Illuminate\Support\Facades\Route;
+
 
 // форма лоигна
 Route::get('/login', [LoginController::class, 'index'])->name('login');
@@ -95,14 +96,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/divisions/{id}', [DivisionsController::class, 'delete'])->name('divisions.delete');
 
     // добавить некое назначение какомуто сотруднику
-    // Route::get('/employee-positions/add', [EmployeePositionsController::class, 'add'])->name('employee-positions.add');
-    // Route::post('/employee-positions/add', [EmployeePositionsController::class, 'addStore'])->name('employee-positions.addStore');
-    // назначение сотруднику должности
     Route::get('/employee-positions/{id}/create', [EmployeePositionsController::class, 'create'])->name('employee-positions.create');
-    // Route::post('/employee-positions/{id}', [EmployeePositionsController::class, 'store'])->name('employee-positions.store');
-    // Route::get('/employee-positions/{id}/edit', [EmployeePositionsController::class, 'edit'])->name('employee-positions.edit');
-    // Route::put('/employee-positions/{id}', [EmployeePositionsController::class, 'update'])->name('employee-positions.update');
-    // Route::delete('/employee-positions/{id}', [EmployeePositionsController::class, 'delete'])->name('employee-positions.delete');
+
 
     // штатные должности в комиссариате
     Route::prefix('commissariat-positions')->name('commissariat-positions.')->group(function () {
@@ -123,5 +118,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // структуры
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
     Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name('structure.obsidian');
+
+
+    // excel
+    Route::prefix('excel-export')->name('excel-export.')->group(function () {
+          Route::get('/', [ExcelExportController::class, 'index'])->name('index');
+          Route::get('/employee', [ExcelExportController::class, 'employee'])->name('employee');
+    });
 
 });

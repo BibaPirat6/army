@@ -146,7 +146,7 @@
 
                     <!-- Меню -->
                     <ul class="dropdown-menu absolute top-full left-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[240px] z-[1000]
-                           hidden opacity-0 scale-95 transition-all duration-200">
+                               hidden opacity-0 scale-95 transition-all duration-200">
 
                         <!-- ТВОИ ПУНКТЫ МЕНЮ БЕЗ ИЗМЕНЕНИЙ -->
                         <li class="mb-1 last:mb-0">
@@ -182,17 +182,6 @@
                                 Отделения
                             </a>
                         </li>
-
-                        {{-- <li class="mb-1 last:mb-0">
-                            <a href="{{ route('employee-positions.index') }}"
-                                class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Назначения
-                            </a>
-                        </li> --}}
                         <li class="mb-1 last:mb-0">
                             <a href="{{ route('positions.index') }}"
                                 class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
@@ -245,6 +234,45 @@
                     Структура
                 </a>
             </li>
+
+            <li>
+                <a href="{{ route('excel-export.index') }}" class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
+               font-semibold text-sm tracking-wide
+               text-[#217346] bg-white/80 backdrop-blur-sm
+               border border-[#217346]/20
+               shadow-sm hover:shadow-md hover:shadow-[#217346]/10
+               transition-all duration-300 ease-out
+               hover:bg-[#217346] hover:text-white hover:border-[#217346]
+               hover:-translate-y-0.5
+               active:translate-y-0 active:shadow-sm">
+
+                    <!-- Иконка Excel -->
+                    <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                        fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                        <polyline points="14 2 14 8 20 8" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M8 13h2.5l1.5-3 1.5 3H16l-2.5 2 1 3-2.5-1.5L9.5 18l1-3L8 13z" fill="white"
+                            opacity="0.9" />
+                        <rect x="8" y="13" width="8" height="5" rx="0.5" fill="none" stroke="white"
+                            stroke-width="1.5" />
+                    </svg>
+
+                    <span>Excel Export</span>
+
+                    <!-- Мини-иконка стрелки при наведении -->
+                    <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                    </svg>
+
+                    <!-- Подсветка слева -->
+                    <span
+                        class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white rounded-r-full transition-all duration-300 group-hover:h-8"></span>
+                </a>
+            </li>
+
+            
 
             <li class="ml-auto">
                 <ul class="flex justify-end items-center">
