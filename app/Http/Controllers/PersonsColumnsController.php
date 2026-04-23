@@ -14,7 +14,7 @@ class PersonsColumnsController extends Controller
     {
         $backUrl = $request->input('back_url');
 
-        $columns = Person::getTableColumns('persons');
+        $columns = Person::getUserColumns('persons');
 
         return view('admin.persons.persons-columns.index', compact('backUrl', 'columns'));
     }

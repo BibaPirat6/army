@@ -43,7 +43,7 @@ class EmployeesController extends Controller
     {
         $backUrl = $request->input('back_url');
         $employee = Employee::findOrFail($id);
-        $columns = Person::getTableColumns();
+        $columns = Person::getAllColumns();
 
         return view('admin.employees.show')->with([
             'employee' => $employee,
@@ -61,7 +61,7 @@ class EmployeesController extends Controller
 
         $roles = Role::all();
         $backUrl = $request->input('back_url');
-        $columns = Person::getTableColumns();
+        $columns = Person::getAllColumns();
 
         return view('admin.employees.create')->with([
             'roles' => $roles,
@@ -100,7 +100,7 @@ class EmployeesController extends Controller
             'role.exists' => 'Недопустимое значение для роли',
         ]);
 
-        $columns = Person::getTableColumns();
+        $columns = Person::getAllColumns();
 
         $personData = [];
 
@@ -213,7 +213,7 @@ class EmployeesController extends Controller
         if ($hasContext) {
             // Собираем параметры для создания должности
             $positionParams = [
-                'id'=> $employeeId,
+                'id' => $employeeId,
                 'employeeId' => $employeeId,
                 'backUrl' => $backUrl,
             ];
@@ -248,7 +248,7 @@ class EmployeesController extends Controller
 
         $backUrl = $request->input('back_url');
 
-        $columns = Person::getTableColumns();
+        $columns = Person::getAllColumns();
 
         return view('admin.employees.edit')->with([
             'employee' => $employee,
@@ -289,7 +289,7 @@ class EmployeesController extends Controller
         // person
         $person = $employee->person;
 
-        $columns = Person::getTableColumns();
+        $columns = Person::getAllColumns();
 
         $personData = [];
 
@@ -377,14 +377,13 @@ class EmployeesController extends Controller
 
             // ========== json-списки ==========
             if (str_contains($type, 'longtext') && $comment === 'json') {
-
                 if ($value === null || trim((string) $value) === '') {
                     $personData[$name] = $column['nullable'] ? null : json_encode([], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 } else {
-                    $personData[$name] = json_encode(
-                        $this->jsonService->parseLines($value),
-                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                    );
+                    // Разбиваем строку по переносам строк и удаляем пустые значения
+                    $lines = explode("\n", $value);
+                    $lines = array_filter(array_map('trim', $lines), fn ($line) => $line !== '');
+                    $personData[$name] = json_encode(array_values($lines), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 }
 
                 continue;

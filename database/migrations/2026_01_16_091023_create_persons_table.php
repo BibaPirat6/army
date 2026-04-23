@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('patronymic')->nullable();
+            // новые
+            $table->boolean('участие_в_боевых_действиях')->default(false);
+            $table->integer('возраст')->nullable();
+            $table->boolean('наличие_среднего_образования')->default(false);
+            $table->boolean('наличие_высшего_образования')->default(false);
             $table->timestamps();
         });
     }
