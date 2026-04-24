@@ -2,13 +2,36 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class StructureExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class StructureExport implements WithMultipleSheets
+{
+    protected $data;
+    protected $type;
+    protected $name;
+    
+    public function __construct($data, string $type, string $name)
+    {
+        $this->data = $data;
+        $this->type = $type;
+        $this->name = $name;
+    }
+    
+    public function sheets(): array
+    {
+        return [
+            new StructureSheet($this->data, $this->type, $this->name),
+            new PositionsSheet($this->data, $this->type, $this->name),
+            new EmployeesSheet($this->data, $this->type, $this->name),
+        ];
+    }
+}
+
+// ========== ЛИСТ 1: СТРУКТУРА ==========
+class StructureSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
+                                \Maatwebsite\Excel\Concerns\WithHeadings, 
+                                \Maatwebsite\Excel\Concerns\WithMapping,
+                                \Maatwebsite\Excel\Concerns\WithTitle
 {
     protected $data;
     protected $type;
@@ -28,46 +51,38 @@ class StructureExport implements FromCollection, WithHeadings, WithMapping, With
         if ($this->type === 'commissariat') {
             $commissariat = $this->data;
             
-            // Комиссариат
             $rows->push((object)[
-                'type' => 'КОМИССАРИАТ',
+                'level' => 'КОМИССАРИАТ',
                 'name' => $commissariat->name,
-                'parent' => '',
+                'parent' => '-',
                 'chief' => $this->getChiefName($commissariat->chief),
-                'employees_count' => $commissariat->employeesIndependent()->count()
             ]);
             
-            // Отделы
             foreach ($commissariat->departments as $department) {
                 $rows->push((object)[
-                    'type' => '  ОТДЕЛ',
+                    'level' => '  ОТДЕЛ',
                     'name' => $department->name,
                     'parent' => $commissariat->name,
                     'chief' => $this->getChiefName($department->chief),
-                    'employees_count' => $department->employees->count()
                 ]);
                 
-                // Отделения в отделах
                 foreach ($department->divisions as $division) {
                     $rows->push((object)[
-                        'type' => '    ОТДЕЛЕНИЕ',
+                        'level' => '    ОТДЕЛЕНИЕ',
                         'name' => $division->name,
                         'parent' => $department->name,
                         'chief' => $this->getChiefName($division->chief),
-                        'employees_count' => $division->employees->count()
                     ]);
                 }
             }
             
-            // Самостоятельные отделения
             foreach ($commissariat->divisions as $division) {
                 if (!$division->department_id) {
                     $rows->push((object)[
-                        'type' => '  ОТДЕЛЕНИЕ (самостоятельное)',
+                        'level' => '  ОТДЕЛЕНИЕ (самостоятельное)',
                         'name' => $division->name,
                         'parent' => $commissariat->name,
                         'chief' => $this->getChiefName($division->chief),
-                        'employees_count' => $division->employees->count()
                     ]);
                 }
             }
@@ -75,67 +90,55 @@ class StructureExport implements FromCollection, WithHeadings, WithMapping, With
         } elseif ($this->type === 'department') {
             $department = $this->data;
             
-            // Комиссариат (родитель)
             $rows->push((object)[
-                'type' => 'КОМИССАРИАТ',
+                'level' => 'КОМИССАРИАТ',
                 'name' => $department->commissariat->name,
-                'parent' => '',
+                'parent' => '-',
                 'chief' => $this->getChiefName($department->commissariat->chief),
-                'employees_count' => '-'
             ]);
             
-            // Отдел
             $rows->push((object)[
-                'type' => '  ОТДЕЛ',
+                'level' => '  ОТДЕЛ',
                 'name' => $department->name,
                 'parent' => $department->commissariat->name,
                 'chief' => $this->getChiefName($department->chief),
-                'employees_count' => $department->employees->count()
             ]);
             
-            // Отделения в отделе
             foreach ($department->divisions as $division) {
                 $rows->push((object)[
-                    'type' => '    ОТДЕЛЕНИЕ',
+                    'level' => '    ОТДЕЛЕНИЕ',
                     'name' => $division->name,
                     'parent' => $department->name,
                     'chief' => $this->getChiefName($division->chief),
-                    'employees_count' => $division->employees->count()
                 ]);
             }
             
         } elseif ($this->type === 'division') {
             $division = $this->data;
             
-            // Комиссариат
             $rows->push((object)[
-                'type' => 'КОМИССАРИАТ',
+                'level' => 'КОМИССАРИАТ',
                 'name' => $division->commissariat->name,
-                'parent' => '',
+                'parent' => '-',
                 'chief' => $this->getChiefName($division->commissariat->chief),
-                'employees_count' => '-'
             ]);
             
-            // Отдел (если есть)
             if ($division->department) {
                 $rows->push((object)[
-                    'type' => '  ОТДЕЛ',
+                    'level' => '  ОТДЕЛ',
                     'name' => $division->department->name,
                     'parent' => $division->commissariat->name,
                     'chief' => $this->getChiefName($division->department->chief),
-                    'employees_count' => $division->department->employees->count()
                 ]);
             }
             
-            // Отделение
             $prefix = $division->department ? '    ' : '  ';
             $suffix = $division->department ? '' : ' (самостоятельное)';
             $rows->push((object)[
-                'type' => $prefix . 'ОТДЕЛЕНИЕ' . $suffix,
+                'level' => $prefix . 'ОТДЕЛЕНИЕ' . $suffix,
                 'name' => $division->name,
                 'parent' => $division->department->name ?? $division->commissariat->name,
                 'chief' => $this->getChiefName($division->chief),
-                'employees_count' => $division->employees->count()
             ]);
         }
         
@@ -150,43 +153,225 @@ class StructureExport implements FromCollection, WithHeadings, WithMapping, With
     
     public function headings(): array
     {
+        return ['Уровень', 'Название', 'В составе', 'Руководитель'];
+    }
+    
+    public function map($row): array
+    {
+        return [$row->level, $row->name, $row->parent, $row->chief];
+    }
+    
+    public function title(): string
+    {
+        return '1. Структура';
+    }
+}
+
+// ========== ЛИСТ 2: ШТАТНЫЕ ДОЛЖНОСТИ ==========
+class PositionsSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
+                                \Maatwebsite\Excel\Concerns\WithHeadings, 
+                                \Maatwebsite\Excel\Concerns\WithMapping,
+                                \Maatwebsite\Excel\Concerns\WithTitle
+{
+    protected $data;
+    protected $type;
+    
+    public function __construct($data, string $type, string $name)
+    {
+        $this->data = $data;
+        $this->type = $type;
+    }
+    
+    public function collection()
+    {
+        if ($this->type === 'commissariat') {
+            return $this->data->commissariatPositions;
+        } elseif ($this->type === 'department') {
+            return $this->data->commissariatPositions;
+        } elseif ($this->type === 'division') {
+            return $this->data->commissariatPositions;
+        }
+        return collect();
+    }
+    
+    public function headings(): array
+    {
         return [
+            'ID',
             'Уровень',
-            'Название',
-            'В составе',
-            'Руководитель',
-            'Кол-во сотрудников'
+            'Подразделение',
+            'Должность',
+            'Общая ставка',
+            'Занято ставок',
+            'Свободно ставок',
+            'Самостоятельная'
+        ];
+    }
+    
+    public function map($position): array
+    {
+        if ($position->division_id) {
+            $level = 'Отделение';
+            $subdivision = $position->division->name ?? '-';
+        } elseif ($position->department_id) {
+            $level = 'Отдел';
+            $subdivision = $position->department->name ?? '-';
+        } else {
+            $level = 'Комиссариат';
+            $subdivision = $position->commissariat->name ?? '-';
+        }
+        
+        $totalRate = (float) ($position->position_rate ?? 1);
+        $occupiedRate = 0;
+        
+        foreach ($position->employeePositions as $empPos) {
+            if ($empPos->employee_position_status_id == 1) {
+                $occupiedRate += (float) ($empPos->rate ?? $empPos->rate_percent / 100 ?? 0);
+            }
+        }
+        
+        $freeRate = $totalRate - $occupiedRate;
+        
+        return [
+            $position->id,
+            $level,
+            $subdivision,
+            $position->position->name ?? '-',
+            $this->formatRate($totalRate),
+            $this->formatRate($occupiedRate),
+            $this->formatRate($freeRate),
+            $position->is_independent ? 'Да' : 'Нет'
+        ];
+    }
+    
+    private function formatRate($rate): string
+    {
+        if ($rate == 0) return '0';
+        if ($rate == floor($rate)) return (string) $rate;
+        return number_format($rate, 2, '.', '');
+    }
+    
+    public function title(): string
+    {
+        return '2. Штатные должности';
+    }
+}
+
+// ========== ЛИСТ 3: СОТРУДНИКИ НА ДОЛЖНОСТЯХ ==========
+class EmployeesSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
+                                \Maatwebsite\Excel\Concerns\WithHeadings, 
+                                \Maatwebsite\Excel\Concerns\WithMapping,
+                                \Maatwebsite\Excel\Concerns\WithTitle
+{
+    protected $data;
+    protected $type;
+    
+    public function __construct($data, string $type, string $name)
+    {
+        $this->data = $data;
+        $this->type = $type;
+    }
+    
+    public function collection()
+    {
+        $rows = collect();
+        
+        if ($this->type === 'commissariat') {
+            $positions = $this->data->commissariatPositions;
+        } elseif ($this->type === 'department') {
+            $positions = $this->data->commissariatPositions;
+        } elseif ($this->type === 'division') {
+            $positions = $this->data->commissariatPositions;
+        } else {
+            $positions = collect();
+        }
+        
+        foreach ($positions as $position) {
+            if ($position->division_id) {
+                $level = 'Отделение';
+                $subdivision = $position->division->name ?? '-';
+            } elseif ($position->department_id) {
+                $level = 'Отдел';
+                $subdivision = $position->department->name ?? '-';
+            } else {
+                $level = 'Комиссариат';
+                $subdivision = $position->commissariat->name ?? '-';
+            }
+            
+            if ($position->employeePositions->isNotEmpty()) {
+                foreach ($position->employeePositions as $empPos) {
+                    if ($empPos->employee_position_status_id == 1) {
+                        $employee = $empPos->employee;
+                        $rows->push((object)[
+                            'position_name' => $position->position->name ?? '-',
+                            'position_level' => $level,
+                            'subdivision' => $subdivision,
+                            'employee_id' => $employee->id ?? '-',
+                            'employee_name' => $employee->person->full_name ?? '-',
+                            'rate' => (float) ($empPos->rate ?? $empPos->rate_percent / 100 ?? 0),
+                            'status' => $empPos->status->name ?? 'Работает',
+                            'phone' => $employee->person->phone ?? '-',
+                            'email' => $employee->user->email ?? '-',
+                        ]);
+                    }
+                }
+            } else {
+                $rows->push((object)[
+                    'position_name' => $position->position->name ?? '-',
+                    'position_level' => $level,
+                    'subdivision' => $subdivision,
+                    'employee_id' => '-',
+                    'employee_name' => 'Нет сотрудника',
+                    'rate' => '-',
+                    'status' => '-',
+                    'phone' => '-',
+                    'email' => '-',
+                ]);
+            }
+        }
+        
+        return $rows;
+    }
+    
+    public function headings(): array
+    {
+        return [
+            'Должность',
+            'Уровень',
+            'Подразделение',
+            'ID сотрудника',
+            'ФИО сотрудника',
+            'Ставка',
+            'Статус',
+            'Телефон',
+            'Email'
         ];
     }
     
     public function map($row): array
     {
         return [
-            $row->type,
-            $row->name,
-            $row->parent,
-            $row->chief,
-            $row->employees_count
+            $row->position_name,
+            $row->position_level,
+            $row->subdivision,
+            $row->employee_id,
+            $row->employee_name,
+            is_numeric($row->rate) ? $this->formatRate($row->rate) : $row->rate,
+            $row->status,
+            $row->phone,
+            $row->email,
         ];
     }
     
-    public function styles(Worksheet $sheet)
+    private function formatRate($rate): string
     {
-        $sheet->getColumnDimension('A')->setWidth(30);
-        $sheet->getColumnDimension('B')->setWidth(35);
-        $sheet->getColumnDimension('C')->setWidth(30);
-        $sheet->getColumnDimension('D')->setWidth(35);
-        $sheet->getColumnDimension('E')->setWidth(18);
-        
-        $sheet->getStyle('1')->getFont()->setBold(true);
-        $sheet->getStyle('1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-        $sheet->getStyle('1')->getFill()->getStartColor()->setARGB('FFE0E0E0');
-        
-        return [1 => ['font' => ['bold' => true, 'size' => 11]]];
+        if ($rate == 0) return '0';
+        if ($rate == floor($rate)) return (string) $rate;
+        return number_format($rate, 2, '.', '');
     }
     
     public function title(): string
     {
-        return 'Структура_' . substr($this->name, 0, 20);
+        return '3. Сотрудники';
     }
 }
