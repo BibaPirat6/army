@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Commissariat;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,60 +10,142 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class StructureExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
-    protected $commissariat;
+    protected $data;
+    protected $type;
+    protected $name;
     
-    public function __construct(Commissariat $commissariat)
+    public function __construct($data, string $type, string $name)
     {
-        $this->commissariat = $commissariat;
+        $this->data = $data;
+        $this->type = $type;
+        $this->name = $name;
     }
     
     public function collection()
     {
         $rows = collect();
         
-        // 1. Информация о комиссариате
-        $rows->push((object)[
-            'type' => 'КОМИССАРИАТ',
-            'name' => $this->commissariat->name,
-            'parent' => '',
-            'chief' => $this->commissariat->chief->person->full_name ?? '-',
-            'employees_count' => $this->commissariat->employeesIndependent()->count()
-        ]);
-        
-        // 2. Отделы
-        foreach ($this->commissariat->departments as $department) {
+        if ($this->type === 'commissariat') {
+            $commissariat = $this->data;
+            
+            // Комиссариат
+            $rows->push((object)[
+                'type' => 'КОМИССАРИАТ',
+                'name' => $commissariat->name,
+                'parent' => '',
+                'chief' => $this->getChiefName($commissariat->chief),
+                'employees_count' => $commissariat->employeesIndependent()->count()
+            ]);
+            
+            // Отделы
+            foreach ($commissariat->departments as $department) {
+                $rows->push((object)[
+                    'type' => '  ОТДЕЛ',
+                    'name' => $department->name,
+                    'parent' => $commissariat->name,
+                    'chief' => $this->getChiefName($department->chief),
+                    'employees_count' => $department->employees->count()
+                ]);
+                
+                // Отделения в отделах
+                foreach ($department->divisions as $division) {
+                    $rows->push((object)[
+                        'type' => '    ОТДЕЛЕНИЕ',
+                        'name' => $division->name,
+                        'parent' => $department->name,
+                        'chief' => $this->getChiefName($division->chief),
+                        'employees_count' => $division->employees->count()
+                    ]);
+                }
+            }
+            
+            // Самостоятельные отделения
+            foreach ($commissariat->divisions as $division) {
+                if (!$division->department_id) {
+                    $rows->push((object)[
+                        'type' => '  ОТДЕЛЕНИЕ (самостоятельное)',
+                        'name' => $division->name,
+                        'parent' => $commissariat->name,
+                        'chief' => $this->getChiefName($division->chief),
+                        'employees_count' => $division->employees->count()
+                    ]);
+                }
+            }
+            
+        } elseif ($this->type === 'department') {
+            $department = $this->data;
+            
+            // Комиссариат (родитель)
+            $rows->push((object)[
+                'type' => 'КОМИССАРИАТ',
+                'name' => $department->commissariat->name,
+                'parent' => '',
+                'chief' => $this->getChiefName($department->commissariat->chief),
+                'employees_count' => '-'
+            ]);
+            
+            // Отдел
             $rows->push((object)[
                 'type' => '  ОТДЕЛ',
                 'name' => $department->name,
-                'parent' => $this->commissariat->name,
-                'chief' => $department->chief->person->full_name ?? '-',
+                'parent' => $department->commissariat->name,
+                'chief' => $this->getChiefName($department->chief),
                 'employees_count' => $department->employees->count()
             ]);
             
-            // 3. Отделения в отделах
+            // Отделения в отделе
             foreach ($department->divisions as $division) {
                 $rows->push((object)[
                     'type' => '    ОТДЕЛЕНИЕ',
                     'name' => $division->name,
                     'parent' => $department->name,
-                    'chief' => $division->chief->person->full_name ?? '-',
+                    'chief' => $this->getChiefName($division->chief),
                     'employees_count' => $division->employees->count()
                 ]);
             }
-        }
-        
-        // 4. Самостоятельные отделения (без отдела)
-        foreach ($this->commissariat->divisionsIndependent()->get() as $division) {
+            
+        } elseif ($this->type === 'division') {
+            $division = $this->data;
+            
+            // Комиссариат
             $rows->push((object)[
-                'type' => '  ОТДЕЛЕНИЕ (самостоятельное)',
+                'type' => 'КОМИССАРИАТ',
+                'name' => $division->commissariat->name,
+                'parent' => '',
+                'chief' => $this->getChiefName($division->commissariat->chief),
+                'employees_count' => '-'
+            ]);
+            
+            // Отдел (если есть)
+            if ($division->department) {
+                $rows->push((object)[
+                    'type' => '  ОТДЕЛ',
+                    'name' => $division->department->name,
+                    'parent' => $division->commissariat->name,
+                    'chief' => $this->getChiefName($division->department->chief),
+                    'employees_count' => $division->department->employees->count()
+                ]);
+            }
+            
+            // Отделение
+            $prefix = $division->department ? '    ' : '  ';
+            $suffix = $division->department ? '' : ' (самостоятельное)';
+            $rows->push((object)[
+                'type' => $prefix . 'ОТДЕЛЕНИЕ' . $suffix,
                 'name' => $division->name,
-                'parent' => $this->commissariat->name,
-                'chief' => $division->chief->person->full_name ?? '-',
+                'parent' => $division->department->name ?? $division->commissariat->name,
+                'chief' => $this->getChiefName($division->chief),
                 'employees_count' => $division->employees->count()
             ]);
         }
         
         return $rows;
+    }
+    
+    private function getChiefName($chief): string
+    {
+        if (!$chief) return '-';
+        return $chief->person->full_name ?? '-';
     }
     
     public function headings(): array
@@ -91,17 +172,21 @@ class StructureExport implements FromCollection, WithHeadings, WithMapping, With
     
     public function styles(Worksheet $sheet)
     {
-        $sheet->getColumnDimension('A')->setWidth(25);
-        $sheet->getColumnDimension('B')->setWidth(30);
-        $sheet->getColumnDimension('C')->setWidth(25);
-        $sheet->getColumnDimension('D')->setWidth(30);
-        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('A')->setWidth(30);
+        $sheet->getColumnDimension('B')->setWidth(35);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        $sheet->getColumnDimension('D')->setWidth(35);
+        $sheet->getColumnDimension('E')->setWidth(18);
+        
+        $sheet->getStyle('1')->getFont()->setBold(true);
+        $sheet->getStyle('1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle('1')->getFill()->getStartColor()->setARGB('FFE0E0E0');
         
         return [1 => ['font' => ['bold' => true, 'size' => 11]]];
     }
     
     public function title(): string
     {
-        return 'Структура_' . substr($this->commissariat->name, 0, 20);
+        return 'Структура_' . substr($this->name, 0, 20);
     }
 }

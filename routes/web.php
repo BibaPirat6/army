@@ -124,7 +124,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::prefix('excel-export')->name('excel-export.')->group(function () {
           Route::get('/', [ExcelExportController::class, 'index'])->name('index');
           Route::get('/employee', [ExcelExportController::class, 'employee'])->name('employee');
-          Route::get('/structure', [ExcelExportController::class, 'structure'])->name('structure');
+          Route::post('/structure', [ExcelExportController::class, 'structure'])->name('structure');
     });
 
 });
