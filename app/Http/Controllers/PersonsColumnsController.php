@@ -38,7 +38,7 @@ class PersonsColumnsController extends Controller
             'column_type.required' => 'Поле "Тип колонки" обязательно для заполнения.',
         ]);
 
-        try {
+        try {   
             $columnName = $this->normalizeFieldName($data['column_name']);
 
             if (Schema::hasColumn('persons', $columnName)) {

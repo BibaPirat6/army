@@ -62,8 +62,8 @@
 
 
 
-                            <!-- Default -->
-                            @if (!in_array($column["comment"], ['json', 'file']))
+                           <!-- Default -->
+                            @if (!in_array($column["comment"], ['json', 'file']) && $column["data_type"] != 'date')
                                 <div>
                                     <label for="default" class="block text-sm font-medium text-[#565A5B] mb-2">
                                         Значение по умолчанию
@@ -71,8 +71,8 @@
                                     <input type="text" name="default" id="default" placeholder="null, 0, 1"
                                         value="{{ old('default', $column["default"]) }}"
                                         class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg 
-                                                                                                  focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
-                                                                                                  outline-none transition-colors text-[#060606]">
+                                                                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] 
+                                                                outline-none transition-colors text-[#060606]">
                                 </div>
                             @endif
 

@@ -142,7 +142,7 @@
         const container = document.getElementById('default-field-container');
         const defaultInput = document.getElementById('default');
 
-        const noDefaultTypes = ['json', 'file'];
+        const noDefaultTypes = ['json', 'file', 'date'];
 
         if (noDefaultTypes.includes(selectedType)) {
             container.style.opacity = '0.5';
