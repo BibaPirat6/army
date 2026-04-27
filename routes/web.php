@@ -8,6 +8,7 @@ use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
+use App\Http\Controllers\GraphicController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
@@ -15,7 +16,6 @@ use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
 use Illuminate\Support\Facades\Route;
-
 
 // форма лоигна
 Route::get('/login', [LoginController::class, 'index'])->name('login');
@@ -98,7 +98,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // добавить некое назначение какомуто сотруднику
     Route::get('/employee-positions/{id}/create', [EmployeePositionsController::class, 'create'])->name('employee-positions.create');
 
-
     // штатные должности в комиссариате
     Route::prefix('commissariat-positions')->name('commissariat-positions.')->group(function () {
         Route::get('/', [CommissariatPositionsController::class, 'index'])->name('index');
@@ -119,12 +118,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/structure/{id}/commissariat', [StructureController::class, 'show'])->name('structure.show');
     Route::get('/structure/{id}/obsidian', [StructureController::class, 'obsidian'])->name('structure.obsidian');
 
-
     // excel
     Route::prefix('excel-export')->name('excel-export.')->group(function () {
-          Route::get('/', [ExcelExportController::class, 'index'])->name('index');
-          Route::get('/employee', [ExcelExportController::class, 'employee'])->name('employee');
-          Route::post('/structure', [ExcelExportController::class, 'structure'])->name('structure');
+        Route::get('/', [ExcelExportController::class, 'index'])->name('index');
+        Route::get('/employee', [ExcelExportController::class, 'employee'])->name('employee');
+        Route::post('/structure', [ExcelExportController::class, 'structure'])->name('structure');
+    });
+
+    // графики
+    Route::prefix('graphic')->name('graphic.')->group(function () {
+        Route::get('/', [GraphicController::class, 'index'])->name('index');
     });
 
 });
