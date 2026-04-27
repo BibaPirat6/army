@@ -95,6 +95,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // для аналитики, надо ппц
         // Зачем: При отметке выполнения одной итерации создаётся запись, а completed_count в task_assignments увеличивается через Observer. Даёт аудит и фактические данные
         Schema::create('task_completions', function (Blueprint $table) {
             $table->id();

@@ -17,7 +17,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $table = "users";
+    protected $table = 'users';
 
     protected $fillable = [
         'login',
@@ -57,7 +57,6 @@ class User extends Authenticatable
         return [];
     }
 
-
     public function employee()
     {
         return $this->hasOne(Employee::class);
@@ -66,5 +65,10 @@ class User extends Authenticatable
     public function role()
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function createdTasks()
+    {
+        return $this->hasMany(Task::class, 'created_by');
     }
 }

@@ -73,9 +73,7 @@ class Employee extends Model
         ])->filter()->implode(' ') ?: 'Без ФИО';
     }
 
-
-
-     /**
+    /**
      * Получить ID текущего статуса сотрудника (активное назначение)
      * Возвращает employee_position_status_id из активного назначения
      */
@@ -83,44 +81,56 @@ class Employee extends Model
     {
         // Получаем активное назначение сотрудника (которое занимает ставку)
         $activePosition = $this->employeePositions()
-            ->whereHas('employeePositionStatus', function($query) {
+            ->whereHas('employeePositionStatus', function ($query) {
                 $query->where('occupies_rate', true);
             })
             ->first();
-        
+
         if ($activePosition) {
             return $activePosition->employee_position_status_id;
         }
-        
+
         // Если нет активного назначения, возвращаем статус по умолчанию (например, 1 - работает)
         return 1;
     }
-    
+
     /**
      * Получить текущую должность сотрудника
      */
     public function getCurrentPosition()
     {
         $activePosition = $this->employeePositions()
-            ->whereHas('employeePositionStatus', function($query) {
+            ->whereHas('employeePositionStatus', function ($query) {
                 $query->where('occupies_rate', true);
             })
             ->with('commissariatPosition.position')
             ->first();
-        
+
         if ($activePosition && $activePosition->commissariatPosition) {
             return $activePosition->commissariatPosition->position;
         }
-        
+
         return null;
     }
-    
+
     /**
      * Получить название текущей должности
      */
     public function getCurrentPositionName()
     {
         $position = $this->getCurrentPosition();
+
         return $position ? $position->name : null;
+    }
+
+    // В app/Models/Employee.php
+    public function workDays()
+    {
+        return $this->hasMany(WorkDay::class);
+    }
+
+    public function taskAssignments()
+    {
+        return $this->hasMany(TaskAssignment::class);
     }
 }
