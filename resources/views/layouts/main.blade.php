@@ -16,6 +16,9 @@
     <!-- Theme color -->
     <meta name="msapplication-TileColor" content="#A60644">
     <meta name="theme-color" content="#ffffff">
+    {{-- csrf --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
 
     {{-- styles --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
