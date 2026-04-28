@@ -21,3 +21,92 @@
 .peer:checked~.peer-checked\:block {
     display: block;
 }
+
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ===== FullCalendar Custom Styles ===== */
+
+/* Контейнер календаря */
+#calendar {
+    @apply bg-white rounded-xl shadow-sm p-6;
+}
+
+/* Шапка — расстояние между кнопками и заголовком */
+.fc .fc-toolbar {
+    @apply flex-wrap gap-2 mb-4;
+}
+
+.fc .fc-toolbar-title {
+    @apply text-lg md:text-xl font-semibold text-gray-800 capitalize;
+}
+
+/* Кнопки */
+.fc .fc-button {
+    @apply rounded-lg font-medium text-sm px-4 py-2 border-none shadow-sm transition-colors duration-150 !important;
+}
+
+.fc .fc-button-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    @apply bg-indigo-800 !important;
+}
+
+.fc .fc-today-button {
+    @apply bg-emerald-600 hover:bg-emerald-700 !important;
+}
+
+/* Сегодняшний день */
+.fc .fc-day-today {
+    @apply bg-amber-50 !important;
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-multimonth-day-number {
+    @apply text-gray-700 text-sm font-medium;
+}
+
+/* Номер сегодняшнего дня — выделяем */
+.fc .fc-day-today .fc-daygrid-day-number,
+.fc .fc-day-today .fc-multimonth-day-number {
+    @apply bg-amber-500 text-white rounded-full w-7 h-7 inline-flex items-center justify-center;
+}
+
+/* Выходные */
+.fc .fc-day-sat,
+.fc .fc-day-sun {
+    @apply bg-gray-50 text-gray-400;
+}
+
+/* Наведение на день */
+.fc .fc-daygrid-day:hover,
+.fc .fc-multimonth-daygrid .fc-day:hover {
+    @apply bg-indigo-50 cursor-pointer transition-colors duration-150;
+}
+
+/* Сетка multiMonth */
+.fc .fc-multimonth {
+    @apply border-none !important;
+}
+
+.fc .fc-multimonth-header {
+    @apply text-gray-600 font-semibold capitalize text-sm;
+}
+
+.fc .fc-multimonth-daygrid .fc-day {
+    @apply border border-gray-100;
+}
+
+/* Заголовки дней недели */
+.fc .fc-col-header-cell {
+    @apply bg-gray-50 text-gray-500 font-medium text-xs uppercase py-2 border-b border-gray-200;
+}
+
+/* События (когда появятся) */
+.fc .fc-event {
+    @apply rounded-md border-none shadow-sm cursor-pointer text-sm px-2 py-1;
+}
