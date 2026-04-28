@@ -277,7 +277,7 @@
 
 
             <li>
-                <a href="{{ route('graphic.index') }}" class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
+                <a href="{{ route('calendar.index') }}" class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
                font-semibold text-sm tracking-wide
                text-[#EA580C] bg-white/80 backdrop-blur-sm
                border border-[#3B82F6]/20

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssignEmployeeController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
@@ -126,8 +127,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     });
 
     // графики
-    Route::prefix('graphic')->name('graphic.')->group(function () {
-        Route::get('/', [GraphicController::class, 'index'])->name('index');
+    Route::prefix('calender')->name('calendar.')->group(function () {
+        Route::get('/', [CalendarController::class, 'index'])->name('index');
     });
 
 });
