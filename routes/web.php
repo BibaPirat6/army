@@ -9,7 +9,6 @@ use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
-use App\Http\Controllers\GraphicController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
@@ -127,8 +126,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     });
 
     // графики
-    Route::prefix('calender')->name('calendar.')->group(function () {
+    Route::prefix('calendar')->name('calendar.')->group(function () {
         Route::get('/', [CalendarController::class, 'index'])->name('index');
+        Route::get('/events', [CalendarController::class, 'events'])->name('events');
+        Route::post('/tasks', [CalendarController::class, 'store'])->name('tasks.store');
+        Route::put('/tasks/{task}', [CalendarController::class, 'update'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
     });
 
 });

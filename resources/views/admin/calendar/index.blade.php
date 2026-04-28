@@ -29,7 +29,7 @@
                     </button>
                 </div>
 
-                <form id="taskForm">
+                <form id="taskForm" method="post" action="{{ route("calendar.tasks.store") }}">
                     @csrf
                     <input type="hidden" id="task_id" name="id">
 
