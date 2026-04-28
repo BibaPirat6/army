@@ -22,91 +22,135 @@
     display: block;
 }
 
-
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import 'tailwindcss';
 
 /* ===== FullCalendar Custom Styles ===== */
 
-/* Контейнер календаря */
 #calendar {
-    @apply bg-white rounded-xl shadow-sm p-6;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    padding: 24px;
 }
 
-/* Шапка — расстояние между кнопками и заголовком */
+/* Шапка */
 .fc .fc-toolbar {
-    @apply flex-wrap gap-2 mb-4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .fc .fc-toolbar-title {
-    @apply text-lg md:text-xl font-semibold text-gray-800 capitalize;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    text-transform: capitalize;
 }
 
 /* Кнопки */
 .fc .fc-button {
-    @apply rounded-lg font-medium text-sm px-4 py-2 border-none shadow-sm transition-colors duration-150 !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    transition: background-color 0.15s !important;
 }
 
 .fc .fc-button-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 !important;
+    background-color: #4f46e5 !important;
+}
+
+.fc .fc-button-primary:hover {
+    background-color: #4338ca !important;
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active {
-    @apply bg-indigo-800 !important;
+    background-color: #3730a3 !important;
 }
 
 .fc .fc-today-button {
-    @apply bg-emerald-600 hover:bg-emerald-700 !important;
+    background-color: #059669 !important;
+}
+
+.fc .fc-today-button:hover {
+    background-color: #047857 !important;
 }
 
 /* Сегодняшний день */
 .fc .fc-day-today {
-    @apply bg-amber-50 !important;
+    background: #fef3c7 !important;
 }
 
 .fc .fc-daygrid-day-number,
 .fc .fc-multimonth-day-number {
-    @apply text-gray-700 text-sm font-medium;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-/* Номер сегодняшнего дня — выделяем */
 .fc .fc-day-today .fc-daygrid-day-number,
 .fc .fc-day-today .fc-multimonth-day-number {
-    @apply bg-amber-500 text-white rounded-full w-7 h-7 inline-flex items-center justify-center;
+    background: #f59e0b;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Выходные */
 .fc .fc-day-sat,
 .fc .fc-day-sun {
-    @apply bg-gray-50 text-gray-400;
+    background: #f9fafb;
+    color: #9ca3af;
 }
 
-/* Наведение на день */
+/* Наведение */
 .fc .fc-daygrid-day:hover,
 .fc .fc-multimonth-daygrid .fc-day:hover {
-    @apply bg-indigo-50 cursor-pointer transition-colors duration-150;
+    background: #eef2ff;
+    cursor: pointer;
+    transition: background 0.15s;
 }
 
 /* Сетка multiMonth */
 .fc .fc-multimonth {
-    @apply border-none !important;
+    border: none !important;
 }
 
 .fc .fc-multimonth-header {
-    @apply text-gray-600 font-semibold capitalize text-sm;
+    color: #4b5563;
+    font-weight: 600;
+    text-transform: capitalize;
+    font-size: 14px;
 }
 
 .fc .fc-multimonth-daygrid .fc-day {
-    @apply border border-gray-100;
+    border: 1px solid #f3f4f6;
 }
 
 /* Заголовки дней недели */
 .fc .fc-col-header-cell {
-    @apply bg-gray-50 text-gray-500 font-medium text-xs uppercase py-2 border-b border-gray-200;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-/* События (когда появятся) */
+/* События */
 .fc .fc-event {
-    @apply rounded-md border-none shadow-sm cursor-pointer text-sm px-2 py-1;
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 8px;
 }

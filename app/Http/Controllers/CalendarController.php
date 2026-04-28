@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Commissariat;
 use App\Models\Task;
+use App\Models\TaskFile;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -52,8 +53,6 @@ class CalendarController extends Controller
 
     public function store(Request $request)
     {
-        \Log::info('Store method called', $request->all());
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -62,13 +61,27 @@ class CalendarController extends Controller
             'commissariat_id' => 'nullable|exists:commissariats,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'files.*' => 'nullable|file|max:10240',
         ]);
 
         $validated['created_by'] = auth()->id() ?? 1;
 
         $task = Task::create($validated);
 
-        \Log::info('Task created', ['id' => $task->id]);
+        // Сохраняем файлы
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('tasks/'.$task->id, 'public');
+
+                TaskFile::create([
+                    'task_id' => $task->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,

@@ -63,8 +63,7 @@
 
                     {{-- Подразделение --}}
                     <div class="mb-4">
-                        <label for="commissariat_id"
-                            class="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
+                        <label for="commissariat_id" class="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
                         <select id="commissariat_id" name="commissariat_id"
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="">Выберите комиссариат</option>
@@ -77,14 +76,12 @@
                     {{-- Даты --}}
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала
-                                *</label>
+                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала *</label>
                             <input type="date" id="start_date" name="start_date" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата
-                                окончания</label>
+                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания</label>
                             <input type="date" id="end_date" name="end_date"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
@@ -118,10 +115,8 @@
     </div>
 @endsection
 
-{{-- ===== СКРИПТЫ МОДАЛКИ ДОЛЖНЫ БЫТЬ В СЕКЦИИ ===== --}}
 @push('scripts')
     <script>
-        // Эти функции должны быть глобальными, чтобы FullCalendar мог их вызвать
         window.openModal = function () {
             document.getElementById('taskModal').classList.remove('hidden');
         };
@@ -136,14 +131,12 @@
             document.getElementById('modalTitle').textContent = 'Новая задача';
         };
 
-        // Закрытие по кнопкам
         document.querySelectorAll('[data-modal-close]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 window.closeModal();
             });
         });
 
-        // Закрытие по оверлею
         const overlay = document.querySelector('[data-modal-overlay]');
         if (overlay) {
             overlay.addEventListener('click', function () {
@@ -151,7 +144,6 @@
             });
         }
 
-        // Закрытие по Escape
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 window.closeModal();

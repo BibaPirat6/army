@@ -14,94 +14,9 @@ const vueApp = createApp({});
 vueApp.component('structure-graph', StructureGraph);
 vueApp.mount('#app');
 
-// Глобальные переменные
-let dropzoneInstance = null;
 let calendar = null;
+let dropzoneInstance = null;
 
-// === ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ DROPZONE ===
-function initDropzone() {
-    if (dropzoneInstance) {
-        dropzoneInstance.destroy();
-    }
-
-    const dropzoneEl = document.getElementById('taskFileDropzone');
-    if (!dropzoneEl) return;
-
-    dropzoneInstance = new Dropzone('#taskFileDropzone', {
-        url: '/calendar/files/upload',
-        method: 'post',
-        maxFilesize: 10,
-        acceptedFiles: 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar',
-        addRemoveLinks: true,
-        dictDefaultMessage: 'Перетащите файлы сюда или кликните для выбора',
-        dictRemoveFile: 'Удалить',
-        dictCancelUpload: 'Отмена',
-        dictFileTooBig: 'Файл слишком большой (макс. 10 МБ)',
-        dictInvalidFileType: 'Недопустимый тип файла',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-        init: function () {
-            this.on('sending', function (file, xhr, formData) {
-                const taskId = document.getElementById('task_id')?.value;
-                if (taskId) {
-                    formData.append('task_id', taskId);
-                }
-            });
-
-            this.on('success', function (file, response) {
-                file.uploadedFileId = response.file_id;
-                console.log('Файл загружен, ID:', response.file_id);
-            });
-
-            this.on('removedfile', function (file) {
-                if (file.uploadedFileId) {
-                    fetch(`/calendar/files/${file.uploadedFileId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                            'Accept': 'application/json',
-                        },
-                    })
-                    .then(r => r.json())
-                    .then(data => console.log('Файл удалён:', data))
-                    .catch(err => console.error('Ошибка удаления файла:', err));
-                }
-            });
-
-            this.on('error', function (file, message) {
-                console.error('Ошибка загрузки файла:', file.name, message);
-            });
-        },
-    });
-}
-
-// === ФУНКЦИЯ ПРИВЯЗКИ ФАЙЛОВ К ЗАДАЧЕ ===
-function attachFilesToTask(taskId) {
-    if (!dropzoneInstance) return Promise.resolve();
-    
-    const uploadedFiles = dropzoneInstance.getFilesWithStatus(Dropzone.SUCCESS);
-    if (uploadedFiles.length === 0) return Promise.resolve();
-
-    return fetch(`/calendar/files/attach/${taskId}`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(r => r.json())
-    .then(data => {
-        console.log('Файлы привязаны к задаче:', data);
-        return data;
-    })
-    .catch(err => {
-        console.error('Ошибка привязки файлов:', err);
-    });
-}
-
-// === ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ===
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
@@ -127,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         events: '/calendar/events',
 
-        // === КЛИК ПО ДНЮ ===
         dateClick: function (info) {
             console.log('Клик по дате:', info.dateStr);
 
@@ -135,23 +49,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.resetForm();
             }
 
-            // Удаляем старые файлы из Dropzone
+            // Очищаем Dropzone
             if (dropzoneInstance) {
                 dropzoneInstance.removeAllFiles(true);
             }
 
-            document.getElementById('start_date').value = info.dateStr;
-            document.getElementById('end_date').value = '';
+            // Безопасно устанавливаем дату
+            const startDateEl = document.getElementById('start_date');
+            if (startDateEl) {
+                startDateEl.value = info.dateStr;
+            } else {
+                console.error('Элемент #start_date не найден в DOM');
+            }
+
+            const endDateEl = document.getElementById('end_date');
+            if (endDateEl) {
+                endDateEl.value = '';
+            }
 
             if (typeof window.openModal === 'function') {
                 window.openModal();
             }
-
-            // Инициализируем Dropzone после открытия модалки
-            setTimeout(initDropzone, 100);
         },
 
-        // === КЛИК ПО СОБЫТИЮ (РЕДАКТИРОВАНИЕ) ===
         eventClick: function (info) {
             console.log('Клик по событию:', info.event.id);
 
@@ -176,42 +96,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.getElementById('modalTitle').textContent = 'Редактирование задачи';
 
+            // Очищаем Dropzone
+            if (dropzoneInstance) {
+                dropzoneInstance.removeAllFiles(true);
+            }
+
             if (typeof window.openModal === 'function') {
                 window.openModal();
             }
-
-            // Инициализируем Dropzone и загружаем существующие файлы
-            setTimeout(() => {
-                initDropzone();
-                
-                // Загружаем существующие файлы задачи
-                if (e.id) {
-                    fetch(`/calendar/tasks/${e.id}/files`)
-                        .then(r => r.json())
-                        .then(files => {
-                            files.forEach(file => {
-                                if (dropzoneInstance) {
-                                    // Создаём mock-файл в Dropzone
-                                    const mockFile = {
-                                        name: file.original_name,
-                                        size: file.size,
-                                        accepted: true,
-                                        uploadedFileId: file.id,
-                                    };
-                                    
-                                    dropzoneInstance.emit('addedfile', mockFile);
-                                    dropzoneInstance.emit('thumbnail', mockFile, file.url || '/storage/' + file.path);
-                                    dropzoneInstance.emit('complete', mockFile);
-                                    dropzoneInstance.files.push(mockFile);
-                                }
-                            });
-                        })
-                        .catch(err => console.error('Ошибка загрузки файлов задачи:', err));
-                }
-            }, 100);
         },
 
-        // === DRAG & DROP СОБЫТИЯ ===
         eventDrop: function (info) {
             const id = info.event.id;
             const startDate = info.event.startStr;
@@ -231,17 +125,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     end_date: endDate,
                 }),
             })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success) {
-                    info.revert();
-                }
-            })
-            .catch(() => info.revert());
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) info.revert();
+                })
+                .catch(() => info.revert());
         },
     });
 
     calendar.render();
+
+    // === DROPZONE (без авто-загрузки) ===
+    initDropzone();
 
     // === САБМИТ ФОРМЫ ===
     const taskForm = document.getElementById('taskForm');
@@ -254,39 +149,44 @@ document.addEventListener('DOMContentLoaded', function () {
             const url = id ? `/calendar/tasks/${id}` : '/calendar/tasks';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-            const data = {
-                _token: csrfToken,
-                title: document.getElementById('title').value,
-                description: document.getElementById('description').value,
-                color: document.getElementById('color').value,
-                quota: document.getElementById('quota').value,
-                commissariat_id: document.getElementById('commissariat_id').value,
-                start_date: document.getElementById('start_date').value,
-                end_date: document.getElementById('end_date').value,
-            };
+            // Собираем FormData (поддерживает файлы)
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('color', document.getElementById('color').value);
+            formData.append('quota', document.getElementById('quota').value);
+            formData.append('commissariat_id', document.getElementById('commissariat_id').value);
+            formData.append('start_date', document.getElementById('start_date').value);
+            formData.append('end_date', document.getElementById('end_date').value);
 
             if (id) {
-                data._method = 'PUT';
+                formData.append('_method', 'PUT');
             }
+
+            // Добавляем файлы из Dropzone
+            if (dropzoneInstance) {
+                const files = dropzoneInstance.getAcceptedFiles(); // все принятые файлы
+                files.forEach(file => {
+                    formData.append('files[]', file);
+                });
+            }
+
+            console.log('Отправка на:', url);
 
             fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify(data),
+                body: formData,
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Ответ сервера:', data);
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Ответ сервера:', data);
 
-                if (data.success) {
-                    const taskId = data.event.id;
-
-                    // Привязываем файлы к задаче
-                    attachFilesToTask(taskId).then(() => {
+                    if (data.success) {
                         if (!id) {
                             calendar.addEvent(data.event);
                         } else {
@@ -298,18 +198,43 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (typeof window.closeModal === 'function') {
                             window.closeModal();
                         }
-                    });
-                } else {
-                    alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка запроса:', error);
-                alert('Ошибка соединения с сервером. Проверьте консоль.');
-            });
+                    } else {
+                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка запроса:', error);
+                    alert('Ошибка соединения с сервером. Проверьте консоль.');
+                });
         });
         console.log('Обработчик формы привязан');
-    } else {
-        console.error('Форма #taskForm не найдена на странице!');
     }
 });
+
+// === ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ DROPZONE ===
+function initDropzone() {
+    const dropzoneEl = document.getElementById('taskFileDropzone');
+    if (!dropzoneEl) return;
+
+    // Уничтожаем старый экземпляр
+    if (dropzoneInstance) {
+        dropzoneInstance.destroy();
+    }
+
+    dropzoneInstance = new Dropzone('#taskFileDropzone', {
+        url: '/calendar/tasks',        // фейковый URL (не используется)
+        method: 'post',
+        autoProcessQueue: false,       // ← ГЛАВНОЕ: отключаем авто-загрузку
+        maxFilesize: 10,
+        maxFiles: 10,
+        acceptedFiles: 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar',
+        addRemoveLinks: true,
+        dictDefaultMessage: 'Перетащите файлы сюда или кликните для выбора',
+        dictRemoveFile: 'Удалить',
+        dictCancelUpload: 'Отмена',
+        dictFileTooBig: 'Файл слишком большой (макс. 10 МБ)',
+        dictInvalidFileType: 'Недопустимый тип файла',
+    });
+
+    console.log('Dropzone инициализирован (авто-загрузка отключена)');
+}
