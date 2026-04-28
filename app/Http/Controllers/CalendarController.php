@@ -53,6 +53,9 @@ class CalendarController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Store method data:', $request->all());
+        \Log::info('Files count: '.count($request->file('files', [])));
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -70,8 +73,14 @@ class CalendarController extends Controller
 
         // Сохраняем файлы
         if ($request->hasFile('files')) {
+            \Log::info('Saving files...');
             foreach ($request->file('files') as $file) {
                 $path = $file->store('tasks/'.$task->id, 'public');
+
+                \Log::info('File saved:', [
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                ]);
 
                 TaskFile::create([
                     'task_id' => $task->id,
@@ -81,11 +90,12 @@ class CalendarController extends Controller
                     'size' => $file->getSize(),
                 ]);
             }
+        } else {
+            \Log::info('No files in request');
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Задача создана',
             'event' => [
                 'id' => $task->id,
                 'title' => $task->title,

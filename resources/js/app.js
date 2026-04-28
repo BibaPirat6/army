@@ -86,10 +86,18 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('commissariat_id').value = props.commissariat_id || '';
             document.getElementById('start_date').value = e.startStr;
 
+            // Исправление: проверяем, была ли задача многодневной
             if (e.end) {
+                // FullCalendar end всегда на 1 день больше
                 const endDate = new Date(e.end);
                 endDate.setDate(endDate.getDate() - 1);
-                document.getElementById('end_date').value = endDate.toISOString().slice(0, 10);
+
+                // Если после вычитания получается та же дата, что и start — задача однодневная
+                if (endDate.toISOString().slice(0, 10) === e.startStr) {
+                    document.getElementById('end_date').value = '';
+                } else {
+                    document.getElementById('end_date').value = endDate.toISOString().slice(0, 10);
+                }
             } else {
                 document.getElementById('end_date').value = '';
             }
@@ -105,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.openModal();
             }
         },
+
 
         eventDrop: function (info) {
             const id = info.event.id;
@@ -149,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const url = id ? `/calendar/tasks/${id}` : '/calendar/tasks';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-            // Собираем FormData (поддерживает файлы)
+            // Собираем FormData
             const formData = new FormData();
             formData.append('_token', csrfToken);
             formData.append('title', document.getElementById('title').value);
@@ -158,18 +167,29 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('quota', document.getElementById('quota').value);
             formData.append('commissariat_id', document.getElementById('commissariat_id').value);
             formData.append('start_date', document.getElementById('start_date').value);
-            formData.append('end_date', document.getElementById('end_date').value);
+
+            const endDate = document.getElementById('end_date').value;
+            if (endDate) {
+                formData.append('end_date', endDate);
+            }
 
             if (id) {
                 formData.append('_method', 'PUT');
             }
 
-            // Добавляем файлы из Dropzone
-            if (dropzoneInstance) {
-                const files = dropzoneInstance.getAcceptedFiles(); // все принятые файлы
-                files.forEach(file => {
-                    formData.append('files[]', file);
+            // Добавляем файлы из Dropzone (ВСЕ, которые есть в дропзоне)
+            if (dropzoneInstance && dropzoneInstance.files.length > 0) {
+                let filesAdded = 0;
+                dropzoneInstance.files.forEach(file => {
+                    // Берём только файлы со статусом added или queued (не удалённые)
+                    if (file.status === Dropzone.ADDED || file.status === Dropzone.QUEUED) {
+                        formData.append('files[]', file);
+                        filesAdded++;
+                    }
                 });
+                console.log('Добавлено файлов в форму:', filesAdded, 'из', dropzoneInstance.files.length);
+            } else {
+                console.log('Нет файлов в Dropzone');
             }
 
             console.log('Отправка на:', url);
