@@ -12,7 +12,7 @@ class Task extends Model
     protected $fillable = [
         'title', 'description', 'color', 'quota',
         'commissariat_id', 'department_id', 'division_id',
-        'created_by', 'start_date', 'end_date'
+        'created_by', 'start_date', 'end_date',
     ];
 
     protected $casts = [
@@ -58,6 +58,12 @@ class Task extends Model
     public function taskAssignments()
     {
         return $this->hasMany(TaskAssignment::class);
+    }
+
+    // Файлы задачи
+    public function files()
+    {
+        return $this->hasMany(TaskFile::class);
     }
 
     // Суммарные временные оценки (вычисляются на основе subtasks)
