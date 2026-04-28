@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssignEmployeeController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CalendarFileController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
@@ -131,7 +132,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/events', [CalendarController::class, 'events'])->name('events');
         Route::post('/tasks', [CalendarController::class, 'store'])->name('tasks.store');
         Route::put('/tasks/{task}', [CalendarController::class, 'update'])->name('tasks.update');
+        Route::get('/tasks/{task}/files', [CalendarController::class, 'getFiles'])->name('tasks.files');
         Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
+
+        // Добавь эти маршруты для файлов:
+        Route::post('/files/upload', [CalendarFileController::class, 'upload'])->name('files.upload');
+        Route::post('/files/attach/{taskId}', [CalendarFileController::class, 'attachToTask'])->name('files.attach');
+        Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
     });
 
 });

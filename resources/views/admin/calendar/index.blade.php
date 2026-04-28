@@ -29,7 +29,7 @@
                     </button>
                 </div>
 
-                <form id="taskForm">
+                <form id="taskForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="task_id" name="id">
 
@@ -56,15 +56,15 @@
                         </div>
                         <div>
                             <label for="quota" class="block text-sm font-medium text-gray-700 mb-1">Квота</label>
-                            <input type="number" id="quota" name="quota" min="1"
-                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Не задана" value="1">
+                            <input type="number" id="quota" name="quota" min="1" value="1"
+                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                     </div>
 
                     {{-- Подразделение --}}
                     <div class="mb-4">
-                        <label for="commissariat_id" class="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
+                        <label for="commissariat_id"
+                            class="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
                         <select id="commissariat_id" name="commissariat_id"
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="">Выберите комиссариат</option>
@@ -75,16 +75,29 @@
                     </div>
 
                     {{-- Даты --}}
-                    <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала *</label>
+                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала
+                                *</label>
                             <input type="date" id="start_date" name="start_date" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания</label>
+                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата
+                                окончания</label>
                             <input type="date" id="end_date" name="end_date"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+
+                    {{-- Загрузка файлов --}}
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Файлы</label>
+                        <div id="taskFileDropzone"
+                            class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
+                            <div class="dz-message text-gray-500 text-sm text-center">
+                                Перетащите файлы сюда или кликните для выбора
+                            </div>
                         </div>
                     </div>
 
@@ -107,42 +120,42 @@
 
 {{-- ===== СКРИПТЫ МОДАЛКИ ДОЛЖНЫ БЫТЬ В СЕКЦИИ ===== --}}
 @push('scripts')
-<script>
-    // Эти функции должны быть глобальными, чтобы FullCalendar мог их вызвать
-    window.openModal = function () {
-        document.getElementById('taskModal').classList.remove('hidden');
-    };
+    <script>
+        // Эти функции должны быть глобальными, чтобы FullCalendar мог их вызвать
+        window.openModal = function () {
+            document.getElementById('taskModal').classList.remove('hidden');
+        };
 
-    window.closeModal = function () {
-        document.getElementById('taskModal').classList.add('hidden');
-    };
+        window.closeModal = function () {
+            document.getElementById('taskModal').classList.add('hidden');
+        };
 
-    window.resetForm = function () {
-        document.getElementById('taskForm').reset();
-        document.getElementById('task_id').value = '';
-        document.getElementById('modalTitle').textContent = 'Новая задача';
-    };
+        window.resetForm = function () {
+            document.getElementById('taskForm').reset();
+            document.getElementById('task_id').value = '';
+            document.getElementById('modalTitle').textContent = 'Новая задача';
+        };
 
-    // Закрытие по кнопкам
-    document.querySelectorAll('[data-modal-close]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            window.closeModal();
+        // Закрытие по кнопкам
+        document.querySelectorAll('[data-modal-close]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                window.closeModal();
+            });
         });
-    });
 
-    // Закрытие по оверлею
-    const overlay = document.querySelector('[data-modal-overlay]');
-    if (overlay) {
-        overlay.addEventListener('click', function () {
-            window.closeModal();
-        });
-    }
-
-    // Закрытие по Escape
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            window.closeModal();
+        // Закрытие по оверлею
+        const overlay = document.querySelector('[data-modal-overlay]');
+        if (overlay) {
+            overlay.addEventListener('click', function () {
+                window.closeModal();
+            });
         }
-    });
-</script>
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                window.closeModal();
+            }
+        });
+    </script>
 @endpush

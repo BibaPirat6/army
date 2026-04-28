@@ -61,14 +61,21 @@ return new class extends Migration
         });
 
         // храним файлы для tasks
-         Schema::create('task_files', function (Blueprint $table) {
+        Schema::create('task_files', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
-            $table->string('original_name');      
-            $table->string('path');               
+
+            $table->foreignId('task_id')
+                ->nullable()
+                ->constrained('tasks')
+                ->nullOnDelete();
+
+            $table->string('original_name');
+            $table->string('path');
             $table->string('mime_type')->nullable();
             $table->unsignedBigInteger('size')->default(0);
             $table->timestamps();
+
+            $table->index('task_id');
         });
 
         // Назначение: Декомпозиция задачи на подзадачи. Каждая хранит три временные оценки (оптимистичную, среднюю, пессимистичную) в минутах. Эти данные нужны алгоритму расчёта загрузки: они суммируются в модели Task (total_min_time, total_avg_time, total_max_time) и используются как стоимость одной итерации выполнения задачи. На основании квоты и этих чисел вычисляется общее требуемое время.
@@ -123,11 +130,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-         Schema::dropIfExists('task_files');
-         Schema::dropIfExists('task_files');
-         Schema::dropIfExists('task_files');
-         Schema::dropIfExists('task_files');
-         Schema::dropIfExists('task_files');
-        Schema::dropIfExists('graphics');
+        Schema::dropIfExists('task_files');
     }
 };
