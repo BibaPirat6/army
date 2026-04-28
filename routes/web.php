@@ -134,5 +134,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::put('/tasks/{task}', [CalendarController::class, 'update'])->name('tasks.update');
         Route::get('/tasks/{task}/files', [CalendarController::class, 'getFiles'])->name('tasks.files');
         Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
+
+        Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class StructureExport implements WithMultipleSheets
@@ -31,7 +32,8 @@ class StructureExport implements WithMultipleSheets
 class StructureSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
                                 \Maatwebsite\Excel\Concerns\WithHeadings, 
                                 \Maatwebsite\Excel\Concerns\WithMapping,
-                                \Maatwebsite\Excel\Concerns\WithTitle
+                                \Maatwebsite\Excel\Concerns\WithTitle,
+                                ShouldAutoSize
 {
     protected $data;
     protected $type;
@@ -171,7 +173,8 @@ class StructureSheet implements \Maatwebsite\Excel\Concerns\FromCollection,
 class PositionsSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
                                 \Maatwebsite\Excel\Concerns\WithHeadings, 
                                 \Maatwebsite\Excel\Concerns\WithMapping,
-                                \Maatwebsite\Excel\Concerns\WithTitle
+                                \Maatwebsite\Excel\Concerns\WithTitle,
+                                ShouldAutoSize
 {
     protected $data;
     protected $type;
@@ -261,7 +264,8 @@ class PositionsSheet implements \Maatwebsite\Excel\Concerns\FromCollection,
 class EmployeesSheet implements \Maatwebsite\Excel\Concerns\FromCollection, 
                                 \Maatwebsite\Excel\Concerns\WithHeadings, 
                                 \Maatwebsite\Excel\Concerns\WithMapping,
-                                \Maatwebsite\Excel\Concerns\WithTitle
+                                \Maatwebsite\Excel\Concerns\WithTitle,
+                                ShouldAutoSize
 {
     protected $data;
     protected $type;

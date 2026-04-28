@@ -4,11 +4,12 @@ namespace App\Exports;
 
 use App\Models\Employee;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
 
-class EmployeeExport implements FromCollection, WithHeadings, WithMapping
+class EmployeeExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {
     public function collection()
     {

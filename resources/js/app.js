@@ -17,6 +17,121 @@ vueApp.mount('#app');
 let calendar = null;
 let dropzoneInstance = null;
 
+
+// === ЗАГРУЗКА СУЩЕСТВУЮЩИХ ФАЙЛОВ ЗАДАЧИ В DROPZONE ===
+function loadTaskFiles(taskId) {
+    if (!taskId) return;
+
+    fetch(`/calendar/tasks/${taskId}/files`)
+        .then(r => r.json())
+        .then(files => {
+            console.log('Загружены файлы задачи:', files);
+
+            if (dropzoneInstance && files.length > 0) {
+                files.forEach(file => {
+                    // Создаём мок-файл в Dropzone
+                    const mockFile = {
+                        id: file.id,
+                        name: file.original_name,
+                        size: file.size,
+                        accepted: true,
+                        status: Dropzone.ADDED,
+                        url: file.url,
+                        existingFileId: file.id, // помечаем как существующий
+                    };
+
+                    // Добавляем файл в Dropzone
+                    dropzoneInstance.emit('addedfile', mockFile);
+
+                    // Если есть превью (изображение) — показываем
+                    if (file.mime_type && file.mime_type.startsWith('image/')) {
+                        dropzoneInstance.emit('thumbnail', mockFile, file.url);
+                    }
+
+                    dropzoneInstance.emit('complete', mockFile);
+                    dropzoneInstance.files.push(mockFile);
+
+                    // Устанавливаем data-атрибут с ID существующего файла
+                    const previewElement = mockFile.previewElement;
+                    if (previewElement) {
+                        previewElement.dataset.existingFileId = file.id;
+                    }
+                });
+            }
+        })
+        .catch(err => console.error('Ошибка загрузки файлов задачи:', err));
+}
+
+// === ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ DROPZONE ===
+function initDropzone() {
+    const dropzoneEl = document.getElementById('taskFileDropzone');
+    if (!dropzoneEl) return;
+
+    if (dropzoneInstance) {
+        dropzoneInstance.destroy();
+    }
+
+    dropzoneInstance = new Dropzone('#taskFileDropzone', {
+        url: '/calendar/tasks',
+        method: 'post',
+        autoProcessQueue: false,
+        maxFilesize: 10,
+        maxFiles: 20,
+        acceptedFiles: 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar',
+        addRemoveLinks: true,
+        dictDefaultMessage: 'Перетащите файлы сюда или кликните для выбора',
+        dictRemoveFile: 'Удалить',
+        dictCancelUpload: 'Отмена',
+        dictFileTooBig: 'Файл слишком большой (макс. 10 МБ)',
+        dictInvalidFileType: 'Недопустимый тип файла',
+
+        init: function () {
+            this.on('removedfile', function (file) {
+                const existingFileId = file.previewElement?.dataset?.existingFileId;
+
+                // Удаляем с сервера ТОЛЬКО если есть existingFileId
+                // И ТОЛЬКО если модалка открыта для редактирования
+                if (existingFileId) {
+                    console.log('Удаляем существующий файл с сервера, ID:', existingFileId);
+
+                    fetch(`/calendar/files/${existingFileId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'Accept': 'application/json',
+                        },
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            console.log('Файл удалён с сервера:', data);
+                        })
+                        .catch(err => console.error('Ошибка удаления файла:', err));
+                }
+            });
+        },
+    });
+
+    console.log('Dropzone инициализирован');
+}
+
+// === ОЧИСТКА DROPZONE БЕЗ УДАЛЕНИЯ ФАЙЛОВ С СЕРВЕРА ===
+function clearDropzone() {
+    if (!dropzoneInstance) return;
+
+    // Временно отключаем обработчик removedfile
+    dropzoneInstance.options.autoProcessQueue = false;
+
+    // Удаляем все файлы из Dropzone НЕ ТРОГАЯ сервер
+    while (dropzoneInstance.files.length > 0) {
+        const file = dropzoneInstance.files[0];
+        // Удаляем data-атрибут, чтобы removedfile не слал DELETE
+        if (file.previewElement) {
+            delete file.previewElement.dataset.existingFileId;
+        }
+        dropzoneInstance.removeFile(file);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
@@ -49,23 +164,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.resetForm();
             }
 
-            // Очищаем Dropzone
-            if (dropzoneInstance) {
-                dropzoneInstance.removeAllFiles(true);
-            }
+            // Просто очищаем Dropzone (без удаления с сервера)
+            clearDropzone();
 
-            // Безопасно устанавливаем дату
-            const startDateEl = document.getElementById('start_date');
-            if (startDateEl) {
-                startDateEl.value = info.dateStr;
-            } else {
-                console.error('Элемент #start_date не найден в DOM');
-            }
-
-            const endDateEl = document.getElementById('end_date');
-            if (endDateEl) {
-                endDateEl.value = '';
-            }
+            document.getElementById('start_date').value = info.dateStr;
+            document.getElementById('end_date').value = '';
 
             if (typeof window.openModal === 'function') {
                 window.openModal();
@@ -86,27 +189,25 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('commissariat_id').value = props.commissariat_id || '';
             document.getElementById('start_date').value = e.startStr;
 
-            // Исправление: проверяем, была ли задача многодневной
-            if (e.end) {
-                // FullCalendar end всегда на 1 день больше
-                const endDate = new Date(e.end);
+            // Безопасная обработка даты окончания (только строки)
+            if (e.endStr) {
+                // endStr всегда на 1 день больше реальной даты окончания
+                const endDate = new Date(e.endStr);
                 endDate.setDate(endDate.getDate() - 1);
+                const realEndStr = endDate.toISOString().slice(0, 10);
 
-                // Если после вычитания получается та же дата, что и start — задача однодневная
-                if (endDate.toISOString().slice(0, 10) === e.startStr) {
-                    document.getElementById('end_date').value = '';
-                } else {
-                    document.getElementById('end_date').value = endDate.toISOString().slice(0, 10);
-                }
+                // Если после вычитания получилась дата начала – задача однодневная
+                document.getElementById('end_date').value = (realEndStr !== e.startStr) ? realEndStr : '';
             } else {
                 document.getElementById('end_date').value = '';
             }
 
             document.getElementById('modalTitle').textContent = 'Редактирование задачи';
 
-            // Очищаем Dropzone
-            if (dropzoneInstance) {
-                dropzoneInstance.removeAllFiles(true);
+            clearDropzone();
+
+            if (e.id) {
+                loadTaskFiles(e.id);
             }
 
             if (typeof window.openModal === 'function') {
@@ -158,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const url = id ? `/calendar/tasks/${id}` : '/calendar/tasks';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-            // Собираем FormData
             const formData = new FormData();
             formData.append('_token', csrfToken);
             formData.append('title', document.getElementById('title').value);
@@ -177,22 +277,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('_method', 'PUT');
             }
 
-            // Добавляем файлы из Dropzone (ВСЕ, которые есть в дропзоне)
+            // Добавляем ТОЛЬКО НОВЫЕ файлы (не существующие)
             if (dropzoneInstance && dropzoneInstance.files.length > 0) {
-                let filesAdded = 0;
+                let newFilesCount = 0;
                 dropzoneInstance.files.forEach(file => {
-                    // Берём только файлы со статусом added или queued (не удалённые)
-                    if (file.status === Dropzone.ADDED || file.status === Dropzone.QUEUED) {
+                    // Проверяем, что файл новый (нет existingFileId в previewElement)
+                    const isExisting = file.previewElement?.dataset?.existingFileId;
+                    if (!isExisting && (file.status === Dropzone.ADDED || file.status === Dropzone.QUEUED)) {
                         formData.append('files[]', file);
-                        filesAdded++;
+                        newFilesCount++;
                     }
                 });
-                console.log('Добавлено файлов в форму:', filesAdded, 'из', dropzoneInstance.files.length);
-            } else {
-                console.log('Нет файлов в Dropzone');
+                console.log('Добавлено НОВЫХ файлов:', newFilesCount);
             }
-
-            console.log('Отправка на:', url);
 
             fetch(url, {
                 method: 'POST',
@@ -231,30 +328,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// === ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ DROPZONE ===
-function initDropzone() {
-    const dropzoneEl = document.getElementById('taskFileDropzone');
-    if (!dropzoneEl) return;
-
-    // Уничтожаем старый экземпляр
-    if (dropzoneInstance) {
-        dropzoneInstance.destroy();
-    }
-
-    dropzoneInstance = new Dropzone('#taskFileDropzone', {
-        url: '/calendar/tasks',        // фейковый URL (не используется)
-        method: 'post',
-        autoProcessQueue: false,       // ← ГЛАВНОЕ: отключаем авто-загрузку
-        maxFilesize: 10,
-        maxFiles: 10,
-        acceptedFiles: 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar',
-        addRemoveLinks: true,
-        dictDefaultMessage: 'Перетащите файлы сюда или кликните для выбора',
-        dictRemoveFile: 'Удалить',
-        dictCancelUpload: 'Отмена',
-        dictFileTooBig: 'Файл слишком большой (макс. 10 МБ)',
-        dictInvalidFileType: 'Недопустимый тип файла',
-    });
-
-    console.log('Dropzone инициализирован (авто-загрузка отключена)');
-}

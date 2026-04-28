@@ -125,9 +125,25 @@ class CalendarController extends Controller
             'commissariat_id' => 'nullable|exists:commissariats,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'files.*' => 'nullable|file|max:10240',   // разрешаем новые файлы
         ]);
 
         $task->update($validated);
+
+        // Сохраняем новые файлы (существующие не трогаем)
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('tasks/'.$task->id, 'public');
+
+                TaskFile::create([
+                    'task_id' => $task->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'mime_type' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -163,6 +179,7 @@ class CalendarController extends Controller
                 'id' => $file->id,
                 'original_name' => $file->original_name,
                 'size' => $file->size,
+                'mime_type' => $file->mime_type,
                 'url' => asset('storage/'.$file->path),
             ];
         });
