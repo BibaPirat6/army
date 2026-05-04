@@ -16,6 +16,7 @@ use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
+use App\Http\Controllers\SubtaskController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -139,5 +140,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
 
         Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
+
+        // Подзадачи (CRUD)
+        Route::prefix('tasks/{task}/subtasks')->name('subtasks.')->group(function () {
+            Route::get('/', [SubtaskController::class, 'index'])->name('index');
+            Route::get('/{subtask}', [SubtaskController::class, 'show'])->name('show');
+            Route::post('/', [SubtaskController::class, 'store'])->name('store');
+            Route::put('/{subtask}', [SubtaskController::class, 'update'])->name('update')
+                ->where('subtask', '[0-9]+');
+            Route::delete('/{subtask}', [SubtaskController::class, 'destroy'])->name('destroy')
+                ->where('subtask', '[0-9]+');
+        });
     });
 });

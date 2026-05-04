@@ -187,9 +187,15 @@ class CalendarController extends Controller
 
     public function destroy(Task $task)
     {
-        $task->delete();
+        // Удаляем связанные подзадачи и файлы
+        $task->subtasks()->delete();
+        $task->files()->delete();
+        $task->forceDelete();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Задача удалена',
+        ]);
     }
 
     // получаем файлы
