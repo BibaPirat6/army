@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Commissariat;
+use App\Models\EmployeePosition;
 use App\Models\Task;
 use App\Models\TaskFile;
 use Carbon\Carbon;
@@ -12,11 +12,22 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        $commissariats = Commissariat::all();
+        $employeePositions = EmployeePosition::with([
+            'employee.person',
+            'commissariatPosition.position.chiefType',
+            'commissariatPosition.commissariat',
+            'commissariatPosition.department',
+            'commissariatPosition.division',
+        ])
+            ->whereHas('commissariatPosition.position.chiefType', function ($query) {
+                $query->whereIn('id', [2, 3, 4]);
+            })
+            ->get();
 
-        return view('admin.calendar.index', compact('commissariats'));
+        return view('admin.calendar.index', compact('employeePositions'));
     }
 
+    // текущие события
     public function events(Request $request)
     {
         $start = Carbon::parse($request->start);
@@ -172,6 +183,7 @@ class CalendarController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // получаем файлы
     public function getFiles(Task $task)
     {
         $files = $task->files->map(function ($file) {

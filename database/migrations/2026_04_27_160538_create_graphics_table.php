@@ -46,9 +46,10 @@ return new class extends Migration
             $table->unsignedInteger('quota')->nullable();
 
             // К какому подразделению относится задача (строго одна из трёх связей)
-            $table->foreignId('commissariat_id')->nullable()->constrained('commissariats')->nullOnDelete();
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->foreignId('division_id')->nullable()->constrained('divisions')->nullOnDelete();
+            $table->foreignId('employee_position_id')
+                ->nullable()
+                ->constrained('employee_positions')
+                ->nullOnDelete();
 
             // Кто создал
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();

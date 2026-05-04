@@ -11,7 +11,7 @@ class Task extends Model
 
     protected $fillable = [
         'title', 'description', 'color', 'quota',
-        'commissariat_id', 'department_id', 'division_id',
+        'employee_position_id',
         'created_by', 'start_date', 'end_date',
     ];
 
@@ -26,26 +26,23 @@ class Task extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Подразделение, к которому привязана задача (один из трёх вариантов)
-    public function commissariat()
+    // Ответственный (должность)
+    public function employeePosition()
     {
-        return $this->belongsTo(Commissariat::class);
+        return $this->belongsTo(EmployeePosition::class);
     }
 
-    public function department()
-    {
-        return $this->belongsTo(Department::class);
-    }
-
-    public function division()
-    {
-        return $this->belongsTo(Division::class);
-    }
-
-    // Универсальный метод для получения объекта подразделения
+    // Подразделение через должность
     public function getUnitAttribute()
     {
-        return $this->commissariat ?? $this->department ?? $this->division;
+        $position = $this->employeePosition;
+        if (! $position || ! $position->commissariatPosition) {
+            return null;
+        }
+
+        return $position->commissariatPosition->division
+            ?? $position->commissariatPosition->department
+            ?? $position->commissariatPosition->commissariat;
     }
 
     // Подзадачи

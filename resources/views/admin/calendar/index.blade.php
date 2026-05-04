@@ -47,6 +47,51 @@
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                     </div>
 
+                    {{-- Ответственный с поиском --}}
+                    <div class="relative mb-4" id="responsible-select">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Ответственный *
+                        </label>
+
+                        {{-- Видимое поле поиска --}}
+                        <input type="text" id="employee_position_search" placeholder="Начните вводить ФИО или должность"
+                            autocomplete="off" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
+
+                        {{-- Скрытое поле с ID --}}
+                        <input type="hidden" name="employee_position_id" id="employee_position_id">
+
+                        {{-- Выпадающий список --}}
+                        <ul id="employee_position_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
+                               rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="Не назначать">
+                                Очистить
+                            </li>
+
+                            @foreach($employeePositions as $ep)
+                                @php
+                                    $cp = $ep->commissariatPosition;
+                                    $unitName = $cp->division?->name
+                                        ?? $cp->department?->name
+                                        ?? $cp->commissariat?->name
+                                        ?? 'Не указано';
+                                    $person = $ep->employee?->person;
+                                    $fullName = $person
+                                        ? trim($person->фамилия . ' ' . $person->имя . ' ' . ($person->отчество ?? ''))
+                                        : 'Сотрудник #' . $ep->employee_id;
+                                @endphp
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $ep->id }}"
+                                    data-name="{{ $fullName }} — {{ $unitName }}"
+                                    data-search="{{ mb_strtolower($fullName . ' ' . $unitName) }}">
+                                    <span class="font-medium">{{ $fullName }}</span>
+                                    <span class="text-gray-400 ml-1">— {{ $unitName }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
                     {{-- Цвет + Квота --}}
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -61,27 +106,20 @@
                         </div>
                     </div>
 
-                    {{-- Подразделение --}}
-                    <div class="mb-4">
-                        <label for="commissariat_id" class="block text-sm font-medium text-gray-700 mb-1">Подразделение</label>
-                        <select id="commissariat_id" name="commissariat_id"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Выберите комиссариат</option>
-                            @foreach($commissariats as $com)
-                                <option value="{{ $com->id }}">{{ $com->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    {{-- Ответственный --}}
+
 
                     {{-- Даты --}}
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала *</label>
+                            <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Дата начала
+                                *</label>
                             <input type="date" id="start_date" name="start_date" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания</label>
+                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата
+                                окончания</label>
                             <input type="date" id="end_date" name="end_date"
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
@@ -129,6 +167,9 @@
             document.getElementById('taskForm').reset();
             document.getElementById('task_id').value = '';
             document.getElementById('modalTitle').textContent = 'Новая задача';
+            if (typeof window.resetResponsibleSelect === 'function') {
+                window.resetResponsibleSelect();
+            }
         };
 
         document.querySelectorAll('[data-modal-close]').forEach(function (btn) {
@@ -149,5 +190,86 @@
                 window.closeModal();
             }
         });
+    </script>
+
+    <script>
+        // === ВЫПАДАЮЩИЙ СПИСОК С ПОИСКОМ ===
+        (function () {
+            const container = document.getElementById('responsible-select');
+            if (!container) return;
+
+            const input = container.querySelector('#employee_position_search');
+            const hidden = container.querySelector('#employee_position_id');
+            const list = container.querySelector('#employee_position_list');
+            const items = list.querySelectorAll('li');
+
+            function open() {
+                list.classList.remove('hidden');
+            }
+
+            function close() {
+                list.classList.add('hidden');
+            }
+
+            function filter(value) {
+                const q = value.toLowerCase().trim();
+
+                items.forEach(item => {
+                    const name = (item.dataset.name || '').toLowerCase();
+                    const search = (item.dataset.search || '').toLowerCase();
+                    const id = item.dataset.id || '';
+
+                    if (!q || name.includes(q) || search.includes(q) || id.includes(q)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            }
+
+            // Фокус — открываем
+            input.addEventListener('focus', () => {
+                open();
+                filter(input.value);
+            });
+
+            // Ввод — сбрасываем ID и фильтруем
+            input.addEventListener('input', () => {
+                hidden.value = '';
+                open();
+                filter(input.value);
+            });
+
+            // Выбор элемента
+            items.forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id || '';
+                    const name = item.dataset.name || '';
+
+                    input.value = name;
+                    hidden.value = id;
+
+                    close();
+                });
+            });
+
+            // Клик вне — закрываем
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    close();
+                }
+            });
+
+            // Глобальные функции для сброса и установки значения
+            window.resetResponsibleSelect = function () {
+                input.value = '';
+                hidden.value = '';
+            };
+
+            window.setResponsibleSelect = function (id, name) {
+                input.value = name;
+                hidden.value = id;
+            };
+        })();
     </script>
 @endpush

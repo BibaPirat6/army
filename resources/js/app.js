@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initialView: 'multiMonthYear',
         locale: ruLocale,
         firstDay: 1,
-        editable: true,
+        editable: false,
 
         headerToolbar: {
             left: 'prev,next today',

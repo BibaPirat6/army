@@ -10,7 +10,6 @@ class EmployeePosition extends Model
 {
     protected $table = 'employee_positions';
 
-
     protected $fillable = [
         'employee_id',
         'commissariat_position_id',
@@ -22,6 +21,12 @@ class EmployeePosition extends Model
         'rate' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    // Задачи, где эта должность — ответственный
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 
     /**
      * Сотрудник
