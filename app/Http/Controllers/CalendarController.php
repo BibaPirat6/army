@@ -72,7 +72,7 @@ class CalendarController extends Controller
             'description' => 'nullable|string',
             'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'quota' => 'nullable|integer|min:1',
-            'commissariat_id' => 'nullable|exists:commissariats,id',
+            'employee_position_id' => 'nullable|exists:employee_positions,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'files.*' => 'nullable|file|max:10240',
@@ -118,7 +118,7 @@ class CalendarController extends Controller
                 'extendedProps' => [
                     'description' => $task->description,
                     'quota' => $task->quota,
-                    'commissariat_id' => $task->commissariat_id,
+                    'employee_position_id' => $task->employee_position_id,
                 ],
             ],
         ]);
@@ -133,7 +133,7 @@ class CalendarController extends Controller
             'description' => 'nullable|string',
             'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'quota' => 'nullable|integer|min:1',
-            'commissariat_id' => 'nullable|exists:commissariats,id',
+            'employee_position_id' => 'nullable|exists:employee_positions,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'files.*' => 'nullable|file|max:10240',   // разрешаем новые файлы
@@ -170,7 +170,7 @@ class CalendarController extends Controller
                 'extendedProps' => [
                     'description' => $task->description,
                     'quota' => $task->quota,
-                    'commissariat_id' => $task->commissariat_id,
+                    'employee_position_id' => $task->employee_position_id,
                 ],
             ],
         ]);

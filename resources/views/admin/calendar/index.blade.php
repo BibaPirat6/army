@@ -106,9 +106,6 @@
                         </div>
                     </div>
 
-                    {{-- Ответственный --}}
-
-
                     {{-- Даты --}}
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>

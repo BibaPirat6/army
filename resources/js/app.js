@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('description').value = props.description || '';
             document.getElementById('color').value = e.backgroundColor || '#3788d8';
             document.getElementById('quota').value = props.quota || '';
-            document.getElementById('commissariat_id').value = props.commissariat_id || '';
+            document.getElementById('employee_position_id').value = props.employee_position_id || '';
             document.getElementById('start_date').value = e.startStr;
 
             // Безопасная обработка даты окончания (только строки)
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('description', document.getElementById('description').value);
             formData.append('color', document.getElementById('color').value);
             formData.append('quota', document.getElementById('quota').value);
-            formData.append('commissariat_id', document.getElementById('commissariat_id').value);
+            formData.append('employee_position_id', document.getElementById('employee_position_id').value);
             formData.append('start_date', document.getElementById('start_date').value);
 
             const endDate = document.getElementById('end_date').value;
