@@ -11,7 +11,7 @@
     </div>
 
     {{-- Модальное окно --}}
-    <div id="taskModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div id="taskModal" class="fixed inset-0 z-[999] hidden overflow-y-auto" aria-hidden="true">
         {{-- Оверлей --}}
         <div class="fixed inset-0 bg-gray-900/50 transition-opacity" data-modal-overlay></div>
 
@@ -27,6 +27,18 @@
                                 d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
+                </div>
+
+                {{-- Ссылка на задачу (показывается только при редактировании) --}}
+                <div id="taskLinkContainer" class="mb-4 hidden">
+                    <a href="#" id="taskLink"
+                        class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800 transition">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Перейти к задаче
+                    </a>
                 </div>
 
                 <form id="taskForm" enctype="multipart/form-data">
@@ -56,14 +68,14 @@
                         {{-- Видимое поле поиска --}}
                         <input type="text" id="employee_position_search" placeholder="Начните вводить ФИО или должность"
                             autocomplete="off" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                               focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
+                                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
                         {{-- Скрытое поле с ID --}}
                         <input type="hidden" name="employee_position_id" id="employee_position_id">
 
                         {{-- Выпадающий список --}}
                         <ul id="employee_position_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
-                               rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+                                                   rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
                                 data-name="Не назначать">
@@ -164,6 +176,13 @@
             document.getElementById('taskForm').reset();
             document.getElementById('task_id').value = '';
             document.getElementById('modalTitle').textContent = 'Новая задача';
+
+            // Скрываем ссылку на задачу
+            const taskLinkContainer = document.getElementById('taskLinkContainer');
+            if (taskLinkContainer) {
+                taskLinkContainer.classList.add('hidden');
+            }
+
             if (typeof window.resetResponsibleSelect === 'function') {
                 window.resetResponsibleSelect();
             }
@@ -257,16 +276,26 @@
                 }
             });
 
-            // Глобальные функции для сброса и установки значения
+            window.setResponsibleSelect = function (id, name) {
+                const input = document.getElementById('employee_position_search');
+                const hidden = document.getElementById('employee_position_id');
+
+                if (input && name) {
+                    input.value = name;
+                }
+                if (hidden && id) {
+                    hidden.value = id;
+                }
+            }
+
             window.resetResponsibleSelect = function () {
-                input.value = '';
-                hidden.value = '';
+                const input = document.getElementById('employee_position_search');
+                const hidden = document.getElementById('employee_position_id');
+
+                if (input) input.value = '';
+                if (hidden) hidden.value = '';
             };
 
-            window.setResponsibleSelect = function (id, name) {
-                input.value = name;
-                hidden.value = id;
-            };
         })();
     </script>
 @endpush

@@ -164,6 +164,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.resetForm();
             }
 
+            // Скрываем ссылку на задачу (так как создаём новую)
+            const taskLinkContainer = document.getElementById('taskLinkContainer');
+            if (taskLinkContainer) {
+                taskLinkContainer.classList.add('hidden');
+            }
+
             // Просто очищаем Dropzone (без удаления с сервера)
             clearDropzone();
 
@@ -201,6 +207,44 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 document.getElementById('end_date').value = '';
             }
+
+            // ✅ УСТАНОВКА ОТВЕТСТВЕННОГО
+            if (props.employee_position_id) {
+                // Ищем имя в выпадающем списке
+                const listItems = document.querySelectorAll('#employee_position_list li');
+                let foundName = '';
+                let foundId = null;
+
+                listItems.forEach(li => {
+                    if (li.dataset.id == props.employee_position_id) {
+                        foundName = li.dataset.name;
+                        foundId = li.dataset.id;
+                    }
+                });
+
+                if (foundName) {
+                    window.setResponsibleSelect(foundId, foundName);
+                } else {
+                    window.setResponsibleSelect(props.employee_position_id, '');
+                }
+            } else {
+                window.resetResponsibleSelect();
+            }
+
+
+            // ✅ ПОКАЗЫВАЕМ ССЫЛКУ НА ЗАДАЧУ
+            const taskLinkContainer = document.getElementById('taskLinkContainer');
+            const taskLink = document.getElementById('taskLink');
+
+            if (taskLinkContainer && taskLink && e.id) {
+                // Формируем URL для просмотра задачи
+                taskLink.href = `/calendar/tasks/${e.id}`;
+                taskLinkContainer.classList.remove('hidden');
+            } else if (taskLinkContainer) {
+                taskLinkContainer.classList.add('hidden');
+            }
+
+
 
             document.getElementById('modalTitle').textContent = 'Редактирование задачи';
 

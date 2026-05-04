@@ -55,11 +55,20 @@ class CalendarController extends Controller
                     'description' => $task->description,
                     'quota' => $task->quota,
                     'commissariat_id' => $task->commissariat_id,
+                    'employee_position_id' => $task->employee_position_id, // ✅ Добавьте эту строку
                 ],
             ];
         });
 
         return response()->json($events);
+    }
+
+    public function show($id)
+    {
+        $task = Task::with(['employeePosition.employee.person', 'employeePosition.commissariatPosition'])->findOrFail($id);
+
+        // Возвращаем отдельную страницу или компонент для просмотра задачи
+        return view('admin.calendar.show', compact('task'));
     }
 
     public function store(Request $request)

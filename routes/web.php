@@ -129,10 +129,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // графики
     Route::prefix('calendar')->name('calendar.')->group(function () {
         Route::get('/', [CalendarController::class, 'index'])->name('index');
+        Route::get('/tasks/{task}', [CalendarController::class, 'show'])->name('show')
+            ->where('task', '[0-9]+');
         Route::get('/events', [CalendarController::class, 'events'])->name('events');
         Route::post('/tasks', [CalendarController::class, 'store'])->name('tasks.store');
         Route::put('/tasks/{task}', [CalendarController::class, 'update'])->name('tasks.update');
         Route::get('/tasks/{task}/files', [CalendarController::class, 'getFiles'])->name('tasks.files');
+        // destroy еще не сделан, можно еще сделать удаление и отметка что задача выполнена, также архив
         Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
 
         Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
