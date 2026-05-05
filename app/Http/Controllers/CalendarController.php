@@ -35,7 +35,7 @@ class CalendarController extends Controller
     }
 
 
-    
+
     // текущие события
     public function events(Request $request)
     {
@@ -222,4 +222,5 @@ class CalendarController extends Controller
 
         return response()->json($files);
     }
+
 }

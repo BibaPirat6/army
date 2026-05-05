@@ -11,6 +11,7 @@ use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MatrixController;
 use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
@@ -151,5 +152,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::delete('/{subtask}', [SubtaskController::class, 'destroy'])->name('destroy')
                 ->where('subtask', '[0-9]+');
         });
+
+        // Матрица сотрудников
+        Route::prefix('matrix')->name('matrix.')->group(function () {
+            Route::get('/{commissariat}/{department?}/{division?}', [MatrixController::class, 'index'])
+                ->name('index');
+        });
     });
+
 });

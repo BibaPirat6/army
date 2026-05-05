@@ -9,7 +9,7 @@ class TaskStatsService
 {
     public function getStats(): array
     {
-        $commissariats = Commissariat::with(['departments.divisions'])->get();
+        $commissariats = Commissariat::with(['departments.divisions', 'divisions'])->get();
         $stats = [];
 
         foreach ($commissariats as $commissariat) {
@@ -23,27 +23,43 @@ class TaskStatsService
     {
         $directTasks = $this->countDirectTasks($commissariat->id, null, null);
 
+        // Отделы
         $departments = [];
         foreach ($commissariat->departments as $department) {
-            $departments[] = $this->buildDepartmentStats($department);
+            $departments[] = $this->buildDepartmentStats($commissariat->id, $department);
+        }
+
+        // Самостоятельные отделения (без отдела)
+        $independentDivisions = [];
+        foreach ($commissariat->divisions as $division) {
+            if (is_null($division->department_id)) {
+                $independentDivisions[] = $this->buildDivisionStats(
+                    $commissariat->id,
+                    null,
+                    $division
+                );
+            }
         }
 
         return [
-            'id'          => $commissariat->id,
-            'name'        => $commissariat->name,
-            'direct'      => $directTasks,
-            'departments' => $departments,
-            'total'       => $directTasks + collect($departments)->sum('total'),
+            'id'                    => $commissariat->id,
+            'name'                  => $commissariat->name,
+            'direct'                => $directTasks,
+            'departments'           => $departments,
+            'independent_divisions' => $independentDivisions,
+            'total'                 => $directTasks
+                + collect($departments)->sum('total')
+                + collect($independentDivisions)->sum('tasks'),
         ];
     }
 
-    private function buildDepartmentStats($department): array
+    private function buildDepartmentStats(int $commissariatId, $department): array
     {
-        $directTasks = $this->countDirectTasks($department->commissariat_id, $department->id, null);
+        $directTasks = $this->countDirectTasks($commissariatId, $department->id, null);
 
         $divisions = [];
         foreach ($department->divisions as $division) {
-            $divisions[] = $this->buildDivisionStats($division);
+            $divisions[] = $this->buildDivisionStats($commissariatId, $department->id, $division);
         }
 
         return [
@@ -55,14 +71,16 @@ class TaskStatsService
         ];
     }
 
-    private function buildDivisionStats($division): array
+    private function buildDivisionStats(int $commissariatId, ?int $departmentId, $division): array
     {
-        $tasks = $this->countDirectTasks($division->commissariat_id, $division->department_id, $division->id);
+        $tasks = $this->countDirectTasks($commissariatId, $departmentId, $division->id);
 
         return [
-            'id'    => $division->id,
-            'name'  => $division->name,
-            'tasks' => $tasks,
+            'id'              => $division->id,
+            'name'            => $division->name,
+            'tasks'           => $tasks,
+            'commissariat_id' => $commissariatId,
+            'department_id'   => $departmentId,
         ];
     }
 
