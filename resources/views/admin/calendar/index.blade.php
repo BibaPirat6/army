@@ -6,10 +6,21 @@
 
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Календарный график задач</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">Календарный график задач</h2>
+            <button type="button" onclick="openStatsModal()"
+                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Статистика по подразделениям
+            </button>
+        </div>
         <div id="calendar"></div>
     </div>
 
+    
     {{-- Модальное окно --}}
     <div id="taskModal" class="fixed inset-0 z-[999] hidden overflow-y-auto" aria-hidden="true">
         {{-- Оверлей --}}
@@ -67,15 +78,16 @@
 
                         {{-- Видимое поле поиска --}}
                         <input type="text" id="employee_position_search" placeholder="Начните вводить ФИО или должность"
-                            autocomplete="off" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
+                            autocomplete="off"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                                                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
                         {{-- Скрытое поле с ID --}}
                         <input type="hidden" name="employee_position_id" id="employee_position_id">
 
                         {{-- Выпадающий список --}}
                         <ul id="employee_position_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
-                                                   rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+                                                                   rounded-lg max-h-72 overflow-auto hidden shadow-lg">
 
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
                                 data-name="Не назначать">
@@ -161,6 +173,80 @@
         </div>
     </div>
 @endsection
+
+
+{{-- Модальное окно статистики --}}
+<div id="statsModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="closeStatsModal()"></div>
+
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 z-10">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-lg font-semibold text-gray-800">Статистика задач по подразделениям</h3>
+                <button type="button" onclick="closeStatsModal()"
+                    class="text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4 max-h-[70vh] overflow-y-auto">
+                @foreach($taskStats as $commissariat)
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        {{-- Комиссариат --}}
+                        <div class="bg-indigo-50 px-4 py-3 flex justify-between items-center">
+                            <span class="font-semibold text-gray-800">🏛 {{ $commissariat['name'] }}</span>
+                            <span class="text-sm font-medium bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
+                                Всего: {{ $commissariat['total'] }}
+                            </span>
+                        </div>
+
+                        {{-- Прямые задачи комиссариата --}}
+                        @if($commissariat['direct'] > 0)
+                            <div class="px-4 py-2 border-b border-gray-100 flex justify-between text-sm">
+                                <span class="text-gray-500 pl-4">↳ Напрямую</span>
+                                <span class="font-medium text-gray-700">{{ $commissariat['direct'] }}</span>
+                            </div>
+                        @endif
+
+                        {{-- Отделы --}}
+                        @foreach($commissariat['departments'] as $department)
+                            <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+                                <span class="font-medium text-gray-700">📁 {{ $department['name'] }}</span>
+                                <span class="text-sm font-medium text-gray-600">{{ $department['total'] }}</span>
+                            </div>
+
+                            {{-- Прямые задачи отдела --}}
+                            @if($department['direct'] > 0)
+                                <div class="px-4 py-1 border-b border-gray-100 flex justify-between text-sm">
+                                    <span class="text-gray-400 pl-6">↳ Напрямую</span>
+                                    <span class="text-gray-500">{{ $department['direct'] }}</span>
+                                </div>
+                            @endif
+
+                            {{-- Отделения --}}
+                            @foreach($department['divisions'] as $division)
+                                <div class="px-4 py-1 border-b border-gray-100 flex justify-between text-sm">
+                                    <span class="text-gray-500 pl-6">📋 {{ $division['name'] }}</span>
+                                    <span class="font-medium text-gray-600">{{ $division['tasks'] }}</span>
+                                </div>
+                            @endforeach
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="flex justify-end mt-5 pt-4 border-t border-gray-200">
+                <button type="button" onclick="closeStatsModal()"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
     <script>
@@ -295,6 +381,22 @@
                 if (input) input.value = '';
                 if (hidden) hidden.value = '';
             };
+
+            // === СТАТИСТИКА ===
+            window.openStatsModal = function () {
+                document.getElementById('statsModal').classList.remove('hidden');
+            };
+
+            window.closeStatsModal = function () {
+                document.getElementById('statsModal').classList.add('hidden');
+            };
+
+            // Закрытие по Escape
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeStatsModal();
+                }
+            });
 
         })();
     </script>

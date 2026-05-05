@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commissariat;
 use App\Models\EmployeePosition;
 use App\Models\Task;
 use App\Models\TaskFile;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
+
     public function index()
     {
         $employeePositions = EmployeePosition::with([
@@ -24,7 +26,59 @@ class CalendarController extends Controller
             })
             ->get();
 
-        return view('admin.calendar.index', compact('employeePositions'));
+        // Статистика для модального окна
+        $commissariats = Commissariat::with(['departments.divisions'])->get();
+
+        $taskStats = [];
+        foreach ($commissariats as $commissariat) {
+            // Задачи напрямую на комиссариат
+            $directTasks = Task::whereHas('employeePosition.commissariatPosition', function ($q) use ($commissariat) {
+                $q->where('commissariat_id', $commissariat->id)
+                    ->whereNull('department_id')
+                    ->whereNull('division_id');
+            })->count();
+
+            $departmentStats = [];
+            foreach ($commissariat->departments as $department) {
+                // Задачи напрямую на отдел
+                $deptDirectTasks = Task::whereHas('employeePosition.commissariatPosition', function ($q) use ($department) {
+                    $q->where('department_id', $department->id)
+                        ->whereNull('division_id');
+                })->count();
+
+                $divisionStats = [];
+                foreach ($department->divisions as $division) {
+                    // Задачи на отделение
+                    $divTasks = Task::whereHas('employeePosition.commissariatPosition', function ($q) use ($division) {
+                        $q->where('division_id', $division->id);
+                    })->count();
+
+                    $divisionStats[] = [
+                        'id' => $division->id,
+                        'name' => $division->name,
+                        'tasks' => $divTasks,
+                    ];
+                }
+
+                $departmentStats[] = [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'direct' => $deptDirectTasks,
+                    'divisions' => $divisionStats,
+                    'total' => $deptDirectTasks + collect($divisionStats)->sum('tasks'),
+                ];
+            }
+
+            $taskStats[] = [
+                'id' => $commissariat->id,
+                'name' => $commissariat->name,
+                'direct' => $directTasks,
+                'departments' => $departmentStats,
+                'total' => $directTasks + collect($departmentStats)->sum('total'),
+            ];
+        }
+
+        return view('admin.calendar.index', compact('employeePositions', 'taskStats'));
     }
 
     // текущие события
