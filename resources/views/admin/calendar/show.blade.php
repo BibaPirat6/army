@@ -53,8 +53,10 @@
                     <h3 class="text-sm font-medium text-gray-500">Ответственный</h3>
                     <p class="mt-1 text-gray-800">
                         @if($task->employeePosition && $task->employeePosition->employee)
-                            {{ $task->employeePosition->employee->person->фамилия ?? '' }}
-                            {{ $task->employeePosition->employee->person->имя ?? '' }}
+                            <a href="{{ route("employees.show",[
+                                "id" => $task->employeePosition->employee->id,
+                                "back_url"=>url()->full()                           
+                            ]) }}">{{ $task->employeePosition->employee->getFullNameAttribute() }}</a>
                         @else
                             Не назначен
                         @endif

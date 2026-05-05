@@ -525,60 +525,60 @@
                     const deptTasks = data.total - data.direct - indDivSum;
 
                     html = `
-                        <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${data.name}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">↳ Прямые задачи:</span><span class="font-medium">${data.direct}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">📁 Задачи отделов:</span><span class="font-medium">${deptTasks}</span></div>
-                        ${indDivSum > 0 ? `<div class="flex justify-between"><span class="text-gray-500">📋 Задачи самост. отделений:</span><span class="font-medium">${indDivSum}</span></div>` : ''}
-                        <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество:</span><span class="font-bold text-indigo-700">${data.total}</span></div>
-                    `;
+                            <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${data.name}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">↳ Прямые задачи:</span><span class="font-medium">${data.direct}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">📁 Задачи отделов:</span><span class="font-medium">${deptTasks}</span></div>
+                            ${indDivSum > 0 ? `<div class="flex justify-between"><span class="text-gray-500">📋 Задачи самост. отделений:</span><span class="font-medium">${indDivSum}</span></div>` : ''}
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество:</span><span class="font-bold text-indigo-700">${data.total}</span></div>
+                        `;
                     hasMatrix = data.total > 0;
                     matrixUrl = `/calendar/matrix/${data.id}`;
                 } else if (level === 'department') {
                     html = `
-                        <div class="flex justify-between"><span class="text-gray-500">📁 Отдел:</span><span class="font-medium">${data.name}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">↳ Прямые задачи:</span><span class="font-medium">${data.direct}</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">📋 Задачи отделений:</span><span class="font-medium">${data.total - data.direct}</span></div>
-                        <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Всего по отделу:</span><span class="font-bold text-indigo-700">${data.total}</span></div>
-                    `;
+                            <div class="flex justify-between"><span class="text-gray-500">📁 Отдел:</span><span class="font-medium">${data.name}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">↳ Прямые задачи:</span><span class="font-medium">${data.direct}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">📋 Задачи отделений:</span><span class="font-medium">${data.total - data.direct}</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Всего по отделу:</span><span class="font-bold text-indigo-700">${data.total}</span></div>
+                        `;
                     hasMatrix = data.total > 0;
                     matrixUrl = `/calendar/matrix/${selectedCommissariatId}/department/${data.id}`;
                 } else if (level === 'division') {
                     html = `
-                        <div class="flex justify-between"><span class="text-gray-500">📋 Отделение:</span><span class="font-medium">${data.name}</span></div>
-                        <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Количество задач:</span><span class="font-bold text-indigo-700">${data.tasks}</span></div>
-                    `;
+                            <div class="flex justify-between"><span class="text-gray-500">📋 Отделение:</span><span class="font-medium">${data.name}</span></div>
+                            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Количество задач:</span><span class="font-bold text-indigo-700">${data.tasks}</span></div>
+                        `;
                     hasMatrix = data.tasks > 0;
                     if (currentMatrixData) {
                         const deptPart = currentMatrixData.departmentId ? `department/${currentMatrixData.departmentId}/` : '';
-                        matrixUrl = `/calendar/matrix/${currentMatrixData.commissariatId}/${deptPart}division/${data.id}`;
+                        matrixUrl = `/calendar/matrix/${currentMatrixData.commissariatId}/division/${data.id}`;
                     }
                 }
 
                 // Кнопка матрицы
                 if (hasMatrix && matrixUrl) {
                     html += `
-                        <div class="mt-3 pt-3 border-t border-gray-200">
-                            <a href="${matrixUrl}"
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                </svg>
-                                Матрица сотрудников
-                            </a>
-                        </div>
-                    `;
+                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                <a href="${matrixUrl}"
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                    </svg>
+                                    Матрица сотрудников
+                                </a>
+                            </div>
+                        `;
                 } else {
                     html += `
-                        <div class="mt-3 pt-3 border-t border-gray-200">
-                            <button type="button" disabled
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                </svg>
-                                Матрица сотрудников (нет задач)
-                            </button>
-                        </div>
-                    `;
+                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                <button type="button" disabled
+                                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                    </svg>
+                                    Матрица сотрудников (нет задач)
+                                </button>
+                            </div>
+                        `;
                 }
 
                 statsResultContent.innerHTML = html;

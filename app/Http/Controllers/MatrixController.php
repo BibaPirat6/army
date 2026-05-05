@@ -12,65 +12,67 @@ use Illuminate\Http\Request;
 
 class MatrixController extends Controller
 {
-    public function index(Request $request, $commissariatId, $departmentId = null, $divisionId = null)
-    {
+    public function index(
+        Request $request,
+        $commissariatId,
+        $departmentId = null,
+        $divisionId = null
+    ) {
         $commissariat = Commissariat::findOrFail($commissariatId);
 
         $department = null;
         $division = null;
         $unitName = $commissariat->name;
         $unitType = 'commissariat';
-        $breadcrumbs = [
-            ['name' => 'Календарь', 'url' => route('calendar.index')],
-            ['name' => 'Матрица', 'url' => null],
-            ['name' => $unitName, 'url' => null],
-        ];
 
-        if ($divisionId) {
+        // Определяем, что передано
+        $routeParams = $request->route()->parameters();
+
+        if (isset($routeParams['division'])) {
+            // Отделение (может быть самостоятельным)
             $division = Division::findOrFail($divisionId);
             $unitName = $division->name;
             $unitType = 'division';
+
             if ($division->department_id) {
-                $department = $division->department;
-                $breadcrumbs[] = ['name' => $department->name, 'url' => null];
+                $department = Department::find($division->department_id);
             }
-            $breadcrumbs[] = ['name' => $unitName, 'url' => null];
-        } elseif ($departmentId) {
+        } elseif (isset($routeParams['department'])) {
+            // Отдел
             $department = Department::findOrFail($departmentId);
             $unitName = $department->name;
             $unitType = 'department';
-            $breadcrumbs[] = ['name' => $unitName, 'url' => null];
         }
 
-        // Получаем ВСЕ задачи (с учётом иерархии)
-        $tasks = $this->getAllTasks($commissariatId, $departmentId, $divisionId);
+        // Получаем задачи
+        $tasks = $this->getTasks($commissariatId, $department?->id, $division?->id);
 
-        // Получаем ВСЕХ сотрудников подразделения (включая вложенные)
-        $allEmployees = $this->getAllEmployees($commissariatId, $departmentId, $divisionId);
+        // Получаем сотрудников
+        $employees = $this->getEmployees($commissariatId, $department?->id, $division?->id);
 
-        // Собираем все назначения для этих задач
+        // Получаем назначения
         $taskIds = $tasks->pluck('id')->toArray();
         $assignments = TaskAssignment::whereIn('task_id', $taskIds)
-            ->with(['employee.person', 'task'])
+            ->with(['employee.person'])
             ->get()
             ->groupBy('task_id');
 
-        // Строим матрицу: задача → сотрудники
+        // Строим матрицу
         $matrix = [];
         $totals = [
-            'tasks'       => count($tasks),
-            'employees'   => count($allEmployees),
+            'tasks'      => count($tasks),
+            'employees'  => count($employees),
             'assignments' => $assignments->flatten(1)->count(),
-            'unassigned'  => 0,
+            'unassigned' => 0,
         ];
 
         foreach ($tasks as $task) {
             $taskAssignments = $assignments->get($task->id, collect());
 
             $row = [
-                'task'        => $task,
-                'assignments' => $taskAssignments,
-                'total_quota' => $taskAssignments->sum('quota'),
+                'task'            => $task,
+                'assignments'     => $taskAssignments,
+                'total_quota'     => $taskAssignments->sum('quota'),
                 'total_completed' => $taskAssignments->sum('completed_count'),
             ];
 
@@ -81,6 +83,20 @@ class MatrixController extends Controller
             $matrix[] = $row;
         }
 
+        // Хлебные крошки
+        $breadcrumbs = [
+            ['name' => 'Календарь', 'url' => route('calendar.index')],
+            ['name' => 'Матрица', 'url' => null],
+            ['name' => $commissariat->name, 'url' => null],
+        ];
+
+        if ($department) {
+            $breadcrumbs[] = ['name' => $department->name, 'url' => null];
+        }
+        if ($division) {
+            $breadcrumbs[] = ['name' => $division->name, 'url' => null];
+        }
+
         return view('admin.calendar.matrix.index', compact(
             'commissariat',
             'department',
@@ -88,7 +104,7 @@ class MatrixController extends Controller
             'unitName',
             'unitType',
             'breadcrumbs',
-            'allEmployees',
+            'employees',
             'tasks',
             'matrix',
             'totals'
@@ -96,39 +112,41 @@ class MatrixController extends Controller
     }
 
     /**
-     * Получить ВСЕ задачи с учётом иерархии.
+     * Получить задачи с учётом иерархии.
      */
-    private function getAllTasks($commissariatId, $departmentId, $divisionId)
+    private function getTasks($commissariatId, $departmentId, $divisionId)
     {
-        $query = Task::with(['subtasks', 'employeePosition.commissariatPosition.commissariat'])
+        $query = Task::with(['subtasks'])
             ->whereHas('employeePosition.commissariatPosition', function ($q) use ($commissariatId) {
                 $q->where('commissariat_id', $commissariatId);
             });
 
         if ($divisionId) {
-            // Только задачи конкретного отделения
+            // Конкретное отделение
             $query->whereHas('employeePosition.commissariatPosition', function ($q) use ($divisionId) {
                 $q->where('division_id', $divisionId);
             });
         } elseif ($departmentId) {
-            // Задачи напрямую отдела + задачи всех его отделений
+            // Отдел: задачи напрямую отдела + всех его отделений
             $divisionIds = Division::where('department_id', $departmentId)->pluck('id')->toArray();
             $query->whereHas('employeePosition.commissariatPosition', function ($q) use ($departmentId, $divisionIds) {
                 $q->where(function ($sub) use ($departmentId, $divisionIds) {
-                    $sub->where('department_id', $departmentId)
-                        ->orWhereIn('division_id', $divisionIds);
+                    $sub->where('department_id', $departmentId);
+                    if (!empty($divisionIds)) {
+                        $sub->orWhereIn('division_id', $divisionIds);
+                    }
                 });
             });
         }
-        // Если только комиссариат — задачи напрямую комиссариата + всех отделов + всех отделений
+        // Комиссариат: все задачи (напрямую + отделы + отделения)
 
         return $query->orderBy('start_date')->get();
     }
 
     /**
-     * Получить ВСЕХ сотрудников с учётом иерархии.
+     * Получить сотрудников с учётом иерархии.
      */
-    private function getAllEmployees($commissariatId, $departmentId, $divisionId)
+    private function getEmployees($commissariatId, $departmentId, $divisionId)
     {
         $query = Employee::with(['person'])
             ->whereHas('employeePositions.commissariatPosition', function ($q) use ($commissariatId) {
@@ -143,8 +161,10 @@ class MatrixController extends Controller
             $divisionIds = Division::where('department_id', $departmentId)->pluck('id')->toArray();
             $query->whereHas('employeePositions.commissariatPosition', function ($q) use ($departmentId, $divisionIds) {
                 $q->where(function ($sub) use ($departmentId, $divisionIds) {
-                    $sub->where('department_id', $departmentId)
-                        ->orWhereIn('division_id', $divisionIds);
+                    $sub->where('department_id', $departmentId);
+                    if (!empty($divisionIds)) {
+                        $sub->orWhereIn('division_id', $divisionIds);
+                    }
                 });
             });
         }
