@@ -67,8 +67,8 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-    public function createdTasks()
-    {
-        return $this->hasMany(Task::class, 'created_by');
-    }
+    // public function createdTasks()
+    // {
+    //     return $this->hasMany(Task::class, 'created_by');
+    // }
 }

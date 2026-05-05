@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             CommissariatPositionSeeder::class,
             EmployeePositionSeeder::class,
 
-            WorkScheduleTemplateSeeder::class
+            // WorkScheduleTemplateSeeder::class
         ]);
     }
 }

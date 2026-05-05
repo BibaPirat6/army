@@ -9,7 +9,7 @@ class WorkDay extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['employee_id', 'date', 'work_start', 'work_end', 'breaks'];
+    protected $fillable = ['employee_id', 'date', 'work_start', 'work_end', 'breaks', 'type'];
 
     protected $casts = [
         'date' => 'date',

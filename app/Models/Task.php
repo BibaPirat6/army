@@ -12,7 +12,7 @@ class Task extends Model
     protected $fillable = [
         'title', 'description', 'color', 'quota',
         'employee_position_id',
-        'created_by', 'start_date', 'end_date',
+        'start_date', 'end_date',
     ];
 
     protected $casts = [
@@ -21,10 +21,10 @@ class Task extends Model
     ];
 
     // Кто создал задачу
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
+    // public function creator()
+    // {
+    //     return $this->belongsTo(User::class, 'created_by');
+    // }
 
     // Ответственный (должность)
     public function employeePosition()
@@ -61,6 +61,11 @@ class Task extends Model
     public function files()
     {
         return $this->hasMany(TaskFile::class);
+    }
+
+    public function taskInstance()
+    {
+        return $this->belongsTo(TaskInstance::class);
     }
 
     // Суммарные временные оценки (вычисляются на основе subtasks)

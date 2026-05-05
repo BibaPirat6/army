@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Назначение: Центральная таблица задач. Содержит описание, цвет, общую квоту для подразделения и привязку к организационной единице (комиссариат, отдел, отделение). Диапазон дат определяет, на какие дни будут автоматически сгенерированы экземпляры (task_instances).
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->string('title');
@@ -28,16 +27,15 @@ return new class extends Migration
                 ->nullOnDelete();
 
             // Кто создал
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            // $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
 
             // Период действия задачи (диапазон дат)
             $table->date('start_date');
-            $table->date('end_date')->nullable(); // null – задача на один день
+            $table->date('end_date')->nullable();
 
             $table->timestamps();
         });
 
-        // Назначение: Декомпозиция задачи на подзадачи. Каждая хранит три временные оценки (оптимистичную, среднюю, пессимистичную) в минутах. Эти данные нужны алгоритму расчёта загрузки: они суммируются в модели Task (total_min_time, total_avg_time, total_max_time) и используются как стоимость одной итерации выполнения задачи. На основании квоты и этих чисел вычисляется общее требуемое время.
         Schema::create('subtasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
@@ -66,7 +64,8 @@ return new class extends Migration
             $table->index('task_id');
         });
 
-        // Назначение: Ручное распределение задач начальником. Начальник выбирает задачу (уже привязанную к его подразделению), сотрудника из этого же подразделения, задаёт персональную квоту, приоритет и сроки. При сохранении система проверяет, что сумма квот всех назначений по задаче не превышает общую квоту tasks.quota. На основе этих записей симулятор (WorkloadSimulator) строит прогноз загрузки сотрудника.
+        // какой сотрудник делает какую задачу
+        // и в каком объёме
         Schema::create('task_assignments', function (Blueprint $table) {
             $table->id();
             // Привязка к родительской задаче (чтобы знать контекст и подразделение)
@@ -75,30 +74,48 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
 
             // Сколько всего итераций должен выполнить именно этот сотрудник
-            $table->unsignedInteger('quota')->default(1);
+            $table->unsignedInteger('quota')->default(0);
             // Приоритет: чем меньше число, тем выше приоритет (1 – наивысший)
             $table->unsignedInteger('priority')->default(1);
 
-            // Период, в который сотрудник должен выполнить свою квоту
-            $table->date('start_date');
-            $table->date('end_date');
+            // рамки (не календарь!)
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
 
             // Статус и счётчик фактического выполнения (денормализация)
-            $table->enum('status', ['assigned', 'in_progress', 'completed'])->default('assigned');
+            // $table->enum('status', ['assigned', 'in_progress', 'completed'])->default('assigned');
             $table->unsignedInteger('completed_count')->default(0);
 
             $table->timestamps();
+
+            $table->unique(['task_id', 'employee_id']);
+        });
+
+        // когда задача существует по дням
+        Schema::create('task_instances', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
+
+            $table->date('date');
+
+            // сколько нужно выполнить в этот день
+            $table->unsignedInteger('daily_quota')->default(0);
+
+            $table->timestamps();
+
+            $table->unique(['task_id', 'date']);
         });
 
         // для аналитики, надо ппц
         // Зачем: При отметке выполнения одной итерации создаётся запись, а completed_count в task_assignments увеличивается через Observer. Даёт аудит и фактические данные
-        Schema::create('task_completions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('task_assignment_id')->constrained('task_assignments')->cascadeOnDelete();
-            $table->timestamp('completed_at');
-            $table->unsignedInteger('duration_minutes')->nullable(); // реально потраченное время
-            $table->timestamps();
-        });
+        // Schema::create('task_completions', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('task_assignment_id')->constrained('task_assignments')->cascadeOnDelete();
+        //     $table->timestamp('completed_at');
+        //     $table->unsignedInteger('duration_minutes')->nullable(); // реально потраченное время
+        //     $table->timestamps();
+        // });
     }
 
     /**

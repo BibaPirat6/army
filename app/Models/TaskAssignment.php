@@ -11,7 +11,7 @@ class TaskAssignment extends Model
 
     protected $fillable = [
         'task_id', 'employee_id', 'quota', 'priority',
-        'start_date', 'end_date', 'status', 'completed_count'
+        'start_date', 'end_date', 'completed_count'
     ];
 
     protected $casts = [
@@ -35,10 +35,10 @@ class TaskAssignment extends Model
     }
 
     // Журнал выполнений
-    public function completions()
-    {
-        return $this->hasMany(TaskCompletion::class);
-    }
+    // public function completions()
+    // {
+    //     return $this->hasMany(TaskCompletion::class);
+    // }
 
     // Оставшаяся квота (вычисляемое)
     public function getRemainingQuotaAttribute(): int
