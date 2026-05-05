@@ -153,27 +153,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
                 ->where('subtask', '[0-9]+');
         });
 
-        // Матрица сотрудников
         Route::prefix('matrix')->name('calendar.matrix.')->group(function () {
-            // Комиссариат
             Route::get('/{commissariat}', [MatrixController::class, 'index'])
                 ->name('index')
                 ->where('commissariat', '[0-9]+');
-
-            // Комиссариат → Отдел
-            Route::get('/{commissariat}/department/{department}', [MatrixController::class, 'index'])
-                ->name('department')
-                ->where(['commissariat' => '[0-9]+', 'department' => '[0-9]+']);
-
-            // Комиссариат → Отдел → Отделение
-            Route::get('/{commissariat}/department/{department}/division/{division}', [MatrixController::class, 'index'])
-                ->name('division')
-                ->where(['commissariat' => '[0-9]+', 'department' => '[0-9]+', 'division' => '[0-9]+']);
-
-            // Комиссариат → Самостоятельное отделение
-            Route::get('/{commissariat}/division/{division}', [MatrixController::class, 'index'])
-                ->name('independent_division')
-                ->where(['commissariat' => '[0-9]+', 'division' => '[0-9]+']);
         });
     });
 

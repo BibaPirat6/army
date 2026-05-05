@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('header-title')
-    Матрица сотрудников — {{ $unitName }}
+    Матрица сотрудников — {{ $commissariat->name }}
 @endsection
 
 @section('content')
@@ -24,7 +24,7 @@
     {{-- Заголовок --}}
     <div class="flex items-center justify-between mb-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">{{ $unitName }}</h2>
+            <h2 class="text-2xl font-bold text-gray-800">{{ $commissariat->name }}</h2>
             <p class="text-sm text-gray-500 mt-1">
                 Задач: {{ $totals['tasks'] }} |
                 Сотрудников: {{ $totals['employees'] }} |
@@ -72,7 +72,6 @@
                             $barColor = $percent >= 100 ? 'bg-emerald-500' : ($percent > 50 ? 'bg-indigo-500' : 'bg-amber-500');
                         @endphp
                         <tr class="hover:bg-gray-50/50 transition">
-                            {{-- Задача --}}
                             <td class="sticky left-0 z-10 bg-white px-4 py-3 border-r border-gray-200">
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ $task->color }}"></span>
@@ -93,7 +92,6 @@
                                 </div>
                             </td>
 
-                            {{-- Назначенные сотрудники --}}
                             <td class="px-4 py-3">
                                 @if($taskAssignments->isEmpty())
                                     <div class="flex items-center gap-3">
@@ -138,7 +136,6 @@
                                 @endif
                             </td>
 
-                            {{-- Прогресс --}}
                             <td class="px-4 py-3 text-center">
                                 @if($row['total_quota'] > 0)
                                     <div class="text-sm font-semibold {{ $percent >= 100 ? 'text-emerald-600' : ($percent > 50 ? 'text-indigo-600' : 'text-amber-600') }}">
@@ -162,7 +159,6 @@
             </table>
         </div>
 
-        {{-- Легенда --}}
         <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
             <span class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Завершено
