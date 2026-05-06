@@ -13,24 +13,10 @@ class CalendarController extends Controller
 {
     public function index(TaskStatsService $statsService)
     {
-        // Передаём все должности с привязанными сотрудниками, чтобы в списке были все сотрудники подразделений
-        $employeePositions = $this->getAllEmployeePositions();
+        $employeePositions = $this->getChiefPositions();
         $taskStats = $statsService->getStats();
 
         return view('admin.calendar.index', compact('employeePositions', 'taskStats'));
-    }
-
-    private function getAllEmployeePositions()
-    {
-        return EmployeePosition::with([
-            'employee.person',
-            'commissariatPosition.position.chiefType',
-            'commissariatPosition.commissariat',
-            'commissariatPosition.department',
-            'commissariatPosition.division',
-        ])
-            ->whereHas('employee') // только должности с сотрудником
-            ->get();
     }
 
     private function getChiefPositions()
