@@ -18,6 +18,7 @@ use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StructureController;
 use App\Http\Controllers\SubtaskController;
+use App\Http\Controllers\TaskAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -159,6 +160,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::get('/{commissariat}', [MatrixController::class, 'index'])
                 ->name('index')
                 ->where('commissariat', '[0-9]+');
+        });
+
+        // Назначения сотрудников на задачи
+        Route::prefix('tasks/{task}/assignments')->name('assignments.')->group(function () {
+            Route::get('/create/{employee}', [TaskAssignmentController::class, 'create'])->name('create');
+            Route::post('/', [TaskAssignmentController::class, 'store'])->name('store');
+            Route::get('/{assignment}/edit', [TaskAssignmentController::class, 'edit'])->name('edit');
+            Route::put('/{assignment}', [TaskAssignmentController::class, 'update'])->name('update');
+            Route::delete('/{assignment}', [TaskAssignmentController::class, 'destroy'])->name('destroy');
         });
     });
 

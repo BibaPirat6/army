@@ -53,9 +53,9 @@
                     <h3 class="text-sm font-medium text-gray-500">Ответственный</h3>
                     <p class="mt-1 text-gray-800">
                         @if($task->employeePosition && $task->employeePosition->employee)
-                            <a href="{{ route("employees.show",[
+                                            <a href="{{ route("employees.show", [
                                 "id" => $task->employeePosition->employee->id,
-                                "back_url"=>url()->full()                           
+                                "back_url" => url()->full()
                             ]) }}">{{ $task->employeePosition->employee->getFullNameAttribute() }}</a>
                         @else
                             Не назначен
@@ -64,7 +64,49 @@
                 </div>
             </div>
 
+
+            @php
+                $subtasks = $task->subtasks;
+
+                $totalMin = $subtasks->sum('min_time_minutes');
+                $totalAvg = $subtasks->sum('avg_time_minutes');
+                $totalMax = $subtasks->sum('max_time_minutes');
+
+                $quota = $task->quota ?? 0;
+
+                $totalMinAll = $quota ? $totalMin * $quota : null;
+                $totalAvgAll = $quota ? $totalAvg * $quota : null;
+                $totalMaxAll = $quota ? $totalMax * $quota : null;
+            @endphp
             <!-- Подзадачи -->
+            @if($subtasks->count() > 0)
+                <div class="border-t border-gray-200 px-6 py-4 bg-gray-50">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Оценка времени</h3>
+
+                    <!-- На 1 итерацию -->
+                    <div class="mb-2">
+                        <p class="text-xs text-gray-500">На 1 выполнение:</p>
+                        <p class="text-sm text-gray-800">
+                            мин: <span class="font-medium">{{ $totalMin }} мин</span> |
+                            ср: <span class="font-medium">{{ $totalAvg }} мин</span> |
+                            макс: <span class="font-medium">{{ $totalMax }} мин</span>
+                        </p>
+                    </div>
+
+                    <!-- На всю задачу -->
+                    @if($quota)
+                        <div>
+                            <p class="text-xs text-gray-500">На всю задачу ({{ $quota }} итераций):</p>
+                            <p class="text-sm text-gray-800">
+                                мин: <span class="font-medium">{{ $totalMinAll }} мин</span> |
+                                ср: <span class="font-medium">{{ $totalAvgAll }} мин</span> |
+                                макс: <span class="font-medium">{{ $totalMaxAll }} мин</span>
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <div class="border-t border-gray-200 px-6 py-4">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-gray-800">Подзадачи</h3>
