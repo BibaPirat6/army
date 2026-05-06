@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-2xl font-bold text-gray-800">Календарный график задач</h2>
             <button type="button" onclick="openStatsModal()"
-                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition flex items-center gap-2">
+                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition flex items-center gap-2 cursor-pointer">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -261,12 +261,32 @@
 
         // ===== СТАТИСТИКА ПОДРАЗДЕЛЕНИЙ =====
         (function () {
-            const statsData = @json($taskStats);
+            let statsData = @json($taskStats);
 
             const commissariatSearch = document.getElementById('statsCommissariatSearch');
             const commissariatList = document.getElementById('statsCommissariatList');
             const statsResult = document.getElementById('statsResult');
             const statsResultContent = document.getElementById('statsResultContent');
+
+            // Функция обновления данных с сервера
+            async function refreshStatsData() {
+                try {
+                    const response = await fetch('/calendar/stats');
+                    if (response.ok) {
+                        statsData = await response.json();
+                        // Если модалка открыта и что-то выбрано — обновить результаты
+                        if (!statsModal.classList.contains('hidden') && commissariatSearch.value) {
+                            const selected = statsData.find(c => c.name === commissariatSearch.value);
+                            if (selected) {
+                                commissariatSearch.value = selected.name;
+                                showStatsResult(selected);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка обновления статистики:', e);
+                }
+            }
 
             function renderCommissariatList(filter = '') {
                 const q = filter.toLowerCase().trim();
@@ -292,32 +312,32 @@
             function showStatsResult(c) {
                 statsResult.classList.remove('hidden');
                 let html = `
-                    <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${c.name}</span></div>
-                    <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество задач:</span><span class="font-bold text-indigo-700">${c.total}</span></div>
-                `;
+                <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${c.name}</span></div>
+                <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество задач:</span><span class="font-bold text-indigo-700">${c.total}</span></div>
+            `;
 
                 if (c.total > 0) {
                     html += `
-                        <div class="mt-3 pt-3 border-t border-gray-200">
-                            <a href="/calendar/matrix/${c.id}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                </svg>
-                                Матрица сотрудников
-                            </a>
-                        </div>
-                    `;
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <a href="/calendar/matrix/${c.id}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                            Матрица сотрудников
+                        </a>
+                    </div>
+                `;
                 } else {
                     html += `
-                        <div class="mt-3 pt-3 border-t border-gray-200">
-                            <button type="button" disabled class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                </svg>
-                                Матрица сотрудников (нет задач)
-                            </button>
-                        </div>
-                    `;
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <button type="button" disabled class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            </svg>
+                            Матрица сотрудников (нет задач)
+                        </button>
+                    </div>
+                `;
                 }
 
                 statsResultContent.innerHTML = html;
@@ -337,7 +357,10 @@
                     commissariatList.classList.add('hidden');
                 }
             });
-        })();
 
+            // Экспортируем функцию обновления глобально
+            window.refreshStatsData = refreshStatsData;
+        })();
+        
     </script>
 @endpush

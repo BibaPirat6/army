@@ -17,7 +17,6 @@ vueApp.mount('#app');
 let calendar = null;
 let dropzoneInstance = null;
 
-
 // === ЗАГРУЗКА СУЩЕСТВУЮЩИХ ФАЙЛОВ ЗАДАЧИ В DROPZONE ===
 function loadTaskFiles(taskId) {
     if (!taskId) return;
@@ -29,7 +28,6 @@ function loadTaskFiles(taskId) {
 
             if (dropzoneInstance && files.length > 0) {
                 files.forEach(file => {
-                    // Создаём мок-файл в Dropzone
                     const mockFile = {
                         id: file.id,
                         name: file.original_name,
@@ -37,13 +35,11 @@ function loadTaskFiles(taskId) {
                         accepted: true,
                         status: Dropzone.ADDED,
                         url: file.url,
-                        existingFileId: file.id, // помечаем как существующий
+                        existingFileId: file.id,
                     };
 
-                    // Добавляем файл в Dropzone
                     dropzoneInstance.emit('addedfile', mockFile);
 
-                    // Если есть превью (изображение) — показываем
                     if (file.mime_type && file.mime_type.startsWith('image/')) {
                         dropzoneInstance.emit('thumbnail', mockFile, file.url);
                     }
@@ -51,7 +47,6 @@ function loadTaskFiles(taskId) {
                     dropzoneInstance.emit('complete', mockFile);
                     dropzoneInstance.files.push(mockFile);
 
-                    // Устанавливаем data-атрибут с ID существующего файла
                     const previewElement = mockFile.previewElement;
                     if (previewElement) {
                         previewElement.dataset.existingFileId = file.id;
@@ -89,8 +84,6 @@ function initDropzone() {
             this.on('removedfile', function (file) {
                 const existingFileId = file.previewElement?.dataset?.existingFileId;
 
-                // Удаляем с сервера ТОЛЬКО если есть existingFileId
-                // И ТОЛЬКО если модалка открыта для редактирования
                 if (existingFileId) {
                     console.log('Удаляем существующий файл с сервера, ID:', existingFileId);
 
@@ -101,11 +94,9 @@ function initDropzone() {
                             'Accept': 'application/json',
                         },
                     })
-                        .then(r => r.json())
-                        .then(data => {
-                            console.log('Файл удалён с сервера:', data);
-                        })
-                        .catch(err => console.error('Ошибка удаления файла:', err));
+                    .then(r => r.json())
+                    .then(data => console.log('Файл удалён с сервера:', data))
+                    .catch(err => console.error('Ошибка удаления файла:', err));
                 }
             });
         },
@@ -118,13 +109,8 @@ function initDropzone() {
 function clearDropzone() {
     if (!dropzoneInstance) return;
 
-    // Временно отключаем обработчик removedfile
-    dropzoneInstance.options.autoProcessQueue = false;
-
-    // Удаляем все файлы из Dropzone НЕ ТРОГАЯ сервер
     while (dropzoneInstance.files.length > 0) {
         const file = dropzoneInstance.files[0];
-        // Удаляем data-атрибут, чтобы removedfile не слал DELETE
         if (file.previewElement) {
             delete file.previewElement.dataset.existingFileId;
         }
@@ -164,13 +150,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.resetForm();
             }
 
-            // Скрываем ссылку на задачу (так как создаём новую)
             const taskLinkContainer = document.getElementById('taskLinkContainer');
             if (taskLinkContainer) {
                 taskLinkContainer.classList.add('hidden');
             }
 
-            // Просто очищаем Dropzone (без удаления с сервера)
             clearDropzone();
 
             document.getElementById('start_date').value = info.dateStr;
@@ -192,25 +176,19 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('description').value = props.description || '';
             document.getElementById('color').value = e.backgroundColor || '#3788d8';
             document.getElementById('quota').value = props.quota || '';
-            document.getElementById('employee_position_id').value = props.employee_position_id || '';
             document.getElementById('start_date').value = e.startStr;
 
-            // Безопасная обработка даты окончания (только строки)
             if (e.endStr) {
-                // endStr всегда на 1 день больше реальной даты окончания
                 const endDate = new Date(e.endStr);
                 endDate.setDate(endDate.getDate() - 1);
                 const realEndStr = endDate.toISOString().slice(0, 10);
-
-                // Если после вычитания получилась дата начала – задача однодневная
                 document.getElementById('end_date').value = (realEndStr !== e.startStr) ? realEndStr : '';
             } else {
                 document.getElementById('end_date').value = '';
             }
 
-            // ✅ УСТАНОВКА ОТВЕТСТВЕННОГО
+            // Установка ответственного
             if (props.employee_position_id) {
-                // Ищем имя в выпадающем списке
                 const listItems = document.querySelectorAll('#employee_position_list li');
                 let foundName = '';
                 let foundId = null;
@@ -231,20 +209,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.resetResponsibleSelect();
             }
 
-
-            // ✅ ПОКАЗЫВАЕМ ССЫЛКУ НА ЗАДАЧУ
+            // Ссылка на задачу
             const taskLinkContainer = document.getElementById('taskLinkContainer');
             const taskLink = document.getElementById('taskLink');
-
             if (taskLinkContainer && taskLink && e.id) {
-                // Формируем URL для просмотра задачи
                 taskLink.href = `/calendar/tasks/${e.id}`;
                 taskLinkContainer.classList.remove('hidden');
             } else if (taskLinkContainer) {
                 taskLinkContainer.classList.add('hidden');
             }
-
-
 
             document.getElementById('modalTitle').textContent = 'Редактирование задачи';
 
@@ -258,38 +231,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.openModal();
             }
         },
-
-
-        eventDrop: function (info) {
-            const id = info.event.id;
-            const startDate = info.event.startStr;
-            const endDate = info.event.end ? info.event.endStr : info.event.startStr;
-
-            fetch(`/calendar/tasks/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: info.event.title,
-                    color: info.event.backgroundColor,
-                    start_date: startDate,
-                    end_date: endDate,
-                }),
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.success) info.revert();
-                })
-                .catch(() => info.revert());
-        },
     });
 
     calendar.render();
 
-    // === DROPZONE (без авто-загрузки) ===
     initDropzone();
 
     // === САБМИТ ФОРМЫ ===
@@ -321,11 +266,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('_method', 'PUT');
             }
 
-            // Добавляем ТОЛЬКО НОВЫЕ файлы (не существующие)
             if (dropzoneInstance && dropzoneInstance.files.length > 0) {
                 let newFilesCount = 0;
                 dropzoneInstance.files.forEach(file => {
-                    // Проверяем, что файл новый (нет existingFileId в previewElement)
                     const isExisting = file.previewElement?.dataset?.existingFileId;
                     if (!isExisting && (file.status === Dropzone.ADDED || file.status === Dropzone.QUEUED)) {
                         formData.append('files[]', file);
@@ -343,32 +286,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData,
             })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Ответ сервера:', data);
+            .then(response => response.json())
+            .then(data => {
+                console.log('Ответ сервера:', data);
 
-                    if (data.success) {
-                        if (!id) {
-                            calendar.addEvent(data.event);
-                        } else {
-                            const existingEvent = calendar.getEventById(id);
-                            if (existingEvent) existingEvent.remove();
-                            calendar.addEvent(data.event);
-                        }
-
-                        if (typeof window.closeModal === 'function') {
-                            window.closeModal();
-                        }
+                if (data.success) {
+                    if (!id) {
+                        calendar.addEvent(data.event);
                     } else {
-                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+                        const existingEvent = calendar.getEventById(id);
+                        if (existingEvent) existingEvent.remove();
+                        calendar.addEvent(data.event);
                     }
-                })
-                .catch(error => {
-                    console.error('Ошибка запроса:', error);
-                    alert('Ошибка соединения с сервером. Проверьте консоль.');
-                });
+
+                    // ✅ Автообновление статистики
+                    if (typeof window.refreshStatsData === 'function') {
+                        window.refreshStatsData();
+                    }
+
+                    if (typeof window.closeModal === 'function') {
+                        window.closeModal();
+                    }
+                } else {
+                    alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка запроса:', error);
+                alert('Ошибка соединения с сервером. Проверьте консоль.');
+            });
         });
         console.log('Обработчик формы привязан');
     }
 });
-

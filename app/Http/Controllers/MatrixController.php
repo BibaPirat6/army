@@ -14,69 +14,44 @@ class MatrixController extends Controller
     {
         $commissariat = Commissariat::findOrFail($commissariatId);
 
-        // Все задачи комиссариата
-        $tasks = Task::with(['subtasks'])
-            ->whereHas('employeePosition.commissariatPosition', function ($q) use ($commissariatId) {
-                $q->where('commissariat_id', $commissariatId);
-            })
+        // Задачи с ответственным
+        $tasks = Task::with(['subtasks', 'employeePosition.employee.person'])
+            ->whereHas('employeePosition.commissariatPosition', fn($q) => $q->where('commissariat_id', $commissariatId))
             ->orderBy('start_date')
             ->get();
 
-        // Все сотрудники комиссариата (включая начальников)
-        $employees = Employee::with(['person'])
-            ->whereHas('employeePositions', function ($epQuery) use ($commissariatId) {
-                // Убрал фильтр по статусу — берем всех
-                $epQuery->whereHas('commissariatPosition', function ($cpQuery) use ($commissariatId) {
-                    $cpQuery->where('commissariat_id', $commissariatId);
-                });
-            })
+        // АБСОЛЮТНО ВСЕ сотрудники через commissariat_positions → employee_positions
+        $employeeIds = \DB::table('employee_positions')
+            ->join('commissariat_positions', 'employee_positions.commissariat_position_id', '=', 'commissariat_positions.id')
+            ->where('commissariat_positions.commissariat_id', $commissariatId)
+            ->pluck('employee_positions.employee_id')
+            ->unique()
+            ->filter() // убираем null
+            ->values();
+
+        $employees = Employee::with(['person', 'employeePositions.commissariatPosition.position'])
+            ->whereIn('id', $employeeIds)
             ->get();
 
         // Назначения
         $taskIds = $tasks->pluck('id')->toArray();
         $assignments = TaskAssignment::whereIn('task_id', $taskIds)
-            ->with(['employee.person'])
+            ->whereIn('employee_id', $employeeIds)
             ->get()
-            ->groupBy('task_id');
+            ->groupBy('employee_id')
+            ->map(fn($group) => $group->keyBy('task_id'));
 
         // Матрица
         $matrix = [];
-        $totals = [
-            'tasks'      => count($tasks),
-            'employees'  => count($employees),
-            'assignments' => $assignments->flatten(1)->count(),
-            'unassigned' => 0,
-        ];
-
-        foreach ($tasks as $task) {
-            $taskAssignments = $assignments->get($task->id, collect());
-
-            $row = [
-                'task'            => $task,
-                'assignments'     => $taskAssignments,
-                'total_quota'     => $taskAssignments->sum('quota'),
-                'total_completed' => $taskAssignments->sum('completed_count'),
-            ];
-
-            if ($taskAssignments->isEmpty()) {
-                $totals['unassigned']++;
+        foreach ($employees as $employee) {
+            $empAssignments = $assignments->get($employee->id, collect());
+            $row = ['employee' => $employee, 'tasks' => []];
+            foreach ($tasks as $task) {
+                $row['tasks'][$task->id] = $empAssignments->get($task->id);
             }
-
             $matrix[] = $row;
         }
 
-        $breadcrumbs = [
-            ['name' => 'Календарь', 'url' => route('calendar.index')],
-            ['name' => $commissariat->name, 'url' => null],
-        ];
-
-        return view('admin.calendar.matrix.index', compact(
-            'commissariat',
-            'breadcrumbs',
-            'employees',
-            'tasks',
-            'matrix',
-            'totals'
-        ));
+        return view('admin.calendar.matrix.index', compact('commissariat', 'tasks', 'employees', 'matrix'));
     }
 }

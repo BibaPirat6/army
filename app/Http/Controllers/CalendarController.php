@@ -2,21 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmployeePosition;
 use App\Models\Task;
 use App\Models\TaskFile;
 use App\Services\TaskStatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\EmployeePosition;
 
 class CalendarController extends Controller
 {
-   public function index(TaskStatsService $statsService)
+    public function index(TaskStatsService $statsService)
     {
-        $employeePositions = $this->getChiefPositions();
+        // Передаём все должности с привязанными сотрудниками, чтобы в списке были все сотрудники подразделений
+        $employeePositions = $this->getAllEmployeePositions();
         $taskStats = $statsService->getStats();
 
         return view('admin.calendar.index', compact('employeePositions', 'taskStats'));
+    }
+
+    private function getAllEmployeePositions()
+    {
+        return EmployeePosition::with([
+            'employee.person',
+            'commissariatPosition.position.chiefType',
+            'commissariatPosition.commissariat',
+            'commissariatPosition.department',
+            'commissariatPosition.division',
+        ])
+            ->whereHas('employee') // только должности с сотрудником
+            ->get();
     }
 
     private function getChiefPositions()
@@ -28,13 +42,16 @@ class CalendarController extends Controller
             'commissariatPosition.department',
             'commissariatPosition.division',
         ])
-        ->whereHas('commissariatPosition.position.chiefType', function ($query) {
-            $query->whereIn('id', [2, 3, 4]);
-        })
-        ->get();
+            ->whereHas('commissariatPosition.position.chiefType', function ($query) {
+                $query->whereIn('id', [2, 3, 4]);
+            })
+            ->get();
     }
 
-
+    public function stats(TaskStatsService $statsService)
+    {
+        return response()->json($statsService->getStats());
+    }
 
     // текущие события
     public function events(Request $request)
@@ -222,5 +239,4 @@ class CalendarController extends Controller
 
         return response()->json($files);
     }
-
 }

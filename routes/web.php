@@ -141,6 +141,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
 
         Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
+        // без перегрузки страницы, для получения статистики по задачам в виде количества задач по каждому комиссариату
+        Route::get('/stats', [CalendarController::class, 'stats'])->name('calendar.stats');
 
         // Подзадачи (CRUD)
         Route::prefix('tasks/{task}/subtasks')->name('subtasks.')->group(function () {
