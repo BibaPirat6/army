@@ -30,6 +30,7 @@ return new class extends Migration
             $table->time('work_start')->nullable(); // null = выходной
             $table->time('work_end')->nullable();
             $table->json('breaks')->nullable(); // [{"start":"13:00","end":"14:00"}]
+            $table->unsignedInteger('weekly_hours')->nullable();
             $table->enum('type', ['рабочий_день', 'выходной'])->default('рабочий_день');
             $table->timestamps();
             $table->unique(['employee_id', 'date']);
