@@ -156,7 +156,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
                 ->where('subtask', '[0-9]+');
         });
 
-        Route::prefix('matrix')->name('calendar.matrix.')->group(function () {
+        Route::prefix('matrix')->name('matrix.')->group(function () {
             Route::get('/{commissariat}', [MatrixController::class, 'index'])
                 ->name('index')
                 ->where('commissariat', '[0-9]+');
