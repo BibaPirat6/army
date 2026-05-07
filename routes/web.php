@@ -174,17 +174,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
         // Внутри группы calendar
         Route::prefix('schedule')->name('schedule.')->group(function () {
-            // График сотрудника на месяц
             Route::get('/employee/{employee}', [EmployeeScheduleController::class, 'index'])->name('employee');
-
-            // Генерация рабочих дней для сотрудника на год
             Route::post('/employee/{employee}/generate', [EmployeeScheduleController::class, 'generate'])->name('generate');
-
-            // Обновление конкретного рабочего дня
             Route::put('/work-day/{workDay}', [EmployeeScheduleController::class, 'updateWorkDay'])->name('update-day');
 
-            // Отметка выполнения итерации задачи
-            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'complete'])->name('complete');
+            // Отметки выполнения
+            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'completeIteration'])->name('complete');
+            Route::post('/complete-all/{taskAssignment}', [EmployeeScheduleController::class, 'completeAssignment'])->name('complete-all');
+            Route::post('/reset/{taskAssignment}', [EmployeeScheduleController::class, 'resetAssignment'])->name('reset');
         });
     });
 

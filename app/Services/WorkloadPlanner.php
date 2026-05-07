@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class WorkloadPlanner
 {
     /**
-     * Генерирует дневной план для сотрудника.
+     * Генерирует дневной план для сотрудника с учётом весов приоритетов.
      */
     public function generatePlan(Employee $employee, Carbon $from, Carbon $to): array
     {
@@ -35,6 +35,9 @@ class WorkloadPlanner
             $remaining[$a->id] = max(0, $a->task->total_avg_time * ($a->quota - $a->completed_count));
         }
 
+        // Веса приоритетов: prio 1 → 50%, prio 2 → 30%, prio 3 → 15%, prio 4 → 5%, prio 5+ → 0%
+        $priorityWeights = $this->calculatePriorityWeights($assignments);
+
         $plan = [];
         $current = $from->copy();
 
@@ -43,24 +46,35 @@ class WorkloadPlanner
             $wd = $workDays->get($dateStr);
             $dayPlan = [];
 
-            if ($wd && in_array($wd->type, ['рабочий_день']) && $wd->work_start) {
+            if ($wd && $wd->type === 'рабочий_день' && $wd->work_start) {
                 $available = $wd->total_minutes;
 
-                foreach ($assignments as $a) {
-                    if (($remaining[$a->id] ?? 0) <= 0) continue;
-                    $alloc = min($remaining[$a->id], $available);
-                    if ($alloc <= 0) break;
+                // Сначала раздаём время по приоритетам с учётом весов
+                foreach ($priorityWeights as $priority => $weight) {
+                    if ($available <= 0) break;
 
-                    $dayPlan[$a->task_id] = $alloc;
-                    $remaining[$a->id] -= $alloc;
-                    $available -= $alloc;
+                    $tasksWithThisPriority = $assignments->where('priority', $priority);
+                    if ($tasksWithThisPriority->isEmpty()) continue;
 
-                    // Создаём/обновляем task_instance
-                    $dailyQuota = (int) round($alloc / max(1, $a->task->total_avg_time));
-                    TaskInstance::updateOrCreate(
-                        ['task_id' => $a->task_id, 'date' => $dateStr],
-                        ['daily_quota' => $dailyQuota]
-                    );
+                    $timeForPriority = (int) round($available * $weight / 100);
+
+                    foreach ($tasksWithThisPriority as $a) {
+                        if (($remaining[$a->id] ?? 0) <= 0) continue;
+                        if ($timeForPriority <= 0) break;
+
+                        $alloc = min($remaining[$a->id], $timeForPriority);
+                        if ($alloc <= 0) continue;
+
+                        $dayPlan[$a->task_id] = ($dayPlan[$a->task_id] ?? 0) + $alloc;
+                        $remaining[$a->id] -= $alloc;
+                        $timeForPriority -= $alloc;
+                        $available -= $alloc;
+
+                        TaskInstance::updateOrCreate(
+                            ['task_id' => $a->task_id, 'date' => $dateStr],
+                            ['daily_quota' => (int) round($alloc / max(1, $a->task->total_avg_time))]
+                        );
+                    }
                 }
             }
 
@@ -72,14 +86,31 @@ class WorkloadPlanner
     }
 
     /**
-     * Пересчёт task_instances при изменении конкретного дня.
+     * Веса приоритетов: чем выше приоритет, тем больше % времени.
      */
-    public function regenerateForDate(WorkDay $workDay): void
+    private function calculatePriorityWeights($assignments): array
     {
-        $from = Carbon::parse($workDay->date)->startOfDay();
-        $to = $from->copy()->endOfDay();
-        $employee = Employee::find($workDay->employee_id);
+        $groups = $assignments->groupBy('priority')->sortKeys();
 
-        $this->generatePlan($employee, $from, $to);
+        // Веса по умолчанию
+        $defaultWeights = [1 => 50, 2 => 25, 3 => 15, 4 => 7, 5 => 3];
+
+        $weights = [];
+        $totalWeight = 0;
+
+        foreach ($groups as $priority => $tasks) {
+            $weight = $defaultWeights[$priority] ?? 1;
+            $weights[$priority] = $weight;
+            $totalWeight += $weight;
+        }
+
+        // Нормализуем до 100%
+        if ($totalWeight > 0) {
+            foreach ($weights as $priority => $weight) {
+                $weights[$priority] = round(($weight / $totalWeight) * 100);
+            }
+        }
+
+        return $weights;
     }
 }

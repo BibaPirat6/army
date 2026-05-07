@@ -125,16 +125,56 @@
                                 @endif
                             @else — @endif
                         </td>
+                        {{-- Задачи --}}
                         <td class="px-2 py-1.5 border-b">
                             @if(!empty($day['tasks']))
                                 <div class="flex flex-wrap gap-1">
                                     @foreach($day['tasks'] as $taskId => $minutes)
-                                        @php $task = \App\Models\Task::find($taskId); @endphp
-                                        <div class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border"
-                                            style="border-color:{{ $task?->color ?? '#ccc' }}; background:{{ $task?->color ?? '#ccc' }}10">
+                                        @php
+                                            $task = \App\Models\Task::find($taskId);
+                                            $assignment = \App\Models\TaskAssignment::where('task_id', $taskId)
+                                                ->where('employee_id', $employee->id)->first();
+                                        @endphp
+                                        <div class="relative group flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border cursor-pointer"
+                                            style="border-color:{{ $task?->color ?? '#ccc' }}; background:{{ $task?->color ?? '#ccc' }}10"
+                                            onclick="document.getElementById('actions-{{ $taskId }}').classList.toggle('hidden')">
                                             <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $task?->color }}"></span>
                                             <span>{{ $task?->title ?? '—' }}</span>
                                             <span class="text-gray-400">{{ $minutes }}м</span>
+                                            @if($assignment)
+                                                <span class="text-[9px] {{ $assignment->completed_count >= $assignment->quota ? 'text-emerald-500' : 'text-amber-500' }}">
+                                                    {{ $assignment->completed_count }}/{{ $assignment->quota }}
+                                                </span>
+                                            @endif
+
+                                            {{-- Выпадающие действия --}}
+                                            @if($assignment)
+                                                <div id="actions-{{ $taskId }}" class="absolute top-6 left-0 z-50 hidden bg-white border rounded shadow-lg p-1.5 text-[10px] min-w-[130px]">
+                                                    <form action="{{ route('calendar.schedule.complete', $assignment->id) }}" method="POST" class="mb-1">
+                                                        @csrf
+                                                        <div class="flex items-center gap-1 mb-1">
+                                                            <input type="number" name="amount" value="1" min="1"
+                                                                max="{{ $assignment->quota - $assignment->completed_count }}"
+                                                                class="w-12 border rounded px-1 py-0.5 text-[10px]">
+                                                            <button type="submit" class="px-1.5 py-0.5 bg-indigo-500 text-white rounded hover:bg-indigo-600">
+                                                                + Выполнить
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                    <form action="{{ route('calendar.schedule.complete-all', $assignment->id) }}" method="POST" class="mb-1">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left px-1.5 py-0.5 bg-emerald-500 text-white rounded hover:bg-emerald-600">
+                                                            ✅ Завершить полностью
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ route('calendar.schedule.reset', $assignment->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left px-1.5 py-0.5 bg-red-400 text-white rounded hover:bg-red-500">
+                                                            🔄 Сбросить
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
