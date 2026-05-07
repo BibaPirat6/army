@@ -8,6 +8,7 @@ use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeePositionsController;
+use App\Http\Controllers\EmployeeScheduleController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
 use App\Http\Controllers\LoginController;
@@ -169,6 +170,21 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::get('/{assignment}/edit', [TaskAssignmentController::class, 'edit'])->name('edit');
             Route::put('/{assignment}', [TaskAssignmentController::class, 'update'])->name('update');
             Route::delete('/{assignment}', [TaskAssignmentController::class, 'destroy'])->name('destroy');
+        });
+
+        // Внутри группы calendar
+        Route::prefix('schedule')->name('schedule.')->group(function () {
+            // График сотрудника на месяц
+            Route::get('/employee/{employee}', [EmployeeScheduleController::class, 'index'])->name('employee');
+
+            // Генерация рабочих дней для сотрудника на год
+            Route::post('/employee/{employee}/generate', [EmployeeScheduleController::class, 'generate'])->name('generate');
+
+            // Обновление конкретного рабочего дня
+            Route::put('/work-day/{workDay}', [EmployeeScheduleController::class, 'updateWorkDay'])->name('update-day');
+
+            // Отметка выполнения итерации задачи
+            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'complete'])->name('complete');
         });
     });
 
