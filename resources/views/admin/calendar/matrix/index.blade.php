@@ -52,7 +52,7 @@
                         @php
                             $e = $row['employee'];
                             $p = $e->person;
-                            $name = $p ? $p->фамилия . ' ' . mb_substr($p->имя, 0, 1) . '.' . ($p->отчество ? ' ' . mb_substr($p->отчество, 0, 1) . '.' : '') : '#'.$e->id;
+                            $name = $p ? $p->фамилия . ' ' . $p->имя . '.' . ($p->отчество ? ' ' . $p->отчество . '.' : '') : '#'.$e->id;
                             $ep = $e->current_ep ?? null;
                             $cp = $ep?->commissariatPosition;
                         @endphp

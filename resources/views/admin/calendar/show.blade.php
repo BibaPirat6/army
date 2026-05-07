@@ -53,10 +53,9 @@
                     <h3 class="text-sm font-medium text-gray-500">Ответственный</h3>
                     <p class="mt-1 text-gray-800">
                         @if($task->employeePosition && $task->employeePosition->employee)
-                                            <a href="{{ route("employees.show", [
-                                "id" => $task->employeePosition->employee->id,
-                                "back_url" => url()->full()
-                            ]) }}">{{ $task->employeePosition->employee->getFullNameAttribute() }}</a>
+                            <a href="{{ route('employees.show', ['id' => $task->employeePosition->employee->id, 'back_url' => url()->full()]) }}">
+                                {{ $task->employeePosition->employee->getFullNameAttribute() }}
+                            </a>
                         @else
                             Не назначен
                         @endif
@@ -64,52 +63,60 @@
                 </div>
             </div>
 
-
-            @php
-                $subtasks = $task->subtasks;
-
-                $totalMin = $subtasks->sum('min_time_minutes');
-                $totalAvg = $subtasks->sum('avg_time_minutes');
-                $totalMax = $subtasks->sum('max_time_minutes');
-
-                $quota = $task->quota ?? 0;
-
-                $totalMinAll = $quota ? $totalMin * $quota : null;
-                $totalAvgAll = $quota ? $totalAvg * $quota : null;
-                $totalMaxAll = $quota ? $totalMax * $quota : null;
-            @endphp
-            <!-- Подзадачи -->
-            @if($subtasks->count() > 0)
-                <div class="border-t border-gray-200 px-6 py-4 bg-gray-50">
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Оценка времени</h3>
-
-                    <!-- На 1 итерацию -->
-                    <div class="mb-2">
-                        <p class="text-xs text-gray-500">На 1 выполнение:</p>
-                        <p class="text-sm text-gray-800">
-                            мин: <span class="font-medium">{{ $totalMin }} мин</span> |
-                            ср: <span class="font-medium">{{ $totalAvg }} мин</span> |
-                            макс: <span class="font-medium">{{ $totalMax }} мин</span>
-                        </p>
-                    </div>
-
-                    <!-- На всю задачу -->
-                    @if($quota)
-                        <div>
-                            <p class="text-xs text-gray-500">На всю задачу ({{ $quota }} итераций):</p>
-                            <p class="text-sm text-gray-800">
-                                мин: <span class="font-medium">{{ $totalMinAll }} мин</span> |
-                                ср: <span class="font-medium">{{ $totalAvgAll }} мин</span> |
-                                макс: <span class="font-medium">{{ $totalMaxAll }} мин</span>
-                            </p>
+            {{-- Предупреждение: нет подзадач --}}
+            @if($task->subtasks->isEmpty())
+                <div class="border-t border-gray-200 px-6 py-4">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-red-500 text-xl flex-shrink-0">⚠️</span>
+                            <div>
+                                <h4 class="text-sm font-semibold text-red-700 mb-1">Не добавлено ни одной подзадачи</h4>
+                                <p class="text-sm text-red-600">
+                                    Для корректного построения графиков, расчёта времени выполнения и распределения нагрузки
+                                    необходимо добавить <strong>хотя бы одну подзадачу</strong> с указанием временных оценок
+                                    (минимальное, среднее, максимальное время).
+                                </p>
+                                <button onclick="openSubtaskModal()"
+                                    class="mt-3 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition">
+                                    + Добавить подзадачу
+                                </button>
+                            </div>
                         </div>
-                    @endif
+                    </div>
+                </div>
+            @else
+                {{-- Оценка времени --}}
+                <div class="border-t border-gray-200 px-6 py-4">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3">Оценка времени</h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-sm text-gray-500 mb-1">На 1 выполнение</p>
+                            <div class="text-sm text-gray-800">
+                                <div>Мин: {{ $task->formatMinutes($task->total_min_time) }}</div>
+                                <div>Сред: {{ $task->formatMinutes($task->total_avg_time) }}</div>
+                                <div>Макс: {{ $task->formatMinutes($task->total_max_time) }}</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-50 rounded-lg p-3">
+                            <p class="text-sm text-gray-500 mb-1">На всю квоту</p>
+                            <div class="text-sm font-medium text-gray-900">
+                                <div>Мин: {{ $task->formatMinutes($task->total_min_time_with_quota) }}</div>
+                                <div>Сред: {{ $task->formatMinutes($task->total_avg_time_with_quota) }}</div>
+                                <div>Макс: {{ $task->formatMinutes($task->total_max_time_with_quota) }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             @endif
 
+            {{-- Подзадачи --}}
             <div class="border-t border-gray-200 px-6 py-4">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-medium text-gray-800">Подзадачи</h3>
+                    <h3 class="text-lg font-medium text-gray-800">
+                        Подзадачи ({{ $task->subtasks->count() }})
+                    </h3>
                     <button onclick="openSubtaskModal()"
                         class="px-3 py-1 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
                         + Добавить подзадачу
@@ -117,7 +124,7 @@
                 </div>
 
                 <div id="subtasksList" class="space-y-2">
-                    @foreach($task->subtasks as $subtask)
+                    @forelse($task->subtasks as $subtask)
                         <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
                             <div class="flex-1">
                                 <p class="font-medium text-gray-800">{{ $subtask->title }}</p>
@@ -136,20 +143,60 @@
                                 </button>
                             </div>
                         </div>
-                    @endforeach
+                    @empty
+                        <p class="text-sm text-gray-400">Нет подзадач</p>
+                    @endforelse
                 </div>
             </div>
 
-            <!-- Кнопка назад -->
+            {{-- Назначенные сотрудники --}}
+            <div class="border-t border-gray-200 px-6 py-4" id="assign">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-800">
+                        Назначенные сотрудники ({{ $task->taskAssignments->count() }})
+                    </h3>
+                </div>
+
+                @if($task->taskAssignments->isEmpty())
+                    <p class="text-sm text-gray-400">Нет назначенных сотрудников</p>
+                @else
+                    <div class="space-y-2">
+                        @foreach($task->taskAssignments as $a)
+                            @php
+                                $ep = $a->employee->person;
+                                $ename = $ep ? trim($ep->фамилия.' '.mb_substr($ep->имя,0,1).'.') : '#'.$a->employee_id;
+                                $pct = $a->quota ? round($a->completed_count/$a->quota*100) : 0;
+                            @endphp
+                            <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <a href="{{ route('employees.show', $a->employee_id) }}" class="font-medium text-indigo-600 hover:underline">
+                                        {{ $ename }}
+                                    </a>
+                                    <span class="text-xs text-gray-500">Приоритет: {{ $a->priority }}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm">{{ $a->completed_count }}/{{ $a->quota }}</span>
+                                    <div class="w-24 bg-gray-200 rounded-full h-2">
+                                        <div class="h-2 rounded-full {{ $pct>=100?'bg-emerald-500':'bg-indigo-500' }}" style="width:{{ $pct }}%"></div>
+                                    </div>
+                                    <span class="text-sm font-medium {{ $pct>=100?'text-emerald-600':'text-indigo-600' }}">{{ $pct }}%</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <!-- Назад -->
             <div class="border-t border-gray-200 px-6 py-4">
-                <a href="{{ route('calendar.index') }}" class="text-indigo-600 hover:text-indigo-800 transition">
-                    ← Назад к календарю
+                <a href="{{ url()->previous() }}" class="text-indigo-600 hover:text-indigo-800 transition">
+                    ← Назад
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно для подзадач -->
+    {{-- Модальное окно для подзадач --}}
     <div id="subtaskModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
         <div class="fixed inset-0 bg-gray-900/50"></div>
         <div class="flex items-center justify-center min-h-full p-4">
@@ -199,7 +246,6 @@
         const taskId = {{ $task->id }};
         const csrfToken = '{{ csrf_token() }}';
 
-        // === ПОДЗАДАЧИ ===
         function openSubtaskModal(subtaskId = null) {
             const modal = document.getElementById('subtaskModal');
             const form = document.getElementById('subtaskForm');
@@ -210,14 +256,8 @@
 
             if (subtaskId) {
                 title.textContent = 'Редактировать подзадачу';
-                // Загрузка данных подзадачи для редактирования
                 fetch(`/calendar/tasks/${taskId}/subtasks/${subtaskId}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
-                        return response.json();
-                    })
+                    .then(r => r.json())
                     .then(data => {
                         if (data.success) {
                             document.getElementById('subtask_id').value = data.subtask.id;
@@ -225,13 +265,7 @@
                             document.getElementById('subtask_min').value = data.subtask.min_time_minutes;
                             document.getElementById('subtask_avg').value = data.subtask.avg_time_minutes;
                             document.getElementById('subtask_max').value = data.subtask.max_time_minutes;
-                        } else {
-                            alert('Ошибка загрузки данных подзадачи');
                         }
-                    })
-                    .catch(error => {
-                        console.error('Ошибка:', error);
-                        alert('Ошибка загрузки данных подзадачи');
                     });
             } else {
                 title.textContent = 'Добавить подзадачу';
@@ -244,91 +278,23 @@
             document.getElementById('subtaskModal').classList.add('hidden');
         }
 
-        // 
-        // Фронтенд валидация для полей времени
-        function validateTimeFields(min, avg, max) {
-            if (min > avg) {
-                return {
-                    valid: false,
-                    message: 'Минимальное время не может быть больше среднего',
-                    field: 'min'
-                };
-            }
-            if (avg > max) {
-                return {
-                    valid: false,
-                    message: 'Среднее время не может быть больше максимального',
-                    field: 'avg'
-                };
-            }
-            if (min > max) {
-                return {
-                    valid: false,
-                    message: 'Минимальное время не может быть больше максимального',
-                    field: 'min'
-                };
-            }
-            return { valid: true };
-        }
-
-        document.getElementById('subtaskForm')?.addEventListener('submit', function (e) {
+        document.getElementById('subtaskForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Получаем значения
             const minVal = parseInt(document.getElementById('subtask_min').value);
             const avgVal = parseInt(document.getElementById('subtask_avg').value);
             const maxVal = parseInt(document.getElementById('subtask_max').value);
-            const title = document.getElementById('subtask_title').value.trim();
+            const titleVal = document.getElementById('subtask_title').value.trim();
 
-            // Проверка названия
-            if (!title) {
-                alert('Пожалуйста, введите название подзадачи');
-                return;
-            }
-
-            // Фронтенд валидация времени
-            const validation = validateTimeFields(minVal, avgVal, maxVal);
-            if (!validation.valid) {
-                alert(validation.message);
-
-                // Подсвечиваем поле с ошибкой
-                const fieldMap = {
-                    'min': 'subtask_min',
-                    'avg': 'subtask_avg',
-                    'max': 'subtask_max'
-                };
-                const fieldId = fieldMap[validation.field];
-                if (fieldId) {
-                    const field = document.getElementById(fieldId);
-                    field.classList.add('border-red-500');
-                    setTimeout(() => {
-                        field.classList.remove('border-red-500');
-                    }, 3000);
-                    field.focus();
-                }
-                return;
-            }
+            if (!titleVal) return alert('Введите название');
+            if (minVal > avgVal) return alert('Минимальное время не может быть больше среднего');
+            if (avgVal > maxVal) return alert('Среднее время не может быть больше максимального');
 
             const subtaskId = document.getElementById('subtask_id').value;
             const url = subtaskId
                 ? `/calendar/tasks/${taskId}/subtasks/${subtaskId}`
                 : `/calendar/tasks/${taskId}/subtasks`;
             const method = subtaskId ? 'PUT' : 'POST';
-
-            const data = {
-                title: title,
-                min_time_minutes: minVal,
-                avg_time_minutes: avgVal,
-                max_time_minutes: maxVal,
-                _token: csrfToken,
-                _method: method,
-            };
-
-            // Добавляем индикатор загрузки
-            const submitBtn = document.querySelector('#subtaskForm button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Сохранение...';
-            submitBtn.disabled = true;
 
             fetch(url, {
                 method: 'POST',
@@ -337,108 +303,50 @@
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    title: titleVal,
+                    min_time_minutes: minVal,
+                    avg_time_minutes: avgVal,
+                    max_time_minutes: maxVal,
+                    _token: csrfToken,
+                    _method: method,
+                }),
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
-                        // Если ошибка связана с конкретным полем, подсвечиваем его
-                        if (data.field) {
-                            const fieldMap = {
-                                'min_time_minutes': 'subtask_min',
-                                'avg_time_minutes': 'subtask_avg',
-                                'max_time_minutes': 'subtask_max'
-                            };
-                            const fieldId = fieldMap[data.field];
-                            if (fieldId) {
-                                const field = document.getElementById(fieldId);
-                                field.classList.add('border-red-500');
-                                setTimeout(() => {
-                                    field.classList.remove('border-red-500');
-                                }, 3000);
-                            }
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    alert('Ошибка соединения: ' + error.message);
-                })
-                .finally(() => {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                });
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) location.reload();
+                else alert('Ошибка: ' + (data.message || ''));
+            });
         });
 
+        function editSubtask(id) { openSubtaskModal(id); }
 
-        function editSubtask(subtaskId) {
-            openSubtaskModal(subtaskId);
-        }
-
-        function deleteSubtask(subtaskId) {
-            if (confirm('Удалить подзадачу?')) {
-                fetch(`/calendar/tasks/${taskId}/subtasks/${subtaskId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                    },
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Ошибка удаления');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Ошибка:', error);
-                        alert('Ошибка соединения');
-                    });
-            }
+        function deleteSubtask(id) {
+            if (!confirm('Удалить подзадачу?')) return;
+            fetch(`/calendar/tasks/${taskId}/subtasks/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            })
+            .then(r => r.json())
+            .then(data => { if (data.success) location.reload(); });
         }
 
         function deleteTask() {
-            if (confirm('⚠️ Внимание! Задача будет удалена вместе со всеми подзадачами и файлами. Отменить действие будет невозможно. Продолжить?')) {
-                fetch(`/calendar/tasks/${taskId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                    },
-                })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            window.location.href = '{{ route("calendar.index") }}';
-                        } else {
-                            alert('Ошибка удаления: ' + (data.message || 'Неизвестная ошибка'));
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Ошибка:', error);
-                        alert('Ошибка соединения');
-                    });
-            }
+            if (!confirm('Удалить задачу со всеми подзадачами и файлами?')) return;
+            fetch(`/calendar/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            })
+            .then(r => r.json())
+            .then(data => { if (data.success) window.location.href = '{{ route("calendar.index") }}'; });
         }
 
-        // Закрытие модалки по клику на оверлей и Escape
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('subtaskModal');
-            const overlay = modal?.querySelector('.fixed.bg-gray-900\\/50');
-
-            if (overlay) {
-                overlay.addEventListener('click', closeSubtaskModal);
-            }
-
+            const overlay = modal?.querySelector('.bg-gray-900\\/50');
+            if (overlay) overlay.addEventListener('click', closeSubtaskModal);
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
-                    closeSubtaskModal();
-                }
+                if (e.key === 'Escape' && !modal?.classList.contains('hidden')) closeSubtaskModal();
             });
         });
     </script>

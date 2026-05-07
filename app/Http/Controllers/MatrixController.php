@@ -27,7 +27,6 @@ class MatrixController extends Controller
             ->whereIn('employee_position_status_id', [1, 2, 3])
             ->get();
 
-        // Убираем дубли сотрудников (берём первую должность)
         $employees = $eps->groupBy('employee_id')
             ->map(fn($group) => tap($group->first()->employee, fn($e) => $e->current_ep = $group->first()))
             ->values();
@@ -43,7 +42,7 @@ class MatrixController extends Controller
 
         $matrix = $employees->map(fn($e) => [
             'employee' => $e,
-            'tasks'    => collect($tasks)->mapWithKeys(fn($t) => [$t->id => $assignments->get($e->id)?->get($t->id)])->toArray(),
+            'tasks'    => $tasks->mapWithKeys(fn($t) => [$t->id => $assignments->get($e->id)?->get($t->id)]),
         ]);
 
         return view('admin.calendar.matrix.index', compact('commissariat', 'tasks', 'matrix'));
