@@ -16,19 +16,34 @@
         </a>
     </div>
 
-    {{-- Навигация по неделям --}}
-    <div class="flex items-center gap-4 mb-4 text-sm">
+    {{-- Навигация --}}
+    <div class="flex items-center gap-2 mb-4 text-sm">
         @php
-            $prevWeek = $week - 1;
-            $nextWeek = $week + 1;
+            $prev = Carbon\Carbon::create($year, $month, 1)->subMonth();
+            $next = Carbon\Carbon::create($year, $month, 1)->addMonth();
         @endphp
-        <a href="?week={{ $prevWeek }}&year={{ $year }}" class="text-gray-500 hover:text-indigo-600">← Пред. неделя</a>
-        <span class="font-semibold text-gray-700">
-            {{ $from->translatedFormat('d M') }} – {{ $to->translatedFormat('d M Y') }}
-        </span>
-        <a href="?week={{ $nextWeek }}&year={{ $year }}" class="text-gray-500 hover:text-indigo-600">След. неделя →</a>
+        <a href="?month={{ $prev->month }}&year={{ $prev->year }}" 
+           class="px-2 py-1 text-gray-500 hover:text-indigo-600 border rounded">←</a>
+        
+        <select onchange="goToMonth(this.value, {{ $year }})" class="border rounded px-2 py-1 text-sm">
+            @foreach(range(1,12) as $m)
+                <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
+                    {{ Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                </option>
+            @endforeach
+        </select>
+        
+        <select onchange="goToMonth({{ $month }}, this.value)" class="border rounded px-2 py-1 text-sm">
+            @foreach(range(now()->year - 2, now()->year + 2) as $y)
+                <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+            @endforeach
+        </select>
+        
+        <a href="?month={{ $next->month }}&year={{ $next->year }}" 
+           class="px-2 py-1 text-gray-500 hover:text-indigo-600 border rounded">→</a>
     </div>
 
+    {{-- Таблица без изменений --}}
     <div class="overflow-auto bg-white rounded shadow border">
         <table class="min-w-full text-xs border-collapse">
             <thead>
@@ -58,7 +73,9 @@
                                 {{ Carbon\Carbon::parse($wd->work_start)->format('H:i') }} – {{ Carbon\Carbon::parse($wd->work_end)->format('H:i') }}
                                 @php $b = is_string($wd->breaks) ? json_decode($wd->breaks, true) : $wd->breaks; @endphp
                                 @if(!empty($b))
-                                    <div class="text-gray-400">обед: @foreach($b as $br) {{ Carbon\Carbon::parse($br['start'])->format('H:i') }}–{{ Carbon\Carbon::parse($br['end'])->format('H:i') }} @endforeach</div>
+                                    <div class="text-gray-400">
+                                        обед: @foreach($b as $br) {{ Carbon\Carbon::parse($br['start'])->format('H:i') }}–{{ Carbon\Carbon::parse($br['end'])->format('H:i') }}@if(!$loop->last), @endif @endforeach
+                                    </div>
                                 @endif
                             @else — @endif
                         </td>
@@ -79,7 +96,7 @@
                                                 <span class="text-[9px] {{ $a->completed_count>=$a->quota?'text-emerald-500':'text-amber-500' }}">
                                                     {{ $a->completed_count }}/{{ $a->quota }}
                                                 </span>
-                                                <form action="{{ route('calendar.schedule.complete', $a->id) }}" method="POST" class="inline-flex items-center ml-1">
+                                                <form action="{{ route('calendar.schedule.complete', $a->id) }}" method="POST" class="inline-flex ml-1">
                                                     @csrf
                                                     <input type="hidden" name="amount" value="1">
                                                     <button type="submit" class="text-[9px] bg-indigo-500 text-white px-1 rounded hover:bg-indigo-600">+1</button>
@@ -98,8 +115,7 @@
                                     $pct = $total ? round($assigned/$total*100) : 0;
                                 @endphp
                                 <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div class="h-1.5 rounded-full {{ $pct>100?'bg-red-500':($pct>75?'bg-amber-500':'bg-emerald-500') }}"
-                                        style="width:{{ min(100,$pct) }}%"></div>
+                                    <div class="h-1.5 rounded-full {{ $pct>100?'bg-red-500':($pct>75?'bg-amber-500':'bg-emerald-500') }}" style="width:{{ min(100,$pct) }}%"></div>
                                 </div>
                                 <span class="text-[10px] {{ $pct>100?'text-red-600 font-medium':'text-gray-500' }}">{{ $pct }}%</span>
                             @else — @endif
@@ -110,4 +126,10 @@
         </table>
     </div>
 </div>
+
+<script>
+function goToMonth(month, year) {
+    window.location.href = '?month=' + month + '&year=' + year;
+}
+</script>
 @endsection

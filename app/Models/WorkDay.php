@@ -9,11 +9,16 @@ class WorkDay extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['employee_id', 'date', 'work_start', 'work_end', 'breaks', 'type'];
+    protected $fillable = [
+        'employee_id', 'date', 'work_start', 'work_end',
+        'breaks', 'type', 'weekly_hours', 'daily_hours_target',
+    ];
 
     protected $casts = [
-        'date'   => 'date',
+        'date' => 'date',
         'breaks' => 'array',
+        'weekly_hours' => 'integer',
+        'daily_hours_target' => 'integer',
     ];
 
     public function employee()
@@ -23,7 +28,7 @@ class WorkDay extends Model
 
     public function getTotalMinutesAttribute(): int
     {
-        if (!$this->work_start || !$this->work_end) {
+        if (! $this->work_start || ! $this->work_end) {
             return 0;
         }
 
@@ -39,7 +44,9 @@ class WorkDay extends Model
         }
 
         foreach ((array) $breaks as $b) {
-            if (!isset($b['start'], $b['end'])) continue;
+            if (! isset($b['start'], $b['end'])) {
+                continue;
+            }
             [$bsh, $bsm] = explode(':', $b['start']);
             [$beh, $bem] = explode(':', $b['end']);
             $total -= ($beh * 60 + $bem) - ($bsh * 60 + $bsm);

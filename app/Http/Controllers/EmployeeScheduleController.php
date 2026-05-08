@@ -25,39 +25,45 @@ class EmployeeScheduleController extends Controller
     public function generate(Request $request, Employee $employee)
     {
         $validated = $request->validate([
-            'year'         => 'required|integer|min:2020|max:2100',
-            'work_start'   => 'required|date_format:H:i',
-            'work_end'     => 'required|date_format:H:i',
-            'break_start'  => 'required|date_format:H:i',
-            'break_end'    => 'required|date_format:H:i',
+            'year' => 'required|integer|min:2020|max:2100',
             'weekly_hours' => 'required|integer|min:1|max:168',
-            'work_days'    => 'required|array|min:1',
-            'work_days.*'  => 'integer|min:0|max:6', // 0 вс, 1 пн, …, 6 сб
+            'days' => 'required|array',
+            'days.*.type' => 'required|in:рабочий_день,выходной',
+            'days.*.work_start' => 'nullable|date_format:H:i',
+            'days.*.work_end' => 'nullable|date_format:H:i',
+            'days.*.breaks' => 'nullable|array',
+            'days.*.breaks.*.start' => 'nullable|date_format:H:i',
+            'days.*.breaks.*.end' => 'nullable|date_format:H:i',
         ]);
 
-        $year       = (int) $validated['year'];
-        $workStart  = $validated['work_start'];
-        $workEnd    = $validated['work_end'];
-        $breakStart = $validated['break_start'];
-        $breakEnd   = $validated['break_end'];
+        $year = (int) $validated['year'];
         $weeklyHours = (int) $validated['weekly_hours'];
-        $workDays   = array_map('intval', $validated['work_days']);
-        $breaks     = [['start' => $breakStart, 'end' => $breakEnd]];
 
         $start = Carbon::create($year, 1, 1);
-        $end   = Carbon::create($year, 12, 31);
+        $end = Carbon::create($year, 12, 31);
 
         $current = $start->copy();
         while ($current->lte($end)) {
-            $isWorking = in_array($current->dayOfWeek, $workDays);
+            $dow = (string) $current->dayOfWeek;
+            $dayConfig = $validated['days'][$dow] ?? null;
+            $isWorking = $dayConfig && ($dayConfig['type'] === 'рабочий_день');
+
+            $breaks = [];
+            if ($isWorking && ! empty($dayConfig['breaks'])) {
+                foreach ($dayConfig['breaks'] as $b) {
+                    if (! empty($b['start']) && ! empty($b['end'])) {
+                        $breaks[] = ['start' => $b['start'], 'end' => $b['end']];
+                    }
+                }
+            }
 
             WorkDay::updateOrCreate(
                 ['employee_id' => $employee->id, 'date' => $current->toDateString()],
                 [
-                    'type'         => $isWorking ? 'рабочий_день' : 'выходной',
-                    'work_start'   => $isWorking ? $workStart : null,
-                    'work_end'     => $isWorking ? $workEnd : null,
-                    'breaks'       => $isWorking ? $breaks : null,
+                    'type' => $isWorking ? 'рабочий_день' : 'выходной',
+                    'work_start' => $isWorking ? ($dayConfig['work_start'] ?? '09:00') : null,
+                    'work_end' => $isWorking ? ($dayConfig['work_end'] ?? '18:00') : null,
+                    'breaks' => $isWorking ? $breaks : null,
                     'weekly_hours' => $weeklyHours,
                 ]
             );
@@ -66,7 +72,23 @@ class EmployeeScheduleController extends Controller
         }
 
         return redirect()->route('calendar.schedule.employee', $employee->id)
-            ->with('success', 'График на ' . $year . ' год создан');
+            ->with('success', 'График сохранён');
+    }
+
+    private function calcDayTarget(array $config): int
+    {
+        [$sh, $sm] = explode(':', $config['work_start'] ?? '09:00');
+        [$eh, $em] = explode(':', $config['work_end'] ?? '18:00');
+        $total = ($eh * 60 + $em) - ($sh * 60 + $sm);
+        foreach ($config['breaks'] ?? [] as $b) {
+            if (! empty($b['start']) && ! empty($b['end'])) {
+                [$bsh, $bsm] = explode(':', $b['start']);
+                [$beh, $bem] = explode(':', $b['end']);
+                $total -= ($beh * 60 + $bem) - ($bsh * 60 + $bsm);
+            }
+        }
+
+        return max(0, (int) round($total / 60));
     }
 
     /**
@@ -74,14 +96,15 @@ class EmployeeScheduleController extends Controller
      */
     public function index(Request $request, Employee $employee, WorkloadPlanner $planner)
     {
-        $week = $request->input('week', now()->weekOfYear);
-        $year = $request->input('year', now()->year);
-        $from = Carbon::now()->setISODate($year, $week)->startOfWeek();
-        $to   = $from->copy()->endOfWeek();
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+
+        $from = Carbon::create($year, $month, 1)->startOfMonth();
+        $to = $from->copy()->endOfMonth();
 
         $schedule = $planner->generatePlan($employee, $from, $to);
 
-        return view('admin.calendar.schedule.index', compact('employee', 'schedule', 'week', 'year', 'from', 'to'));
+        return view('admin.calendar.schedule.index', compact('employee', 'schedule', 'month', 'year', 'from', 'to'));
     }
 
     /**
