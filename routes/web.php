@@ -173,15 +173,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
         });
 
         // Внутри группы calendar
+        // Внутри calendar или employees
         Route::prefix('schedule')->name('schedule.')->group(function () {
-            Route::get('/employee/{employee}', [EmployeeScheduleController::class, 'index'])->name('employee');
+            // Форма создания графика
+            Route::get('/employee/{employee}/setup', [EmployeeScheduleController::class, 'setup'])->name('setup');
+            // Сохранение графика
             Route::post('/employee/{employee}/generate', [EmployeeScheduleController::class, 'generate'])->name('generate');
-            Route::put('/work-day/{workDay}', [EmployeeScheduleController::class, 'updateWorkDay'])->name('update-day');
-
-            // Отметки выполнения
-            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'completeIteration'])->name('complete');
-            Route::post('/complete-all/{taskAssignment}', [EmployeeScheduleController::class, 'completeAssignment'])->name('complete-all');
-            Route::post('/reset/{taskAssignment}', [EmployeeScheduleController::class, 'resetAssignment'])->name('reset');
+            // Просмотр недельного расписания
+            Route::get('/employee/{employee}', [EmployeeScheduleController::class, 'index'])->name('employee');
+            // Отметка выполнения
+            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'complete'])->name('complete');
         });
     });
 
