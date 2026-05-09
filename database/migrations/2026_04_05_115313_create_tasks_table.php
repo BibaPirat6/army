@@ -31,7 +31,7 @@ return new class extends Migration
 
             // Период действия задачи (диапазон дат)
             $table->date('start_date');
-            $table->date('end_date')->nullable();
+            $table->date('end_date');
 
             $table->timestamps();
         });
@@ -79,8 +79,8 @@ return new class extends Migration
             $table->unsignedInteger('priority')->default(1);
 
             // рамки (не календарь!)
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
+            // $table->date('start_date')->nullable();
+            // $table->date('end_date')->nullable();
 
             // Статус и счётчик фактического выполнения (денормализация)
             // $table->enum('status', ['assigned', 'in_progress', 'completed'])->default('assigned');
