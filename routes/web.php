@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssignEmployeeController;
 use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\SubtaskController;
 use App\Http\Controllers\Calendar\TaskController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StructureController;
-use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskAssignmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -141,17 +141,23 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::prefix('tasks')->name('tasks.')->group(function () {
             Route::get('/create', [TaskController::class, 'create'])->name('create');
             Route::get('/{task}', [TaskController::class, 'show'])->name('show');
+            Route::get('/{task}/edit', [TaskController::class, 'edit'])->name('edit');
             Route::post('/', [TaskController::class, 'store'])->name('store');
             Route::put('/{task}', [TaskController::class, 'update'])->name('update');
-            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
 
-            // Файлы задачи (новые роуты)
-            Route::get('/{task}/files', [TaskController::class, 'getFiles'])->name('files');
+            // Удаление файла - ДОЛЖНО БЫТЬ ПЕРЕД удалением задачи!
             Route::delete('/{task}/files/{fileId}', [TaskController::class, 'deleteFile'])->name('files.delete');
 
-            // Подзадачи
-            Route::prefix('/{task}/subtasks')->name('subtasks.')->group(function () {
+            // Удаление задачи - ПОСЛЕ удаления файла
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
+
+            // ===== ПОДЗАДАЧИ =====
+            Route::prefix('{task}/subtasks')->name('subtasks.')->group(function () {
+                Route::get('/', [SubtaskController::class, 'index'])->name('index');
+                Route::get('/create', [SubtaskController::class, 'create'])->name('create');
                 Route::post('/', [SubtaskController::class, 'store'])->name('store');
+                Route::get('/{subtask}', [SubtaskController::class, 'show'])->name('show');
+                Route::get('/{subtask}/edit', [SubtaskController::class, 'edit'])->name('edit');
                 Route::put('/{subtask}', [SubtaskController::class, 'update'])->name('update');
                 Route::delete('/{subtask}', [SubtaskController::class, 'destroy'])->name('destroy');
             });

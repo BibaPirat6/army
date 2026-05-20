@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
-use Storage;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Task extends Model
 {
@@ -19,22 +19,17 @@ class Task extends Model
         'employee_position_id',
         'start_date',
         'end_date',
-          'files',
+        'files',
     ];
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date'   => 'date',
-         'files' => 'array',
-         'quota' => 'integer',
+        'end_date' => 'date',
+        'files' => 'array',
+        'quota' => 'integer',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relations
-    |--------------------------------------------------------------------------
-    */
-
+    // Связи
     public function employeePosition()
     {
         return $this->belongsTo(EmployeePosition::class);
@@ -55,34 +50,18 @@ class Task extends Model
         return $this->hasMany(TaskInstance::class);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Unit accessor
-    |--------------------------------------------------------------------------
-    */
-
     public function getUnitAttribute()
     {
         $position = $this->employeePosition;
-
         if (! $position || ! $position->commissariatPosition) {
             return null;
         }
-
         return $position->commissariatPosition->division
             ?? $position->commissariatPosition->department
             ?? $position->commissariatPosition->commissariat;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Aggregates (оптимизировано)
-    |--------------------------------------------------------------------------
-    */
-
-    /**
-     * Получаем агрегаты одним SQL-запросом
-     */
+    // Агрегаты подзадач
     public function getSubtasksAggregateAttribute(): object
     {
         return $this->subtasks()
@@ -109,12 +88,6 @@ class Task extends Model
         return $this->subtasks_aggregate->max ?? 0;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Итоговое время с учетом quota
-    |--------------------------------------------------------------------------
-    */
-
     public function getTotalMinTimeWithQuotaAttribute(): int
     {
         return $this->total_min_time * ($this->quota ?? 0);
@@ -130,95 +103,116 @@ class Task extends Model
         return $this->total_max_time * ($this->quota ?? 0);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Форматирование (для UI)
-    |--------------------------------------------------------------------------
-    */
-
     public function formatMinutes(int $minutes): string
     {
         if ($minutes <= 0) return '0 мин';
-
         $h = floor($minutes / 60);
         $m = $minutes % 60;
-
-        if ($h > 0) {
-            return "{$h}ч {$m}м";
-        }
-
+        if ($h > 0) return "{$h}ч {$m}м";
         return "{$m} мин";
     }
 
-
-
+    /*
+    |--------------------------------------------------------------------------
+    | РАБОТА С ФАЙЛАМИ
+    |--------------------------------------------------------------------------
+    */
 
     /**
-     * Добавить файл к задаче
+     * Получить список файлов
      */
-    public function addFile($uploadedFile): array
+    public function getFilesList(): array
     {
-        $files = $this->files ?? [];
+        if (empty($this->files)) {
+            return [];
+        }
         
-        $path = $uploadedFile->store('tasks/' . $this->id, 'public');
+        if (is_string($this->files)) {
+            $decoded = json_decode($this->files, true);
+            return is_array($decoded) ? $decoded : [];
+        }
         
-        $fileData = [
-            'id' => uniqid(),
-            'original_name' => $uploadedFile->getClientOriginalName(),
-            'path' => $path,
-            'mime_type' => $uploadedFile->getMimeType(),
-            'size' => $uploadedFile->getSize(),
-            'created_at' => now()->toDateTimeString(),
-        ];
+        if (is_array($this->files)) {
+            return $this->files;
+        }
         
-        $files[] = $fileData;
-        $this->files = $files;
-        $this->save();
-        
-        return $fileData;
+        return [];
     }
 
     /**
-     * Удалить файл из задачи
+     * Добавить файл
+     */
+    public function addFile($uploadedFile): ?array
+    {
+        try {
+            $files = $this->getFilesList();
+            
+            $path = $uploadedFile->store('tasks/' . $this->id, 'public');
+            
+            $fileData = [
+                'id' => (string) Str::uuid(),
+                'original_name' => $uploadedFile->getClientOriginalName(),
+                'path' => $path,
+                'mime_type' => $uploadedFile->getMimeType(),
+                'size' => $uploadedFile->getSize(),
+                'created_at' => now()->toDateTimeString(),
+            ];
+            
+            $files[] = $fileData;
+            $this->files = $files;
+            $this->save();
+            
+            return $fileData;
+        } catch (\Exception $e) {
+            \Log::error('Ошибка добавления файла: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Удалить файл по ID
      */
     public function removeFile(string $fileId): bool
     {
-        $files = $this->files ?? [];
-        
-        foreach ($files as $key => $file) {
-            if ($file['id'] === $fileId) {
-                // Удаляем физический файл
-                if (Storage::disk('public')->exists($file['path'])) {
-                    Storage::disk('public')->delete($file['path']);
+        try {
+            $files = $this->getFilesList();
+            $found = false;
+            
+            foreach ($files as $key => $file) {
+                if (isset($file['id']) && $file['id'] === $fileId) {
+                    // Удаляем физический файл
+                    if (isset($file['path']) && Storage::disk('public')->exists($file['path'])) {
+                        Storage::disk('public')->delete($file['path']);
+                    }
+                    unset($files[$key]);
+                    $found = true;
+                    break;
                 }
-                // Удаляем из массива
-                unset($files[$key]);
+            }
+            
+            if ($found) {
                 $this->files = array_values($files);
                 $this->save();
-                return true;
             }
+            
+            return $found;
+        } catch (\Exception $e) {
+            \Log::error('Ошибка удаления файла: ' . $e->getMessage());
+            return false;
         }
-        
-        return false;
     }
 
     /**
-     * Получить все файлы задачи
-     */
-    public function getFiles(): array
-    {
-        return $this->files ?? [];
-    }
-
-    /**
-     * Получить файлы с публичными URL
+     * Получить файлы с URL
      */
     public function getFilesWithUrls(): array
     {
-        $files = $this->files ?? [];
+        $files = $this->getFilesList();
         
         foreach ($files as &$file) {
-            $file['url'] = Storage::url($file['path']);
+            if (isset($file['path'])) {
+                $file['url'] = Storage::url($file['path']);
+            }
         }
         
         return $files;

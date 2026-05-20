@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Calendar;
 
 use App\Http\Controllers\Controller;
-use App\Models\Task;
 use App\Models\EmployeePosition;
-use Carbon\Carbon;
+use App\Models\Task;
 use Illuminate\Http\Request;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class TaskController extends Controller
 {
@@ -15,7 +14,7 @@ class TaskController extends Controller
     {
         $employeePositions = EmployeePosition::with([
             'employee.person',
-            'commissariatPosition.position.chiefType',
+            'commissariatPosition.position',
             'commissariatPosition.commissariat',
             'commissariatPosition.department',
             'commissariatPosition.division',
@@ -23,10 +22,36 @@ class TaskController extends Controller
             ->whereHas('commissariatPosition.position.chiefType', function ($query) {
                 $query->whereIn('id', [2, 3, 4]);
             })
-            ->get();
+            ->get()
+            ->map(function ($ep) {
+                $person = $ep->employee?->person;
+                $cp = $ep->commissariatPosition;
+
+                // ФИО
+                $fullName = $person
+                    ? trim($person->фамилия.' '.$person->имя.' '.($person->отчество ?? ''))
+                    : 'Сотрудник #'.$ep->employee_id;
+
+                // Должность
+                $positionName = $cp->position?->name ?? '';
+
+                // Подразделение
+                $unitName = $cp->division?->name
+                    ?? $cp->department?->name
+                    ?? $cp->commissariat?->name
+                    ?? '';
+
+                return [
+                    'id' => $ep->id,
+                    'full_name' => $fullName,
+                    'position' => $positionName,
+                    'unit' => $unitName,
+                    'search_text' => mb_strtolower($fullName.' '.$positionName.' '.$unitName),
+                ];
+            });
 
         $startDate = $request->get('start_date', now()->format('Y-m-d'));
-        
+
         return view('admin.calendar.tasks.create', compact('employeePositions', 'startDate'));
     }
 
@@ -35,15 +60,76 @@ class TaskController extends Controller
         $task = Task::with([
             'employeePosition.employee.person',
             'employeePosition.commissariatPosition',
+            'subtasks',
+            'taskAssignments.employee.person',
         ])->findOrFail($id);
 
-        return view('admin.calendar.tasks.show', compact('task'));
+        $subtasks = $task->subtasks;
+        $totalMin = $subtasks->sum('min_time_minutes');
+        $totalAvg = $subtasks->sum('avg_time_minutes');
+        $totalMax = $subtasks->sum('max_time_minutes');
+        $totalCompleted = $task->taskAssignments->sum('completed_count');
+        $totalQuotaAssigned = $task->taskAssignments->sum('quota');
+
+        return view('admin.calendar.tasks.show', compact(
+            'task', 'subtasks', 'totalMin', 'totalAvg', 'totalMax', 'totalCompleted', 'totalQuotaAssigned'
+        ));
+    }
+
+    public function edit(Task $task)
+    {
+        $employeePositions = EmployeePosition::with([
+            'employee.person',
+            'commissariatPosition.position',
+            'commissariatPosition.commissariat',
+            'commissariatPosition.department',
+            'commissariatPosition.division',
+        ])
+            ->whereHas('commissariatPosition.position.chiefType', function ($query) {
+                $query->whereIn('id', [2, 3, 4]);
+            })
+            ->get()
+            ->map(function ($ep) {
+                $person = $ep->employee?->person;
+                $cp = $ep->commissariatPosition;
+
+                // ФИО
+                $fullName = $person
+                    ? trim($person->фамилия.' '.$person->имя.' '.($person->отчество ?? ''))
+                    : 'Сотрудник #'.$ep->employee_id;
+
+                // Должность
+                $positionName = $cp->position?->name ?? '';
+
+                // Подразделение
+                $unitName = $cp->division?->name
+                    ?? $cp->department?->name
+                    ?? $cp->commissariat?->name
+                    ?? '';
+
+                return [
+                    'id' => $ep->id,
+                    'full_name' => $fullName,
+                    'position' => $positionName,
+                    'unit' => $unitName,
+                    'search_text' => mb_strtolower($fullName.' '.$positionName.' '.$unitName),
+                ];
+            });
+
+        // Находим выбранного ответственного для отображения
+        $selectedResponsible = null;
+        if ($task->employee_position_id) {
+            $selected = collect($employeePositions)->firstWhere('id', $task->employee_position_id);
+            if ($selected) {
+                $selectedResponsible = $selected;
+            }
+        }
+
+        return view('admin.calendar.tasks.edit', compact('task', 'employeePositions', 'selectedResponsible'));
     }
 
     public function store(Request $request)
     {
-        \Log::info('Store method data:', $request->all());
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -56,33 +142,24 @@ class TaskController extends Controller
         ]);
 
         $validated['created_by'] = auth()->id() ?? 1;
-        $validated['files'] = []; // Пустой массив для файлов
+        $validated['files'] = [];
 
         $task = Task::create($validated);
 
-        // Сохраняем файлы в JSON поле
+        // Сохранение файлов
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $task->addFile($file);
             }
         }
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Задача создана',
-                'task_id' => $task->id,
-                'event' => $this->formatEvent($task),
-            ]);
-        }
-
-        return redirect()->route('calendar.index')->with('success', 'Задача создана');
+        return redirect()
+            ->route('calendar.tasks.show', $task)
+            ->with('success', 'Задача успешно создана');
     }
 
     public function update(Request $request, Task $task)
     {
-        \Log::info('Update method called', ['id' => $task->id]);
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -96,78 +173,69 @@ class TaskController extends Controller
 
         $task->update($validated);
 
-        // Добавляем новые файлы
+        // Сохранение новых файлов
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $task->addFile($file);
             }
         }
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Задача обновлена',
-                'event' => $this->formatEvent($task),
-            ]);
-        }
-
-        return redirect()->route('calendar.tasks.show', $task)->with('success', 'Задача обновлена');
-    }
-
-    public function destroy(Task $task)
-    {
-        // Удаляем физические файлы
-        $files = $task->getFiles();
-        foreach ($files as $file) {
-            if (Storage::disk('public')->exists($file['path'])) {
-                Storage::disk('public')->delete($file['path']);
-            }
-        }
-        
-        $task->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Задача удалена',
-        ]);
+        return redirect()
+            ->route('calendar.tasks.show', $task)
+            ->with('success', 'Задача успешно обновлена');
     }
 
     /**
-     * Удалить конкретный файл из задачи
+     * Удаление задачи
+     */
+    public function destroy(Task $task)
+    {
+        try {
+            // Удаляем все файлы задачи
+            foreach ($task->getFilesList() as $file) {
+                if (isset($file['path']) && Storage::disk('public')->exists($file['path'])) {
+                    Storage::disk('public')->delete($file['path']);
+                }
+            }
+
+            // Удаляем подзадачи
+            $task->subtasks()->delete();
+
+            // Удаляем назначения
+            $task->taskAssignments()->delete();
+
+            // Удаляем задачу
+            $task->delete();
+
+            return redirect()
+                ->route('calendar.index')
+                ->with('success', 'Задача успешно удалена');
+        } catch (\Exception $e) {
+            \Log::error('Ошибка удаления задачи: '.$e->getMessage());
+
+            return redirect()
+                ->back()
+                ->with('error', 'Ошибка при удалении задачи');
+        }
+    }
+
+    /**
+     * Удаление файла задачи
      */
     public function deleteFile(Task $task, $fileId)
     {
-        $task->removeFile($fileId);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Файл удален',
-        ]);
-    }
+        try {
+            $result = $task->removeFile($fileId);
 
-    /**
-     * Получить файлы задачи
-     */
-    public function getFiles(Task $task)
-    {
-        return response()->json($task->getFilesWithUrls());
-    }
+            if ($result) {
+                return redirect()->back()->with('success', 'Файл успешно удален');
+            } else {
+                return redirect()->back()->with('error', 'Файл не найден');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Ошибка удаления файла: '.$e->getMessage());
 
-    private function formatEvent(Task $task): array
-    {
-        return [
-            'id' => $task->id,
-            'title' => $task->title,
-            'start' => $task->start_date->toDateString(),
-            'end' => $task->end_date
-                ? Carbon::parse($task->end_date)->addDay()->toDateString()
-                : Carbon::parse($task->start_date)->addDay()->toDateString(),
-            'color' => $task->color,
-            'extendedProps' => [
-                'description' => $task->description,
-                'quota' => $task->quota,
-                'employee_position_id' => $task->employee_position_id,
-            ],
-        ];
+            return redirect()->back()->with('error', 'Ошибка при удалении файла');
+        }
     }
 }
