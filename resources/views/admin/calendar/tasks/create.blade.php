@@ -18,12 +18,12 @@
         <div class="bg-white rounded-2xl shadow-xl p-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Новая задача</h1>
 
-            <form action="{{ route('calendar.tasks.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('calendar.tasks.store') }}" method="POST" enctype="multipart/form-data" id="taskForm">
                 @csrf
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Название *</label>
-                    <input type="text" name="title" value="{{ old('title') }}" required
+                    <input type="text" name="title" id="title" value="{{ old('title') }}" required
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('title')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -32,7 +32,7 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Описание</label>
-                    <textarea name="description" rows="3"
+                    <textarea name="description" id="description" rows="3"
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description') }}</textarea>
                 </div>
 
@@ -52,12 +52,12 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Цвет</label>
-                        <input type="color" name="color" value="{{ old('color', '#3788d8') }}"
+                        <input type="color" name="color" id="color" value="{{ old('color', '#3788d8') }}"
                             class="h-10 w-full rounded-lg border-gray-300 cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Квота</label>
-                        <input type="number" name="quota" min="1" value="{{ old('quota', 1) }}"
+                        <input type="number" name="quota" id="quota" min="1" value="{{ old('quota', 1) }}"
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                 </div>
@@ -75,12 +75,13 @@
                     </div>
                 </div>
 
-                {{-- Файлы --}}
+                {{-- Файлы с валидацией --}}
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Файлы</label>
-                    <input type="file" name="files[]" multiple
+                    <input type="file" name="files[]" multiple id="file-input"
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     <p class="text-xs text-gray-400 mt-1">Максимум 10 МБ на файл</p>
+                    <div id="file-errors" class="mt-2 space-y-1"></div>
                     @error('files.*')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -89,7 +90,7 @@
                 <div class="flex justify-end gap-3">
                     <a href="{{ route('calendar.index') }}"
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Отмена</a>
-                    <button type="submit"
+                    <button type="submit" id="submit-btn"
                         class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">Создать</button>
                 </div>
             </form>
@@ -115,6 +116,90 @@ endDateInput.addEventListener('change', function() {
         this.value = startDateInput.value;
         alert('Дата окончания не может быть раньше даты начала');
     }
+});
+
+// === ВАЛИДАЦИЯ ФАЙЛОВ ===
+const fileInput = document.getElementById('file-input');
+const fileErrorsDiv = document.getElementById('file-errors');
+const submitBtn = document.getElementById('submit-btn');
+const taskForm = document.getElementById('taskForm');
+
+let validFilesCount = 0;
+
+function validateFiles() {
+    const files = Array.from(fileInput.files);
+    const maxSize = 10 * 1024 * 1024; // 10 МБ
+    const errors = [];
+    const validFiles = [];
+    
+    // Очищаем предыдущие ошибки
+    fileErrorsDiv.innerHTML = '';
+    
+    files.forEach(file => {
+        if (file.size > maxSize) {
+            errors.push(`Файл "${file.name}" превышает 10 МБ (${(file.size / 1024 / 1024).toFixed(2)} МБ)`);
+        } else {
+            validFiles.push(file);
+        }
+    });
+    
+    // Показываем ошибки
+    if (errors.length > 0) {
+        errors.forEach(error => {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-sm text-red-600 bg-red-50 p-2 rounded';
+            errorDiv.textContent = error;
+            fileErrorsDiv.appendChild(errorDiv);
+        });
+    }
+    
+    // Обновляем input только с валидными файлами
+    if (validFiles.length !== files.length) {
+        const dataTransfer = new DataTransfer();
+        validFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+        
+        if (validFiles.length === 0) {
+            fileInput.value = '';
+        }
+        
+        if (validFiles.length > 0) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'text-sm text-green-600 bg-green-50 p-2 rounded mt-1';
+            successDiv.textContent = `Выбрано ${validFiles.length} файл(ов) для загрузки`;
+            fileErrorsDiv.appendChild(successDiv);
+        }
+    }
+    
+    validFilesCount = validFiles.length;
+}
+
+// Валидация при выборе файлов
+fileInput.addEventListener('change', validateFiles);
+
+// Валидация перед отправкой формы
+taskForm.addEventListener('submit', function(e) {
+    // Проверяем файлы
+    const files = Array.from(fileInput.files);
+    const maxSize = 10 * 1024 * 1024;
+    let hasInvalidFile = false;
+    
+    for (const file of files) {
+        if (file.size > maxSize) {
+            hasInvalidFile = true;
+            break;
+        }
+    }
+    
+    if (hasInvalidFile) {
+        e.preventDefault();
+        alert('Есть файлы превышающие 10 МБ. Пожалуйста, удалите их или выберите другие файлы.');
+        return;
+    }
+    
+    // Блокируем кнопку, чтобы избежать двойной отправки
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Сохранение...';
 });
 
 // === ВЫПАДАЮЩИЙ СПИСОК С ПОИСКОМ ===

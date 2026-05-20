@@ -128,62 +128,73 @@ class TaskController extends Controller
         return view('admin.calendar.tasks.edit', compact('task', 'employeePositions', 'selectedResponsible'));
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'quota' => 'nullable|integer|min:1',
-            'employee_position_id' => 'nullable|exists:employee_positions,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'files.*' => 'nullable|file|max:10240',
-        ]);
+ public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        'quota' => 'nullable|integer|min:1',
+        'employee_position_id' => 'nullable|exists:employee_positions,id',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'files.*' => 'nullable|file|max:10240', // 10 МБ
+    ]);
 
-        $validated['created_by'] = auth()->id() ?? 1;
-        $validated['files'] = [];
+    $validated['created_by'] = auth()->id() ?? 1;
+    $validated['files'] = [];
 
-        $task = Task::create($validated);
+    $task = Task::create($validated);
 
-        // Сохранение файлов
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
+    // Сохранение файлов (только валидные)
+    if ($request->hasFile('files')) {
+        $files = $request->file('files');
+        
+        foreach ($files as $file) {
+            // Дополнительная проверка размера
+            if ($file->isValid() && $file->getSize() <= 10 * 1024 * 1024) {
                 $task->addFile($file);
             }
         }
-
-        return redirect()
-            ->route('calendar.tasks.show', $task)
-            ->with('success', 'Задача успешно создана');
     }
 
-    public function update(Request $request, Task $task)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'quota' => 'nullable|integer|min:1',
-            'employee_position_id' => 'nullable|exists:employee_positions,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'files.*' => 'nullable|file|max:10240',
-        ]);
+    return redirect()
+        ->route('calendar.tasks.show', $task)
+        ->with('success', 'Задача успешно создана');
+}
 
-        $task->update($validated);
+ public function update(Request $request, Task $task)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        'quota' => 'nullable|integer|min:1',
+        'employee_position_id' => 'nullable|exists:employee_positions,id',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'files.*' => 'nullable|file|max:10240', // 10 МБ
+    ]);
 
-        // Сохранение новых файлов
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                $task->addFile($file);
-            }
+    $task->update($validated);
+
+    // Сохранение новых файлов (только если они есть и валидны)
+    if ($request->hasFile('files')) {
+        $files = $request->file('files');
+        // Фильтруем только валидные файлы
+        $validFiles = array_filter($files, function($file) {
+            return $file->isValid() && $file->getSize() <= 10240 * 1024; // 10 МБ
+        });
+        
+        foreach ($validFiles as $file) {
+            $task->addFile($file);
         }
-
-        return redirect()
-            ->route('calendar.tasks.show', $task)
-            ->with('success', 'Задача успешно обновлена');
     }
+
+    return redirect()
+        ->route('calendar.tasks.show', $task)
+        ->with('success', 'Задача успешно обновлена');
+}
 
     /**
      * Удаление задачи

@@ -104,7 +104,7 @@
                                                 class="text-xs text-gray-400">({{ isset($file['size']) ? round($file['size'] / 1024, 1) : 0 }}
                                                 КБ)</span>
                                         </div>
-                                        
+
                                     </div>
                                 @endif
                             @endforeach
@@ -115,9 +115,10 @@
                 {{-- Добавление новых файлов --}}
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Добавить новые файлы</label>
-                    <input type="file" name="files[]" multiple
+                    <input type="file" name="files[]" multiple id="file-input"
                         class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     <p class="text-xs text-gray-400 mt-1">Максимум 10 МБ на файл</p>
+                    <div id="file-errors" class="mt-2 space-y-1"></div>
                     @error('files.*')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -168,16 +169,16 @@
             }
 
             dropdown.innerHTML = items.map(item => `
-            <div class="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-0" 
-                 data-id="${item.id}"
-                 data-name="${item.full_name.replace(/'/g, "\\'")}">
-                <div class="font-medium text-gray-800">${item.full_name}</div>
-                <div class="text-xs text-gray-500 mt-0.5">
-                    <span class="inline-block mr-3">📌 ${item.position}</span>
-                    <span>🏛 ${item.unit}</span>
+                <div class="px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-0" 
+                     data-id="${item.id}"
+                     data-name="${item.full_name.replace(/'/g, "\\'")}">
+                    <div class="font-medium text-gray-800">${item.full_name}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">
+                        <span class="inline-block mr-3">📌 ${item.position}</span>
+                        <span>🏛 ${item.unit}</span>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
 
             dropdown.querySelectorAll('[data-id]').forEach(el => {
                 el.addEventListener('click', () => {
@@ -230,5 +231,59 @@
                 hiddenInput.value = selected.id;
             }
         @endif
+
+
+            // === ВАЛИДАЦИЯ ФАЙЛОВ ===
+    const fileInput = document.getElementById('file-input');
+        const fileErrorsDiv = document.getElementById('file-errors');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                // Очищаем предыдущие ошибки
+                fileErrorsDiv.innerHTML = '';
+
+                const files = Array.from(e.target.files);
+                const maxSize = 10 * 1024 * 1024; // 10 МБ
+                const validFiles = [];
+                const errors = [];
+
+                files.forEach(file => {
+                    if (file.size > maxSize) {
+                        errors.push(`Файл "${file.name}" превышает 10 МБ (${(file.size / 1024 / 1024).toFixed(2)} МБ)`);
+                    } else {
+                        validFiles.push(file);
+                    }
+                });
+
+                // Показываем ошибки
+                if (errors.length > 0) {
+                    errors.forEach(error => {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'text-sm text-red-600 bg-red-50 p-2 rounded';
+                        errorDiv.textContent = error;
+                        fileErrorsDiv.appendChild(errorDiv);
+                    });
+                }
+
+                // Обновляем input только с валидными файлами
+                if (validFiles.length !== files.length) {
+                    // Создаем новый DataTransfer с валидными файлами
+                    const dataTransfer = new DataTransfer();
+                    validFiles.forEach(file => dataTransfer.items.add(file));
+                    fileInput.files = dataTransfer.files;
+
+                    if (validFiles.length === 0) {
+                        fileInput.value = '';
+                    }
+
+                    if (validFiles.length > 0) {
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'text-sm text-green-600 bg-green-50 p-2 rounded mt-1';
+                        successDiv.textContent = `Выбрано ${validFiles.length} файл(ов) для загрузки`;
+                        fileErrorsDiv.appendChild(successDiv);
+                    }
+                }
+            });
+        }
     </script>
 @endpush

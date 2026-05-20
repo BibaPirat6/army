@@ -139,35 +139,41 @@ class Task extends Model
         return [];
     }
 
-    /**
-     * Добавить файл
-     */
-    public function addFile($uploadedFile): ?array
-    {
-        try {
-            $files = $this->getFilesList();
-            
-            $path = $uploadedFile->store('tasks/' . $this->id, 'public');
-            
-            $fileData = [
-                'id' => (string) Str::uuid(),
-                'original_name' => $uploadedFile->getClientOriginalName(),
-                'path' => $path,
-                'mime_type' => $uploadedFile->getMimeType(),
+   public function addFile($uploadedFile): ?array
+{
+    try {
+        // Проверка размера файла (10 МБ)
+        if ($uploadedFile->getSize() > 10 * 1024 * 1024) {
+            \Log::warning('Файл превышает размер', [
                 'size' => $uploadedFile->getSize(),
-                'created_at' => now()->toDateTimeString(),
-            ];
-            
-            $files[] = $fileData;
-            $this->files = $files;
-            $this->save();
-            
-            return $fileData;
-        } catch (\Exception $e) {
-            \Log::error('Ошибка добавления файла: ' . $e->getMessage());
+                'name' => $uploadedFile->getClientOriginalName()
+            ]);
             return null;
         }
+        
+        $files = $this->getFilesList();
+        
+        $path = $uploadedFile->store('tasks/' . $this->id, 'public');
+        
+        $fileData = [
+            'id' => (string) \Str::uuid(),
+            'original_name' => $uploadedFile->getClientOriginalName(),
+            'path' => $path,
+            'mime_type' => $uploadedFile->getMimeType(),
+            'size' => $uploadedFile->getSize(),
+            'created_at' => now()->toDateTimeString(),
+        ];
+        
+        $files[] = $fileData;
+        $this->files = $files;
+        $this->save();
+        
+        return $fileData;
+    } catch (\Exception $e) {
+        \Log::error('Ошибка добавления файла: ' . $e->getMessage());
+        return null;
     }
+}
 
     /**
      * Удалить файл по ID
