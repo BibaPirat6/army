@@ -109,9 +109,9 @@
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                         <div>
-                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата
-                                окончания</label>
-                            <input type="date" id="end_date" name="end_date"
+                            <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Дата окончания
+                                *</label>
+                            <input type="date" id="end_date" name="end_date" required
                                 class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </div>
                     </div>
@@ -312,32 +312,32 @@
             function showStatsResult(c) {
                 statsResult.classList.remove('hidden');
                 let html = `
-                <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${c.name}</span></div>
-                <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество задач:</span><span class="font-bold text-indigo-700">${c.total}</span></div>
-            `;
+                    <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${c.name}</span></div>
+                    <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество задач:</span><span class="font-bold text-indigo-700">${c.total}</span></div>
+                `;
 
                 if (c.total > 0) {
                     html += `
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <a href="/calendar/matrix/${c.id}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                            </svg>
-                            Матрица сотрудников
-                        </a>
-                    </div>
-                `;
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <a href="/calendar/matrix/${c.id}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                </svg>
+                                Матрица сотрудников
+                            </a>
+                        </div>
+                    `;
                 } else {
                     html += `
-                    <div class="mt-3 pt-3 border-t border-gray-200">
-                        <button type="button" disabled class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                            </svg>
-                            Матрица сотрудников (нет задач)
-                        </button>
-                    </div>
-                `;
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <button type="button" disabled class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-lg cursor-not-allowed">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                </svg>
+                                Матрица сотрудников (нет задач)
+                            </button>
+                        </div>
+                    `;
                 }
 
                 statsResultContent.innerHTML = html;
@@ -361,6 +361,6 @@
             // Экспортируем функцию обновления глобально
             window.refreshStatsData = refreshStatsData;
         })();
-        
+
     </script>
 @endpush

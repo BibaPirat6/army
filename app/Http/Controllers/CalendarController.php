@@ -95,7 +95,7 @@ class CalendarController extends Controller
             'quota' => 'nullable|integer|min:1',
             'employee_position_id' => 'nullable|exists:employee_positions,id',
             'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'files.*' => 'nullable|file|max:10240',
         ]);
 
@@ -156,7 +156,7 @@ class CalendarController extends Controller
             'quota' => 'nullable|integer|min:1',
             'employee_position_id' => 'nullable|exists:employee_positions,id',
             'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'files.*' => 'nullable|file|max:10240',   // разрешаем новые файлы
         ]);
 

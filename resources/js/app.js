@@ -94,9 +94,9 @@ function initDropzone() {
                             'Accept': 'application/json',
                         },
                     })
-                    .then(r => r.json())
-                    .then(data => console.log('Файл удалён с сервера:', data))
-                    .catch(err => console.error('Ошибка удаления файла:', err));
+                        .then(r => r.json())
+                        .then(data => console.log('Файл удалён с сервера:', data))
+                        .catch(err => console.error('Ошибка удаления файла:', err));
                 }
             });
         },
@@ -118,9 +118,43 @@ function clearDropzone() {
     }
 }
 
+// === ЛОГИКА РАБОТЫ С ДАТАМИ ===
+function initDateLogic() {
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (!startDateInput || !endDateInput) return;
+    
+    // При изменении Start Date
+    startDateInput.addEventListener('change', function() {
+        const startValue = this.value;
+        const endValue = endDateInput.value;
+        
+        // Если End Date пустой или меньше нового Start Date
+        if (!endValue || endValue < startValue) {
+            endDateInput.value = startValue;
+        }
+    });
+    
+    // При изменении End Date
+    endDateInput.addEventListener('change', function() {
+        const startValue = startDateInput.value;
+        const endValue = this.value;
+        
+        // Если End Date меньше Start Date - корректируем
+        if (endValue && startValue && endValue < startValue) {
+            this.value = startValue;
+            alert('Дата окончания не может быть раньше даты начала');
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
+    
+    // Инициализируем логику дат
+    initDateLogic();
 
     calendar = new Calendar(calendarEl, {
         plugins: [dayGridPlugin, multiMonthPlugin, interactionPlugin],
@@ -157,8 +191,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             clearDropzone();
 
+            // ✅ Устанавливаем обе даты на выбранную дату
             document.getElementById('start_date').value = info.dateStr;
-            document.getElementById('end_date').value = '';
+            document.getElementById('end_date').value = info.dateStr;
 
             if (typeof window.openModal === 'function') {
                 window.openModal();
@@ -178,13 +213,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('quota').value = props.quota || '';
             document.getElementById('start_date').value = e.startStr;
 
+            // ✅ Устанавливаем end_date из события
             if (e.endStr) {
                 const endDate = new Date(e.endStr);
                 endDate.setDate(endDate.getDate() - 1);
-                const realEndStr = endDate.toISOString().slice(0, 10);
-                document.getElementById('end_date').value = (realEndStr !== e.startStr) ? realEndStr : '';
+                document.getElementById('end_date').value = endDate.toISOString().slice(0, 10);
             } else {
-                document.getElementById('end_date').value = '';
+                // Если нет end_date в событии, ставим start_date
+                document.getElementById('end_date').value = e.startStr;
             }
 
             // Установка ответственного
@@ -244,6 +280,20 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             console.log('Форма отправляется...');
 
+            // ✅ Валидация дат перед отправкой
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            
+            if (!startDate || !endDate) {
+                alert('Пожалуйста, заполните дату начала и дату окончания');
+                return;
+            }
+            
+            if (endDate < startDate) {
+                alert('Дата окончания не может быть раньше даты начала');
+                return;
+            }
+
             const id = document.getElementById('task_id').value;
             const url = id ? `/calendar/tasks/${id}` : '/calendar/tasks';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -255,12 +305,8 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('color', document.getElementById('color').value);
             formData.append('quota', document.getElementById('quota').value);
             formData.append('employee_position_id', document.getElementById('employee_position_id').value);
-            formData.append('start_date', document.getElementById('start_date').value);
-
-            const endDate = document.getElementById('end_date').value;
-            if (endDate) {
-                formData.append('end_date', endDate);
-            }
+            formData.append('start_date', startDate);
+            formData.append('end_date', endDate);
 
             if (id) {
                 formData.append('_method', 'PUT');
@@ -286,35 +332,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: formData,
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Ответ сервера:', data);
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Ответ сервера:', data);
 
-                if (data.success) {
-                    if (!id) {
-                        calendar.addEvent(data.event);
+                    if (data.success) {
+                        if (!id) {
+                            calendar.addEvent(data.event);
+                        } else {
+                            const existingEvent = calendar.getEventById(id);
+                            if (existingEvent) existingEvent.remove();
+                            calendar.addEvent(data.event);
+                        }
+
+                        // ✅ Автообновление статистики
+                        if (typeof window.refreshStatsData === 'function') {
+                            window.refreshStatsData();
+                        }
+
+                        if (typeof window.closeModal === 'function') {
+                            window.closeModal();
+                        }
                     } else {
-                        const existingEvent = calendar.getEventById(id);
-                        if (existingEvent) existingEvent.remove();
-                        calendar.addEvent(data.event);
+                        alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
                     }
-
-                    // ✅ Автообновление статистики
-                    if (typeof window.refreshStatsData === 'function') {
-                        window.refreshStatsData();
-                    }
-
-                    if (typeof window.closeModal === 'function') {
-                        window.closeModal();
-                    }
-                } else {
-                    alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка запроса:', error);
-                alert('Ошибка соединения с сервером. Проверьте консоль.');
-            });
+                })
+                .catch(error => {
+                    console.error('Ошибка запроса:', error);
+                    alert('Ошибка соединения с сервером. Проверьте консоль.');
+                });
         });
         console.log('Обработчик формы привязан');
     }
