@@ -38,15 +38,15 @@ class PersonsColumnsController extends Controller
             'column_type.required' => 'Поле "Тип колонки" обязательно для заполнения.',
         ]);
 
-        try {   
+        try {
             $columnName = $this->normalizeFieldName($data['column_name']);
 
             if (Schema::hasColumn('persons', $columnName)) {
                 throw new \Exception('колонка уже существует в persons');
             }
 
-            if (in_array($data['column_type'], ['json', 'file']) && ! empty($data['default'])) {
-                throw new \Exception('Для полей типа JSON и FILE нельзя указать значение по умолчанию');
+            if (in_array($data['column_type'], ['json', 'file', 'date']) && ! empty($data['default'])) {
+                throw new \Exception('Для полей типа JSON, FILE и DATE нельзя указать значение по умолчанию');
             }
 
             $isNullable = $request->has('nullable');
@@ -71,7 +71,7 @@ class PersonsColumnsController extends Controller
                     default => throw new \Exception("Неподдерживаемый тип: {$type}"),
                 };
 
-                if ($isNullable) {
+                if ($isNullable || $type === 'date') {
                     $column->nullable();
                 }
 
@@ -127,60 +127,106 @@ class PersonsColumnsController extends Controller
 
         $table = 'persons';
         $oldName = $id;
-        $newName = $this->normalizeFieldName($data['column_name']) ;
+        $newName = $this->normalizeFieldName($data['column_name']);
         $isNullable = $request->has('nullable');
 
         try {
+
+            /**
+             * 1. RENAME COLUMN
+             */
             if ($oldName !== $newName) {
                 Schema::table($table, function (Blueprint $table) use ($oldName, $newName) {
                     $table->renameColumn($oldName, $newName);
                 });
             }
 
+            /**
+             * 2. COLUMN INFO
+             */
             $column = Person::getColumnInfo($table, $newName);
 
             if (! $column) {
                 throw new \Exception('Колонка не найдена');
             }
 
-            $type = $column['type'];
-            $default = $data['default'] ?? null;
+            $dataType = $column['data_type']; // <<< ВАЖНО (НЕ full type)
             $comment = $column['comment'] ?? null;
+
+            $default = $data['default'] ?? null;
+            if ($default === '') {
+                $default = null;
+            }
 
             $currentNullable = $column['nullable'];
             $newNullable = $isNullable;
 
+            /**
+             * 3. HANDLE NULL → NOT NULL
+             */
             if ($currentNullable && ! $newNullable) {
 
-                $nullCount = DB::table($table)->whereNull($newName)->count();
+                $nullCount = DB::table($table)
+                    ->whereNull($newName)
+                    ->count();
 
                 if ($nullCount > 0) {
 
-                    if ($default === null || $default === '') {
-                        throw new \Exception('Укажите значение по умолчанию перед отключением NULL');
+                    $fillValue = $default;
+
+                    // если default не задан — ставим безопасный fallback
+                    if ($fillValue === null || $fillValue === '') {
+
+                        // универсальный fallback по типу MySQL-логики
+                        $fillValue = match ($column['data_type']) {
+                            'date' => now()->format('Y-m-d'),
+                            'int', 'integer' => 0,
+                            'decimal' => 0,
+                            default => '',
+                        };
                     }
 
                     DB::table($table)
                         ->whereNull($newName)
-                        ->update([$newName => $default]);
+                        ->update([$newName => $fillValue]);
                 }
             }
 
-            $nullableSql = $newNullable ? 'NULL' : 'NOT NULL';
+            /**
+             * 4. SAFE TYPE MAP (CRITICAL FIX FOR DATE)
+             */
+            $type = match ($dataType) {
+                'date' => 'DATE',
+                'int' => 'INT',
+                'integer' => 'INT',
+                'varchar' => 'VARCHAR(255)',
+                'decimal' => 'DECIMAL(10,2)',
+                'text' => 'TEXT',
+                'longtext' => 'LONGTEXT',
+                default => strtoupper($dataType),
+            };
 
-            $defaultSql = '';
-            if (! $newNullable && $default !== null && $default !== '') {
-                $defaultSql = "DEFAULT '".addslashes($default)."'";
+            /**
+             * 5. BUILD ALTER
+             */
+            $parts = [];
+
+            $parts[] = $type;
+            $parts[] = $newNullable ? 'NULL' : 'NOT NULL';
+
+            if ($default !== null && $default !== '') {
+                $parts[] = "DEFAULT '".addslashes($default)."'";
             }
 
-            $commentSql = '';
             if ($comment) {
-                $commentSql = "COMMENT '".addslashes($comment)."'";
+                $parts[] = "COMMENT '".addslashes($comment)."'";
             }
+
+            $sql = implode(' ', $parts);
 
             DB::statement("
             ALTER TABLE `$table`
-            MODIFY `$newName` $type $nullableSql $defaultSql $commentSql
+            MODIFY `$newName` $sql
         ");
 
             return redirect($request->input('backUrl') ?? route('persons-columns.index'))
