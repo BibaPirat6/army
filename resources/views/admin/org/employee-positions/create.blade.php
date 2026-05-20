@@ -48,7 +48,7 @@
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
                         <input type="hidden" name="commissariat_id" id="commissariat_id" required>
                         <ul id="commissariat_list"
-                            class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+                            class="relative left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
                                 data-static="true">Очистить</li>
                             @foreach ($commissariats as $commissariat)

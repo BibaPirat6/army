@@ -11,11 +11,14 @@ class EmployeePositionsController extends Controller
     public function create(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
-        $commissariats = Commissariat::all();
+
+        $commissariats = Commissariat::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
 
         $backUrl = $request->get('back_url');
 
-        // Передаем все переменные явно, а не через compact
         return view('admin.org.employee-positions.create', [
             'employeeId' => $employee->id,
             'backUrl' => $backUrl,

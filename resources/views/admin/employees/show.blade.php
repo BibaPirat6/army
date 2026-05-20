@@ -247,10 +247,17 @@
                         @forelse ($employee->employeePositions as $position)
                             <div class="bg-gray-50 rounded-xl border border-[#BFBFBF]/30 p-4 mb-3 last:mb-0 hover:shadow-md transition-shadow duration-200">
                                 <div class="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                        <span class="text-[#565A5B] text-xs uppercase tracking-wide">Должность</span>
-                                        <p class="font-semibold text-[#060606]">{{ $position->position->name }}</p>
-                                    </div>
+                                   <a href="{{ route('commissariat-positions.show', array_filter([
+    'id' => $position->commissariat_position_id,
+    'commissariat_id' => $position->commissariat_id,
+    'back_url' => url()->full(),
+    'employeeId' => $employee->id
+])) }}"
+class="font-semibold text-[#060606] hover:text-[#A60644] hover:underline">
+    {{ $position->position->name }}
+</a>
+
+
                                     <div>
                                         <span class="text-[#565A5B] text-xs uppercase tracking-wide">Ставка</span>
                                         <p class="font-semibold text-[#060606]">{{ number_format($position->rate, 2) }}</p>
