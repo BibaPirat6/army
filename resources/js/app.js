@@ -122,25 +122,25 @@ function clearDropzone() {
 function initDateLogic() {
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
-    
+
     if (!startDateInput || !endDateInput) return;
-    
+
     // При изменении Start Date
-    startDateInput.addEventListener('change', function() {
+    startDateInput.addEventListener('change', function () {
         const startValue = this.value;
         const endValue = endDateInput.value;
-        
+
         // Если End Date пустой или меньше нового Start Date
         if (!endValue || endValue < startValue) {
             endDateInput.value = startValue;
         }
     });
-    
+
     // При изменении End Date
-    endDateInput.addEventListener('change', function() {
+    endDateInput.addEventListener('change', function () {
         const startValue = startDateInput.value;
         const endValue = this.value;
-        
+
         // Если End Date меньше Start Date - корректируем
         if (endValue && startValue && endValue < startValue) {
             this.value = startValue;
@@ -152,7 +152,7 @@ function initDateLogic() {
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
-    
+
     // Инициализируем логику дат
     initDateLogic();
 
@@ -179,25 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         dateClick: function (info) {
             console.log('Клик по дате:', info.dateStr);
-
-            if (typeof window.resetForm === 'function') {
-                window.resetForm();
-            }
-
-            const taskLinkContainer = document.getElementById('taskLinkContainer');
-            if (taskLinkContainer) {
-                taskLinkContainer.classList.add('hidden');
-            }
-
-            clearDropzone();
-
-            // ✅ Устанавливаем обе даты на выбранную дату
-            document.getElementById('start_date').value = info.dateStr;
-            document.getElementById('end_date').value = info.dateStr;
-
-            if (typeof window.openModal === 'function') {
-                window.openModal();
-            }
+            // Редирект на страницу создания задачи с параметром start_date
+            window.location.href = '/calendar/tasks/create?start_date=' + info.dateStr;
         },
 
         eventClick: function (info) {
@@ -283,12 +266,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // ✅ Валидация дат перед отправкой
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
-            
+
             if (!startDate || !endDate) {
                 alert('Пожалуйста, заполните дату начала и дату окончания');
                 return;
             }
-            
+
             if (endDate < startDate) {
                 alert('Дата окончания не может быть раньше даты начала');
                 return;

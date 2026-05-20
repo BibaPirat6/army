@@ -9,7 +9,7 @@ use App\Services\WorkloadPlanner;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class EmployeeScheduleController extends Controller
+class ScheduleController extends Controller
 {
     /**
      * Форма настройки графика.

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Storage;
 
 class Task extends Model
 {
@@ -18,11 +19,14 @@ class Task extends Model
         'employee_position_id',
         'start_date',
         'end_date',
+          'files',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date'   => 'date',
+         'files' => 'array',
+         'quota' => 'integer',
     ];
 
     /*
@@ -49,11 +53,6 @@ class Task extends Model
     public function taskInstances()
     {
         return $this->hasMany(TaskInstance::class);
-    }
-
-    public function files()
-    {
-        return $this->hasMany(TaskFile::class);
     }
 
     /*
@@ -149,5 +148,79 @@ class Task extends Model
         }
 
         return "{$m} мин";
+    }
+
+
+
+
+    /**
+     * Добавить файл к задаче
+     */
+    public function addFile($uploadedFile): array
+    {
+        $files = $this->files ?? [];
+        
+        $path = $uploadedFile->store('tasks/' . $this->id, 'public');
+        
+        $fileData = [
+            'id' => uniqid(),
+            'original_name' => $uploadedFile->getClientOriginalName(),
+            'path' => $path,
+            'mime_type' => $uploadedFile->getMimeType(),
+            'size' => $uploadedFile->getSize(),
+            'created_at' => now()->toDateTimeString(),
+        ];
+        
+        $files[] = $fileData;
+        $this->files = $files;
+        $this->save();
+        
+        return $fileData;
+    }
+
+    /**
+     * Удалить файл из задачи
+     */
+    public function removeFile(string $fileId): bool
+    {
+        $files = $this->files ?? [];
+        
+        foreach ($files as $key => $file) {
+            if ($file['id'] === $fileId) {
+                // Удаляем физический файл
+                if (Storage::disk('public')->exists($file['path'])) {
+                    Storage::disk('public')->delete($file['path']);
+                }
+                // Удаляем из массива
+                unset($files[$key]);
+                $this->files = array_values($files);
+                $this->save();
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Получить все файлы задачи
+     */
+    public function getFiles(): array
+    {
+        return $this->files ?? [];
+    }
+
+    /**
+     * Получить файлы с публичными URL
+     */
+    public function getFilesWithUrls(): array
+    {
+        $files = $this->files ?? [];
+        
+        foreach ($files as &$file) {
+            $file['url'] = Storage::url($file['path']);
+        }
+        
+        return $files;
     }
 }

@@ -1,14 +1,13 @@
 <?php
 
 use App\Http\Controllers\AssignEmployeeController;
-use App\Http\Controllers\CalendarController;
-use App\Http\Controllers\CalendarFileController;
+use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\TaskController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
 use App\Http\Controllers\DepartmentsController;
 use App\Http\Controllers\DivisionsController;
 use App\Http\Controllers\EmployeePositionsController;
-use App\Http\Controllers\EmployeeScheduleController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
 use App\Http\Controllers\LoginController;
@@ -17,6 +16,7 @@ use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StructureController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\TaskAssignmentController;
@@ -130,40 +130,39 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/structure', [ExcelExportController::class, 'structure'])->name('structure');
     });
 
-    // графики
     Route::prefix('calendar')->name('calendar.')->group(function () {
+
+        // ===== ОСНОВНОЙ КАЛЕНДАРЬ =====
         Route::get('/', [CalendarController::class, 'index'])->name('index');
-        Route::get('/tasks/{task}', [CalendarController::class, 'show'])->name('show')
-            ->where('task', '[0-9]+');
         Route::get('/events', [CalendarController::class, 'events'])->name('events');
-        Route::post('/tasks', [CalendarController::class, 'store'])->name('tasks.store');
-        Route::put('/tasks/{task}', [CalendarController::class, 'update'])->name('tasks.update');
-        Route::get('/tasks/{task}/files', [CalendarController::class, 'getFiles'])->name('tasks.files');
-        // destroy еще не сделан, можно еще сделать удаление и отметка что задача выполнена, также архив
-        Route::delete('/tasks/{task}', [CalendarController::class, 'destroy'])->name('tasks.destroy');
+        Route::get('/stats', [CalendarController::class, 'stats'])->name('stats');
 
-        Route::delete('/files/{file}', [CalendarFileController::class, 'destroy'])->name('files.destroy');
-        // без перегрузки страницы, для получения статистики по задачам в виде количества задач по каждому комиссариату
-        Route::get('/stats', [CalendarController::class, 'stats'])->name('calendar.stats');
+        // ===== ЗАДАЧИ =====
+        Route::prefix('tasks')->name('tasks.')->group(function () {
+            Route::get('/create', [TaskController::class, 'create'])->name('create');
+            Route::get('/{task}', [TaskController::class, 'show'])->name('show');
+            Route::post('/', [TaskController::class, 'store'])->name('store');
+            Route::put('/{task}', [TaskController::class, 'update'])->name('update');
+            Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
 
-        // Подзадачи (CRUD)
-        Route::prefix('tasks/{task}/subtasks')->name('subtasks.')->group(function () {
-            Route::get('/', [SubtaskController::class, 'index'])->name('index');
-            Route::get('/{subtask}', [SubtaskController::class, 'show'])->name('show');
-            Route::post('/', [SubtaskController::class, 'store'])->name('store');
-            Route::put('/{subtask}', [SubtaskController::class, 'update'])->name('update')
-                ->where('subtask', '[0-9]+');
-            Route::delete('/{subtask}', [SubtaskController::class, 'destroy'])->name('destroy')
-                ->where('subtask', '[0-9]+');
+            // Файлы задачи (новые роуты)
+            Route::get('/{task}/files', [TaskController::class, 'getFiles'])->name('files');
+            Route::delete('/{task}/files/{fileId}', [TaskController::class, 'deleteFile'])->name('files.delete');
+
+            // Подзадачи
+            Route::prefix('/{task}/subtasks')->name('subtasks.')->group(function () {
+                Route::post('/', [SubtaskController::class, 'store'])->name('store');
+                Route::put('/{subtask}', [SubtaskController::class, 'update'])->name('update');
+                Route::delete('/{subtask}', [SubtaskController::class, 'destroy'])->name('destroy');
+            });
         });
 
+        // ===== МАТРИЦА СОТРУДНИКОВ =====
         Route::prefix('matrix')->name('matrix.')->group(function () {
-            Route::get('/{commissariat}', [MatrixController::class, 'index'])
-                ->name('index')
-                ->where('commissariat', '[0-9]+');
+            Route::get('/{commissariat}', [MatrixController::class, 'index'])->name('index');
         });
 
-        // Назначения сотрудников на задачи
+        // ===== НАЗНАЧЕНИЯ =====
         Route::prefix('tasks/{task}/assignments')->name('assignments.')->group(function () {
             Route::get('/create/{employee}', [TaskAssignmentController::class, 'create'])->name('create');
             Route::post('/', [TaskAssignmentController::class, 'store'])->name('store');
@@ -172,17 +171,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::delete('/{assignment}', [TaskAssignmentController::class, 'destroy'])->name('destroy');
         });
 
-        // Внутри группы calendar
-        // Внутри calendar или employees
+        // ===== ГРАФИКИ РАБОТЫ =====
         Route::prefix('schedule')->name('schedule.')->group(function () {
-            // Форма создания графика
-            Route::get('/employee/{employee}/setup', [EmployeeScheduleController::class, 'setup'])->name('setup');
-            // Сохранение графика
-            Route::post('/employee/{employee}/generate', [EmployeeScheduleController::class, 'generate'])->name('generate');
-            // Просмотр недельного расписания
-            Route::get('/employee/{employee}', [EmployeeScheduleController::class, 'index'])->name('employee');
-            // Отметка выполнения
-            Route::post('/complete/{taskAssignment}', [EmployeeScheduleController::class, 'complete'])->name('complete');
+            Route::get('/employee/{employee}/setup', [ScheduleController::class, 'setup'])->name('setup');
+            Route::post('/employee/{employee}/generate', [ScheduleController::class, 'generate'])->name('generate');
+            Route::get('/employee/{employee}', [ScheduleController::class, 'index'])->name('employee');
+            Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])->name('complete');
         });
     });
 

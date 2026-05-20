@@ -33,6 +33,8 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
 
+             $table->json('files')->nullable();
+
             $table->timestamps();
         });
 
@@ -47,22 +49,22 @@ return new class extends Migration
         });
 
         // храним файлы для tasks
-        Schema::create('task_files', function (Blueprint $table) {
-            $table->id();
+        // Schema::create('task_files', function (Blueprint $table) {
+        //     $table->id();
 
-            $table->foreignId('task_id')
-                ->nullable()
-                ->constrained('tasks')
-                ->nullOnDelete();
+        //     $table->foreignId('task_id')
+        //         ->nullable()
+        //         ->constrained('tasks')
+        //         ->nullOnDelete();
 
-            $table->string('original_name');
-            $table->string('path');
-            $table->string('mime_type')->nullable();
-            $table->unsignedBigInteger('size')->default(0);
-            $table->timestamps();
+        //     $table->string('original_name');
+        //     $table->string('path');
+        //     $table->string('mime_type')->nullable();
+        //     $table->unsignedBigInteger('size')->default(0);
+        //     $table->timestamps();
 
-            $table->index('task_id');
-        });
+        //     $table->index('task_id');
+        // });
 
         // какой сотрудник делает какую задачу
         // и в каком объёме
