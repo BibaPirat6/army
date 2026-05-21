@@ -15,7 +15,7 @@ class ScheduleController extends Controller
     /**
      * ГЛАВНАЯ СТРАНИЦА ГРАФИКА
      */
-  public function index(Request $request, Employee $employee)
+public function index(Request $request, Employee $employee, WorkloadPlanner $planner)
 {
     $month = (int) $request->input('month', now()->month);
     $year = (int) $request->input('year', now()->year);
@@ -23,43 +23,16 @@ class ScheduleController extends Controller
     $from = Carbon::create($year, $month, 1)->startOfMonth();
     $to = $from->copy()->endOfMonth();
 
-    // WORK DAYS (основа)
-    $workDays = WorkDay::where('employee_id', $employee->id)
-        ->whereBetween('date', [$from, $to])
-        ->get()
-        ->keyBy(fn($d) => $d->date->toDateString());
-
-    // TASK INSTANCES
-    $taskInstances = TaskInstance::whereBetween('date', [$from, $to])
-        ->get()
-        ->groupBy('date');
-
-    // формируем view model
-    $schedule = [];
-
-    $current = $from->copy();
-
-    while ($current->lte($to)) {
-
-        $date = $current->toDateString();
-
-        $schedule[$date] = [
-            'work_day' => $workDays[$date] ?? null,
-            'tasks' => $taskInstances[$date] ?? collect(),
-        ];
-
-        $current->addDay();
-    }
+    $schedule = $planner->generatePlan($employee, $from, $to);
 
     return view('admin.calendar.schedule.index', [
         'employee' => $employee,
         'month' => $month,
         'year' => $year,
         'schedule' => $schedule,
-        'hasSchedule' => $workDays->isNotEmpty(),
+        'hasSchedule' => WorkDay::where('employee_id', $employee->id)->exists(),
     ]);
 }
-
     /**
      * ФОРМА НАСТРОЙКИ
      */

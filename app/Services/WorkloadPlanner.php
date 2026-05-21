@@ -47,7 +47,7 @@ class WorkloadPlanner
             $dayPlan = [];
 
             if ($wd && $wd->type === 'рабочий_день' && $wd->work_start) {
-                $available = $wd->total_minutes;
+                $available = $wd->total_minutes ?? 0;
 
                 // Сначала раздаём время по приоритетам с учётом весов
                 foreach ($priorityWeights as $priority => $weight) {
