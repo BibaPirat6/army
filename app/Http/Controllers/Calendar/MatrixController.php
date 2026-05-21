@@ -60,7 +60,7 @@ class MatrixController extends Controller
 
 
 
-        return view('admin.calendar1.matrix.index', [
+        return view('admin.calendar.matrix.index', [
             'commissariat' => $commissariat,
             'tasks' => $tasks,
             'matrix' => $matrix

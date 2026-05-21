@@ -3,15 +3,6 @@
 @section('header-title', 'Матрица — ' . $commissariat->name)
 
 @section('content')
-
-{{-- Отладка --}}
-<div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid red;">
-    <p><strong>DEBUG:</strong></p>
-    <p>Commissariat: {{ $commissariat->name ?? 'null' }}</p>
-    <p>Tasks count: {{ count($tasks ?? []) }}</p>
-    <p>Matrix count: {{ count($matrix ?? []) }}</p>
-</div>
-
 <div class="px-3 py-3">
     {{-- Header --}}
     <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -90,8 +81,7 @@
                                 {{-- Resize Handle --}}
                                 <div class="resize-handle absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-indigo-400"></div>
 
-                                {{-- ИСПРАВЛЕНО: calendar.tasks.show вместо calendar.show --}}
-                                <a href="{{ route('calendar.tasks.show', $t->id) }}"
+                                <a href="{{ route('calendar.show', $t->id) }}"
                                    class="flex h-full flex-col items-start gap-2 px-3 py-3 hover:bg-black/5 transition"
                                    title="{{ $t->title }}">
 
@@ -187,6 +177,7 @@
                                            class="mt-1 text-xs text-gray-400 hover:text-indigo-600">
                                             {{ $cp->position?->name }}
                                         </a>
+                                        {{-- Добавь ссылку на график --}}
                                         <a href="{{ route('calendar.schedule.employee', $e->id) }}" class="block text-gray-400 hover:text-emerald-600 text-[10px]">
                                             📅 График
                                         </a>

@@ -3,15 +3,6 @@
 @section('header-title', 'Матрица — ' . $commissariat->name)
 
 @section('content')
-
-{{-- Отладка --}}
-<div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid red;">
-    <p><strong>DEBUG:</strong></p>
-    <p>Commissariat: {{ $commissariat->name ?? 'null' }}</p>
-    <p>Tasks count: {{ count($tasks ?? []) }}</p>
-    <p>Matrix count: {{ count($matrix ?? []) }}</p>
-</div>
-
 <div class="px-3 py-3">
     {{-- Header --}}
     <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -33,19 +24,13 @@
 
         {{-- Zoom --}}
         <div class="flex items-center gap-2">
-            <button type="button"
-                    onclick="changeScale(-20)"
-                    class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
+            <button type="button" onclick="changeScale(-20)"
+                class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
                 −
             </button>
-
-            <span id="zoomLabel" class="min-w-[60px] text-center text-sm font-medium text-gray-600">
-                140%
-            </span>
-
-            <button type="button"
-                    onclick="changeScale(20)"
-                    class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
+            <span id="zoomLabel" class="min-w-[60px] text-center text-sm font-medium text-gray-600">100%</span>
+            <button type="button" onclick="changeScale(20)"
+                class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm hover:bg-gray-50">
                 +
             </button>
         </div>
@@ -53,313 +38,197 @@
 
     @if($tasks->isEmpty() || empty($matrix))
         <div class="rounded-2xl border border-dashed border-gray-300 bg-white py-16 text-center">
-            <div class="text-sm text-gray-400">
-                Нет данных
-            </div>
+            <div class="text-sm text-gray-400">Нет данных</div>
         </div>
     @else
-
-        <div class="overflow-auto rounded-2xl border border-gray-200 bg-white shadow-sm"
-             style="max-height: 82vh;">
-
-            <table id="matrixTable"
-                   class="border-collapse text-sm transition-all duration-200">
+        <div class="overflow-auto rounded-2xl border border-gray-200 bg-white shadow-sm" style="max-height: 82vh;">
+            <table id="matrixTable" class="border-collapse text-sm transition-all duration-200">
                 <thead>
                     <tr class="bg-gray-50">
-
-                        {{-- Employees --}}
-                        <th class="sticky left-0 top-0 z-40 border-b border-r border-gray-200 bg-gray-50 px-4 py-3 text-left"
-                            style="min-width: 260px;">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                                    Сотрудники
-                                </span>
-                            </div>
+                        <th class="sticky left-0 top-0 z-40 border-b border-r border-gray-200 bg-gray-50 px-4 py-3 text-left" style="min-width: 200px;">
+                            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500">Сотрудники</span>
                         </th>
-
-                        {{-- Tasks --}}
                         @foreach($tasks as $t)
-
                             <th class="task-column sticky top-0 z-30 border-b border-gray-200 group relative"
-                                style="
-                                    background-color: {{ $t->color }}12;
-                                    min-width: 180px;
-                                    width: 180px;
-                                ">
-
-                                {{-- Resize Handle --}}
+                                style="background-color: {{ $t->color }}12; min-width: 160px; width: 160px;">
                                 <div class="resize-handle absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-indigo-400"></div>
-
-                                {{-- ИСПРАВЛЕНО: calendar.tasks.show вместо calendar.show --}}
                                 <a href="{{ route('calendar.tasks.show', $t->id) }}"
-                                   class="flex h-full flex-col items-start gap-2 px-3 py-3 hover:bg-black/5 transition"
+                                   class="flex h-full flex-col items-start gap-1 px-2 py-2 hover:bg-black/5 transition"
                                    title="{{ $t->title }}">
-
-                                    <div class="flex items-center gap-2 w-full">
-                                        <span class="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                                              style="background: {{ $t->color }}"></span>
-
-                                        <span class="line-clamp-2 text-left text-xs font-semibold leading-4 text-gray-700">
-                                            {{ $t->title }}
-                                        </span>
+                                    <div class="flex items-center gap-1.5 w-full">
+                                        <span class="h-2 w-2 rounded-full flex-shrink-0" style="background: {{ $t->color }}"></span>
+                                        <span class="line-clamp-2 text-left text-[11px] font-semibold leading-4 text-gray-700">{{ $t->title }}</span>
                                     </div>
-
-                                    @php
-                                        $resp = $t->employeePosition?->employee?->person;
-                                    @endphp
-
-                                    <div class="text-[10px] text-gray-400">
+                                    <div class="text-[9px] text-gray-400">
                                         {{ $t->start_date?->format('d.m.Y') ?? '—' }}
-                                        @if($t->end_date)
-                                            — {{ $t->end_date->format('d.m.Y') }}
-                                        @endif
-                                    </div>
-
-                                    {{-- Tooltip --}}
-                                    <div class="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-72 -translate-x-1/2 rounded-xl bg-gray-900 p-3 text-left opacity-0 shadow-2xl transition-all duration-200 group-hover:opacity-100">
-
-                                        <div class="mb-2 text-sm font-semibold text-white break-words">
-                                            {{ $t->title }}
-                                        </div>
-
-                                        @if($resp)
-                                            <div class="text-xs text-gray-300">
-                                                Ответственный:
-                                                {{ $resp->фамилия }}
-                                                {{ mb_substr($resp->имя, 0, 1) }}.
-                                                @if($resp->отчество)
-                                                    {{ mb_substr($resp->отчество, 0, 1) }}.
-                                                @endif
-                                            </div>
-                                        @else
-                                            <div class="text-xs text-gray-400">
-                                                Без ответственного
-                                            </div>
-                                        @endif
-
-                                        @if($t->quota)
-                                            <div class="mt-1 text-xs text-indigo-300">
-                                                Квота: {{ $t->quota }}
-                                            </div>
-                                        @endif
+                                        @if($t->end_date) — {{ $t->end_date->format('d.m.Y') }} @endif
                                     </div>
                                 </a>
                             </th>
                         @endforeach
                     </tr>
                 </thead>
-
                 <tbody>
                     @foreach($matrix as $row)
-
                         @php
                             $e = $row['employee'];
                             $p = $e->person;
-
-                            $name = $p
-                                ? $p->фамилия . ' ' .
-                                  mb_substr($p->имя, 0, 1) . '.' .
-                                  ($p->отчество ? ' ' . mb_substr($p->отчество, 0, 1) . '.' : '')
-                                : '#'.$e->id;
-
+                            $name = $p ? trim($p->фамилия . ' ' . mb_substr($p->имя, 0, 1) . '.' . ($p->отчество ? ' ' . mb_substr($p->отчество, 0, 1) . '.' : '')) : '#'.$e->id;
                             $ep = $e->current_ep ?? null;
                             $cp = $ep?->commissariatPosition;
                         @endphp
-
                         <tr class="hover:bg-gray-50/70 transition">
-                            {{-- Employee --}}
-                            <td class="sticky left-0 z-20 border-b border-r border-gray-100 bg-white px-4 py-3"
-                                style="min-width: 260px;">
-
+                            <td class="sticky left-0 z-20 border-b border-r border-gray-100 bg-white px-3 py-2" style="min-width: 200px;">
                                 <div class="flex flex-col">
-                                    <a href="{{ route('employees.show', $e->id) }}"
-                                       class="font-semibold text-gray-700 hover:text-indigo-600">
-                                        {{ $name }}
-                                    </a>
-
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-gradient-to-r from-indigo-100 to-indigo-200 flex items-center justify-center text-indigo-700 font-semibold text-xs flex-shrink-0">
+                                            {{ mb_substr($name, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <a href="{{ route('employees.show', $e->id) }}" class="font-semibold text-gray-700 hover:text-indigo-600 text-sm">
+                                                {{ $name }}
+                                            </a>
+                                            @if($cp)
+                                                <div class="text-[10px]">
+                                                    <a href="{{ route('commissariat-positions.show', array_filter([
+                                                        'id' => $cp->id,
+                                                        'back_url' => url()->full(),
+                                                        'commissariat_id' => $commissariat->id,
+                                                        'employeeId' => $e->id
+                                                    ])) }}" class="text-gray-500 hover:text-indigo-600 transition">
+                                                        {{ $cp->position?->name ?? '' }}
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                     @if($cp)
-                                        <a href="{{ route('commissariat-positions.show', array_filter([
-                                            'id' => $cp->id,
-                                            'back_url' => url()->full(),
-                                            'commissariat_id' => $commissariat->id,
-                                            'employeeId' => $e->id
-                                        ])) }}"
-                                           class="mt-1 text-xs text-gray-400 hover:text-indigo-600">
-                                            {{ $cp->position?->name }}
-                                        </a>
-                                        <a href="{{ route('calendar.schedule.employee', $e->id) }}" class="block text-gray-400 hover:text-emerald-600 text-[10px]">
-                                            📅 График
-                                        </a>
+                                        <div class="mt-1">
+                                            <a href="{{ route('calendar.schedule.employee', $e->id) }}" class="text-[9px] text-gray-400 hover:text-emerald-600">
+                                                📅 График
+                                            </a>
+                                        </div>
                                     @endif
                                 </div>
                             </td>
-
-                            {{-- Tasks --}}
                             @foreach($tasks as $t)
-
-                                @php
-                                    $a = $row['tasks'][$t->id] ?? null;
-                                @endphp
-
-                                <td class="border-b border-gray-100 px-3 py-3 align-top"
-                                    style="min-width: 180px; width: 180px;">
-
+                                @php $a = $row['tasks'][$t->id] ?? null; @endphp
+                                <td class="border-b border-gray-100 px-1 py-1 align-top" style="min-width: 160px; width: 160px;">
                                     @if($a)
-
-                                        @php
-                                            $pct = $a->quota
-                                                ? round($a->completed_count / $a->quota * 100)
-                                                : 0;
-                                        @endphp
-
+                                        @php $pct = $a->quota ? round($a->completed_count / $a->quota * 100) : 0; @endphp
                                         <a href="{{ route('calendar.assignments.edit', [$t->id, $a->id]) }}"
-                                           class="group block rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
-
-                                            <div class="mb-2 flex items-center justify-between">
-                                                <div class="text-sm font-bold
-                                                    {{ $pct >= 100
-                                                        ? 'text-emerald-600'
-                                                        : ($pct > 50
-                                                            ? 'text-indigo-600'
-                                                            : 'text-amber-600') }}">
+                                           class="group block rounded-lg border border-gray-100 bg-white p-2 shadow-sm transition hover:shadow-md">
+                                            <div class="mb-1 flex items-center justify-between">
+                                                <div class="text-xs font-bold {{ $pct >= 100 ? 'text-emerald-600' : ($pct > 50 ? 'text-indigo-600' : 'text-amber-600') }}">
                                                     {{ $a->completed_count }}/{{ $a->quota }}
                                                 </div>
-
-                                                <div class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
-                                                    P{{ $a->priority }}
-                                                </div>
+                                                <div class="rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] text-gray-500">P{{ $a->priority }}</div>
                                             </div>
-
-                                            <div class="mb-2 h-2 overflow-hidden rounded-full bg-gray-100">
-                                                <div class="h-full rounded-full transition-all
-                                                    {{ $pct >= 100
-                                                        ? 'bg-emerald-500'
-                                                        : ($pct > 50
-                                                            ? 'bg-indigo-500'
-                                                            : 'bg-amber-500') }}"
-                                                     style="width: {{ min($pct, 100) }}%">
-                                                </div>
+                                            <div class="mb-1 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                                                <div class="h-full rounded-full transition-all {{ $pct >= 100 ? 'bg-emerald-500' : ($pct > 50 ? 'bg-indigo-500' : 'bg-amber-500') }}" style="width: {{ min($pct, 100) }}%"></div>
                                             </div>
-
-                                            <div class="flex items-center justify-between text-[11px]">
-                                                <span class="text-gray-400">
-                                                    Выполнение
-                                                </span>
-
-                                                <span class="font-medium text-gray-600">
-                                                    {{ $pct }}%
-                                                </span>
+                                            <div class="flex items-center justify-between text-[9px]">
+                                                <span class="text-gray-400">Выполнение</span>
+                                                <span class="font-medium text-gray-600">{{ $pct }}%</span>
                                             </div>
                                         </a>
-
                                     @else
-
-                                        <div class="group relative flex min-h-[92px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 transition">
-
-                                            <span class="text-gray-300 text-lg">
-                                                —
-                                            </span>
-
+                                        <div class="group relative flex min-h-[70px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50 transition">
+                                            <span class="text-gray-300 text-base">—</span>
                                             <a href="{{ route('calendar.assignments.create', [$t->id, $e->id]) }}"
                                                class="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100">
-
-                                                <span class="rounded-lg bg-indigo-500 px-3 py-1 text-xs font-medium text-white shadow hover:bg-indigo-600">
+                                                <span class="rounded-lg bg-indigo-500 px-2 py-1 text-[10px] font-medium text-white shadow hover:bg-indigo-600 whitespace-nowrap">
                                                     Назначить
                                                 </span>
                                             </a>
                                         </div>
-
                                     @endif
                                 </td>
-
                             @endforeach
                         </tr>
-
                     @endforeach
                 </tbody>
             </table>
         </div>
-
     @endif
 </div>
 
-{{-- Resize + Zoom --}}
+<style>
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .task-column { position: relative; transition: background-color 0.2s; }
+    .resize-handle { position: absolute; right: 0; top: 0; width: 4px; height: 100%; cursor: col-resize; background: transparent; z-index: 30; }
+    .resize-handle:hover { background: rgba(99, 102, 241, 0.5); }
+    .resize-handle:active { background: rgb(99, 102, 241); }
+    .overflow-auto::-webkit-scrollbar { height: 8px; width: 8px; }
+    .overflow-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+    .overflow-auto::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .overflow-auto::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    body.resizing { user-select: none; cursor: col-resize; }
+</style>
+
 <script>
-    let currentScale = 140;
+    let currentScale = 100;
+    let activeResize = null;
+    let savedWidths = JSON.parse(localStorage.getItem('matrixWidths') || '{}');
+    const BASE_EMPLOYEE_WIDTH = 200;
+    const BASE_TASK_WIDTH = 160;
 
-    function changeScale(diff) {
-        currentScale += diff;
+    function saveWidth(column, width) { savedWidths[column] = width; localStorage.setItem('matrixWidths', JSON.stringify(savedWidths)); }
+    function getWidth(column, defaultWidth) { return savedWidths[column] || defaultWidth; }
 
-        if (currentScale < 60) currentScale = 60;
-        if (currentScale > 220) currentScale = 220;
-
-        const table = document.getElementById('matrixTable');
-
-        table.style.fontSize = (currentScale / 100) + 'rem';
-
-        document.querySelectorAll('.task-column').forEach(col => {
-            const width = 180 * (currentScale / 100);
-
-            col.style.minWidth = width + 'px';
-            col.style.width = width + 'px';
-        });
-
-        document.querySelectorAll('tbody td').forEach(td => {
-            if (!td.classList.contains('sticky')) {
-                const width = 180 * (currentScale / 100);
-
-                td.style.minWidth = width + 'px';
-                td.style.width = width + 'px';
-            }
-        });
-
+    function applyScale() {
+        const scale = currentScale / 100;
         document.getElementById('zoomLabel').innerText = currentScale + '%';
+        const empWidth = Math.round(BASE_EMPLOYEE_WIDTH * scale);
+        const empCol = document.querySelector('#matrixTable thead th:first-child');
+        if (empCol) { empCol.style.minWidth = empWidth + 'px'; empCol.style.width = empWidth + 'px'; }
+        document.querySelectorAll('#matrixTable tbody td:first-child').forEach(td => { td.style.minWidth = empWidth + 'px'; td.style.width = empWidth + 'px'; });
+        document.querySelectorAll('.task-column').forEach((col, idx) => {
+            const defaultWidth = Math.round(BASE_TASK_WIDTH * scale);
+            const savedWidth = getWidth(idx, defaultWidth);
+            const finalWidth = Math.max(120, Math.min(400, savedWidth));
+            col.style.minWidth = finalWidth + 'px'; col.style.width = finalWidth + 'px';
+            document.querySelectorAll(`#matrixTable tbody tr td:nth-child(${idx + 2})`).forEach(td => { td.style.minWidth = finalWidth + 'px'; td.style.width = finalWidth + 'px'; });
+        });
     }
 
-    // Resize columns
-    document.querySelectorAll('.resize-handle').forEach(handle => {
-
-        handle.addEventListener('mousedown', function(e) {
-
-            e.preventDefault();
-
-            const th = handle.parentElement;
-
-            let startX = e.pageX;
-            let startWidth = th.offsetWidth;
-
-            function mouseMove(e) {
-
-                let newWidth = startWidth + (e.pageX - startX);
-
-                if (newWidth < 120) {
-                    newWidth = 120;
-                }
-
-                th.style.width = newWidth + 'px';
-                th.style.minWidth = newWidth + 'px';
-
-                const index = Array.from(th.parentNode.children).indexOf(th);
-
-                document.querySelectorAll('#matrixTable tr').forEach(row => {
-
-                    const cell = row.children[index];
-
-                    if (cell) {
-                        cell.style.width = newWidth + 'px';
-                        cell.style.minWidth = newWidth + 'px';
-                    }
-                });
-            }
-
-            function mouseUp() {
-                document.removeEventListener('mousemove', mouseMove);
-                document.removeEventListener('mouseup', mouseUp);
-            }
-
-            document.addEventListener('mousemove', mouseMove);
-            document.addEventListener('mouseup', mouseUp);
+    function initResize() {
+        document.querySelectorAll('.resize-handle').forEach((handle, idx) => {
+            handle.removeEventListener('mousedown', onResizeStart);
+            handle.addEventListener('mousedown', (e) => onResizeStart(e, idx));
         });
-    });
+    }
+
+    function onResizeStart(e, columnIndex) {
+        e.preventDefault(); e.stopPropagation();
+        const th = e.target.closest('.task-column');
+        if (!th) return;
+        const startX = e.clientX, startWidth = th.offsetWidth;
+        activeResize = { columnIndex, th, startX, startWidth };
+        document.body.classList.add('resizing');
+        document.addEventListener('mousemove', onResizeMove);
+        document.addEventListener('mouseup', onResizeEnd);
+    }
+
+    function onResizeMove(e) {
+        if (!activeResize) return;
+        const delta = e.clientX - activeResize.startX;
+        let newWidth = activeResize.startWidth + delta;
+        newWidth = Math.max(120, Math.min(400, newWidth));
+        activeResize.th.style.width = newWidth + 'px';
+        activeResize.th.style.minWidth = newWidth + 'px';
+        document.querySelectorAll(`#matrixTable tbody tr td:nth-child(${activeResize.columnIndex + 2})`).forEach(td => {
+            td.style.width = newWidth + 'px'; td.style.minWidth = newWidth + 'px';
+        });
+        saveWidth(activeResize.columnIndex, newWidth);
+    }
+
+    function onResizeEnd() { activeResize = null; document.body.classList.remove('resizing'); document.removeEventListener('mousemove', onResizeMove); document.removeEventListener('mouseup', onResizeEnd); }
+    function changeScale(diff) { currentScale = Math.min(180, Math.max(60, currentScale + diff)); applyScale(); }
+
+    document.addEventListener('DOMContentLoaded', () => { initResize(); applyScale(); });
+    const observer = new MutationObserver(() => { initResize(); applyScale(); });
+    const table = document.getElementById('matrixTable');
+    if (table) observer.observe(table, { childList: true, subtree: true });
 </script>
-@endsection 
+@endsection
