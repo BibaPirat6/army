@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
 
+namespace App\Http\Controllers\Calendar;
+
+use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\TaskAssignment;
 use App\Models\WorkDay;
@@ -91,21 +93,37 @@ class ScheduleController extends Controller
         return max(0, (int) round($total / 60));
     }
 
-    /**
-     * Недельное расписание.
-     */
-    public function index(Request $request, Employee $employee, WorkloadPlanner $planner)
-    {
-        $month = (int) $request->input('month', now()->month);
-        $year = (int) $request->input('year', now()->year);
+    public function index(Request $request, Employee $employee)
+{
+    $month = (int) $request->input('month', now()->month);
+    $year = (int) $request->input('year', now()->year);
 
-        $from = Carbon::create($year, $month, 1)->startOfMonth();
-        $to = $from->copy()->endOfMonth();
+    $from = Carbon::create($year, $month, 1)->startOfMonth();
+    $to = $from->copy()->endOfMonth();
 
-        $schedule = $planner->generatePlan($employee, $from, $to);
+    $days = [];
 
-        return view('admin.calendar.schedule.index', compact('employee', 'schedule', 'month', 'year', 'from', 'to'));
+    $current = $from->copy();
+
+    while ($current->lte($to)) {
+
+        $days[] = [
+            'date' => $current->copy(),
+        ];
+
+        $current->addDay();
     }
+
+    return view(
+        'admin.calendar.schedule.index',
+        compact(
+            'employee',
+            'month',
+            'year',
+            'days'
+        )
+    );
+}
 
     /**
      * Отметка выполнения итерации.

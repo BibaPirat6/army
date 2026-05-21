@@ -17,7 +17,7 @@ use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\Calendar\ScheduleController;
 use App\Http\Controllers\StructureController;
 use App\Http\Controllers\Calendar\TaskAssignmentController;
 use Illuminate\Support\Facades\Route;
