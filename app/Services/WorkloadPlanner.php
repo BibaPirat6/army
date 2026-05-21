@@ -18,13 +18,13 @@ class WorkloadPlanner
         $workDays = WorkDay::where('employee_id', $employee->id)
             ->whereBetween('date', [$from, $to])
             ->get()
-            ->keyBy(fn($d) => $d->date->toDateString());
+            ->keyBy(fn ($d) => $d->date->toDateString());
 
         $assignments = TaskAssignment::with('task.subtasks')
             ->where('employee_id', $employee->id)
-            ->where(function ($q) use ($from, $to) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', $to);
-                $q->whereNull('end_date')->orWhere('end_date', '>=', $from);
+            ->whereHas('task', function ($q) use ($from, $to) {
+                $q->where('start_date', '<=', $to)
+                    ->where('end_date', '>=', $from);
             })
             ->get()
             ->sortBy('priority');
@@ -51,19 +51,29 @@ class WorkloadPlanner
 
                 // Сначала раздаём время по приоритетам с учётом весов
                 foreach ($priorityWeights as $priority => $weight) {
-                    if ($available <= 0) break;
+                    if ($available <= 0) {
+                        break;
+                    }
 
                     $tasksWithThisPriority = $assignments->where('priority', $priority);
-                    if ($tasksWithThisPriority->isEmpty()) continue;
+                    if ($tasksWithThisPriority->isEmpty()) {
+                        continue;
+                    }
 
                     $timeForPriority = (int) round($available * $weight / 100);
 
                     foreach ($tasksWithThisPriority as $a) {
-                        if (($remaining[$a->id] ?? 0) <= 0) continue;
-                        if ($timeForPriority <= 0) break;
+                        if (($remaining[$a->id] ?? 0) <= 0) {
+                            continue;
+                        }
+                        if ($timeForPriority <= 0) {
+                            break;
+                        }
 
                         $alloc = min($remaining[$a->id], $timeForPriority);
-                        if ($alloc <= 0) continue;
+                        if ($alloc <= 0) {
+                            continue;
+                        }
 
                         $dayPlan[$a->task_id] = ($dayPlan[$a->task_id] ?? 0) + $alloc;
                         $remaining[$a->id] -= $alloc;

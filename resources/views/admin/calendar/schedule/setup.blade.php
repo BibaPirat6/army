@@ -3,51 +3,46 @@
 @section('header-title', 'График — ' . $employee->person->фамилия)
 
 @section('content')
-<div class="max-w-full mx-auto px-6 py-4">
+    <div class="max-w-full mx-auto px-6 py-4">
 
-    <form id="scheduleForm" action="{{ route('calendar.schedule.generate', $employee->id) }}" method="POST">
-        @csrf
+        <form id="scheduleForm" action="{{ route('calendar.schedule.generate', $employee->id) }}" method="POST">
+            @csrf
 
-        <input type="hidden" name="year" value="{{ now()->year }}">
+            <input type="hidden" name="year" value="{{ now()->year }}">
 
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800">
-                    {{ $employee->person->фамилия }} {{ $employee->person->имя }}
-                </h2>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">
+                        {{ $employee->person->фамилия }} {{ $employee->person->имя }}
+                    </h2>
 
-                <p class="text-sm text-gray-500">
-                    Настройка графика на {{ now()->year }} год
-                </p>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-white rounded-lg border px-4 py-2">
-                    <span class="text-sm text-gray-600">Цель в неделю:</span>
-
-                    <input
-                        type="number"
-                        id="weeklyHoursTotal"
-                        name="weekly_hours"
-                        value="{{ \App\Models\WorkDay::where('employee_id', $employee->id)->whereYear('date', now()->year)->first()?->weekly_hours ?? 40 }}"
-                        min="1"
-                        max="168"
-                        class="w-16 text-center font-bold text-indigo-600 border-0 border-b-2 border-indigo-300 focus:border-indigo-500 focus:ring-0 outline-none"
-                    >
-
-                    <span class="text-sm text-gray-600">ч</span>
+                    <p class="text-sm text-gray-500">
+                        Настройка графика на {{ now()->year }} год
+                    </p>
                 </div>
 
-                <span id="totalInfo" class="text-sm text-gray-500"></span>
-            </div>
-        </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-white rounded-lg border px-4 py-2">
+                        <span class="text-sm text-gray-600">Цель в неделю:</span>
 
-        @php
-            $existingByDay = \App\Models\WorkDay::where('employee_id', $employee->id)
-                ->whereYear('date', now()->year)
-                ->get()
-                ->groupBy(fn($d) => \Carbon\Carbon::parse($d->date)->dayOfWeek);
-        @endphp
+                        <input type="number" id="weeklyHoursTotal" name="weekly_hours"
+                            value="{{ \App\Models\WorkDay::where('employee_id', $employee->id)->whereYear('date', now()->year)->first()?->weekly_hours ?? 40 }}"
+                            min="1" max="168"
+                            class="w-16 text-center font-bold text-indigo-600 border-0 border-b-2 border-indigo-300 focus:border-indigo-500 focus:ring-0 outline-none">
+
+                        <span class="text-sm text-gray-600">ч</span>
+                    </div>
+
+                    <span id="totalInfo" class="text-sm text-gray-500"></span>
+                </div>
+            </div>
+
+            @php
+                $existingByDay = \App\Models\WorkDay::where('employee_id', $employee->id)
+                    ->whereYear('date', now()->year)
+                    ->get()
+                    ->groupBy(fn($d) => \Carbon\Carbon::parse($d->date)->dayOfWeek);
+            @endphp
             <input type="hidden" name="year" value="{{ now()->year }}">
 
             <div class="grid grid-cols-7 gap-3 mb-4">
@@ -55,11 +50,19 @@
                     @php
                         $dayData = $existingByDay->get($val)?->first();
                         $isWorking = $dayData && $dayData->type === 'рабочий_день';
-                        $breaks = $dayData?->breaks;
-                        if (is_string($breaks))
+                        $breaks = $dayData?->breaks ?? [];
+
+                        if (is_string($breaks)) {
                             $breaks = json_decode($breaks, true) ?: [];
-                        if (!$isWorking)
+                        }
+
+                        if (!is_array($breaks)) {
                             $breaks = [];
+                        }
+
+                        if (!$isWorking) {
+                            $breaks = [];
+                        }
                     @endphp
                     <div class="day-card bg-white rounded-lg border {{ $isWorking ? 'border-gray-200' : 'border-gray-100 bg-gray-50' }} overflow-hidden"
                         data-day="{{ $val }}">
