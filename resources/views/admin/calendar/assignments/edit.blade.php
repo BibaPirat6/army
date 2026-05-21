@@ -19,7 +19,7 @@
         <div class="text-xs text-gray-400 mt-0.5">
             Квота задачи: <strong>{{ $task->quota ?? 'не указана' }}</strong>
             <span class="ml-1 {{ $availableQuota <= 0 ? 'text-red-500' : 'text-gray-400' }}">
-                (доступно: {{ $availableQuota }})
+                (доступно: {{ $availableQuota + $assignment->quota }})
             </span>
         </div>
     </div>
@@ -28,15 +28,15 @@
     <div class="mb-4 p-3 bg-gray-50 rounded-lg">
         <div class="text-sm text-gray-500">Сотрудник</div>
         @php
-            $p = $employee->person;
-            $name = $p ? trim($p->фамилия.' '.$p->имя.' '.($p->отчество??'')) : '#'.$employee->id;
-            $ep = $employee->employeePositions->first();
+            $p = $assignment->employee->person;
+            $name = $p ? trim($p->фамилия.' '.$p->имя.' '.($p->отчество??'')) : '#'.$assignment->employee_id;
+            $ep = $assignment->employee->employeePositions->first();
             $cp = $ep?->commissariatPosition;
         @endphp
-        <a href="{{ route('employees.show', $employee->id) }}" class="font-medium text-indigo-600 hover:text-indigo-800 hover:underline">{{ $name }}</a>
+        <a href="{{ route('employees.show', $assignment->employee_id) }}" class="font-medium text-indigo-600 hover:text-indigo-800 hover:underline">{{ $name }}</a>
         @if($cp)
             <div class="text-xs text-gray-400 mt-0.5">
-                <a href="{{ route('commissariat-positions.show', array_filter(['id' => $cp->id, 'back_url' => url()->full(), 'commissariat_id' => $cp->commissariat_id, 'employeeId' => $employee->id])) }}"
+                <a href="{{ route('commissariat-positions.show', array_filter(['id' => $cp->id, 'back_url' => url()->full(), 'commissariat_id' => $cp->commissariat_id, 'employeeId' => $assignment->employee_id])) }}"
                    class="text-gray-500 hover:text-indigo-600 transition">{{ $cp->position?->name }}</a>
             </div>
         @endif

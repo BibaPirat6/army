@@ -19,7 +19,7 @@ use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StructureController;
-use App\Http\Controllers\TaskAssignmentController;
+use App\Http\Controllers\Calendar\TaskAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
