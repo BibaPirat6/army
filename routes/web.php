@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssignEmployeeController;
 use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\MatrixController;
 use App\Http\Controllers\Calendar\SubtaskController;
 use App\Http\Controllers\Calendar\TaskController;
 use App\Http\Controllers\CommissariatPositionsController;
@@ -12,7 +13,6 @@ use App\Http\Controllers\EmployeePositionsController;
 use App\Http\Controllers\EmployeesController;
 use App\Http\Controllers\ExcelExportController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\MatrixController;
 use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;

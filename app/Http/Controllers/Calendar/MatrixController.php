@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Calendar;
 
+use App\Http\Controllers\Controller;
 use App\Models\Commissariat;
 use App\Models\Task;
 use App\Models\TaskAssignment;
@@ -14,16 +15,28 @@ class MatrixController extends Controller
         $commissariat = Commissariat::findOrFail($commissariatId);
 
         $tasks = Task::with(['employeePosition.employee.person'])
-            ->whereHas('employeePosition.commissariatPosition', fn($q) => $q->where('commissariat_id', $commissariatId)
-                ->orWhereHas('department', fn($dq) => $dq->where('commissariat_id', $commissariatId))
-                ->orWhereHas('division', fn($dq) => $dq->where('commissariat_id', $commissariatId)))
+            ->whereHas('employeePosition.commissariatPosition', function($q) use ($commissariatId) {
+                $q->where('commissariat_id', $commissariatId)
+                    ->orWhereHas('department', function($dq) use ($commissariatId) {
+                        $dq->where('commissariat_id', $commissariatId);
+                    })
+                    ->orWhereHas('division', function($dq) use ($commissariatId) {
+                        $dq->where('commissariat_id', $commissariatId);
+                    });
+            })
             ->orderBy('start_date')
             ->get();
 
         $eps = \App\Models\EmployeePosition::with(['employee.person', 'commissariatPosition.position'])
-            ->whereHas('commissariatPosition', fn($q) => $q->where('commissariat_id', $commissariatId)
-                ->orWhereHas('department', fn($dq) => $dq->where('commissariat_id', $commissariatId))
-                ->orWhereHas('division', fn($dq) => $dq->where('commissariat_id', $commissariatId)))
+            ->whereHas('commissariatPosition', function($q) use ($commissariatId) {
+                $q->where('commissariat_id', $commissariatId)
+                    ->orWhereHas('department', function($dq) use ($commissariatId) {
+                        $dq->where('commissariat_id', $commissariatId);
+                    })
+                    ->orWhereHas('division', function($dq) use ($commissariatId) {
+                        $dq->where('commissariat_id', $commissariatId);
+                    });
+            })
             ->whereIn('employee_position_status_id', [1, 2, 3])
             ->get();
 
@@ -45,6 +58,12 @@ class MatrixController extends Controller
             'tasks'    => $tasks->mapWithKeys(fn($t) => [$t->id => $assignments->get($e->id)?->get($t->id)]),
         ]);
 
-        return view('admin.calendar.matrix.index', compact('commissariat', 'tasks', 'matrix'));
+
+
+        return view('admin.calendar1.matrix.index', [
+            'commissariat' => $commissariat,
+            'tasks' => $tasks,
+            'matrix' => $matrix
+        ]);
     }
 }
