@@ -35,20 +35,29 @@ class WorkDay extends Model
         [$sh, $sm] = explode(':', $this->work_start);
         [$eh, $em] = explode(':', $this->work_end);
 
-        $total = ($eh * 60 + $em) - ($sh * 60 + $sm);
+        $work = ($eh * 60 + $em) - ($sh * 60 + $sm);
 
-        $breaks = is_string($this->breaks)
-            ? json_decode($this->breaks, true)
-            : ($this->breaks ?? []);
+        $breaks = $this->breaks;
 
-        foreach ($breaks as $b) {
-            if (! empty($b['start']) && ! empty($b['end'])) {
-                [$bh, $bm] = explode(':', $b['start']);
-                [$eh2, $em2] = explode(':', $b['end']);
-                $total -= ($eh2 * 60 + $em2) - ($bh * 60 + $bm);
-            }
+        if (is_string($breaks)) {
+            $breaks = json_decode($breaks, true) ?? [];
         }
 
-        return max(0, $total);
+        if (! is_array($breaks)) {
+            return max(0, $work);
+        }
+
+        foreach ($breaks as $b) {
+            if (empty($b['start']) || empty($b['end'])) {
+                continue;
+            }
+
+            [$bh, $bm] = explode(':', $b['start']);
+            [$eh2, $em2] = explode(':', $b['end']);
+
+            $work -= (($eh2 * 60 + $em2) - ($bh * 60 + $bm));
+        }
+
+        return max(0, $work);
     }
 }

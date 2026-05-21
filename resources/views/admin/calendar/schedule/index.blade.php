@@ -1,21 +1,27 @@
 @extends('layouts.main')
 
 @section('content')
-<div class="max-w-7xl mx-auto p-4">
+<div class="max-w-7xl mx-auto p-6 space-y-5">
 
     {{-- HEADER --}}
-    <div class="flex justify-between items-center mb-4">
-        <div>
-            <h1 class="text-lg font-bold">
+    <div class="flex justify-between items-start">
+        <div class="space-y-1">
+            <h1 class="text-xl font-bold tracking-tight">
                 {{ $employee->person->фамилия }} {{ $employee->person->имя }}
             </h1>
-            <p class="text-xs text-gray-500">
-                {{ $month }}/{{ $year }}
-            </p>
+
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+                <span class="px-2 py-0.5 bg-gray-100 rounded">
+                    {{ $month }}/{{ $year }}
+                </span>
+                <span>•</span>
+                <span>Workload Dashboard</span>
+            </div>
         </div>
 
         <a href="{{ route('calendar.schedule.setup', $employee->id) }}"
-           class="px-3 py-1 bg-indigo-600 text-white rounded">
+           class="px-4 py-2 text-xs font-medium bg-indigo-600 text-white rounded-lg
+                  hover:bg-indigo-700 active:scale-95 transition-all duration-200 shadow-sm">
             ⚙ Настроить
         </a>
     </div>
@@ -26,10 +32,15 @@
         $next = \Carbon\Carbon::create($year, $month)->addMonth();
     @endphp
 
-    <div class="flex items-center gap-2 mb-4 text-sm">
-        <a href="?month={{ $prev->month }}&year={{ $prev->year }}" class="px-2 py-1 border rounded">←</a>
+    <div class="flex items-center gap-2 text-sm bg-white border rounded-xl p-2 shadow-sm">
 
-        <select onchange="go(this.value, {{ $year }})" class="border rounded px-2 py-1">
+        <a href="?month={{ $prev->month }}&year={{ $prev->year }}"
+           class="px-3 py-1 rounded-lg hover:bg-gray-100 transition">
+            ←
+        </a>
+
+        <select onchange="go(this.value, {{ $year }})"
+                class="border-0 bg-transparent text-sm focus:ring-0">
             @foreach(range(1,12) as $m)
                 <option value="{{ $m }}" @selected($m==$month)>
                     {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
@@ -37,84 +48,136 @@
             @endforeach
         </select>
 
-        <select onchange="go({{ $month }}, this.value)" class="border rounded px-2 py-1">
+        <select onchange="go({{ $month }}, this.value)"
+                class="border-0 bg-transparent text-sm">
             @foreach(range(now()->year-1, now()->year+2) as $y)
                 <option value="{{ $y }}" @selected($y==$year)>{{ $y }}</option>
             @endforeach
         </select>
 
-        <a href="?month={{ $next->month }}&year={{ $next->year }}" class="px-2 py-1 border rounded">→</a>
+        <a href="?month={{ $next->month }}&year={{ $next->year }}"
+           class="px-3 py-1 rounded-lg hover:bg-gray-100 transition">
+            →
+        </a>
+
     </div>
 
-    {{-- TABLE --}}
-    <div class="bg-white border rounded overflow-auto">
+    {{-- TABLE WRAPPER --}}
+    <div class="bg-white border rounded-2xl shadow-sm overflow-hidden">
+
         <table class="w-full text-xs">
 
-            <thead class="bg-gray-100">
+            {{-- sticky header --}}
+            <thead class="sticky top-0 bg-gray-50 border-b text-gray-600">
                 <tr>
-                    <th class="p-2">Дата</th>
-                    <th>Тип</th>
-                    <th>Время</th>
-                    <th>Задачи</th>
-                    <th>%</th>
+                    <th class="p-3 text-left">Дата</th>
+                    <th class="p-3 text-left">Тип</th>
+                    <th class="p-3 text-left">Время</th>
+                    <th class="p-3 text-left">Задачи</th>
+                    <th class="p-3 text-center">Load</th>
                 </tr>
             </thead>
 
             <tbody>
+
             @foreach($schedule['plan'] as $date => $day)
 
-                @php $wd = $day['work_day']; @endphp
+                @php
+                    $wd = $day['work_day'];
+                    $isWork = $wd && $wd->type === 'рабочий_день';
+                    $assigned = array_sum($day['tasks']);
+                    $total = $wd?->total_minutes ?? 0;
+                    $pct = $total ? round($assigned / $total * 100) : 0;
+                @endphp
 
-                <tr class="border-b {{ $wd && $wd->type!='рабочий_день' ? 'bg-gray-50' : '' }}">
+                <tr class="group border-b transition-all duration-200
+                           hover:bg-gray-50 hover:shadow-sm
+                           {{ !$isWork ? 'bg-gray-50/50' : '' }}">
 
-                    <td class="p-2 font-medium">
-                        {{ \Carbon\Carbon::parse($date)->format('d.m') }}
+                    {{-- DATE --}}
+                    <td class="p-3 font-medium">
+                        <div class="flex flex-col">
+                            <span class="text-sm">
+                                {{ \Carbon\Carbon::parse($date)->format('d') }}
+                            </span>
+                            <span class="text-[10px] text-gray-400">
+                                {{ \Carbon\Carbon::parse($date)->translatedFormat('D') }}
+                            </span>
+                        </div>
                     </td>
 
-                    <td>
-                        {{ $wd?->type === 'рабочий_день' ? 'Рабочий' : 'Выходной' }}
+                    {{-- TYPE --}}
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-lg text-[10px]
+                            {{ $isWork ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
+                            {{ $isWork ? 'Рабочий' : 'Выходной' }}
+                        </span>
                     </td>
 
-                    <td>
+                    {{-- TIME --}}
+                    <td class="p-3 text-gray-600">
                         @if($wd && $wd->work_start)
-                            {{ $wd->work_start }} - {{ $wd->work_end }}
-                        @else —
+                            <div class="flex flex-col">
+                                <span>
+                                    {{ $wd->work_start }} — {{ $wd->work_end }}
+                                </span>
+                                <span class="text-[10px] text-gray-400">
+                                    {{ $total }} мин доступно
+                                </span>
+                            </div>
+                        @else
+                            —
                         @endif
                     </td>
 
-                    <td>
-                        @forelse($day['tasks'] as $taskId => $min)
-                            <div class="text-[11px]">
-                                #{{ $taskId }} — {{ $min }} мин
-                            </div>
-                        @empty
-                            —
-                        @endforelse
+                    {{-- TASKS --}}
+                    <td class="p-3">
+                        <div class="flex flex-wrap gap-1">
+
+                            @forelse($day['tasks'] as $taskId => $min)
+
+                                <div class="px-2 py-1 rounded-lg text-[10px]
+                                            bg-indigo-50 text-indigo-700
+                                            border border-indigo-100
+                                            hover:scale-[1.03] transition">
+
+                                    <span class="font-medium">#{{ $taskId }}</span>
+                                    <span class="text-gray-400">• {{ $min }}м</span>
+
+                                </div>
+
+                            @empty
+                                <span class="text-gray-400">—</span>
+                            @endforelse
+
+                        </div>
                     </td>
 
-                    <td class="text-center">
-                        @php
-                            $total = $wd?->total_minutes ?? 0;
-                            $assigned = array_sum($day['tasks']);
-                            $pct = $total ? round($assigned/$total*100) : 0;
-                        @endphp
+                    {{-- PROGRESS --}}
+                    <td class="p-3">
+                        <div class="flex flex-col items-center gap-1">
 
-                        <div class="w-full bg-gray-200 h-1.5 rounded">
-                            <div class="h-1.5 bg-indigo-500 rounded"
-                                 style="width:{{ min(100,$pct) }}%"></div>
-                        </div>
+                            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-2 rounded-full transition-all duration-700 ease-out
+                                    {{ $pct > 100 ? 'bg-red-500' : ($pct > 75 ? 'bg-amber-500' : 'bg-emerald-500') }}"
+                                     style="width: {{ min(100, $pct) }}%">
+                                </div>
+                            </div>
 
-                        <div class="text-[10px] text-gray-500">
-                            {{ $pct }}%
+                            <span class="text-[10px] text-gray-500 group-hover:text-gray-700 transition">
+                                {{ $pct }}%
+                            </span>
+
                         </div>
                     </td>
 
                 </tr>
 
             @endforeach
-            </tbody>
 
+            </tbody>
         </table>
+
     </div>
 </div>
 

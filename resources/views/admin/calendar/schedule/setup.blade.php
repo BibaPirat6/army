@@ -189,19 +189,34 @@
 
         function calcDay(row) {
             if (row.querySelector('.day-type-select')?.value !== 'рабочий_день') return 0;
+
             const ws = row.querySelector('input[name*="work_start"]')?.value;
             const we = row.querySelector('input[name*="work_end"]')?.value;
+
             if (!ws || !we) return 0;
-            const [sh, sm] = ws.split(':').map(Number), [eh, em] = we.split(':').map(Number);
-            let t = (eh * 60 + em) - (sh * 60 + sm);
+
+            const [sh, sm] = ws.split(':').map(Number);
+            const [eh, em] = we.split(':').map(Number);
+
+            let total = (eh * 60 + em) - (sh * 60 + sm);
+
+            // ОБЕДЫ
             row.querySelectorAll('.break-row').forEach(br => {
-                const inp = br.querySelectorAll('input');
-                if (inp.length >= 2 && inp[0].value && inp[1].value) {
-                    const [bh, bm] = inp[0].value.split(':').map(Number), [eh2, em2] = inp[1].value.split(':').map(Number);
-                    t -= (eh2 * 60 + em2) - (bh * 60 + bm);
-                }
+                const inputs = br.querySelectorAll('input');
+                if (inputs.length < 2) return;
+
+                const s = inputs[0].value;
+                const e = inputs[1].value;
+
+                if (!s || !e) return;
+
+                const [bh, bm] = s.split(':').map(Number);
+                const [eh2, em2] = e.split(':').map(Number);
+
+                total -= (eh2 * 60 + em2) - (bh * 60 + bm);
             });
-            return Math.max(0, t);
+
+            return Math.max(0, total);
         }
 
         function recalc() {
