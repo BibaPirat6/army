@@ -21,11 +21,10 @@ class TaskAssignmentController extends Controller
             return redirect()->route('calendar.assignments.edit', [$task->id, $existingAssignment->id]);
         }
 
-        // Расчет доступной квоты
+        // Расчет доступной квоты для создания
         $usedQuota = TaskAssignment::where('task_id', $task->id)->sum('quota');
         $availableQuota = max(0, ($task->quota ?? 0) - $usedQuota);
         
-        // Получаем ID комиссариата для возврата
         $commissariatId = $task->employeePosition?->commissariatPosition?->commissariat_id ?? 1;
         
         return view('admin.calendar.assignments.create', compact('task', 'employee', 'availableQuota', 'commissariatId'));
@@ -37,8 +36,6 @@ class TaskAssignmentController extends Controller
             'employee_id' => 'required|exists:employees,id',
             'quota' => 'required|integer|min:1',
             'priority' => 'required|integer|min:1|max:10',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
         
         // Проверка доступной квоты
@@ -62,13 +59,11 @@ class TaskAssignmentController extends Controller
             ]);
         }
         
-        $assignment = TaskAssignment::create([
+        TaskAssignment::create([
             'task_id' => $task->id,
             'employee_id' => $validated['employee_id'],
             'quota' => $validated['quota'],
             'priority' => $validated['priority'],
-            'start_date' => $validated['start_date'] ?? $task->start_date,
-            'end_date' => $validated['end_date'] ?? $task->end_date,
             'completed_count' => 0,
         ]);
         
@@ -81,17 +76,21 @@ class TaskAssignmentController extends Controller
     
     public function edit(Task $task, TaskAssignment $assignment)
     {
-        $employee = $assignment->employee;
-        
-        // Расчет доступной квоты (исключая текущее назначение)
-        $usedQuota = TaskAssignment::where('task_id', $task->id)
+        // Расчет использованной квоты ДРУГИМИ сотрудниками (исключая текущее назначение)
+        $usedByOthers = TaskAssignment::where('task_id', $task->id)
             ->where('id', '!=', $assignment->id)
             ->sum('quota');
-        $availableQuota = max(0, ($task->quota ?? 0) - $usedQuota);
+        
+        // Общая квота задачи
+        $totalQuota = $task->quota ?? 0;
+        
+        // Доступная квота для изменения = общая квота - использованная другими
+        // Текущее назначение может увеличиваться/уменьшаться в пределах этой доступности
+        $availableQuota = max(0, $totalQuota - $usedByOthers);
         
         $commissariatId = $task->employeePosition?->commissariatPosition?->commissariat_id ?? 1;
         
-        return view('admin.calendar.assignments.edit', compact('task', 'assignment', 'employee', 'availableQuota', 'commissariatId'));
+        return view('admin.calendar.assignments.edit', compact('task', 'assignment', 'availableQuota', 'commissariatId'));
     }
     
     public function update(Request $request, Task $task, TaskAssignment $assignment)
@@ -99,27 +98,28 @@ class TaskAssignmentController extends Controller
         $validated = $request->validate([
             'quota' => 'required|integer|min:1',
             'priority' => 'required|integer|min:1|max:10',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
         
-        // Проверка доступной квоты (исключая текущее назначение)
-        $usedQuota = TaskAssignment::where('task_id', $task->id)
+        // Расчет использованной квоты ДРУГИМИ сотрудниками
+        $usedByOthers = TaskAssignment::where('task_id', $task->id)
             ->where('id', '!=', $assignment->id)
             ->sum('quota');
-        $availableQuota = ($task->quota ?? 0) - $usedQuota;
         
-        if ($validated['quota'] > $availableQuota + $assignment->quota) {
+        $totalQuota = $task->quota ?? 0;
+        
+        // Доступно для этого сотрудника = общая квота - занято другими
+        $availableForThis = $totalQuota - $usedByOthers;
+        
+        // Новая квота не может превышать доступное место
+        if ($validated['quota'] > $availableForThis) {
             return back()->withInput()->withErrors([
-                'quota' => "Доступно только {$availableQuota} из {$task->quota}."
+                'quota' => "Доступно только {$availableForThis} из {$totalQuota}. Другие сотрудники уже заняли {$usedByOthers}."
             ]);
         }
         
         $assignment->update([
             'quota' => $validated['quota'],
             'priority' => $validated['priority'],
-            'start_date' => $validated['start_date'] ?? $task->start_date,
-            'end_date' => $validated['end_date'] ?? $task->end_date,
         ]);
         
         $commissariatId = $task->employeePosition?->commissariatPosition?->commissariat_id ?? 1;

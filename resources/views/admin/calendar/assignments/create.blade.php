@@ -4,6 +4,12 @@
 
 @section('content')
 <div class="max-w-lg mx-auto px-4 py-6">
+    <div class="mb-4">
+        <a href="{{ route('calendar.matrix.index', $commissariatId) }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-sm">
+            ← Назад к матрице
+        </a>
+    </div>
+
     <h2 class="text-lg font-semibold text-gray-800 mb-4">Новое назначение</h2>
 
     {{-- Задача --}}
@@ -57,7 +63,7 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Приоритет (1-10)</label>
-                <input type="number" name="priority" value="{{ old('priority', 5) }}" min="1" max="10"
+                <input type="number" name="priority" value="{{ old('priority', 1) }}" min="1" max="10"
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
             <div>
@@ -65,19 +71,6 @@
                     Квота (макс. {{ $availableQuota }})
                 </label>
                 <input type="number" name="quota" value="{{ old('quota', 1) }}" min="1" max="{{ $availableQuota }}"
-                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Начало</label>
-                <input type="date" name="start_date" value="{{ old('start_date', $task->start_date?->format('Y-m-d')) }}"
-                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Окончание</label>
-                <input type="date" name="end_date" value="{{ old('end_date', $task->end_date?->format('Y-m-d')) }}"
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
         </div>

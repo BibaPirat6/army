@@ -4,6 +4,12 @@
 
 @section('content')
 <div class="max-w-lg mx-auto px-4 py-6">
+    <div class="mb-4">
+        <a href="{{ route('calendar.matrix.index', $commissariatId) }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-sm">
+            ← Назад к матрице
+        </a>
+    </div>
+
     <h2 class="text-lg font-semibold text-gray-800 mb-4">Редактировать назначение</h2>
 
     {{-- Задача --}}
@@ -19,7 +25,7 @@
         <div class="text-xs text-gray-400 mt-0.5">
             Квота задачи: <strong>{{ $task->quota ?? 'не указана' }}</strong>
             <span class="ml-1 {{ $availableQuota <= 0 ? 'text-red-500' : 'text-gray-400' }}">
-                (доступно: {{ $availableQuota + $assignment->quota }})
+                (доступно для этого сотрудника: {{ $availableQuota }})
             </span>
         </div>
     </div>
@@ -40,6 +46,23 @@
                    class="text-gray-500 hover:text-indigo-600 transition">{{ $cp->position?->name }}</a>
             </div>
         @endif
+    </div>
+
+    {{-- Текущее назначение --}}
+    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="text-sm text-gray-500">Текущее назначение</div>
+        <div class="flex justify-between items-center mt-1">
+            <span class="font-medium">Квота:</span>
+            <span class="font-bold text-indigo-600">{{ $assignment->quota }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="font-medium">Приоритет:</span>
+            <span class="font-bold text-amber-600">P{{ $assignment->priority }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="font-medium">Выполнено:</span>
+            <span class="font-bold text-emerald-600">{{ $assignment->completed_count }}</span>
+        </div>
     </div>
 
     {{-- Кнопка удаления --}}
@@ -75,23 +98,13 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Квота (макс. {{ $availableQuota + $assignment->quota }})
+                    Квота (макс. {{ $availableQuota }})
                 </label>
-                <input type="number" name="quota" value="{{ old('quota', $assignment->quota) }}" min="1" max="{{ $availableQuota + $assignment->quota }}"
+                <input type="number" name="quota" id="quota" value="{{ old('quota', $assignment->quota) }}" min="1" max="{{ $availableQuota }}"
                     class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Начало</label>
-                <input type="date" name="start_date" value="{{ old('start_date', $assignment->start_date?->format('Y-m-d')) }}"
-                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Окончание</label>
-                <input type="date" name="end_date" value="{{ old('end_date', $assignment->end_date?->format('Y-m-d')) }}"
-                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <p class="text-xs text-gray-400 mt-1">
+                    Текущая квота: {{ $assignment->quota }}. Доступно всего: {{ $availableQuota }}
+                </p>
             </div>
         </div>
 
@@ -105,4 +118,19 @@
         </div>
     </form>
 </div>
+
+<script>
+    const quotaInput = document.getElementById('quota');
+    const maxQuota = {{ $availableQuota }};
+    
+    quotaInput.addEventListener('change', function() {
+        if (parseInt(this.value) > maxQuota) {
+            alert('Квота не может превышать ' + maxQuota);
+            this.value = maxQuota;
+        }
+        if (parseInt(this.value) < 1) {
+            this.value = 1;
+        }
+    });
+</script>
 @endsection
