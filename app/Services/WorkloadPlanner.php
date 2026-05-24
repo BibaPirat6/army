@@ -20,7 +20,7 @@ class WorkloadPlanner
             ->get()
             ->keyBy(fn ($d) => $d->date->toDateString());
 
-        $assignments = TaskAssignment::with('task.subtasks')
+        $assignments = TaskAssignment::with('task')
             ->where('employee_id', $employee->id)
             ->whereHas('task', function ($q) use ($from, $to) {
                 $q->where('start_date', '<=', $to)
@@ -31,32 +31,43 @@ class WorkloadPlanner
             ->values();
 
         /**
-         * remaining[id] = сколько минут осталось
+         * remaining[id] = сколько минут осталось выполнить КОНКРЕТНО ЭТОМУ СОТРУДНИКУ
+         * 
+         * Формула:
+         * (quota - completed_count) * total_avg_time
+         * 
+         * quota - сколько всего итераций должен сделать сотрудник
+         * completed_count - сколько уже сделал
+         * total_avg_time - время на одну итерацию
          */
         $remaining = [];
 
         foreach ($assignments as $a) {
-
-            $remaining[$a->id] = max(
-                0,
-                $a->task->total_avg_time
-                * max(0, ($a->quota - $a->completed_count))
-            );
+            $remainingQuota = max(0, $a->quota - $a->completed_count);
+            $remaining[$a->id] = $a->task->total_avg_time * $remainingQuota;
+            
+            // Для отладки (можно убрать потом)
+            \Log::info('Task calculation', [
+                'task_id' => $a->task_id,
+                'task_name' => $a->task->name,
+                'quota_total' => $a->quota,
+                'completed_count' => $a->completed_count,
+                'remaining_quota' => $remainingQuota,
+                'time_per_quota' => $a->task->total_avg_time,
+                'remaining_minutes' => $remaining[$a->id],
+            ]);
         }
 
         $plan = [];
-
         $current = $from->copy();
 
         while ($current->lte($to)) {
 
             $dateStr = $current->toDateString();
-
             $wd = $workDays->get($dateStr);
 
             $dayPlan = [];
             $taskMeta = [];
-
             $loadPercent = 0;
 
             if (
@@ -65,62 +76,27 @@ class WorkloadPlanner
                 && $wd->work_start
             ) {
 
-                /**
-                 * Доступное время сотрудника
-                 */
                 $available = (int) ($wd->total_minutes ?? 0);
 
-                /**
-                 * Активные задачи
-                 */
                 $activeAssignments = $assignments->filter(function ($a) use ($remaining) {
                     return ($remaining[$a->id] ?? 0) > 0;
                 });
 
-                /**
-                 * Сколько ВСЕГО минут требуется сотруднику
-                 * на текущий момент ДО распределения
-                 */
                 $requiredMinutes = 0;
-
                 foreach ($activeAssignments as $a) {
                     $requiredMinutes += ($remaining[$a->id] ?? 0);
                 }
 
-                /**
-                 * Реальная загрузка сотрудника
-                 *
-                 * 100% = успевает
-                 * 200% = нужно в 2 раза больше времени
-                 * 300% = жесткая перегрузка
-                 */
                 $loadPercent = $available > 0
                     ? (int) round($requiredMinutes / $available * 100)
                     : 0;
 
-                /**
-                 * Если задач нет — пропускаем
-                 */
-                if (
-                    $available > 0
-                    && $activeAssignments->isNotEmpty()
-                ) {
+                if ($available > 0 && $activeAssignments->isNotEmpty()) {
 
-                    /**
-                     * Вес каждой задачи
-                     *
-                     * prio1 = 1
-                     * prio2 = 0.5
-                     * prio3 = 0.25
-                     */
                     $taskWeights = [];
-
                     foreach ($activeAssignments as $a) {
-
                         $priority = max(1, (int) $a->priority);
-
-                        $taskWeights[$a->id] =
-                            1 / (2 ** ($priority - 1));
+                        $taskWeights[$a->id] = 1 / (2 ** ($priority - 1));
                     }
 
                     $totalWeight = array_sum($taskWeights);
@@ -128,11 +104,6 @@ class WorkloadPlanner
                     if ($totalWeight > 0) {
 
                         $usedMinutes = 0;
-
-                        /**
-                         * Сортируем:
-                         * сначала higher priority
-                         */
                         $sortedAssignments = $activeAssignments
                             ->sortBy('priority')
                             ->values();
@@ -145,50 +116,24 @@ class WorkloadPlanner
                                 continue;
                             }
 
-                            /**
-                             * Доля времени задачи
-                             */
                             $share = $weight / $totalWeight;
+                            $alloc = (int) floor($available * $share);
 
-                            /**
-                             * Базовое распределение
-                             */
-                            $alloc = (int) floor(
-                                $available * $share
-                            );
-
-                            /**
-                             * Последней задаче отдаём остаток,
-                             * чтобы сотрудник был загружен ровно на 100%
-                             */
-                            $isLast =
-                                $index === ($sortedAssignments->count() - 1);
+                            $isLast = $index === ($sortedAssignments->count() - 1);
 
                             if ($isLast) {
-
-                                $remainingDayMinutes =
-                                    $available - $usedMinutes;
-
-                                $alloc = max(
-                                    $alloc,
-                                    $remainingDayMinutes
-                                );
+                                $remainingDayMinutes = $available - $usedMinutes;
+                                $alloc = max($alloc, $remainingDayMinutes);
                             }
 
-                            /**
-                             * Нельзя выдать больше,
-                             * чем осталось по задаче
-                             */
-                            $alloc = min(
-                                $alloc,
-                                $remaining[$a->id]
-                            );
+                            $neededForTask = $remaining[$a->id];
+                            $alloc = min($alloc, $neededForTask);
 
                             if ($alloc <= 0) {
                                 continue;
                             }
 
-                            if (! isset($dayPlan[$a->task_id])) {
+                            if (!isset($dayPlan[$a->task_id])) {
                                 $dayPlan[$a->task_id] = [
                                     'minutes' => 0,
                                     'assignment_id' => $a->id,
@@ -197,29 +142,22 @@ class WorkloadPlanner
                             $dayPlan[$a->task_id]['minutes'] += $alloc;
 
                             $remaining[$a->id] -= $alloc;
-
                             $usedMinutes += $alloc;
 
-                            /**
-                             * Определяем:
-                             * задача влезла в capacity
-                             * или вызвала перегруз
-                             */
-                            /**
-                             * Если после allocation
-                             * по задаче ещё осталось время —
-                             * значит задача перегружает день
-                             */
-                            $isOverload = ($remaining[$a->id] ?? 0) > 0;
+                            $isOverload = $remaining[$a->id] > 0;
 
+                            // ПРАВИЛЬНОЕ название задачи из БД
                             $taskMeta[$a->task_id] = [
-                                'minutes' => $dayPlan[$a->task_id],
+                                'minutes' => $dayPlan[$a->task_id]['minutes'],
                                 'overload' => $isOverload,
+                                'task_name' => $a->task->name, // Вот здесь берем реальное название!
+                                'task_total_minutes' => $a->task->total_avg_time * $a->quota, // Общее время для сотрудника
+                                'remaining_minutes' => $remaining[$a->id],
+                                'quota_total' => $a->quota,
+                                'completed_count' => $a->completed_count,
+                                'remaining_quota' => max(0, $a->quota - $a->completed_count),
                             ];
 
-                            /**
-                             * Daily quota
-                             */
                             TaskInstance::updateOrCreate(
                                 [
                                     'task_id' => $a->task_id,
@@ -227,21 +165,12 @@ class WorkloadPlanner
                                 ],
                                 [
                                     'daily_quota' => (int) round(
-                                        $alloc / max(
-                                            1,
-                                            $a->task->total_avg_time
-                                        )
+                                        $alloc / max(1, $a->task->total_avg_time)
                                     ),
                                 ]
                             );
                         }
 
-                        /**
-                         * Если после распределения остались минуты
-                         * (из-за min remaining),
-                         * докидываем их в highest priority task
-                         */
-                        // Весь блок leftover замените на:
                         $leftover = $available - $usedMinutes;
 
                         if ($leftover > 0) {
@@ -250,14 +179,12 @@ class WorkloadPlanner
                                 ->first();
 
                             if ($topTask) {
-                                // Проверяем существующую структуру
-                                if (! isset($dayPlan[$topTask->task_id])) {
+                                if (!isset($dayPlan[$topTask->task_id])) {
                                     $dayPlan[$topTask->task_id] = [
                                         'minutes' => 0,
                                         'assignment_id' => $topTask->id,
                                     ];
-                                } elseif (! is_array($dayPlan[$topTask->task_id])) {
-                                    // Если это число, конвертируем в массив
+                                } elseif (!is_array($dayPlan[$topTask->task_id])) {
                                     $oldValue = $dayPlan[$topTask->task_id];
                                     $dayPlan[$topTask->task_id] = [
                                         'minutes' => $oldValue,
@@ -270,6 +197,9 @@ class WorkloadPlanner
                                 $taskMeta[$topTask->task_id] = [
                                     'minutes' => $dayPlan[$topTask->task_id]['minutes'],
                                     'overload' => true,
+                                    'task_name' => $topTask->task->name,
+                                    'task_total_minutes' => $topTask->task->total_avg_time * $topTask->quota,
+                                    'remaining_minutes' => max(0, $remaining[$topTask->id] - $leftover),
                                 ];
 
                                 $remaining[$topTask->id] = max(

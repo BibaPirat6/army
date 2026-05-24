@@ -149,31 +149,40 @@
                             {{-- TASKS --}}
                             <td class="p-3">
                                 <div class="flex flex-wrap gap-1">
-
-                                    @forelse($day['tasks'] as $taskId => $data)
+                                    @forelse($day['task_meta'] as $taskId => $meta)
                                         @php
-                                            $meta = $day['task_meta'][$taskId] ?? null;
                                             $isOverloadTask = $meta['overload'] ?? false;
-
-                                            $minutes = is_array($data) ? $data['minutes'] : $data;
-                                            $assignmentId = is_array($data) ? $data['assignment_id'] : null;
+                                            $minutes = $meta['minutes'] ?? 0;
+                                            $taskName = $meta['task_name'] ?? 'Задача #' . $taskId;
+                                            $totalMinutes = $meta['task_total_minutes'] ?? 0;
+                                            $remainingMinutes = $meta['remaining_minutes'] ?? 0;
+                                            $remainingQuota = $meta['remaining_quota'] ?? 0;
+                                            $assignmentId = $day['tasks'][$taskId]['assignment_id'] ?? null;
                                         @endphp
 
                                         <a href="{{ $assignmentId ? route('calendar.assignments.edit', [$taskId, $assignmentId]) : '#' }}"
-                                            class="px-2 py-1 rounded-lg text-[10px]
-       {{ $isOverloadTask
-           ? 'bg-red-50 text-red-700 border border-red-200'
-           : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}
-       hover:scale-[1.03] transition">
+                                            class="px-2 py-1 rounded-lg text-[10px] transition-all duration-200
+                       {{ $isOverloadTask
+                           ? 'bg-red-50 text-red-700 border border-red-200'
+                           : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}
+                       hover:scale-[1.03]"
+                                            title="{{ $taskName }}: осталось {{ $remainingQuota }} итераций">
 
-                                            <span class="font-medium">#{{ $taskId }}</span>
-                                            <span class="text-gray-400">• {{ $minutes }}м</span>
+                                            <div class="flex flex-col">
+                                                <span class="font-medium truncate max-w-[150px]">{{ $taskName }}</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-gray-500">{{ $minutes }} мин</span>
+                                                    @if ($remainingQuota > 0)
+                                                        <span class="text-gray-400 text-[8px]">
+                                                            (осталось: {{ $remainingQuota }} шт)
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </a>
-
                                     @empty
                                         <span class="text-gray-400">—</span>
                                     @endforelse
-
                                 </div>
                             </td>
 
