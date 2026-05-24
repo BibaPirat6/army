@@ -7,6 +7,12 @@
     {{-- Header --}}
     <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
+              <a href="{{ route('calendar.index') }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Назад к календарю
+            </a>
             <h1 class="text-xl font-bold tracking-tight text-gray-800">
                 {{ $commissariat->name }}
             </h1>

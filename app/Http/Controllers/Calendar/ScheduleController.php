@@ -15,24 +15,25 @@ class ScheduleController extends Controller
     /**
      * ГЛАВНАЯ СТРАНИЦА ГРАФИКА
      */
-public function index(Request $request, Employee $employee, WorkloadPlanner $planner)
-{
-    $month = (int) $request->input('month', now()->month);
-    $year = (int) $request->input('year', now()->year);
+    public function index(Request $request, Employee $employee, WorkloadPlanner $planner)
+    {
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
 
-    $from = Carbon::create($year, $month, 1)->startOfMonth();
-    $to = $from->copy()->endOfMonth();
+        $from = Carbon::create($year, $month, 1)->startOfMonth();
+        $to = $from->copy()->endOfMonth();
 
-    $schedule = $planner->generatePlan($employee, $from, $to);
+        $schedule = $planner->generatePlan($employee, $from, $to);
 
-    return view('admin.calendar.schedule.index', [
-        'employee' => $employee,
-        'month' => $month,
-        'year' => $year,
-        'schedule' => $schedule,
-        'hasSchedule' => WorkDay::where('employee_id', $employee->id)->exists(),
-    ]);
-}
+        return view('admin.calendar.schedule.index', [
+            'employee' => $employee,
+            'month' => $month,
+            'year' => $year,
+            'schedule' => $schedule,
+            'hasSchedule' => WorkDay::where('employee_id', $employee->id)->exists(),
+        ]);
+    }
+
     /**
      * ФОРМА НАСТРОЙКИ
      */
