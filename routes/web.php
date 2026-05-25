@@ -182,6 +182,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::get('/employee/{employee}/setup', [ScheduleController::class, 'setup'])->name('setup');
             Route::post('/employee/{employee}/generate', [ScheduleController::class, 'generate'])->name('generate');
             Route::get('/employee/{employee}', [ScheduleController::class, 'index'])->name('employee');
+
+            Route::get(
+                '/employee/{employee}/timeline',
+                [ScheduleController::class, 'timeline']
+            )->name('timeline');
+
             Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])->name('complete');
 
             Route::put('/assignment/{taskAssignment}/progress', [ScheduleController::class, 'updateProgress'])

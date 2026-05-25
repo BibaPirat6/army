@@ -182,7 +182,8 @@ class ScheduleController extends Controller
             abort(404);
         }
 
-        $assignments = TaskAssignment::where('employee_id', $employee->id)
+        $assignments = TaskAssignment::query()
+            ->where('employee_id', $employee->id)
             ->with('task:id,title,color')
             ->get();
 

@@ -109,16 +109,29 @@
                                    hover:bg-gray-50 hover:shadow-sm
                                    {{ !$isWork ? 'bg-gray-50/50' : '' }}">
 
-                            {{-- DATE --}}
+                                                        {{-- DATE --}}
                             <td class="p-3 font-medium">
-                                <div class="flex flex-col">
-                                    <span class="text-sm">
-                                        {{ \Carbon\Carbon::parse($date)->format('d') }}
-                                    </span>
-                                    <span class="text-[10px] text-gray-400">
-                                        {{ \Carbon\Carbon::parse($date)->translatedFormat('D') }}
-                                    </span>
-                                </div>
+                                <a href="{{ route('calendar.schedule.timeline', [
+                                    'employee' => $employee->id,
+                                    'date' => $date,
+                                ]) }}"
+                                    class="
+                                    block
+                                    rounded-2xl
+                                    transition`
+                                    hover:scale-[1.01]
+                                    hover:shadow-md
+                                ">  
+                                    <div class="flex flex-col">
+                                        <span class="text-sm">
+                                            {{ \Carbon\Carbon::parse($date)->format('d') }}
+                                        </span>
+                                        <span class="text-[10px] text-gray-400">
+                                            {{ \Carbon\Carbon::parse($date)->translatedFormat('D') }}
+                                        </span>
+                                    </div>
+                                </a>
+                              
                             </td>
 
                             {{-- TYPE --}}
