@@ -31,7 +31,7 @@
                         {{ $month }}/{{ $year }}
                     </span>
                     <span>•</span>
-                    <span>Workload Dashboard</span>
+                    <span>график сотрудника</span>
                 </div>
             </div>
 
@@ -88,7 +88,7 @@
                         <th class="p-3 text-left">Тип</th>
                         <th class="p-3 text-left">Время</th>
                         <th class="p-3 text-left">Задачи</th>
-                        <th class="p-3 text-center">Load</th>
+                        <th class="p-3 text-center">Загрузка</th>
                     </tr>
                 </thead>
 
@@ -146,70 +146,63 @@
                                 @endif
                             </td>
 
-                            {{-- TASKS --}}
-                            <td class="p-3">
-                                <div class="flex flex-wrap gap-1">
+
+                            {{-- TASKS Column --}}
+                            <td class="p-3 align-top">
+                                <div class="flex flex-col gap-1">
                                     @forelse($day['task_meta'] as $taskId => $meta)
                                         @php
-                                            $isOverloadTask = $meta['overload'] ?? false;
                                             $minutes = $meta['minutes'] ?? 0;
-                                            $taskName = $meta['task_name'] ?? 'Задача #' . $taskId;
-                                            $totalMinutes = $meta['task_total_minutes'] ?? 0;
-                                            $remainingMinutes = $meta['remaining_minutes'] ?? 0;
+                                            $taskName = $meta['task_name'] ?? 'Задача';
                                             $remainingQuota = $meta['remaining_quota'] ?? 0;
                                             $assignmentId = $day['tasks'][$taskId]['assignment_id'] ?? null;
+
+                                            // Цвет бейджа (просто синий для всех, чтобы не мельтешило)
+                                            $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
                                         @endphp
 
-                                        <a href="{{ $assignmentId ? route('calendar.assignments.edit', [$taskId, $assignmentId]) : '#' }}"
-                                            class="px-2 py-1 rounded-lg text-[10px] transition-all duration-200
-                       {{ $isOverloadTask
-                           ? 'bg-red-50 text-red-700 border border-red-200'
-                           : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }}
-                       hover:scale-[1.03]"
-                                            title="{{ $taskName }}: осталось {{ $remainingQuota }} итераций">
-
-                                            <div class="flex flex-col">
-                                                <span class="font-medium truncate max-w-[150px]">{{ $taskName }}</span>
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-gray-500">{{ $minutes }} мин</span>
+                                        @if ($assignmentId)
+                                            <a href="{{ route('calendar.assignments.edit', [$taskId, $assignmentId]) }}"
+                                                class="block px-2 py-1.5 rounded-md text-xs transition hover:bg-blue-100 {{ $badgeClass }}">
+                                                <div class="font-semibold truncate" title="{{ $taskName }}">
+                                                    {{ $taskName }}
+                                                </div>
+                                                <div
+                                                    class="flex justify-between items-center mt-0.5 text-[10px] text-blue-600/80">
+                                                    <span>{{ $minutes }} мин</span>
                                                     @if ($remainingQuota > 0)
-                                                        <span class="text-gray-400 text-[8px]">
-                                                            (осталось: {{ $remainingQuota }} шт)
-                                                        </span>
+                                                        <span>ост. {{ $remainingQuota }}</span>
                                                     @endif
                                                 </div>
+                                            </a>
+                                        @else
+                                            <div
+                                                class="px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-500 border border-gray-200">
+                                                {{ $taskName }} ({{ $minutes }} мин)
                                             </div>
-                                        </a>
+                                        @endif
                                     @empty
-                                        <span class="text-gray-400">—</span>
+                                        <span class="text-gray-300 text-sm">—</span>
                                     @endforelse
                                 </div>
                             </td>
 
-                            {{-- PROGRESS --}}
-                            <td class="p-3">
+                            {{-- PROGRESS / LOAD Column --}}
+                            <td class="p-3 align-middle">
+                                @php
+                                    $pct = $day['load_percent'] ?? 0;
+                                    $color =
+                                        $pct > 100 ? 'bg-red-500' : ($pct > 85 ? 'bg-amber-500' : 'bg-emerald-500');
+                                @endphp
+
                                 <div class="flex flex-col items-center gap-1">
-
-                                    <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div class="h-2 rounded-full transition-all duration-700 ease-out
-                                            {{ $pct > 100 ? 'bg-red-500' : ($pct > 75 ? 'bg-amber-500' : 'bg-emerald-500') }}"
-                                            style="width: {{ min(100, $pct) }}%" data-overload="{{ $pct }}">
-                                        </div>
+                                    <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full {{ $color }} transition-all duration-500"
+                                            style="width: {{ min(100, $pct) }}%"></div>
                                     </div>
-
-                                    <span class="text-[10px] text-gray-500 group-hover:text-gray-700 transition">
-                                        {{ $pct }}%
-                                    </span>
-
+                                    <span class="text-[10px] font-medium text-gray-600">{{ $pct }}%</span>
                                 </div>
-
-                                @if ($pct > 100)
-                                    <span class="text-[10px] font-semibold text-red-500">
-                                        OVERLOAD
-                                    </span>
-                                @endif
                             </td>
-
 
 
                         </tr>

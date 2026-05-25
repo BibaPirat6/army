@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class Task extends Model
 {
@@ -56,6 +55,7 @@ class Task extends Model
         if (! $position || ! $position->commissariatPosition) {
             return null;
         }
+
         return $position->commissariatPosition->division
             ?? $position->commissariatPosition->department
             ?? $position->commissariatPosition->commissariat;
@@ -105,10 +105,15 @@ class Task extends Model
 
     public function formatMinutes(int $minutes): string
     {
-        if ($minutes <= 0) return '0 мин';
+        if ($minutes <= 0) {
+            return '0 мин';
+        }
         $h = floor($minutes / 60);
         $m = $minutes % 60;
-        if ($h > 0) return "{$h}ч {$m}м";
+        if ($h > 0) {
+            return "{$h}ч {$m}м";
+        }
+
         return "{$m} мин";
     }
 
@@ -126,54 +131,57 @@ class Task extends Model
         if (empty($this->files)) {
             return [];
         }
-        
+
         if (is_string($this->files)) {
             $decoded = json_decode($this->files, true);
+
             return is_array($decoded) ? $decoded : [];
         }
-        
+
         if (is_array($this->files)) {
             return $this->files;
         }
-        
+
         return [];
     }
 
-   public function addFile($uploadedFile): ?array
-{
-    try {
-        // Проверка размера файла (10 МБ)
-        if ($uploadedFile->getSize() > 10 * 1024 * 1024) {
-            \Log::warning('Файл превышает размер', [
+    public function addFile($uploadedFile): ?array
+    {
+        try {
+            // Проверка размера файла (10 МБ)
+            if ($uploadedFile->getSize() > 10 * 1024 * 1024) {
+                \Log::warning('Файл превышает размер', [
+                    'size' => $uploadedFile->getSize(),
+                    'name' => $uploadedFile->getClientOriginalName(),
+                ]);
+
+                return null;
+            }
+
+            $files = $this->getFilesList();
+
+            $path = $uploadedFile->store('tasks/'.$this->id, 'public');
+
+            $fileData = [
+                'id' => (string) \Str::uuid(),
+                'original_name' => $uploadedFile->getClientOriginalName(),
+                'path' => $path,
+                'mime_type' => $uploadedFile->getMimeType(),
                 'size' => $uploadedFile->getSize(),
-                'name' => $uploadedFile->getClientOriginalName()
-            ]);
+                'created_at' => now()->toDateTimeString(),
+            ];
+
+            $files[] = $fileData;
+            $this->files = $files;
+            $this->save();
+
+            return $fileData;
+        } catch (\Exception $e) {
+            \Log::error('Ошибка добавления файла: '.$e->getMessage());
+
             return null;
         }
-        
-        $files = $this->getFilesList();
-        
-        $path = $uploadedFile->store('tasks/' . $this->id, 'public');
-        
-        $fileData = [
-            'id' => (string) \Str::uuid(),
-            'original_name' => $uploadedFile->getClientOriginalName(),
-            'path' => $path,
-            'mime_type' => $uploadedFile->getMimeType(),
-            'size' => $uploadedFile->getSize(),
-            'created_at' => now()->toDateTimeString(),
-        ];
-        
-        $files[] = $fileData;
-        $this->files = $files;
-        $this->save();
-        
-        return $fileData;
-    } catch (\Exception $e) {
-        \Log::error('Ошибка добавления файла: ' . $e->getMessage());
-        return null;
     }
-}
 
     /**
      * Удалить файл по ID
@@ -183,7 +191,7 @@ class Task extends Model
         try {
             $files = $this->getFilesList();
             $found = false;
-            
+
             foreach ($files as $key => $file) {
                 if (isset($file['id']) && $file['id'] === $fileId) {
                     // Удаляем физический файл
@@ -195,15 +203,16 @@ class Task extends Model
                     break;
                 }
             }
-            
+
             if ($found) {
                 $this->files = array_values($files);
                 $this->save();
             }
-            
+
             return $found;
         } catch (\Exception $e) {
-            \Log::error('Ошибка удаления файла: ' . $e->getMessage());
+            \Log::error('Ошибка удаления файла: '.$e->getMessage());
+
             return false;
         }
     }
@@ -214,13 +223,13 @@ class Task extends Model
     public function getFilesWithUrls(): array
     {
         $files = $this->getFilesList();
-        
+
         foreach ($files as &$file) {
             if (isset($file['path'])) {
                 $file['url'] = Storage::url($file['path']);
             }
         }
-        
+
         return $files;
     }
 }
