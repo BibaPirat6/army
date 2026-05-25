@@ -155,18 +155,23 @@
                                             $minutes = $meta['minutes'] ?? 0;
                                             $taskName = $meta['task_name'] ?? 'Задача';
                                             $remainingQuota = $meta['remaining_quota'] ?? 0;
+                                            $completedCount = $meta['completed_count'] ?? 0;
+                                            $quotaTotal = $meta['quota_total'] ?? 0;
                                             $assignmentId = $day['tasks'][$taskId]['assignment_id'] ?? null;
 
-                                            // Цвет бейджа (просто синий для всех, чтобы не мельтешило)
-                                            $badgeClass = 'bg-blue-50 text-blue-700 border border-blue-200';
+                                            $percent = $quotaTotal > 0 ? ($completedCount / $quotaTotal) * 100 : 0;
                                         @endphp
 
                                         @if ($assignmentId)
-                                            <a href="{{ route('calendar.assignments.edit', [$taskId, $assignmentId]) }}"
-                                                class="block px-2 py-1.5 rounded-md text-xs transition hover:bg-blue-100 {{ $badgeClass }}">
+                                            {{-- КЛИКАБЕЛЬНАЯ ЗАДАЧА --}}
+                                            <div onclick="openModal({{ $assignmentId }}, '{{ $date }}')"
+                                                class="cursor-pointer px-2 py-1.5 rounded-md text-xs transition hover:bg-blue-100 bg-blue-50 text-blue-700 border border-blue-200"
+                                                title="Нажмите, чтобы отметить выполнение">
+
                                                 <div class="font-semibold truncate" title="{{ $taskName }}">
                                                     {{ $taskName }}
                                                 </div>
+
                                                 <div
                                                     class="flex justify-between items-center mt-0.5 text-[10px] text-blue-600/80">
                                                     <span>{{ $minutes }} мин</span>
@@ -174,7 +179,15 @@
                                                         <span>ост. {{ $remainingQuota }}</span>
                                                     @endif
                                                 </div>
-                                            </a>
+
+                                                {{-- Прогресс-бар --}}
+                                                <div class="mt-1">
+                                                    <div class="w-full bg-blue-200 rounded-full h-1">
+                                                        <div class="bg-blue-500 h-1 rounded-full"
+                                                            style="width: {{ $percent }}%"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @else
                                             <div
                                                 class="px-2 py-1 rounded-md text-xs bg-gray-50 text-gray-500 border border-gray-200">
@@ -214,9 +227,185 @@
         </div>
     </div>
 
+    {{-- МОДАЛЬНОЕ ОКНО --}}
+    <div id="completionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+        style="background-color: rgba(0,0,0,0.5);">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm">
+
+            {{-- Заголовок --}}
+            <div class="flex items-center justify-between p-4 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">Отметка выполнения</h3>
+                <button onclick="closeModal()"
+                    class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+
+            {{-- Тело --}}
+            <div class="p-4">
+                <div class="bg-gray-50 rounded-lg p-3 mb-4 text-sm space-y-1">
+                    <div class="font-medium" id="infoTaskName">—</div>
+                    <div class="text-gray-600" id="infoEmployee">—</div>
+                    <div class="text-gray-600" id="infoDate">—</div>
+                    <div class="text-gray-600 mt-1">
+                        Квота: <strong id="infoQuota">0</strong> | Время/шт: <strong id="infoTime">0</strong> мин
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Выполнено итераций:</label>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="changeCompleted(-1)"
+                            class="w-10 h-10 flex items-center justify-center bg-red-100 text-red-600 rounded-lg hover:bg-red-200 text-xl font-bold">
+                            −
+                        </button>
+
+                        <input type="number" id="completedInput" min="0" value="0"
+                            onchange="validateCompleted()"
+                            class="flex-1 text-center text-lg font-bold border-2 border-gray-300 rounded-lg py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+
+                        <button type="button" onclick="changeCompleted(1)"
+                            class="w-10 h-10 flex items-center justify-center bg-green-100 text-green-600 rounded-lg hover:bg-green-200 text-xl font-bold">
+                            +
+                        </button>
+                    </div>
+
+                    <div class="mt-1 text-xs text-gray-500">
+                        Максимум: <span id="maxQuota">0</span>
+                    </div>
+
+                    <div id="quickCalc" class="mt-3 p-2 bg-indigo-50 rounded text-xs text-indigo-800">
+                        Выполнено: <strong id="calcDone">0</strong> мин | Осталось: <strong id="calcRemaining">0</strong>
+                        мин
+                    </div>
+                </div>
+            </div>
+
+            {{-- Футер --}}
+            <div class="flex items-center justify-between p-4 border-t bg-gray-50 rounded-b-lg">
+                <a href="#" id="assignmentLink" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                    📋 К назначению
+                </a>
+
+                <div class="flex gap-2">
+                    <button onclick="closeModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Отмена
+                    </button>
+                    <button onclick="saveCompletion()"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">
+                        💾 Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
     <script>
-        function go(month, year) {
-            window.location = `?month=${month}&year=${year}`;
+        let currentAssignmentId = null;
+        let currentQuota = 0;
+        let currentIterationTime = 0;
+
+        function openModal(assignmentId, date) {
+            fetch(`/calendar/schedule/assignment-info/${assignmentId}`)
+                .then(res => res.json())
+                .then(data => {
+                    currentAssignmentId = data.assignment_id;
+                    currentQuota = data.quota;
+                    currentIterationTime = data.iteration_time;
+
+                    document.getElementById('infoTaskName').textContent = data.task_name;
+                    document.getElementById('infoEmployee').textContent = '👤 ' + data.employee_name;
+                    document.getElementById('infoDate').textContent = '📅 ' + date;
+                    document.getElementById('infoQuota').textContent = data.quota;
+                    document.getElementById('infoTime').textContent = data.iteration_time;
+
+                    const input = document.getElementById('completedInput');
+                    input.value = data.completed_count;
+                    input.max = data.quota;
+
+                    document.getElementById('maxQuota').textContent = data.quota;
+                    document.getElementById('assignmentLink').href =
+                        `/calendar/tasks/${data.task_id}/assignments/${assignmentId}/edit`;
+
+                    updateCalculation();
+
+                    document.getElementById('completionModal').classList.remove('hidden');
+                    document.getElementById('completionModal').classList.add('flex');
+                });
         }
+
+        function closeModal() {
+            document.getElementById('completionModal').classList.add('hidden');
+            document.getElementById('completionModal').classList.remove('flex');
+        }
+
+        function changeCompleted(delta) {
+            const input = document.getElementById('completedInput');
+            let val = parseInt(input.value || 0) + delta;
+            input.value = Math.max(0, Math.min(val, currentQuota));
+            updateCalculation();
+        }
+
+        function validateCompleted() {
+            const input = document.getElementById('completedInput');
+            let val = parseInt(input.value || 0);
+            input.value = Math.max(0, Math.min(val, currentQuota));
+            updateCalculation();
+        }
+
+        function updateCalculation() {
+            const completed = parseInt(document.getElementById('completedInput').value || 0);
+            const remaining = currentQuota - completed;
+            document.getElementById('calcDone').textContent = completed * currentIterationTime;
+            document.getElementById('calcRemaining').textContent = remaining * currentIterationTime;
+        }
+
+        function saveCompletion() {
+            if (!currentAssignmentId) return;
+
+            fetch(`/calendar/schedule/complete/${currentAssignmentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        completed_count: parseInt(document.getElementById('completedInput').value)
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        location.reload();
+                    }
+                });
+        }
+
+        document.getElementById('completionModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
     </script>
+
+    <style>
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
 @endsection

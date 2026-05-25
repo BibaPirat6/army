@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Calendar;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\TaskAssignment;
 use App\Models\TaskInstance;
 use App\Models\WorkDay;
 use App\Services\WorkloadPlanner;
@@ -104,5 +105,59 @@ class ScheduleController extends Controller
         return redirect()
             ->route('calendar.schedule.employee', $employee->id)
             ->with('success', 'График обновлён и пересчитан');
+    }
+
+
+
+       /**
+     * Получить информацию о задании для модального окна
+     */
+    public function assignmentInfo(TaskAssignment $taskAssignment)
+    {
+        $task = $taskAssignment->task;
+        $iterationTime = $task->subtasks->sum('avg_time_minutes') ?: 60;
+        
+        return response()->json([
+            'task_id' => $task->id,
+            'task_name' => $task->title,
+            'employee_name' => $taskAssignment->employee->full_name,
+            'quota' => $taskAssignment->quota,
+            'completed_count' => $taskAssignment->completed_count,
+            'iteration_time' => $iterationTime,
+            'priority' => $taskAssignment->priority,
+            'assignment_id' => $taskAssignment->id,
+        ]);
+    }
+
+    /**
+     * Отметка выполнения задачи
+     */
+    public function complete(Request $request, TaskAssignment $taskAssignment)
+    {
+        // completed_count не может быть больше quota и меньше 0
+        $validated = $request->validate([
+            'completed_count' => 'required|integer|min:0|max:' . $taskAssignment->quota,
+        ]);
+        
+        // Обновляем выполнение
+        $taskAssignment->update([
+            'completed_count' => $validated['completed_count']
+        ]);
+        
+        // Если задача полностью выполнена - удаляем будущие распределения
+        if ($validated['completed_count'] >= $taskAssignment->quota) {
+            TaskInstance::where('task_id', $taskAssignment->task_id)
+                ->where('date', '>=', now()->format('Y-m-d'))
+                ->delete();
+        } else {
+            // Перераспределяем оставшуюся нагрузку
+            $planner = app(WorkloadPlanner::class);
+            $planner->redistributeAfterCompletion($taskAssignment);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Прогресс обновлен'
+        ]);
     }
 }

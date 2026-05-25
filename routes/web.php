@@ -3,7 +3,9 @@
 use App\Http\Controllers\AssignEmployeeController;
 use App\Http\Controllers\Calendar\CalendarController;
 use App\Http\Controllers\Calendar\MatrixController;
+use App\Http\Controllers\Calendar\ScheduleController;
 use App\Http\Controllers\Calendar\SubtaskController;
+use App\Http\Controllers\Calendar\TaskAssignmentController;
 use App\Http\Controllers\Calendar\TaskController;
 use App\Http\Controllers\CommissariatPositionsController;
 use App\Http\Controllers\CommissariatsController;
@@ -17,9 +19,7 @@ use App\Http\Controllers\PersonsColumnsController;
 use App\Http\Controllers\PositionsController;
 use App\Http\Controllers\PositionTypesController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Calendar\ScheduleController;
 use App\Http\Controllers\StructureController;
-use App\Http\Controllers\Calendar\TaskAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 // форма лоигна
@@ -183,6 +183,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
             Route::post('/employee/{employee}/generate', [ScheduleController::class, 'generate'])->name('generate');
             Route::get('/employee/{employee}', [ScheduleController::class, 'index'])->name('employee');
             Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])->name('complete');
+
+            Route::put('/assignment/{taskAssignment}/progress', [ScheduleController::class, 'updateProgress'])
+                ->name('update-progress');
+
+            Route::get('/assignment-info/{taskAssignment}', [ScheduleController::class, 'assignmentInfo'])
+                ->name('schedule.assignment-info');
+            Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])
+                ->name('schedule.complete');
         });
     });
 

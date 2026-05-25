@@ -142,4 +142,146 @@ class WorkloadPlanner
             'employee' => $employee,
         ];
     }
+
+
+
+      /**
+     * Обновить выполнение задачи и перераспределить нагрузку
+     */
+    public function updateTaskProgress(TaskAssignment $assignment, int $completedCount, ?int $newQuota = null): void
+    {
+        // Обновляем выполнение
+        $assignment->update([
+            'completed_count' => $completedCount
+        ]);
+        
+        // Если изменили квоту - обновляем и её
+        if ($newQuota !== null && $newQuota !== $assignment->quota) {
+            $assignment->update([
+                'quota' => $newQuota
+            ]);
+        }
+        
+        // Удаляем будущие распределения
+        TaskInstance::where('task_id', $assignment->task_id)
+            ->where('date', '>=', now()->format('Y-m-d'))
+            ->delete();
+        
+        // Если осталась квота - перераспределяем
+        if ($assignment->quota > $assignment->completed_count) {
+            $this->redistributeForEmployee($assignment->employee, now());
+        }
+    }
+    
+    /**
+     * Перераспределить нагрузку для сотрудника
+     */
+    private function redistributeForEmployee(Employee $employee, Carbon $from): void
+    {
+        $to = $from->copy()->addMonths(3); // Или ваш период
+        
+        // Получаем все рабочие дни
+        $workDays = WorkDay::where('employee_id', $employee->id)
+            ->where('date', '>=', $from->format('Y-m-d'))
+            ->where('date', '<=', $to->format('Y-m-d'))
+            ->orderBy('date')
+            ->get();
+            
+        if ($workDays->isEmpty()) return;
+        
+        // Получаем активные назначения
+        $assignments = TaskAssignment::with('task.subtasks')
+            ->where('employee_id', $employee->id)
+            ->where('completed_count', '<', \DB::raw('quota'))
+            ->get()
+            ->sortBy('priority');
+            
+        $remainingTime = [];
+        foreach ($assignments as $a) {
+            $iterationTime = $a->task->subtasks->sum('avg_time_minutes') ?: 60;
+            $remaining = ($a->quota - $a->completed_count) * $iterationTime;
+            $remainingTime[$a->id] = $remaining;
+        }
+        
+        // Простое пропорциональное распределение
+        foreach ($workDays as $day) {
+            if ($day->type !== 'рабочий_день' || !$day->total_minutes) continue;
+            
+            $available = (int) $day->total_minutes;
+            $used = 0;
+            
+            foreach ($assignments as $assignment) {
+                if (!isset($remainingTime[$assignment->id]) || $remainingTime[$assignment->id] <= 0) continue;
+                
+                $left = $available - $used;
+                if ($left <= 0) break;
+                
+                $alloc = min($remainingTime[$assignment->id], $left);
+                $alloc = (int) floor($alloc);
+                
+                if ($alloc <= 0) continue;
+                
+                $iterationTime = $assignment->task->subtasks->sum('avg_time_minutes') ?: 60;
+                $quota = (int) round($alloc / $iterationTime);
+                
+                TaskInstance::updateOrCreate(
+                    ['task_id' => $assignment->task_id, 'date' => $day->date->format('Y-m-d')],
+                    ['daily_quota' => $quota]
+                );
+                
+                $remainingTime[$assignment->id] -= $alloc;
+                $used += $alloc;
+            }
+        }
+    }
+
+
+     /**
+     * Перераспределить после отметки выполнения
+     */
+    public function redistributeAfterCompletion(TaskAssignment $assignment): void
+    {
+        // Удаляем будущие распределения
+        TaskInstance::where('task_id', $assignment->task_id)
+            ->where('date', '>=', now()->format('Y-m-d'))
+            ->delete();
+        
+        // Считаем оставшееся время
+        $iterationTime = $assignment->task->subtasks->sum('avg_time_minutes') ?: 60;
+        $remainingQuota = $assignment->quota - $assignment->completed_count;
+        $remainingMinutes = $remainingQuota * $iterationTime;
+        
+        if ($remainingMinutes <= 0) return;
+        
+        // Получаем будущие рабочие дни
+        $workDays = WorkDay::where('employee_id', $assignment->employee_id)
+            ->where('date', '>=', now()->format('Y-m-d'))
+            ->where('type', 'рабочий_день')
+            ->whereNotNull('work_start')
+            ->orderBy('date')
+            ->get();
+        
+        if ($workDays->isEmpty()) return;
+        
+        // Простое распределение: раскидываем минуты по дням
+        $totalAvailableMinutes = $workDays->sum('total_minutes');
+        
+        foreach ($workDays as $day) {
+            if ($remainingMinutes <= 0) break;
+            
+            $dayMinutes = (int) $day->total_minutes;
+            if ($dayMinutes <= 0) continue;
+            
+            // Выделяем пропорциональную часть
+            $alloc = min($remainingMinutes, $dayMinutes);
+            $quota = (int) ceil($alloc / $iterationTime);
+            
+            TaskInstance::updateOrCreate(
+                ['task_id' => $assignment->task_id, 'date' => $day->date->format('Y-m-d')],
+                ['daily_quota' => $quota]
+            );
+            
+            $remainingMinutes -= $alloc;
+        }
+    }
 }
