@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\TaskAssignment;
 use App\Models\TaskInstance;
 use App\Models\WorkDay;
+use App\Services\Schedule\TimelineBuilder;
 use App\Services\WorkloadPlanner;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -107,16 +108,14 @@ class ScheduleController extends Controller
             ->with('success', 'График обновлён и пересчитан');
     }
 
-
-
-       /**
+    /**
      * Получить информацию о задании для модального окна
      */
     public function assignmentInfo(TaskAssignment $taskAssignment)
     {
         $task = $taskAssignment->task;
         $iterationTime = $task->subtasks->sum('avg_time_minutes') ?: 60;
-        
+
         return response()->json([
             'task_id' => $task->id,
             'task_name' => $task->title,
@@ -136,14 +135,14 @@ class ScheduleController extends Controller
     {
         // completed_count не может быть больше quota и меньше 0
         $validated = $request->validate([
-            'completed_count' => 'required|integer|min:0|max:' . $taskAssignment->quota,
+            'completed_count' => 'required|integer|min:0|max:'.$taskAssignment->quota,
         ]);
-        
+
         // Обновляем выполнение
         $taskAssignment->update([
-            'completed_count' => $validated['completed_count']
+            'completed_count' => $validated['completed_count'],
         ]);
-        
+
         // Если задача полностью выполнена - удаляем будущие распределения
         if ($validated['completed_count'] >= $taskAssignment->quota) {
             TaskInstance::where('task_id', $taskAssignment->task_id)
@@ -154,10 +153,59 @@ class ScheduleController extends Controller
             $planner = app(WorkloadPlanner::class);
             $planner->redistributeAfterCompletion($taskAssignment);
         }
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Прогресс обновлен'
+            'message' => 'Прогресс обновлен',
         ]);
+    }
+
+    public function timeline(
+        Request $request,
+        Employee $employee,
+        WorkloadPlanner $planner,
+        TimelineBuilder $timelineBuilder
+    ) {
+        $date = $request->date
+            ? Carbon::parse($request->date)
+            : now();
+
+        $schedule = $planner->generatePlan(
+            $employee,
+            $date->copy()->startOfDay(),
+            $date->copy()->endOfDay()
+        );
+
+        $dayData = $schedule['plan'][$date->toDateString()] ?? null;
+
+        if (! $dayData) {
+            abort(404);
+        }
+
+        $assignments = TaskAssignment::where('employee_id', $employee->id)
+            ->with('task:id,title,color')
+            ->get();
+
+        foreach ($dayData['task_meta'] as $taskId => &$meta) {
+
+            $assignment = $assignments
+                ->firstWhere('task_id', $taskId);
+
+            $meta['color'] = $assignment?->task?->color ?? '#3B82F6';
+
+            $meta['priority'] = $assignment?->priority ?? 999;
+        }
+
+        $blocks = $timelineBuilder->build($dayData);
+
+        return view(
+            'admin.calendar.schedule.timeline',
+            compact(
+                'employee',
+                'date',
+                'dayData',
+                'blocks'
+            )
+        );
     }
 }
