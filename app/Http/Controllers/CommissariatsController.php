@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\CommissariatFiltersData;
+use App\Filters\CommissariatFilter;
 use App\Models\Commissariat;
 use App\Models\CommissariatPosition;
 use App\Models\Employee;
@@ -14,11 +16,30 @@ use Illuminate\Http\Request;
 
 class CommissariatsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $commissariats = Commissariat::all();
+        $filters = CommissariatFiltersData::fromRequest(
+            $request
+        );
 
-        return view('admin.org.commissariats.index', compact('commissariats'));
+        $commissariats = Commissariat::query()
+
+            ->filter(
+                new CommissariatFilter($filters)
+            )
+
+            ->paginate(15)
+
+            ->withQueryString();
+
+        return view(
+            'admin.org.commissariats.index',
+            [
+                'commissariats' => $commissariats,
+
+                'filters' => $filters,
+            ]
+        );
     }
 
     public function show(Request $request, $id)

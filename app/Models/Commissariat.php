@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Filters\BaseFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -116,5 +118,12 @@ class Commissariat extends Model
             ])
             ->get()
             ->unique('id');
+    }
+
+    public function scopeFilter(
+        Builder $query,
+        BaseFilter $filter,
+    ): Builder {
+        return $filter->apply($query);
     }
 }
