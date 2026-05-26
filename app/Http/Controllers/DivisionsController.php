@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\DivisionFiltersData;
+use App\Filters\DivisionFilter;
 use App\Models\Commissariat;
 use App\Models\CommissariatPosition;
 use App\Models\Department;
@@ -17,11 +19,43 @@ use Illuminate\Validation\Rule;
 
 class DivisionsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $divisions = Division::paginate(50);
+        $filters = DivisionFiltersData::fromRequest(
+            $request
+        );
 
-        return view('admin.org.divisions.index', compact('divisions'));
+        $divisions = Division::query()
+
+            ->with([
+                'commissariat',
+                'department',
+            ])
+
+            ->filter(
+                new DivisionFilter($filters)
+            )
+
+            ->paginate(15)
+
+            ->withQueryString();
+
+        return view(
+            'admin.org.divisions.index',
+            [
+                'divisions' => $divisions,
+
+                'filters' => $filters,
+
+                'commissariats' => Commissariat::query()
+                    ->orderBy('name')
+                    ->get(),
+
+                'departments' => Department::query()
+                    ->orderBy('name')
+                    ->get(),
+            ]
+        );
     }
 
     public function show(Request $request, $id)

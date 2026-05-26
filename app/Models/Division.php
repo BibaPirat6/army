@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Filters\BaseFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Division extends Model
 {
     protected $table = 'divisions';
+
     protected $fillable = ['name', 'commissariat_id', 'department_id'];
 
     // ===== ОТНОШЕНИЯ =====
@@ -52,7 +55,7 @@ class Division extends Model
     public function chiefCommissariatPosition(): HasOne
     {
         return $this->hasOne(CommissariatPosition::class)
-            ->whereHas('position.chiefType', fn($q) => $q->where('name', 'начальник отделения'));
+            ->whereHas('position.chiefType', fn ($q) => $q->where('name', 'начальник отделения'));
     }
 
     // ===== АКСЕССОРЫ =====
@@ -70,8 +73,15 @@ class Division extends Model
         return Employee::whereHas('employeePositions.commissariatPosition', function ($q) {
             $q->where('commissariat_positions.division_id', $this->id);
         })
-        ->with('person')
-        ->get()
-        ->unique('id');
+            ->with('person')
+            ->get()
+            ->unique('id');
+    }
+
+    public function scopeFilter(
+        Builder $query,
+        BaseFilter $filter,
+    ): Builder {
+        return $filter->apply($query);
     }
 }
