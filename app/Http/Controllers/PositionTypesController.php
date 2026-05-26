@@ -2,16 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\PositionTypeFiltersData;
+use App\Filters\PositionTypeFilter;
 use App\Models\PositionType;
 use Illuminate\Http\Request;
 
 class PositionTypesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $types = PositionType::paginate(50);
+        $filters = PositionTypeFiltersData::fromRequest($request);
 
-        return view('admin.org.position-types.index')->with('types', $types);
+        $positionTypes = PositionType::query()
+            ->filter(new PositionTypeFilter($filters))
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.org.position-types.index', [
+            'positionTypes' => $positionTypes,
+            'filters' => $filters,
+        ]);
     }
 
     public function show(Request $request, $id)
@@ -48,7 +58,7 @@ class PositionTypesController extends Controller
 
     public function edit(Request $request, $id)
     {
-       
+
         $type = PositionType::findOrFail($id);
         $backUrl = $request->input('back_url');
 
@@ -68,17 +78,17 @@ class PositionTypesController extends Controller
 
         PositionType::where('id', $id)->update($data);
 
-
-           $backUrl = $request->get('backUrl', route('position-types.index'));
+        $backUrl = $request->get('backUrl', route('position-types.index'));
 
         return redirect()->to($backUrl)->with('success', 'Тип должности успешно обновлен.');
     }
 
-    public function delete(Request $request,$id)
+    public function delete(Request $request, $id)
     {
         $type = PositionType::findOrFail($id);
         $type->delete();
         $backUrl = $request->get('backUrl', route('position-types.index'));
+
         return redirect()->to($backUrl)->with('success', 'Тип должности успешно удален.');
     }
 }

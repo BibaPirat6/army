@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Filters\BaseFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -48,5 +50,12 @@ class Position extends Model
     public function getPositionTypeNameAttribute(): string
     {
         return $this->positionType?->name ?? '❌';
+    }
+
+    public function scopeFilter(
+        Builder $query,
+        BaseFilter $filter,
+    ): Builder {
+        return $filter->apply($query);
     }
 }

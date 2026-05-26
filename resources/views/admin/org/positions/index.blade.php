@@ -10,6 +10,62 @@
     @endif
 
 
+    <form method="GET" class="flex gap-4 mb-6">
+
+        <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск...">
+
+        <select id="position_type_id" name="position_type_id">
+            <option value="">
+                Все типы
+            </option>
+
+            @foreach ($positionTypes as $type)
+                <option value="{{ $type->id }}" @selected($filters->positionTypeId == $type->id)>
+                    {{ $type->name }}
+                </option>
+            @endforeach
+        </select>
+
+        <select name="chief_type_id">
+
+            <option value="">
+                Все типы начальников
+            </option>
+
+            @foreach ($chiefTypes as $type)
+                <option value="{{ $type->id }}" @selected($filters->chiefTypeId == $type->id)>
+                    {{ $type->name }}
+                </option>
+            @endforeach
+
+        </select>
+
+        <select name="sort_by">
+            <option value="id">ID</option>
+            <option value="name">Название</option>
+            <option value="created_at">
+                Дата создания
+            </option>
+        </select>
+
+        <select name="sort_direction">
+            <option value="asc">ASC</option>
+            <option value="desc">DESC</option>
+        </select>
+
+
+        <button type="submit" class="px-4 py-2 bg-black text-white rounded">
+            Применить
+        </button>
+
+        <a href="{{ route('positions.index') }}" class="px-4 py-2 border rounded">
+            Сбросить
+        </a>
+    </form>
+
+
+
+
     <div class="w-full p-6 mx-auto">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
@@ -21,7 +77,7 @@
 
             <div class="relative inline-block">
                 <a href="{{ route('positions.create', [
-                    "back_url"=>url()->full()
+                    'back_url' => url()->full(),
                 ]) }}"
                     class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,83 +109,90 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         @forelse($positions as $position)
-                                            <tr class="group hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                <td
-                                                    class="px-6 py-4 text-[#060606] font-medium group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    {{ $position->id }}
-                                                </td>
-                                                <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    {{ $position->name }}
-                                                </td>
-                                                <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    <span class="text-sm text-[#565A5B]"><a href="{{ route("position-types.show", [
-                                                        "id"=>$position->positionType->id,
-                                                        "back_url"=>url()->full()
-                                                    ]) }}">{{ $position->getPositionTypeNameAttribute() }}</a></span>
-                                                </td>
-                                                <td class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    <span class="text-sm text-[#565A5B]">
-                                                        {{ $position->getChiefTypeNameAttribute() }}</span>
-                                                </td>
-                                                <td class="px-6 py-4 group-hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                    <div class="flex items-center justify-end gap-2">
-                                                        <!-- Подробнее -->
-                                                        <a href="{{ route('positions.show', [
-                                "id" => $position->id,
-                                "back_url" => url()->full()
-                            ]) }}"
-                                                            class="group/action p-2 rounded-lg bg-[#565A5B] text-[#fff] hover:bg-[#746c6f] hover:text-white transition-all duration-200"
-                                                            title="Подробнее">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                                stroke-width="2">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                            </svg>
-                                                        </a>
+                            <tr class="group hover:bg-[#A60644]/5 transition-colors duration-200">
+                                <td
+                                    class="px-6 py-4 text-[#060606] font-medium group-hover:bg-[#A60644]/5 transition-colors duration-200">
+                                    {{ $position->id }}
+                                </td>
+                                <td
+                                    class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
+                                    {{ $position->name }}
+                                </td>
+                                <td
+                                    class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
+                                    <span class="text-sm text-[#565A5B]"><a
+                                            href="{{ route('position-types.show', [
+                                                'id' => $position->positionType->id,
+                                                'back_url' => url()->full(),
+                                            ]) }}">{{ $position->getPositionTypeNameAttribute() }}</a></span>
+                                </td>
+                                <td
+                                    class="px-6 py-4 text-[#060606] group-hover:bg-[#A60644]/5 transition-colors duration-200">
+                                    <span class="text-sm text-[#565A5B]">
+                                        {{ $position->getChiefTypeNameAttribute() }}</span>
+                                </td>
+                                <td class="px-6 py-4 group-hover:bg-[#A60644]/5 transition-colors duration-200">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <!-- Подробнее -->
+                                        <a href="{{ route('positions.show', [
+                                            'id' => $position->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}"
+                                            class="group/action p-2 rounded-lg bg-[#565A5B] text-[#fff] hover:bg-[#746c6f] hover:text-white transition-all duration-200"
+                                            title="Подробнее">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </a>
 
-                                                        <!-- Редактировать -->
-                                                        <a href="{{ route('positions.edit', [
-                                "id" => $position->id,
-                                "back_url" => url()->full()
-                            ]) }}"
-                                                            class="group/action p-2 rounded-lg bg-[#A60644] text-[#fff] hover:bg-[#A60644] hover:text-white transition-all duration-200"
-                                                            title="Редактировать">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                                stroke-width="2">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
-                                                        </a>
+                                        <!-- Редактировать -->
+                                        <a href="{{ route('positions.edit', [
+                                            'id' => $position->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}"
+                                            class="group/action p-2 rounded-lg bg-[#A60644] text-[#fff] hover:bg-[#A60644] hover:text-white transition-all duration-200"
+                                            title="Редактировать">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
 
-                                                        <!-- Удалить -->
-                                                        <form action="{{ route('positions.delete', [
-                                "id" => $position->id,
-                                "back_url" => url()->full()
-                            ]) }}" method="POST"
-                                                            onsubmit="return confirm('Вы уверены, что хотите удалить должность «{{ $position->name }}»?');"
-                                                            class="inline-block">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="group/action p-2 rounded-lg bg-red-600 text-[#fff] hover:bg-[#060606] hover:text-white transition-all duration-200"
-                                                                title="Удалить">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                                    stroke-width="2">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                        <!-- Удалить -->
+                                        <form
+                                            action="{{ route('positions.delete', [
+                                                'id' => $position->id,
+                                                'back_url' => url()->full(),
+                                            ]) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Вы уверены, что хотите удалить должность «{{ $position->name }}»?');"
+                                            class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="group/action p-2 rounded-lg bg-red-600 text-[#fff] hover:bg-[#060606] hover:text-white transition-all duration-200"
+                                                title="Удалить">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center justify-center">
-                                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                        <div
+                                            class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                             <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"

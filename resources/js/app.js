@@ -8,6 +8,8 @@ import ruLocale from '@fullcalendar/core/locales/ru';
 import { createApp } from 'vue';
 import StructureGraph from './components/StructureGraph.vue';
 
+import { initTomSelect } from './components/tom-select';
+
 const vueApp = createApp({});
 vueApp.component('structure-graph', StructureGraph);
 vueApp.mount('#app');
@@ -15,6 +17,12 @@ vueApp.mount('#app');
 let calendar = null;
 
 document.addEventListener('DOMContentLoaded', function () {
+
+    initTomSelect('#position_type_id');
+
+    initTomSelect('#chief_type_id');
+
+
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
 

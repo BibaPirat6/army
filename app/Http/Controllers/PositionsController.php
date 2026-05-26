@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\PositionFiltersData;
+use App\Filters\PositionFilter;
 use App\Models\ChiefType;
-use App\Models\Commissariat;
 use App\Models\Position;
 use App\Models\PositionType;
 use Illuminate\Http\Request;
@@ -12,12 +13,35 @@ class PositionsController extends Controller
 {
     public function index(Request $request)
     {
-        // фильтр
-        $positions = Position::orderBy('id', 'desc')->paginate(50);
+        $filters = PositionFiltersData::fromRequest($request);
 
-        $commissariats = Commissariat::all();
+        $positions = Position::query()
+            ->with([
+                'positionType',
+                'chiefType',
+            ])
+            ->filter(
+                new PositionFilter($filters)
+            )
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('admin.org.positions.index', compact('positions', 'commissariats'));
+        return view(
+            'admin.org.positions.index',
+            [
+                'positions' => $positions,
+
+                'filters' => $filters,
+
+                'positionTypes' => PositionType::query()
+                    ->orderBy('name')
+                    ->get(),
+
+                'chiefTypes' => ChiefType::query()
+                    ->orderBy('id')
+                    ->get(),
+            ]
+        );
     }
 
     public function show(Request $request, $id)
