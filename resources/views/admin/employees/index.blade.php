@@ -32,6 +32,10 @@
             </a>
         </div>
 
+
+        
+
+
         {{-- таблица --}}
         <div class="rounded-lg border border-[#BFBFBF]">
             <table class="min-w-full divide-y divide-[#BFBFBF] bg-[#e7e1e1] text-sm">
