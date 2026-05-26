@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\DepartmentFiltersData;
+use App\Filters\DepartmentFilter;
 use App\Models\Commissariat;
 use App\Models\CommissariatPosition;
 use App\Models\Department;
@@ -15,11 +17,38 @@ use Illuminate\Support\Facades\DB;
 
 class DepartmentsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $departments = Department::paginate(50);
+        $filters = DepartmentFiltersData::fromRequest(
+            $request
+        );
 
-        return view('admin.org.departments.index', compact('departments'));
+        $departments = Department::query()
+
+            ->with([
+                'commissariat',
+            ])
+
+            ->filter(
+                new DepartmentFilter($filters)
+            )
+
+            ->paginate(15)
+
+            ->withQueryString();
+
+        return view(
+            'admin.org.departments.index',
+            [
+                'departments' => $departments,
+
+                'filters' => $filters,
+
+                'commissariats' => Commissariat::query()
+                    ->orderBy('name')
+                    ->get(),
+            ]
+        );
     }
 
     public function show(Request $request, $id)
@@ -140,7 +169,7 @@ class DepartmentsController extends Controller
         try {
             $department = Department::findOrFail($id);
 
-               $oldCommissariatId = $department->commissariat_id;
+            $oldCommissariatId = $department->commissariat_id;
 
             // Обновляем отдел
             $department->update([
@@ -165,10 +194,8 @@ class DepartmentsController extends Controller
             ])->first();
 
             $chiefSlot->update([
-                'commissariat_id'=>$data['commissariat_id']
+                'commissariat_id' => $data['commissariat_id'],
             ]);
-
-         
 
             $oldId = (int) $data['old_chief_employee_id'];
             $newId = (int) $data['chief_employee_id'];

@@ -10,29 +10,6 @@
     @endif
 
 
-    <form method="GET" class="flex gap-4 mb-6">
-
-        <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск" class="border rounded px-3 py-2">
-
-        <select name="sort_by" class="border rounded px-3 py-2">
-            <option value="id">ID</option>
-            <option value="name">Название</option>
-            <option value="created_at">Дата создания</option>
-        </select>
-
-        <select name="sort_direction" class="border rounded px-3 py-2">
-            <option value="desc">DESC</option>
-            <option value="asc">ASC</option>
-        </select>
-
-        <button type="submit" class="px-4 py-2 bg-black text-white rounded">
-            Применить
-        </button>
-
-        <a href="{{ route('positions.index') }}" class="px-4 py-2 border rounded">
-            Сбросить
-        </a>
-    </form>
 
 
 
@@ -54,6 +31,34 @@
                 Создать тип должности
             </a>
         </div>
+
+
+
+
+        <form method="GET" class="flex gap-4 mb-6">
+
+            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск"
+                class="border rounded px-3 py-2">
+
+            <select name="sort_by" class="border rounded px-3 py-2">
+                <option value="id">ID</option>
+                <option value="name">Название</option>
+                <option value="created_at">Дата создания</option>
+            </select>
+
+            <select name="sort_direction" class="border rounded px-3 py-2">
+                <option value="desc">DESC</option>
+                <option value="asc">ASC</option>
+            </select>
+
+            <button type="submit" class="px-4 py-2 bg-black text-white rounded">
+                Применить
+            </button>
+
+            <a href="{{ route('positions.index') }}" class="px-4 py-2 border rounded">
+                Сбросить
+            </a>
+        </form>
 
         <!-- Таблица -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">

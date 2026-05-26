@@ -10,62 +10,6 @@
     @endif
 
 
-    <form method="GET" class="flex gap-4 mb-6">
-
-        <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск...">
-
-        <select id="position_type_id" name="position_type_id">
-            <option value="">
-                Все типы
-            </option>
-
-            @foreach ($positionTypes as $type)
-                <option value="{{ $type->id }}" @selected($filters->positionTypeId == $type->id)>
-                    {{ $type->name }}
-                </option>
-            @endforeach
-        </select>
-
-        <select name="chief_type_id">
-
-            <option value="">
-                Все типы начальников
-            </option>
-
-            @foreach ($chiefTypes as $type)
-                <option value="{{ $type->id }}" @selected($filters->chiefTypeId == $type->id)>
-                    {{ $type->name }}
-                </option>
-            @endforeach
-
-        </select>
-
-        <select name="sort_by">
-            <option value="id">ID</option>
-            <option value="name">Название</option>
-            <option value="created_at">
-                Дата создания
-            </option>
-        </select>
-
-        <select name="sort_direction">
-            <option value="asc">ASC</option>
-            <option value="desc">DESC</option>
-        </select>
-
-
-        <button type="submit" class="px-4 py-2 bg-black text-white rounded">
-            Применить
-        </button>
-
-        <a href="{{ route('positions.index') }}" class="px-4 py-2 border rounded">
-            Сбросить
-        </a>
-    </form>
-
-
-
-
     <div class="w-full p-6 mx-auto">
         <!-- Заголовок и кнопка создания -->
         <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
@@ -88,6 +32,69 @@
             </div>
         </div>
 
+
+        <form method="GET" class="flex gap-4 mb-6">
+
+            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск..."
+                class="border rounded px-3 py-2">
+
+            <select id="position_type_id" name="position_type_id" class="border rounded px-3 py-2">
+                <option value="">
+                    Все типы
+                </option>
+
+                @foreach ($positionTypes as $type)
+                    <option value="{{ $type->id }}" @selected($filters->positionTypeId == $type->id)>
+                        {{ $type->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="chief_type_id" class="border rounded px-3 py-2">
+                <option value="">
+                    Все типы начальников
+                </option>
+
+                @foreach ($chiefTypes as $type)
+                    <option value="{{ $type->id }}" @selected($filters->chiefTypeId == $type->id)>
+                        {{ $type->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select name="sort_by" class="border rounded px-3 py-2">
+                <option value="id">
+                    ID
+                </option>
+
+                <option value="name">
+                    Название
+                </option>
+
+                <option value="created_at">
+                    Дата создания
+                </option>
+            </select>
+
+            <select name="sort_direction" class="border rounded px-3 py-2">
+                <option value="asc">
+                    ASC
+                </option>
+
+                <option value="desc">
+                    DESC
+                </option>
+            </select>
+
+            <button type="submit" class="px-4 py-2 bg-black text-white rounded">
+                Применить
+            </button>
+
+            <a href="{{ route('positions.index') }}" class="px-4 py-2 border rounded">
+                Сбросить
+            </a>
+
+        </form>
 
         <!-- Таблица -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">

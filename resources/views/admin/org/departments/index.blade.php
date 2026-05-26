@@ -17,8 +17,8 @@
                 <p class="text-[#565A5B] mt-1">Список всех отделов</p>
             </div>
             <a href="{{ route('departments.create', [
-        'back_url' => route('departments.index'),
-    ]) }}"
+                'back_url' => route('departments.index'),
+            ]) }}"
                 class="inline-flex items-center px-6 py-3 bg-[#A60644] text-white font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -26,6 +26,62 @@
                 Добавить отдел
             </a>
         </div>
+
+
+        <form method="GET" class="flex gap-4 mb-6">
+
+            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск отдела"
+                class="border rounded px-3 py-2">
+
+            <select id="commissariat_id" name="commissariat_id">
+
+                <option value="">
+                    Все комиссариаты
+                </option>
+
+                @foreach ($commissariats as $item)
+                    <option value="{{ $item->id }}" @selected($filters->commissariatId == $item->id)>
+                        {{ $item->name }}
+                    </option>
+                @endforeach
+
+            </select>
+
+            <select name="sort_by" class="border rounded px-3 py-2">
+                <option value="id">
+                    ID
+                </option>
+
+                <option value="name">
+                    Название
+                </option>
+
+                <option value="created_at">
+                    Дата создания
+                </option>
+            </select>
+
+            <select name="sort_direction" class="border rounded px-3 py-2">
+                <option value="desc">
+                    DESC
+                </option>
+
+                <option value="asc">
+                    ASC
+                </option>
+            </select>
+
+            <button type="submit" class="px-4 py-2 bg-black text-white rounded">
+                Применить
+            </button>
+
+            <a href="{{ route('departments.index') }}" class="px-4 py-2 border rounded">
+                Сбросить
+            </a>
+
+        </form>
+
+
 
 
 
@@ -44,75 +100,80 @@
                     </thead>
                     <tbody class="divide-y divide-[#BFBFBF]">
                         @forelse($departments as $department)
-                                            <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
-                                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $department->id }}</td>
+                            <tr class="hover:bg-[#A60644]/5 transition-colors duration-200">
+                                <td class="px-6 py-4 text-[#060606] font-medium">{{ $department->id }}</td>
 
 
-                                                <td class="px-6 py-4 text-[#060606]">
-                                                    <a href="{{ route("departments.show", [
-                                "id" => $department->id,
-                                "back_url" => url()->full()
-                            ]) }}">{{ $department->name }}</a>
-                                                </td>
+                                <td class="px-6 py-4 text-[#060606]">
+                                    <a
+                                        href="{{ route('departments.show', [
+                                            'id' => $department->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}">{{ $department->name }}</a>
+                                </td>
 
 
-                                                <td class="px-6 py-4">
-                                                    <a href="{{ route("employees.show", [
-                                "id" => $department->getChiefAttribute()->id,
-                                "back_url" => url()->full()
-                            ]) }}">{{ optional($department->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
-                                                </td>
+                                <td class="px-6 py-4">
+                                    <a
+                                        href="{{ route('employees.show', [
+                                            'id' => $department->getChiefAttribute()->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}">{{ optional($department->getChiefAttribute())->getFullNameAttribute() ?? '' }}</a>
+                                </td>
 
 
-                                                <td class="px-6 py-4">
-                                                    <a href="{{ route("commissariats.show", [
-                                "id" => $department->commissariat->id,
-                                "back_url" => url()->full()
-                            ]) }}">{{ $department->commissariat->name }}</a>
-                                                </td>
+                                <td class="px-6 py-4">
+                                    <a
+                                        href="{{ route('commissariats.show', [
+                                            'id' => $department->commissariat->id,
+                                            'back_url' => url()->full(),
+                                        ]) }}">{{ $department->commissariat->name }}</a>
+                                </td>
 
-                                                {{-- кнопки --}}
-                                                <td class="px-6 py-4 text-right whitespace-nowrap">
-                                                    <div class="inline-flex items-center gap-2">
-                                                        <!-- Подробнее -->
-                                                        <a href="{{ route('departments.show', ['id' => $department->id, 'back_url' => url()->full()]) }}"
-                                                            class="inline-flex items-center px-3.5 py-1.5 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746c6f]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
-                                                            Подробнее
-                                                        </a>
+                                {{-- кнопки --}}
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-2">
+                                        <!-- Подробнее -->
+                                        <a href="{{ route('departments.show', ['id' => $department->id, 'back_url' => url()->full()]) }}"
+                                            class="inline-flex items-center px-3.5 py-1.5 bg-[#746c6f] text-white text-sm font-medium rounded-lg hover:bg-[#746c6f]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Подробнее
+                                        </a>
 
-                                                        <!-- Редактировать -->
-                                                        <a href="{{ route('departments.edit', ['id' => $department->id, 'back_url' => url()->full()]) }}"
-                                                            class="inline-flex items-center px-3.5 py-1.5 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
-                                                            Редактировать
-                                                        </a>
+                                        <!-- Редактировать -->
+                                        <a href="{{ route('departments.edit', ['id' => $department->id, 'back_url' => url()->full()]) }}"
+                                            class="inline-flex items-center px-3.5 py-1.5 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Редактировать
+                                        </a>
 
-                                                        <!-- Удалить -->
-                                                        <form action="{{ route('departments.delete', $department->id) }}" method="POST"
-                                                            onsubmit="return confirm('Вы уверены, что хотите удалить отдел \'{{ $department->name }}\'?');"
-                                                            class="inline-block">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit"
-                                                                class="inline-flex items-center px-3.5 py-1.5 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
-                                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                                Удалить
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                        <!-- Удалить -->
+                                        <form action="{{ route('departments.delete', $department->id) }}" method="POST"
+                                            onsubmit="return confirm('Вы уверены, что хотите удалить отдел \'{{ $department->name }}\'?');"
+                                            class="inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-flex items-center px-3.5 py-1.5 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/85 transition-colors duration-200 shadow-sm hover:shadow-md">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Удалить
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
                                 <td colspan="5" class="px-6 py-12 text-center">
