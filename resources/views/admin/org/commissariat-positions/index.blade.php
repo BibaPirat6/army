@@ -42,7 +42,65 @@
 
 
 
-        
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+
+            <input type="hidden" name="commissariat_id" value="{{ $commissariat->id }}">
+
+            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск"
+                class="border rounded-lg px-3 py-2">
+
+            <select name="vacancy_status" class="border rounded-lg px-3 py-2">
+                <option value="">
+                    Все статусы
+                </option>
+
+                <option value="vacant" @selected($filters->vacancyStatus === 'vacant')>
+                    Вакант
+                </option>
+
+                <option value="staffed" @selected($filters->vacancyStatus === 'staffed')>
+                    Укомплектовано
+                </option>
+            </select>
+
+            <select id="department_id" name="department_id" class="border rounded-lg px-3 py-2">
+                <option value="">
+                    Все отделы
+                </option>
+
+                @foreach ($departments as $item)
+                    <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>
+                        {{ $item->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select id="division_id" name="division_id" class="border rounded-lg px-3 py-2">
+                <option value="">
+                    Все отделения
+                </option>
+
+                @foreach ($divisions as $item)
+                    <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>
+                        {{ $item->name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <button type="submit" class="bg-[#000000] text-white rounded-lg px-4 py-2">
+                Применить
+            </button>
+
+            <a href="{{ route('commissariat-positions.index', ['commissariat_id' => $commissariat->id]) }}"
+                class="border rounded-lg px-4 py-2 text-center">
+                Сбросить
+            </a>
+
+        </form>
+
+
+
+
 
         <!-- Таблица -->
         <div class="bg-[#e7e1e1] rounded-2xl shadow-lg border border-[#BFBFBF] overflow-hidden">

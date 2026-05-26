@@ -20,7 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
   initTomSelect("#position_type_id");
   initTomSelect("#chief_type_id");
   initTomSelect("#commissariat_id");
-  initTomSelect('#department_id');
+  initTomSelect("#department_id");
+  initTomSelect("#division_id");
 
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) return;

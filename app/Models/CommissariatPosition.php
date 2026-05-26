@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Filters\BaseFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -75,5 +77,18 @@ class CommissariatPosition extends Model
     {
         return $this->hasOne(EmployeePosition::class, 'commissariat_position_id')   
             ->where('employee_position_status_id', 1); // 🔥 ID статуса "работает"
+    }
+
+
+
+
+      /**
+     * Scope filters
+     */
+    public function scopeFilter(
+        Builder $query,
+        BaseFilter $filter,
+    ): Builder {
+        return $filter->apply($query);
     }
 }
