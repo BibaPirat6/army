@@ -42,61 +42,176 @@
 
 
 
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+        <form method="GET" class="bg-white shadow-md rounded-xl p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
+                <input type="hidden" name="commissariat_id" value="{{ $commissariat->id }}">
 
-            <input type="hidden" name="commissariat_id" value="{{ $commissariat->id }}">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Поиск</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="search" name="search" value="{{ $filters->search }}"
+                            placeholder="Поиск по должностям..."
+                            class="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                    </div>
+                </div>
 
-            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск"
-                class="border rounded-lg px-3 py-2">
+                <div>
+                    <label for="vacancy_status" class="block text-sm font-medium text-gray-700 mb-1">Статус штатной должности</label>
+                    <select id="vacancy_status" name="vacancy_status"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">
+                            Все статусы
+                        </option>
+                        <option value="vacant" @selected($filters->vacancyStatus === 'vacant')>
+                            🔴 Вакант
+                        </option>
+                        <option value="staffed" @selected($filters->vacancyStatus === 'staffed')>
+                            🟢 Укомплектовано
+                        </option>
+                    </select>
+                </div>
 
-            <select name="vacancy_status" class="border rounded-lg px-3 py-2">
-                <option value="">
-                    Все статусы
-                </option>
+                <div>
+                    <label for="employee_status" class="block text-sm font-medium text-gray-700 mb-1">Статус назначения
+                        сотрудника</label>
+                    <select id="employee_status" name="employee_status"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">
+                            Все
+                        </option>
+                        <option value="working">
+                            💼 Работает
+                        </option>
+                        <option value="vacation">
+                            🏖️ Отпуск
+                        </option>
+                        <option value="maternity">
+                            👶 Декрет
+                        </option>
+                    </select>
+                </div>
 
-                <option value="vacant" @selected($filters->vacancyStatus === 'vacant')>
-                    Вакант
-                </option>
+                <div>
+                    <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">Отдел</label>
+                    <select id="department_id" name="department_id"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">
+                            Все отделы
+                        </option>
+                        @foreach ($departments as $item)
+                            <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>
+                                {{ $item->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <option value="staffed" @selected($filters->vacancyStatus === 'staffed')>
-                    Укомплектовано
-                </option>
-            </select>
+                <div>
+                    <label for="division_id" class="block text-sm font-medium text-gray-700 mb-1">Отделение</label>
+                    <select id="division_id" name="division_id"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">
+                            Все отделения
+                        </option>
+                        @foreach ($divisions as $item)
+                            <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>
+                                {{ $item->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <select id="department_id" name="department_id" class="border rounded-lg px-3 py-2">
-                <option value="">
-                    Все отделы
-                </option>
+                <div>
+                    <label for="sort_direction" class="block text-sm font-medium text-gray-700 mb-1">Сортировка</label>
+                    <select id="sort_direction" name="sort_direction"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="desc">
+                            ↓ По убыванию
+                        </option>
+                        <option value="asc">
+                            ↑ По возрастанию
+                        </option>
+                    </select>
+                </div>
 
-                @foreach ($departments as $item)
-                    <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>
-                        {{ $item->name }}
-                    </option>
-                @endforeach
-            </select>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Ставка: <span id="rate_min_label"
+                            class="text-indigo-600 font-semibold">{{ $filters->rateMin ?? 0.25 }}</span> — <span
+                            id="rate_max_label" class="text-indigo-600 font-semibold">{{ $filters->rateMax ?? 2 }}</span>
+                    </label>
+                    <div class="relative pt-1 px-1">
+                        <div class="relative h-2">
+                            <div class="absolute inset-0 bg-gray-200 rounded-lg"></div>
+                            <div id="rate_range_track" class="absolute inset-y-0 bg-indigo-400 rounded-lg"
+                                style="left: 0%; right: 0%;"></div>
+                            <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
+                                step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
+                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
+                               [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                               [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
+                               [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full 
+                               [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                               [&::-webkit-slider-thumb]:hover:bg-indigo-700 [&::-webkit-slider-thumb]:transition [&::-webkit-slider-thumb]:duration-150
+                               [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none 
+                               [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-indigo-600 
+                               [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md
+                               [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:hover:bg-indigo-700">
+                            <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
+                                step="0.25" value="{{ $filters->rateMax ?? 2 }}"
+                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
+                               [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                               [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
+                               [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full 
+                               [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                               [&::-webkit-slider-thumb]:hover:bg-indigo-700 [&::-webkit-slider-thumb]:transition [&::-webkit-slider-thumb]:duration-150
+                               [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none 
+                               [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-indigo-600 
+                               [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md
+                               [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:hover:bg-indigo-700">
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0.25</span>
+                        <span>0.5</span>
+                        <span>0.75</span>
+                        <span>1</span>
+                        <span>1.25</span>
+                        <span>1.5</span>
+                        <span>1.75</span>
+                        <span>2</span>
+                    </div>
+                </div>
+            </div>
 
-            <select id="division_id" name="division_id" class="border rounded-lg px-3 py-2">
-                <option value="">
-                    Все отделения
-                </option>
+            <div class="flex items-center space-x-3">
+                <button type="submit"
+                    class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-150 ease-in-out shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Применить
+                </button>
 
-                @foreach ($divisions as $item)
-                    <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>
-                        {{ $item->name }}
-                    </option>
-                @endforeach
-            </select>
-
-            <button type="submit" class="bg-[#000000] text-white rounded-lg px-4 py-2">
-                Применить
-            </button>
-
-            <a href="{{ route('commissariat-positions.index', ['commissariat_id' => $commissariat->id]) }}"
-                class="border rounded-lg px-4 py-2 text-center">
-                Сбросить
-            </a>
-
+                <a href="{{ route('commissariat-positions.index', ['commissariat_id' => $commissariat->id]) }}"
+                    class="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Сбросить
+                </a>
+            </div>
         </form>
+
+
 
 
 
@@ -307,3 +422,43 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        const rateMin = document.getElementById('rate_min');
+        const rateMax = document.getElementById('rate_max');
+        const rateMinLabel = document.getElementById('rate_min_label');
+        const rateMaxLabel = document.getElementById('rate_max_label');
+        const rateRangeTrack = document.getElementById('rate_range_track');
+
+        function updateRateRange() {
+            const min = parseFloat(rateMin.value);
+            const max = parseFloat(rateMax.value);
+
+            if (min > max) {
+                if (this === rateMin) {
+                    rateMax.value = min;
+                } else {
+                    rateMin.value = max;
+                }
+            }
+
+            const finalMin = parseFloat(rateMin.value);
+            const finalMax = parseFloat(rateMax.value);
+
+            const minPercent = ((finalMin - 0.25) / (2 - 0.25)) * 100;
+            const maxPercent = ((finalMax - 0.25) / (2 - 0.25)) * 100;
+
+            rateRangeTrack.style.left = minPercent + '%';
+            rateRangeTrack.style.right = (100 - maxPercent) + '%';
+
+            rateMinLabel.textContent = finalMin;
+            rateMaxLabel.textContent = finalMax;
+        }
+
+        rateMin.addEventListener('input', updateRateRange);
+        rateMax.addEventListener('input', updateRateRange);
+
+        updateRateRange();
+    </script>
+@endpush

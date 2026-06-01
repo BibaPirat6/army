@@ -56,7 +56,7 @@ return new class extends Migration
             $table->unique(['name', 'commissariat_id']);
         });
 
-        Schema::create('    ', function (Blueprint $table) {
+        Schema::create('divisions', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
 
