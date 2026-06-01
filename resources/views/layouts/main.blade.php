@@ -18,7 +18,6 @@
     <meta name="theme-color" content="#ffffff">
     {{-- csrf --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
 
     {{-- styles --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -29,6 +28,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
+        // ------------------ Dropdown logic (существующий) ------------------
         const dropdowns = document.querySelectorAll(".dropdown-btn");
 
         dropdowns.forEach(btn => {
@@ -102,16 +102,57 @@
             });
         });
 
+        // ------------------ Мобильное меню (бургер) ------------------
+        const burgerBtn = document.getElementById('burger-btn');
+        const mainNav = document.getElementById('main-nav');
+        const burgerIcon = document.getElementById('burger-icon');
+        const closeIcon = document.getElementById('close-icon');
+
+        if (burgerBtn && mainNav) {
+            burgerBtn.addEventListener('click', function () {
+                mainNav.classList.toggle('hidden');
+                burgerIcon.classList.toggle('hidden');
+                closeIcon.classList.toggle('hidden');
+            });
+
+            // Закрывать меню при клике на любую ссылку в мобильной версии
+            const navLinks = mainNav.querySelectorAll('a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 768) { // md breakpoint Tailwind
+                        mainNav.classList.add('hidden');
+                        burgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
     });
 </script>
 
-
-
 <body style="background: #f4f0f0">
-    {{-- tetris --}}
 
-    <nav class="navigation fixed top-0 left-0 right-0 z-[900] bg-[#e7e1e1] border-b border-[#BFBFBF] shadow-lg">
-        <ul class="main-nav flex list-none m-0 p-0 gap-5 items-center px-5 py-3">
+<nav class="navigation fixed top-0 left-0 right-0 z-[900] bg-[#e7e1e1] border-b border-[#BFBFBF] shadow-lg">
+    <div class="flex flex-wrap items-center justify-between px-5 py-3">
+        
+        <!-- Бургер-кнопка – появляется на экранах меньше lg (1024px) -->
+        <button id="burger-btn" class="lg:hidden text-[#060606] hover:text-[#A60644] focus:outline-none">
+            <!-- Иконка гамбургера -->
+            <svg id="burger-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <!-- Иконка крестика -->
+            <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+
+        <!-- Основное меню: скрыто на мобильных, видно с lg, размер текста динамический -->
+        <ul id="main-nav" 
+            class="main-nav hidden lg:flex flex-col lg:flex-row list-none m-0 p-0 gap-5 items-start lg:items-center w-full lg:w-auto mt-4 lg:mt-0
+                   text-[clamp(0.8rem,1.5vw,1rem)]">
+            
             @if (auth()->check() && auth()->user()->role?->name === 'admin')
                 <li>
                     <a href="{{ route('persons-columns.index') }}"
@@ -125,21 +166,15 @@
                     </a>
                 </li>
 
-
                 <li class="relative">
-
-                    <!-- Кнопка -->
                     <button type="button"
                         class="dropdown-btn cursor-pointer font-bold text-[#060606] px-3 py-2 flex items-center gap-1 transition-colors duration-200 hover:text-[#A60644]">
-
                         <svg class="w-5 h-5 mr-1 text-[#A60644]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                             </path>
                         </svg>
-
                         Должности
-
                         <svg class="w-4 h-4 transition-transform duration-300 dropdown-arrow" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
@@ -147,11 +182,10 @@
                         </svg>
                     </button>
 
-                    <!-- Меню -->
+                    <!-- Выпадающее меню с динамическим текстом -->
                     <ul class="dropdown-menu absolute top-full left-0 mt-2 bg-[#e7e1e1] border border-[#BFBFBF] rounded-lg shadow-xl list-none m-0 p-2 min-w-[240px] z-[1000]
-                                           hidden opacity-0 scale-95 transition-all duration-200">
-
-                        <!-- ТВОИ ПУНКТЫ МЕНЮ БЕЗ ИЗМЕНЕНИЙ -->
+                                           hidden opacity-0 scale-95 transition-all duration-200
+                                           text-[clamp(0.8rem,1.5vw,1rem)]">
                         <li class="mb-1 last:mb-0">
                             <a href="{{ route('commissariats.index') }}"
                                 class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
@@ -196,7 +230,6 @@
                                 Должности
                             </a>
                         </li>
-
                         <li class="mb-1 last:mb-0">
                             <a href="{{ route('position-types.index') }}"
                                 class="block px-4 py-2 text-[#060606] rounded-lg transition-all duration-200 hover:bg-[#A60644]/10 hover:text-[#A60644] hover:pl-5 flex items-center gap-2">
@@ -210,8 +243,6 @@
                         </li>
                     </ul>
                 </li>
-
-
 
                 <li>
                     <a href="{{ route('employees.index') }}"
@@ -232,65 +263,52 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                        </path>
                     </svg>
                     Структура
                 </a>
             </li>
 
             <li>
-                <a href="{{ route('excel-export.index') }}" class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
-               font-semibold text-sm tracking-wide
-               text-[#217346] bg-white/80 backdrop-blur-sm
-               border border-[#217346]/20
-               shadow-sm hover:shadow-md hover:shadow-[#217346]/10
-               transition-all duration-300 ease-out
-               hover:bg-[#217346] hover:text-white hover:border-[#217346]
-               hover:-translate-y-0.5
-               active:translate-y-0 active:shadow-sm">
-
-                    <!-- Иконка Excel -->
+                <a href="{{ route('excel-export.index') }}" 
+                    class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
+                           font-semibold tracking-wide
+                           text-[clamp(0.7rem,1.2vw,0.875rem)]
+                           text-[#217346] bg-white/80 backdrop-blur-sm
+                           border border-[#217346]/20
+                           shadow-sm hover:shadow-md hover:shadow-[#217346]/10
+                           transition-all duration-300 ease-out
+                           hover:bg-[#217346] hover:text-white hover:border-[#217346]
+                           hover:-translate-y-0.5
+                           active:translate-y-0 active:shadow-sm">
                     <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Контур документа -->
-                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-                            stroke-width="2" />
-                        <!-- Загнутый угол -->
-                        <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                        <!-- Сетка таблицы (2×2 ячейки) -->
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" stroke-width="2" />
+                        <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         <rect x="7" y="12" width="10" height="8" rx="1" stroke-width="1.5" />
                         <line x1="12" y1="12" x2="12" y2="20" stroke-width="1.5" />
                         <line x1="7" y1="16" x2="17" y2="16" stroke-width="1.5" />
                     </svg>
-
                     <span>Excel Export</span>
-
-                    <!-- Мини-иконка стрелки при наведении -->
                     <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
                     </svg>
-
-                    <!-- Подсветка слева -->
-                    <span
-                        class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white rounded-r-full transition-all duration-300 group-hover:h-8"></span>
+                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white rounded-r-full transition-all duration-300 group-hover:h-8"></span>
                 </a>
             </li>
 
-
             <li>
-                <a href="{{ route('calendar.index') }}" class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
-               font-semibold text-sm tracking-wide
-               text-[#EA580C] bg-white/80 backdrop-blur-sm
-               border border-[#3B82F6]/20
-               shadow-sm hover:shadow-md hover:shadow-[#3B82F6]/10
-               transition-all duration-300 ease-out
-               hover:bg-[#EA580C] hover:text-white hover:border-[#EA580C]
-               hover:-translate-y-0.5
-               active:translate-y-0 active:shadow-sm">
-
-                    <!-- Иконка календаря -->
+                <a href="{{ route('calendar.index') }}" 
+                    class="group relative flex items-center gap-2.5 px-4 py-2.5 rounded-lg
+                           font-semibold tracking-wide
+                           text-[clamp(0.7rem,1.2vw,0.875rem)]
+                           text-[#EA580C] bg-white/80 backdrop-blur-sm
+                           border border-[#3B82F6]/20
+                           shadow-sm hover:shadow-md hover:shadow-[#3B82F6]/10
+                           transition-all duration-300 ease-out
+                           hover:bg-[#EA580C] hover:text-white hover:border-[#EA580C]
+                           hover:-translate-y-0.5
+                           active:translate-y-0 active:shadow-sm">
                     <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2" fill="none" />
@@ -301,25 +319,18 @@
                         <rect x="14" y="13" width="3" height="3" rx="0.5" fill="currentColor" />
                         <rect x="7" y="17" width="3" height="3" rx="0.5" fill="currentColor" />
                     </svg>
-
                     <span>Календарь</span>
-
-                    <!-- Мини-иконка стрелки при наведении -->
                     <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
                     </svg>
-
-                    <!-- Подсветка слева -->
-                    <span
-                        class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white rounded-r-full transition-all duration-300 group-hover:h-8"></span>
+                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white rounded-r-full transition-all duration-300 group-hover:h-8"></span>
                 </a>
             </li>
 
-
-
-            <li class="ml-auto">
-                <ul class="flex justify-end items-center">
+            <!-- Профиль/Выйти -->
+            <li class="lg:ml-auto">
+                <ul class="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-0">
                     <li>
                         <form action="{{ route('logout') }}" method="POST" class="m-0">
                             @csrf
@@ -346,9 +357,9 @@
                     </li>
                 </ul>
             </li>
-
         </ul>
-    </nav>
+    </div>
+</nav>
 
     <div class="pt-16"></div>
 
