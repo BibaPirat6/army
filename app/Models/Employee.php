@@ -1,4 +1,5 @@
 <?php
+// app/Models/Employee.php
 
 namespace App\Models;
 
@@ -14,52 +15,65 @@ class Employee extends Model
         'user_id',
         'person_id',
         'work_status_id',
+        'commissariat_id',    // добавим
+        'department_id',      // добавим
+        'division_id',        // добавим
     ];
 
-    /**
-     * Получить пользователя
-     */
+    // Связи с подразделениями
+    public function commissariat(): BelongsTo
+    {
+        return $this->belongsTo(Commissariat::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Получить персону
-     */
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
     }
 
-    /** обратная связь
-     * Получить все должности сотрудника
-     */
     public function employeePositions(): HasMany
     {
         return $this->hasMany(EmployeePosition::class);
+    }
+
+    public function workDays(): HasMany
+    {
+        return $this->hasMany(WorkDay::class);
+    }
+
+    public function taskAssignments(): HasMany
+    {
+        return $this->hasMany(TaskAssignment::class);
     }
 
     protected static function booted()
     {
         static::deleting(function ($employee) {
             $employee->load(['user', 'person']);
-            // При удалении сотрудника — удаляем связанного пользователя
             if ($employee->user) {
                 $employee->user->delete();
             }
-
-            // При удалении сотрудника — удаляем связанную персону
             if ($employee->person) {
                 $employee->person->delete();
             }
         });
     }
 
-    /**
-     * Аксессор: полное ФИО сотрудника
-     * Возвращает: "Иванов Иван Иванович"
-     */
     public function getFullNameAttribute(): string
     {
         if (! $this->person) {
@@ -74,38 +88,27 @@ class Employee extends Model
     }
 
     /**
-     * Получить ID текущего статуса сотрудника (активное назначение)
-     * Возвращает employee_position_status_id из активного назначения
+     * Получить текущую активную должность сотрудника
      */
-    public function getCurrentEmployeePositionStatusId()
+    public function getCurrentEmployeePosition()
     {
-        // Получаем активное назначение сотрудника (которое занимает ставку)
-        $activePosition = $this->employeePositions()
+        return $this->employeePositions()
             ->whereHas('employeePositionStatus', function ($query) {
                 $query->where('occupies_rate', true);
             })
             ->first();
-
-        if ($activePosition) {
-            return $activePosition->employee_position_status_id;
-        }
-
-        // Если нет активного назначения, возвращаем статус по умолчанию (например, 1 - работает)
-        return 1;
     }
 
-    /**
-     * Получить текущую должность сотрудника
-     */
+    public function getCurrentEmployeePositionStatusId()
+    {
+        $activePosition = $this->getCurrentEmployeePosition();
+        return $activePosition?->employee_position_status_id ?? 1;
+    }
+
     public function getCurrentPosition()
     {
-        $activePosition = $this->employeePositions()
-            ->whereHas('employeePositionStatus', function ($query) {
-                $query->where('occupies_rate', true);
-            })
-            ->with('commissariatPosition.position')
-            ->first();
-
+        $activePosition = $this->getCurrentEmployeePosition();
+        
         if ($activePosition && $activePosition->commissariatPosition) {
             return $activePosition->commissariatPosition->position;
         }
@@ -113,24 +116,18 @@ class Employee extends Model
         return null;
     }
 
-    /**
-     * Получить название текущей должности
-     */
     public function getCurrentPositionName()
     {
         $position = $this->getCurrentPosition();
-
-        return $position ? $position->name : null;
+        return $position?->name;
     }
 
-    // В app/Models/Employee.php
-    public function workDays()
+    /**
+     * Получить текущую ставку
+     */
+    public function getCurrentRate()
     {
-        return $this->hasMany(WorkDay::class);
-    }
-
-    public function taskAssignments()
-    {
-        return $this->hasMany(TaskAssignment::class);
+        $activePosition = $this->getCurrentEmployeePosition();
+        return $activePosition?->rate ?? null;
     }
 }

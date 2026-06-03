@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\EmployeeFilterDTO;
+use App\Filters\EmployeeFilter;
+use App\Models\Commissariat;
+use App\Models\Department;
+use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeePosition;
 use App\Models\Person;
-use App\Models\Position;
-use App\Models\PositionType;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\JsonColumnService;
 use Hash;
 use Illuminate\Http\Request;
+use Storage;
 
 // сервисы
 
@@ -27,14 +31,64 @@ class EmployeesController extends Controller
 
     public function index(Request $request)
     {
-        $employees = Employee::orderBy('id', 'desc')->paginate(10);
-        $positions = Position::all();
-        $positionTypes = PositionType::has('positions')->get();
+        // Создаем DTO из запроса
+        $filters = EmployeeFilterDTO::fromRequest($request);
+
+        // Базовый запрос с жадной загрузкой
+        $query = Employee::query()
+            ->with([
+                'user.role',
+                'person',
+                'employeePositions' => function ($q) {
+                    $q->with([
+                        'employeePositionStatus',
+                        'commissariatPosition' => function ($q) {
+                            $q->with([
+                                'position',
+                                'commissariat',
+                                'department',
+                                'division',
+                            ]);
+                        },
+                    ])->orderBy('created_at', 'desc');
+                },
+                'commissariat',
+                'department',
+                'division',
+            ]);
+
+        // Применяем фильтры
+        $employeeFilter = new EmployeeFilter($filters);
+        $employees = $employeeFilter->apply($query)->paginate(15)->withQueryString();
+
+        // Данные для фильтров
+        $commissariats = Commissariat::orderBy('name')->get();
+        $departments = collect();
+        $divisions = collect();
+
+        // Каскадные фильтры
+        if ($filters->commissariatId) {
+            $departments = Department::where('commissariat_id', $filters->commissariatId)
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($filters->departmentId) {
+            $divisions = Division::where('department_id', $filters->departmentId)
+                ->orderBy('name')
+                ->get();
+        } elseif ($filters->commissariatId) {
+            $divisions = Division::where('commissariat_id', $filters->commissariatId)
+                ->orderBy('name')
+                ->get();
+        }
 
         return view('admin.employees.index', compact(
             'employees',
-            'positions',
-            'positionTypes',
+            'filters',
+            'commissariats',
+            'departments',
+            'divisions'
         ));
     }
 
