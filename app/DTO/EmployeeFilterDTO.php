@@ -12,8 +12,7 @@ class EmployeeFilterDTO
         public readonly ?int $commissariatId = null,         // комиссариат
         public readonly ?int $departmentId = null,
         public readonly ?int $divisionId = null,
-        public readonly ?float $rateMin = null,
-        public readonly ?float $rateMax = null,
+        public readonly ?float $rate = null,                 // конкретная ставка (0.25, 0.5, 1, 1.5, 2)
         public readonly ?string $sortBy = 'id',
         public readonly ?string $sortDirection = 'desc',
     ) {}
@@ -27,8 +26,7 @@ class EmployeeFilterDTO
             commissariatId: $request->input('commissariat_id') ? (int)$request->input('commissariat_id') : null,
             departmentId: $request->input('department_id') ? (int)$request->input('department_id') : null,
             divisionId: $request->input('division_id') ? (int)$request->input('division_id') : null,
-            rateMin: $request->input('rate_min') ? (float)$request->input('rate_min') : null,
-            rateMax: $request->input('rate_max') ? (float)$request->input('rate_max') : null,
+            rate: $request->input('rate') ? (float)$request->input('rate') : null,
             sortBy: $request->input('sort_by', 'id'),
             sortDirection: $request->input('sort_direction', 'desc'),
         );

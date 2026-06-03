@@ -34,12 +34,12 @@
 
         <!-- Фильтры -->
         <form method="GET" class="bg-white shadow-md rounded-xl p-4 mb-4" id="filterForm">
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7 gap-3 mb-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">
                 <!-- Поиск -->
                 <div class="col-span-2 md:col-span-1">
                     <input type="text" id="search" name="search" value="{{ $filters->search }}"
                         placeholder="🔍 Поиск (ФИО, логин, должность)..."
-                        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] transition">
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] transition outline-none">
                 </div>
 
                 <!-- Статус сотрудника -->
@@ -62,7 +62,7 @@
                 </div>
 
                 <!-- Комиссариат -->
-                <div class="relative z-30">
+                <div>
                     <select id="commissariat_id" name="commissariat_id" class="tom-select w-full">
                         <option value="">Комиссариат</option>
                         @foreach ($commissariats as $item)
@@ -72,7 +72,7 @@
                 </div>
 
                 <!-- Отдел -->
-                <div class="relative z-30">
+                <div>
                     <select id="department_id" name="department_id" class="tom-select w-full">
                         <option value="">Отдел</option>
                         @foreach ($departments as $item)
@@ -82,12 +82,27 @@
                 </div>
 
                 <!-- Отделение -->
-                <div class="relative z-30">
+                <div>
                     <select id="division_id" name="division_id" class="tom-select w-full">
                         <option value="">Отделение</option>
                         @foreach ($divisions as $item)
                             <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>{{ $item->name }}</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <!-- Ставка -->
+                <div>
+                    <select id="rate" name="rate" class="tom-select w-full">
+                        <option value="">Ставка</option>
+                        <option value="0.25" @selected($filters->rate == 0.25)>0.25</option>
+                        <option value="0.5" @selected($filters->rate == 0.5)>0.5</option>
+                        <option value="0.75" @selected($filters->rate == 0.75)>0.75</option>
+                        <option value="1" @selected($filters->rate == 1)>1.0</option>
+                        <option value="1.25" @selected($filters->rate == 1.25)>1.25</option>
+                        <option value="1.5" @selected($filters->rate == 1.5)>1.5</option>
+                        <option value="1.75" @selected($filters->rate == 1.75)>1.75</option>
+                        <option value="2" @selected($filters->rate == 2)>2.0</option>
                     </select>
                 </div>
 
@@ -109,46 +124,6 @@
                         <option value="desc" @selected($filters->sortDirection === 'desc')>↓ По убыванию</option>
                         <option value="asc" @selected($filters->sortDirection === 'asc')>↑ По возрастанию</option>
                     </select>
-                </div>
-            </div>
-
-            <!-- Range слайдер ставок - отдельная строка -->
-            <div class="mt-4 pt-3 border-t border-gray-200">
-                <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium text-gray-700">Диапазон ставок:</span>
-                    <div class="flex-1 max-w-md">
-                        <div class="flex items-center gap-2 text-xs mb-1"> 
-                            <span class="text-gray-600">от</span>
-                            <span id="rate_min_label"
-                                class="font-semibold text-[#A60644] min-w-[45px]">{{ number_format($filters->rateMin ?? 0.25, 2) }}</span>
-                            <span class="text-gray-400">—</span>
-                            <span class="text-gray-600">до</span>
-                            <span id="rate_max_label"
-                                class="font-semibold text-[#A60644] min-w-[45px]">{{ number_format($filters->rateMax ?? 2, 2) }}</span>
-                        </div>
-                        <div class="relative h-1.5">
-                            <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
-                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644] rounded-full"
-                                style="left: 0%; right: 0%;"></div>
-                            <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
-                                step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
-                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
-                                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                                [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
-                            <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
-                                step="0.25" value="{{ $filters->rateMax ?? 2 }}"
-                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
-                                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                                [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500">
-                        (0.25 - 2.00)
-                    </div>
                 </div>
             </div>
 

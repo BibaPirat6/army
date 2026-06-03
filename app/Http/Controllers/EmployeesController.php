@@ -63,25 +63,12 @@ class EmployeesController extends Controller
 
         // Данные для фильтров
         $commissariats = Commissariat::orderBy('name')->get();
-        $departments = collect();
-        $divisions = collect();
 
-        // Каскадные фильтры
-        if ($filters->commissariatId) {
-            $departments = Department::where('commissariat_id', $filters->commissariatId)
-                ->orderBy('name')
-                ->get();
-        }
+        // Всегда загружаем все отделы (для каскадных фильтров)
+        $departments = Department::orderBy('name')->get();
 
-        if ($filters->departmentId) {
-            $divisions = Division::where('department_id', $filters->departmentId)
-                ->orderBy('name')
-                ->get();
-        } elseif ($filters->commissariatId) {
-            $divisions = Division::where('commissariat_id', $filters->commissariatId)
-                ->orderBy('name')
-                ->get();
-        }
+        // Всегда загружаем все отделения (для каскадных фильтров)
+        $divisions = Division::orderBy('name')->get();
 
         return view('admin.employees.index', compact(
             'employees',

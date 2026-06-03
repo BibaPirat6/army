@@ -17,9 +17,17 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Комиссариат</label>
                 <div class="relative" id="statsCommissariatBlock">
-                    <input type="text" id="statsCommissariatSearch" placeholder="Поиск по комиссариатам..."
-                        autocomplete="off"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <div class="relative">
+                        <input type="text" id="statsCommissariatSearch" placeholder="Поиск по комиссариатам..."
+                            autocomplete="off"
+                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                        <button id="clearSearchBtn" type="button"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100 hidden">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
                     <ul id="statsCommissariatList"
                         class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto hidden">
                     </ul>
@@ -48,6 +56,7 @@
     const commissariatList = document.getElementById('statsCommissariatList');
     const statsResult = document.getElementById('statsResult');
     const statsResultContent = document.getElementById('statsResultContent');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
 
     async function refreshStatsData() {
         try {
@@ -83,6 +92,7 @@
                     commissariatSearch.value = c.name;
                     commissariatList.classList.add('hidden');
                     showStatsResult(c);
+                    updateClearButtonVisibility();
                 });
                 commissariatList.appendChild(li);
             });
@@ -112,14 +122,40 @@
         statsResultContent.innerHTML = html;
     }
 
+    function updateClearButtonVisibility() {
+        if (commissariatSearch.value.trim() !== '') {
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            clearSearchBtn.classList.add('hidden');
+        }
+    }
+
+    function clearSearch() {
+        commissariatSearch.value = '';
+        statsResult.classList.add('hidden');
+        statsResultContent.innerHTML = '';
+        updateClearButtonVisibility();
+        renderCommissariatList('');
+        commissariatList.classList.remove('hidden');
+        commissariatSearch.focus();
+    }
+
+    // Обработчик для кнопки очистки
+    clearSearchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearSearch();
+    });
+
     commissariatSearch.addEventListener('focus', () => {
         commissariatList.classList.remove('hidden');
         renderCommissariatList(commissariatSearch.value);
+        updateClearButtonVisibility();
     });
     
     commissariatSearch.addEventListener('input', () => {
         commissariatList.classList.remove('hidden');
         renderCommissariatList(commissariatSearch.value);
+        updateClearButtonVisibility();
     });
 
     document.addEventListener('click', (e) => {

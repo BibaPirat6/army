@@ -20,10 +20,7 @@ class EmployeeFilter extends BaseFilter
             'commissariat' => $this->data->commissariatId,
             'department' => $this->data->departmentId,
             'division' => $this->data->divisionId,
-            'rateRange' => [
-                'min' => $this->data->rateMin,
-                'max' => $this->data->rateMax,
-            ],
+            'rate' => $this->data->rate,
             'sort' => [
                 'by' => $this->data->sortBy,
                 'direction' => $this->data->sortDirection,
@@ -47,7 +44,7 @@ class EmployeeFilter extends BaseFilter
                     ->orWhere('отчество', 'like', "%{$value}%")
                     ->orWhereRaw("CONCAT(фамилия, ' ', имя, ' ', отчество) LIKE ?", ["%{$value}%"]);
             })
-            // Поиск по логину (User) - убираем email
+            // Поиск по логину (User)
             ->orWhereHas('user', function (Builder $sq) use ($value) {
                 $sq->where('login', 'like', "%{$value}%");
             })
@@ -128,16 +125,15 @@ class EmployeeFilter extends BaseFilter
     }
 
     /**
-     * Фильтр по диапазону ставок
+     * Фильтр по конкретной ставке
      */
-    protected function rateRange(Builder $query, array $range): void
+    protected function rate(Builder $query, ?float $value): void
     {
-        $min = $range['min'] ?? 0.25;
-        $max = $range['max'] ?? 2;
-
-        $query->whereHas('employeePositions', function (Builder $q) use ($min, $max) {
-            $q->whereBetween('rate', [$min, $max]);
-        });
+        if ($value !== null) {
+            $query->whereHas('employeePositions', function (Builder $q) use ($value) {
+                $q->where('rate', $value);
+            });
+        }
     }
 
     /**
@@ -158,10 +154,10 @@ class EmployeeFilter extends BaseFilter
             $query->withSum('employeePositions as occupied_rate', 'rate')
                   ->orderBy('occupied_rate', $direction);
         }
-        // Сортировка по свободным ставкам
+        // Сортировка по свободным ставкам (2 - занятая ставка)
         elseif ($sortBy === 'available_rate') {
             $query->withSum('employeePositions as occupied_rate', 'rate')
-                  ->orderByRaw("(2 - occupied_rate) $direction");
+                  ->orderByRaw("(2 - COALESCE(occupied_rate, 0)) $direction");
         }
         // Сортировка по ФИО
         elseif ($sortBy === 'full_name') {
@@ -181,7 +177,7 @@ class EmployeeFilter extends BaseFilter
         }
         // Сортировка по ID
         else {
-            $query->orderBy('id', $direction);
+            $query->orderBy('employees.id', $direction);
         }
     }
 }
