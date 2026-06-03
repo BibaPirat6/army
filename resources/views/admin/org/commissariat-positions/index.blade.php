@@ -62,7 +62,8 @@
                 </div>
 
                 <div>
-                    <label for="vacancy_status" class="block text-sm font-medium text-gray-700 mb-1">Статус штатной должности</label>
+                    <label for="vacancy_status" class="block text-sm font-medium text-gray-700 mb-1">Статус штатной
+                        должности</label>
                     <select id="vacancy_status" name="vacancy_status"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
                         <option value="">
@@ -284,23 +285,53 @@
                                     </div>
                                 </td>
 
-                                <!-- Назначения (только работающие сотрудники) -->
+                                <!-- Назначения (все сотрудники: работающие, отпуск, декрет) -->
                                 <td class="px-6 py-4">
                                     @if ($pos->employeePositions->count() > 0)
                                         <div class="space-y-2">
                                             @foreach ($pos->employeePositions as $assignment)
+                                                @php
+                                                    $statusId = $assignment->employee_position_status_id;
+                                                    $statusName = $assignment->employeePositionStatus->name ?? '';
+                                                    $isWorking = $statusId == 1;
+                                                    $rate = $isWorking ? number_format($assignment->rate, 2) : '';
+                                                @endphp
+
                                                 <div class="flex items-center justify-between gap-2 text-sm">
-                                                    <a href="{{ route('employees.show', [
-                                                        'id' => $assignment->employee->id,
-                                                        'back_url' => url()->full(),
-                                                    ]) }}"
-                                                        class="text-[#A60644] hover:underline font-medium">
-                                                        {{ $assignment->employee->getFullNameAttribute() }}
-                                                    </a>
-                                                    <span
-                                                        class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">
-                                                        ставка: {{ number_format($assignment->rate, 2) }}
-                                                    </span>
+                                                    <div class="flex items-center gap-2">
+                                                        <a href="{{ route('employees.show', [
+                                                            'id' => $assignment->employee->id,
+                                                            'back_url' => url()->full(),
+                                                        ]) }}"
+                                                            class="text-[#A60644] hover:underline font-medium">
+                                                            {{ $assignment->employee->getFullNameAttribute() }}
+                                                        </a>
+                                                        <!-- Бейдж статуса -->
+                                                        @if ($statusId == 1)
+                                                            <span
+                                                                class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">
+                                                                💼 Работает
+                                                            </span>
+                                                        @elseif($statusId == 2)
+                                                            <span
+                                                                class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs font-medium">
+                                                                🏖️ Отпуск
+                                                            </span>
+                                                        @elseif($statusId == 3)
+                                                            <span
+                                                                class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs font-medium">
+                                                                👶 Декрет
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    <!-- Ставка (только для работающих) -->
+                                                    @if ($isWorking)
+                                                        <span
+                                                            class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">
+                                                            ставка: {{ $rate }}
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -309,27 +340,41 @@
                                     @endif
                                 </td>
 
+
+
                                 <!-- Статус вакансии -->
                                 <td class="px-6 py-4">
-                                    @if ($pos->has_vacancy)
+                                    @php
+                                        $availableRate =
+                                            $pos->available_rate ?? $pos->rate - ($pos->occupied_rate ?? 0);
+                                        $isVacant = $availableRate > 0;
+                                    @endphp
+
+                                    @if ($isVacant)
                                         <div
-                                            class="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 text-blue-800 text-sm font-medium">
+                                            class="inline-flex items-center px-2 py-1 rounded-md bg-red-100 text-red-800 text-sm font-medium">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
-                                            ВАКАНТ
+                                            ВАКАНТНО
                                         </div>
+                                        @if ($availableRate > 0 && $availableRate < $pos->rate)
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                свободно: {{ number_format($availableRate, 2) }} из
+                                                {{ number_format($pos->rate, 2) }}
+                                            </div>
+                                        @endif
                                     @else
                                         <div
                                             class="inline-flex items-center px-2 py-1 rounded-md bg-green-100 text-green-800 text-sm font-medium">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7"></path>
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Укомплектовано
+                                            УКОМПЛЕКТОВАНО
                                         </div>
                                     @endif
                                 </td>

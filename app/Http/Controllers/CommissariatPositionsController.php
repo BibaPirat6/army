@@ -20,117 +20,63 @@ class CommissariatPositionsController extends Controller
 {
     public function index(Request $request)
     {
-        $commissariat = Commissariat::findOrFail(
-            $request->commissariat_id
-        );
+        $commissariat = Commissariat::findOrFail($request->commissariat_id);
 
-        $filters =
-            CommissariatPositionFiltersData::fromRequest(
-                $request
-            );
+        $filters = CommissariatPositionFiltersData::fromRequest($request);
 
-        $commissariatPositions =
-            CommissariatPosition::query()
+        $commissariatPositions = CommissariatPosition::query()
+            ->where('commissariat_id', $commissariat->id)
+            ->with([
+                'position.chiefType',
+                'department',
+                'division',
+                'employeePositions' => function ($query) {
+                    $query
+                        ->with([
+                            'employee.person',
+                            'employeePositionStatus',
+                        ])
+                        // Убираем фильтр, загружаем ВСЕХ сотрудников с статусами 1,2,3
+                        ->whereIn('employee_position_status_id', [1, 2, 3])
+                        ->orderBy('employee_position_status_id'); // Сортируем по статусу
+                },
+            ])
+            ->filter(new CommissariatPositionFilter($filters))
+            ->paginate(20)
+            ->withQueryString();
 
-                ->where(
-                    'commissariat_id',
-                    $commissariat->id
-                )
+        // Вычисляем ставки для каждой позиции
+        $commissariatPositions->getCollection()->transform(function ($position) {
+            // Суммируем ставки ТОЛЬКО для работающих (статус 1)
+            $occupiedRate = $position->employeePositions
+                ->where('employee_position_status_id', 1)
+                ->sum('rate');
 
-                ->with([
+            $position->occupied_rate = round($occupiedRate, 2);
+            $position->available_rate = round($position->rate_total - $occupiedRate, 2);
+            $position->has_vacancy = $position->available_rate > 0;
 
-                    'position.chiefType',
+            return $position;
+        });
 
-                    'department',
-
-                    'division',
-
-                    'employeePositions' => function (
-                        $query
-                    ) {
-
-                        $query
-
-                            ->with([
-                                'employee.person',
-                                'employeePositionStatus',
-                            ])
-
-                            ->whereHas(
-                                'employeePositionStatus',
-                                fn ($query) => $query->where(
-                                    'occupies_rate',
-                                    true
-                                )
-                            );
-                    },
-                ])
-
-                ->filter(
-                    new CommissariatPositionFilter(
-                        $filters
-                    )
-                )
-
-                ->paginate(20)
-
-                ->withQueryString();
-
-        return view(
-            'admin.org.commissariat-positions.index',
-            [
-
-                'commissariat' => $commissariat,
-
-                'commissariatPositions' => $commissariatPositions,
-
-                'filters' => $filters,
-
-                'departments' => Department::query()
-                    ->where(
-                        'commissariat_id',
-                        $commissariat->id
-                    )
-                    ->orderBy('name')
-                    ->get(),
-
-                'divisions' => Division::query()
-                    ->where(
-                        'commissariat_id',
-                        $commissariat->id
-                    )
-                    ->orderBy('name')
-                    ->get(),
-
-                'chiefTypes' => ChiefType::query()
-                    ->orderBy('name')
-                    ->get(),
-
-                'backUrl' => $request->back_url,
-
-                'employeeId' => $request->employeeId,
-            ]
-        );
-    }
-
-    /**
-     * Определяем вес для сортировки по иерархии
-     */
-    private function getSortWeight($position): int
-    {
-        if ($position->position?->chiefType?->name === 'начальник комиссариата') {
-            return 100;
-        }
-        if ($position->position?->chiefType?->name === 'начальник отдела') {
-            return 200;
-        }
-
-        if ($position->position?->chiefType?->name === 'начальник отделения') {
-            return 300;
-        }
-
-        // Приоритет 6: Остальные сотрудники
-        return 400;
+        return view('admin.org.commissariat-positions.index', [
+            'commissariat' => $commissariat,
+            'commissariatPositions' => $commissariatPositions,
+            'filters' => $filters,
+            'departments' => Department::query()
+                ->where('commissariat_id', $commissariat->id)
+                ->orderBy('name')
+                ->get(),
+            'divisions' => Division::query()
+                ->where('commissariat_id', $commissariat->id)
+                ->orderBy('name')
+                ->get(),
+            'chiefTypes' => ChiefType::query()
+                ->orderBy('name')
+                ->get(),
+            'backUrl' => $request->back_url,
+            'employeeId' => $request->employeeId,
+        ]);
     }
 
     /**
