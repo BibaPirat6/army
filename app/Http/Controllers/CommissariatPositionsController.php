@@ -24,7 +24,8 @@ class CommissariatPositionsController extends Controller
 
         $filters = CommissariatPositionFiltersData::fromRequest($request);
 
-        $commissariatPositions = CommissariatPosition::query()
+        // Базовый запрос
+        $query = CommissariatPosition::query()
             ->where('commissariat_id', $commissariat->id)
             ->with([
                 'position.chiefType',
@@ -32,48 +33,100 @@ class CommissariatPositionsController extends Controller
                 'division',
                 'employeePositions' => function ($query) {
                     $query
-                        ->with([
-                            'employee.person',
-                            'employeePositionStatus',
-                        ])
-                        // Убираем фильтр, загружаем ВСЕХ сотрудников с статусами 1,2,3
+                        ->with(['employee.person', 'employeePositionStatus'])
                         ->whereIn('employee_position_status_id', [1, 2, 3])
-                        ->orderBy('employee_position_status_id'); // Сортируем по статусу
+                        ->orderBy('employee_position_status_id');
                 },
-            ])
-            ->filter(new CommissariatPositionFilter($filters))
-            ->paginate(20)
-            ->withQueryString();
+            ]);
 
-        // Вычисляем ставки для каждой позиции
-        $commissariatPositions->getCollection()->transform(function ($position) {
-            // Суммируем ставки ТОЛЬКО для работающих (статус 1)
-            $occupiedRate = $position->employeePositions
-                ->where('employee_position_status_id', 1)
-                ->sum('rate');
+        // Применяем фильтры (включая rateMin и rateMax)
+        $query->filter(new CommissariatPositionFilter($filters));
 
-            $position->occupied_rate = round($occupiedRate, 2);
-            $position->available_rate = round($position->rate_total - $occupiedRate, 2);
-            $position->has_vacancy = $position->available_rate > 0;
+        // Получаем все позиции
+        $allPositions = $query->get();
 
-            return $position;
-        });
+        // Фильтрация по статусу вакансии
+        if ($filters->vacancyStatus === 'vacant') {
+            $allPositions = $allPositions->filter(fn ($p) => $p->has_vacancy);
+        } elseif ($filters->vacancyStatus === 'staffed') {
+            $allPositions = $allPositions->filter(fn ($p) => ! $p->has_vacancy);
+        }
+
+        // Фильтрация по статусу сотрудника
+        if ($filters->employeeStatus) {
+            $statusMap = ['working' => 1, 'vacation' => 2, 'maternity' => 3];
+            $statusId = $statusMap[$filters->employeeStatus] ?? null;
+
+            if ($statusId) {
+                $allPositions = $allPositions->filter(function ($position) use ($statusId) {
+                    return $position->employeePositions->contains('employee_position_status_id', $statusId);
+                });
+            }
+        }
+
+        // Сортировка
+        $sortBy = $filters->sortBy;
+        $sortDirection = $filters->sortDirection === 'asc' ? SORT_ASC : SORT_DESC;
+
+        switch ($sortBy) {
+            case 'vacancy_status':
+                $allPositions = $sortDirection === SORT_ASC
+                    ? $allPositions->sortBy(fn ($p) => $p->has_vacancy)
+                    : $allPositions->sortByDesc(fn ($p) => $p->has_vacancy);
+                break;
+            case 'occupied_rate':
+                $allPositions = $sortDirection === SORT_ASC
+                    ? $allPositions->sortBy(fn ($p) => $p->occupied_rate)
+                    : $allPositions->sortByDesc(fn ($p) => $p->occupied_rate);
+                break;
+            case 'available_rate':
+                $allPositions = $sortDirection === SORT_ASC
+                    ? $allPositions->sortBy(fn ($p) => $p->available_rate)
+                    : $allPositions->sortByDesc(fn ($p) => $p->available_rate);
+                break;
+            case 'rate_total':
+                $allPositions = $sortDirection === SORT_ASC
+                    ? $allPositions->sortBy('rate_total')
+                    : $allPositions->sortByDesc('rate_total');
+                break;
+            default:
+                $allPositions = $sortDirection === SORT_ASC
+                    ? $allPositions->sortBy('id')
+                    : $allPositions->sortByDesc('id');
+                break;
+        }
+
+        // Пагинация
+        $perPage = 20;
+        $currentPage = request()->get('page', 1);
+        $paginatedPositions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allPositions->forPage($currentPage, $perPage),
+            $allPositions->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        // Получаем отделения для текущего отдела
+        $divisions = Division::query()
+            ->where('commissariat_id', $commissariat->id);
+
+        if ($filters->departmentId) {
+            $divisions->where('department_id', $filters->departmentId);
+        }
+
+        $divisions = $divisions->orderBy('name')->get();
 
         return view('admin.org.commissariat-positions.index', [
             'commissariat' => $commissariat,
-            'commissariatPositions' => $commissariatPositions,
+            'commissariatPositions' => $paginatedPositions,
             'filters' => $filters,
             'departments' => Department::query()
                 ->where('commissariat_id', $commissariat->id)
                 ->orderBy('name')
                 ->get(),
-            'divisions' => Division::query()
-                ->where('commissariat_id', $commissariat->id)
-                ->orderBy('name')
-                ->get(),
-            'chiefTypes' => ChiefType::query()
-                ->orderBy('name')
-                ->get(),
+            'divisions' => $divisions,
+            'chiefTypes' => ChiefType::query()->orderBy('name')->get(),
             'backUrl' => $request->back_url,
             'employeeId' => $request->employeeId,
         ]);

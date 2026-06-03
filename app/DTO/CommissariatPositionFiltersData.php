@@ -8,74 +8,34 @@ readonly class CommissariatPositionFiltersData
 {
     public function __construct(
         public ?string $search,
-
         public ?string $vacancyStatus,
-
-        public ?float $rate,
-
+        public ?float $rateMin,
+        public ?float $rateMax,
         public ?int $positionTypeId,
-
         public ?int $chiefTypeId,
-
         public ?int $commissariatId,
-
         public ?int $departmentId,
-
         public ?int $divisionId,
-
-        public ?int $employeePositionStatusId,
-
+        public ?string $employeeStatus,
         public string $sortBy,
-
         public string $sortDirection,
     ) {}
 
-    public static function fromRequest(
-        Request $request,
-    ): self {
-
+    public static function fromRequest(Request $request): self
+    {
         return new self(
-            search: $request->string('search')
-                ->toString() ?: null,
-
-            vacancyStatus: $request->string(
-                'vacancy_status'
-            )->toString() ?: null,
-
-            rate: $request->filled('rate')
-                ? (float) $request->rate
-                : null,
-
-            positionTypeId: $request->integer(
-                'position_type_id'
-            ) ?: null,
-
-            chiefTypeId: $request->integer(
-                'chief_type_id'
-            ) ?: null,
-
-            commissariatId: $request->integer(
-                'commissariat_id'
-            ) ?: null,
-
-            departmentId: $request->integer(
-                'department_id'
-            ) ?: null,
-
-            divisionId: $request->integer(
-                'division_id'
-            ) ?: null,
-
-            employeePositionStatusId: $request->integer(
-                'employee_position_status_id'
-            ) ?: null,
-
-            sortBy: $request->string('sort_by')
-                ->toString() ?: 'id',
-
-            sortDirection: $request->string(
-                'sort_direction'
-            )->toString() ?: 'desc',
+            search: $request->string('search')->toString() ?: null,
+            vacancyStatus: $request->string('vacancy_status')->toString() ?: null,
+            rateMin: $request->filled('rate_min') ? (float) $request->rate_min : 0.25,
+            rateMax: $request->filled('rate_max') ? (float) $request->rate_max : 2,
+            positionTypeId: $request->integer('position_type_id') ?: null,
+            chiefTypeId: $request->integer('chief_type_id') ?: null,
+            commissariatId: $request->integer('commissariat_id') ?: null,
+            departmentId: $request->integer('department_id') ?: null,
+            divisionId: $request->integer('division_id') ?: null,
+            employeeStatus: $request->string('employee_status')->toString() ?: null,
+            sortBy: $request->string('sort_by')->toString() ?: 'id',
+            sortDirection: $request->string('sort_direction')->toString() ?: 'desc',
         );
     }
 }
