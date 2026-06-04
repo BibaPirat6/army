@@ -179,24 +179,21 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
         // ===== ГРАФИКИ РАБОТЫ =====
         Route::prefix('schedule')->name('schedule.')->group(function () {
+            // Настройка графика
             Route::get('/employee/{employee}/setup', [ScheduleController::class, 'setup'])->name('setup');
             Route::post('/employee/{employee}/generate', [ScheduleController::class, 'generate'])->name('generate');
+
+            // Просмотр графика
             Route::get('/employee/{employee}', [ScheduleController::class, 'index'])->name('employee');
+            Route::get('/employee/{employee}/timeline', [ScheduleController::class, 'timeline'])->name('timeline');
 
-            Route::get(
-                '/employee/{employee}/timeline',
-                [ScheduleController::class, 'timeline']
-            )->name('timeline');
-
-            Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])->name('complete');
-
+            // Работа с назначениями (только один маршрут для complete!)
+            Route::get('/assignment-info/{taskAssignment}', [ScheduleController::class, 'assignmentInfo'])
+                ->name('assignment-info');
+            Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])
+                ->name('complete');
             Route::put('/assignment/{taskAssignment}/progress', [ScheduleController::class, 'updateProgress'])
                 ->name('update-progress');
-
-            Route::get('/assignment-info/{taskAssignment}', [ScheduleController::class, 'assignmentInfo'])
-                ->name('schedule.assignment-info');
-            Route::post('/complete/{taskAssignment}', [ScheduleController::class, 'complete'])
-                ->name('schedule.complete');
         });
     });
 
