@@ -174,44 +174,6 @@ class ScheduleController extends Controller
     }
 
     /**
-     * Получение полного имени сотрудника
-     */
-    private function getEmployeeFullName(Employee $employee): string
-    {
-        // Проверяем наличие связи с person через модель Employee
-        if (method_exists($employee, 'person')) {
-            $person = $employee->person;
-
-            if ($person) {
-                $lastName = $person->фамилия ?? $person->last_name ?? '';
-                $firstName = $person->имя ?? $person->first_name ?? '';
-
-                return trim($lastName.' '.$firstName) ?: 'Сотрудник #'.$employee->id;
-            }
-        }
-
-        // Запасной вариант - получаем через employee_positions
-        if (method_exists($employee, 'employeePositions')) {
-            $currentPosition = $employee->employeePositions()
-                ->where('status', 'active')
-                ->first();
-
-            if ($currentPosition && method_exists($currentPosition, 'person')) {
-                $person = $currentPosition->person;
-                if ($person) {
-                    $lastName = $person->фамилия ?? $person->last_name ?? '';
-                    $firstName = $person->имя ?? $person->first_name ?? '';
-
-                    return trim($lastName.' '.$firstName) ?: 'Сотрудник #'.$employee->id;
-                }
-            }
-        }
-
-        // Если ничего не нашли - возвращаем ID
-        return 'Сотрудник #'.$employee->id;
-    }
-
-    /**
      * Отметка выполнения задачи
      */
     public function complete(Request $request, TaskAssignment $taskAssignment): JsonResponse
@@ -364,12 +326,11 @@ class ScheduleController extends Controller
             $meta['priority'] = $assignment?->priority ?? 999;
         }
 
-        $blocks = $timelineBuilder->build($dayData);
+        $timeline = $timelineBuilder->build($dayData);
 
         return view(
             'admin.calendar.schedule.timeline',
-            compact('employee', 'date', 'dayData', 'blocks')
+            compact('employee', 'date', 'timeline')
         );
     }
-
 }

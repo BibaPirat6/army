@@ -1,55 +1,52 @@
 @extends('layouts.main')
 
 @section('content')
+<div class="max-w-full mx-auto p-6">
 
-
-    <div class="max-w-7xl mx-auto p-6">
-
-        <a href="{{ route('calendar.index') }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    {{-- Навигация --}}
+    <div class="flex items-center gap-4 mb-4">
+        <a href="{{ route('calendar.index') }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Назад к календарю
+            Календарь
         </a>
-        <a href="{{ route('calendar.matrix.index', $employee->employeePosition?->commissariatPosition?->commissariat_id ?? 1) }}"
-            class="text-indigo-600 hover:text-indigo-800 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{{ route('calendar.schedule.employee', $employee->id) }}" class="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Назад к матрице
+            График сотрудника
         </a>
-
-        <div class="flex items-center gap-2 text-xs text-gray-500">
-            <span>График сотрудника на день</span>
-        </div>
-
-
-
-        @include('admin.calendar.schedule.components.timeline.timeline-header', [
-            'employee' => $employee,
-            'date' => $date,
-        ])
-
-        <div
-            class="
-        bg-white
-        rounded-3xl
-        border
-        shadow-sm
-        overflow-hidden
-        mt-6
-    ">
-            <div class="flex h-[900px] overflow-y-auto">
-
-                @include('admin.calendar.schedule.components.timeline.timeline-hours')
-
-                @include('admin.calendar.schedule.components.timeline.timeline-grid', [
-                    'blocks' => $blocks,
-                    'date' => $date,
-                ])
-
-            </div>
-        </div>
-
     </div>
+
+    @include('admin.calendar.schedule.components.timeline.timeline-header', [
+        'employee' => $employee,
+        'date' => $date,
+    ])
+
+    @include('admin.calendar.schedule.components.timeline.horizontal-timeline', [
+        'timeline' => $timeline,
+        'date' => $date,
+    ])
+
+</div>
 @endsection
+
+@push('styles')
+<style>
+    .timeline-scroll::-webkit-scrollbar {
+        height: 8px;
+    }
+    .timeline-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 8px;
+    }
+    .timeline-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 8px;
+    }
+    .timeline-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+@endpush
