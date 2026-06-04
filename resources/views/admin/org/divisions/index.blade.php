@@ -30,46 +30,53 @@
 
 
 
-        <form method="GET" class="flex gap-4 mb-6">
+        <form method="GET"
+            class="flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
 
-            <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск отделения"
-                class="border rounded px-3 py-2">
+            <div class="relative flex-1 min-w-[200px]">
+                <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" name="search" value="{{ $filters->search }}" placeholder="Поиск отделения..."
+                    class="w-full pl-9 pr-3 py-2 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black focus:border-black outline-none transition">
+            </div>
 
-            <select id="commissariat_id" name="commissariat_id">
+            <div class="w-56">
+                <select id="commissariat_id" name="commissariat_id"
+                    class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg outline-none transition bg-white">
+                    <option value="">Все комиссариаты</option>
+                    @foreach ($commissariats as $item)
+                        <option value="{{ $item->id }}" @selected($filters->commissariatId == $item->id)>
+                            {{ $item->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                <option value="">
-                    Все комиссариаты
-                </option>
+            <div class="w-56">
+                <select id="department_id" name="department_id"
+                    class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg outline-none transition bg-white">
+                    <option value="">Все отделы</option>
+                    @foreach ($departments as $item)
+                        <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>
+                            {{ $item->name }} &larr; {{ $item->commissariat->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                @foreach ($commissariats as $item)
-                    <option value="{{ $item->id }}" @selected($filters->commissariatId == $item->id)>
-                        {{ $item->name }}
-                    </option>
-                @endforeach
-
-            </select>
-
-            <select id="department_id" name="department_id">
-
-                <option value="">
-                    Все отделы
-                </option>
-
-                @foreach ($departments as $item)
-                    <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>
-                        {{ $item->name }} <- {{ $item->commissariat->name }}
-                    </option>
-                @endforeach
-
-            </select>
-
-            <button type="submit" class="px-4 py-2 bg-black text-white rounded">
-                Применить
-            </button>
-
-            <a href="{{ route('divisions.index') }}" class="px-4 py-2 border rounded">
-                Сбросить
-            </a>
+            <div class="flex gap-2 ml-auto">
+                <button type="submit"
+                    class="px-5 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black transition shadow-sm">
+                    Применить
+                </button>
+                <a href="{{ route('divisions.index') }}"
+                    class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                    Сбросить
+                </a>
+            </div>
 
         </form>
 
