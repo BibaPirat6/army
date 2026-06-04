@@ -1,169 +1,140 @@
-{{-- Модальное окно статистики --}}
-<div id="statsModal" class="fixed inset-0 z-[999] hidden overflow-y-auto" aria-hidden="true">
-    <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="closeStatsModal()"></div>
-    <div class="relative min-h-screen flex items-center justify-center p-4">
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 z-10">
-            <div class="flex items-center justify-between mb-5">
-                <h3 class="text-lg font-semibold text-gray-800">Статистика задач по подразделениям</h3>
-                <button type="button" onclick="closeStatsModal()"
-                    class="text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100">
+{{-- Модальное окно статистики по комиссариатам --}}
+<div id="statsModal" 
+     class="fixed inset-0 z-[999] hidden" 
+     aria-hidden="true"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="statsModalTitle">
+    
+    {{-- Оверлей --}}
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" 
+         onclick="closeStatsModal()"
+         aria-hidden="true"></div>
+    
+    {{-- Центрирование --}}
+    <div class="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
+        
+        {{-- Контейнер --}}
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg 
+                    max-h-[85vh] min-h-[500px]
+                    flex flex-col
+                    overflow-hidden transform transition-all duration-300 z-10">
+            
+            {{-- Хедер --}}
+            <div class="flex-shrink-0 flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-white">
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 p-2.5 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl shadow-lg shadow-slate-700/20">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 id="statsModalTitle" class="text-lg sm:text-xl font-bold text-gray-900">
+                        Статистика по подразделениям
+                    </h3>
+                </div>
+                
+                <button type="button" 
+                        onclick="closeStatsModal()"
+                        class="flex-shrink-0 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 
+                               rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 
+                               focus:ring-slate-500"
+                        aria-label="Закрыть модальное окно">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-
-            {{-- Комиссариаты --}}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Комиссариат</label>
-                <div class="relative" id="statsCommissariatBlock">
-                    <div class="relative">
-                        <input type="text" id="statsCommissariatSearch" placeholder="Поиск по комиссариатам..."
-                            autocomplete="off"
-                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
-                        <button id="clearSearchBtn" type="button"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition p-1 rounded-full hover:bg-gray-100 hidden">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+            
+            {{-- Тело (растягивается на всю доступную высоту) --}}
+            <div class="flex-1 p-5 sm:p-6 overflow-y-auto">
+                
+                {{-- Поиск --}}
+                <div class="mb-4">
+                    <label for="statsCommissariatSearch" 
+                           class="block text-sm font-medium text-gray-700 mb-2">
+                        Поиск комиссариата
+                    </label>
+                    
+                    <div id="statsCommissariatBlock" class="relative">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            
+                            <input type="text" 
+                                   id="statsCommissariatSearch" 
+                                   placeholder="Введите название комиссариата..."
+                                   autocomplete="off"
+                                   class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl 
+                                          focus:ring-2 focus:ring-slate-500 focus:border-slate-500 
+                                          outline-none transition-all duration-200 text-gray-800
+                                          placeholder-gray-400 bg-white shadow-sm">
+                            
+                            <button id="clearSearchBtn" 
+                                    type="button"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 
+                                           hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all 
+                                           duration-200 hidden"
+                                    aria-label="Очистить поиск">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <ul id="statsCommissariatList"
+                            class="absolute left-0 right-0 z-50 mt-2 bg-white border border-gray-200 
+                                   rounded-xl shadow-xl max-h-72 overflow-auto hidden"
+                            role="listbox"
+                            aria-label="Список комиссариатов">
+                        </ul>
                     </div>
-                    <ul id="statsCommissariatList"
-                        class="absolute left-0 right-0 z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto hidden">
-                    </ul>
+                </div>
+                
+                {{-- Результат --}}
+                <div id="statsResult" 
+                     class="mt-4 p-5 bg-gradient-to-br from-slate-50 to-white rounded-xl 
+                            border border-gray-200 shadow-sm hidden">
+                    <div id="statsResultContent" class="space-y-2"></div>
                 </div>
             </div>
-
-            {{-- Результат --}}
-            <div id="statsResult" class="mt-4 p-4 bg-gray-50 rounded-lg hidden">
-                <h4 class="font-medium text-gray-700 mb-2">Сводка</h4>
-                <div id="statsResultContent" class="space-y-2 text-sm"></div>
-            </div>
-
-            <div class="flex justify-end mt-5 pt-4 border-t border-gray-200">
-                <button type="button" onclick="closeStatsModal()"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Закрыть</button>
+            
+            {{-- Футер --}}
+            <div class="flex-shrink-0 flex justify-end gap-3 px-5 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                <button type="button" 
+                        onclick="closeStatsModal()"
+                        class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 
+                               hover:bg-gray-50 rounded-xl transition-all duration-200 
+                               focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-sm
+                               active:scale-[0.98]">
+                    Закрыть
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-(function () {
-    let statsData = @json($taskStats);
-
-    const commissariatSearch = document.getElementById('statsCommissariatSearch');
-    const commissariatList = document.getElementById('statsCommissariatList');
-    const statsResult = document.getElementById('statsResult');
-    const statsResultContent = document.getElementById('statsResultContent');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-
-    async function refreshStatsData() {
-        try {
-            const response = await fetch('/calendar/stats');
-            if (response.ok) {
-                statsData = await response.json();
-                if (!document.getElementById('statsModal').classList.contains('hidden') && commissariatSearch.value) {
-                    const selected = statsData.find(c => c.name === commissariatSearch.value);
-                    if (selected) {
-                        commissariatSearch.value = selected.name;
-                        showStatsResult(selected);
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Ошибка обновления статистики:', e);
-        }
+@push('styles')
+<style>
+    /* Кастомный скроллбар */
+    #statsCommissariatList::-webkit-scrollbar {
+        width: 6px;
     }
-
-    function renderCommissariatList(filter = '') {
-        const q = filter.toLowerCase().trim();
-        commissariatList.innerHTML = '';
-        const filtered = statsData.filter(c => !q || c.name.toLowerCase().includes(q));
-        
-        if (filtered.length === 0) {
-            commissariatList.innerHTML = '<div class="px-4 py-2 text-gray-400 text-sm">Ничего не найдено</div>';
-        } else {
-            filtered.forEach(c => {
-                const li = document.createElement('li');
-                li.className = 'px-4 py-2 cursor-pointer hover:bg-indigo-50 flex justify-between items-center';
-                li.innerHTML = `<span>${c.name}</span><span class="text-xs text-gray-500">Задач: ${c.total}</span>`;
-                li.addEventListener('click', () => {
-                    commissariatSearch.value = c.name;
-                    commissariatList.classList.add('hidden');
-                    showStatsResult(c);
-                    updateClearButtonVisibility();
-                });
-                commissariatList.appendChild(li);
-            });
-        }
-    }
-
-    function showStatsResult(c) {
-        statsResult.classList.remove('hidden');
-        let html = `
-            <div class="flex justify-between"><span class="text-gray-500">🏛 Комиссариат:</span><span class="font-medium">${c.name}</span></div>
-            <div class="flex justify-between border-t pt-1 mt-1"><span class="font-semibold text-gray-700">Общее количество задач:</span><span class="font-bold text-indigo-700">${c.total}</span></div>
-        `;
-
-        if (c.total > 0) {
-            html += `
-                <div class="mt-3 pt-3 border-t border-gray-200">
-                    <a href="/calendar/matrix/${c.id}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                        </svg>
-                        Матрица сотрудников
-                    </a>
-                </div>
-            `;
-        }
-
-        statsResultContent.innerHTML = html;
-    }
-
-    function updateClearButtonVisibility() {
-        if (commissariatSearch.value.trim() !== '') {
-            clearSearchBtn.classList.remove('hidden');
-        } else {
-            clearSearchBtn.classList.add('hidden');
-        }
-    }
-
-    function clearSearch() {
-        commissariatSearch.value = '';
-        statsResult.classList.add('hidden');
-        statsResultContent.innerHTML = '';
-        updateClearButtonVisibility();
-        renderCommissariatList('');
-        commissariatList.classList.remove('hidden');
-        commissariatSearch.focus();
-    }
-
-    // Обработчик для кнопки очистки
-    clearSearchBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        clearSearch();
-    });
-
-    commissariatSearch.addEventListener('focus', () => {
-        commissariatList.classList.remove('hidden');
-        renderCommissariatList(commissariatSearch.value);
-        updateClearButtonVisibility();
-    });
     
-    commissariatSearch.addEventListener('input', () => {
-        commissariatList.classList.remove('hidden');
-        renderCommissariatList(commissariatSearch.value);
-        updateClearButtonVisibility();
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!document.getElementById('statsCommissariatBlock')?.contains(e.target)) {
-            commissariatList.classList.add('hidden');
-        }
-    });
-
-    window.refreshStatsData = refreshStatsData;
-})();
-</script>
+    #statsCommissariatList::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    #statsCommissariatList::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    #statsCommissariatList::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+@endpush
