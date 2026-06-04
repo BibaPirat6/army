@@ -10,10 +10,6 @@
             <div class="w-4 h-4 rounded" style="background: repeating-linear-gradient(45deg, #fef3c7 0px, #fef3c7 4px, #fde68a 4px, #fde68a 8px);"></div>
             <span class="text-sm text-gray-600">Перерывы</span>
         </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded bg-green-100 border border-green-300"></div>
-            <span class="text-sm text-gray-600">Рабочее время</span>
-        </div>
     </div>
 
     {{-- Временная шкала --}}

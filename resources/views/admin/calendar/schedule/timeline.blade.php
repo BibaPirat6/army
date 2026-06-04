@@ -1,5 +1,48 @@
 @extends('layouts.main')
 
+
+
+
+<style>
+    /* Плавные переходы для всех интерактивных элементов */
+.timeline-block {
+    @apply transition-all duration-200 ease-in-out;
+}
+
+.timeline-block:hover {
+    @apply shadow-xl -translate-y-1;
+    filter: brightness(1.1);
+}
+
+/* Анимация появления блоков */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.horizontal-timeline .absolute {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Стили для линии текущего времени */
+.current-time-line {
+    @apply absolute w-0.5 bg-red-500 z-20;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.current-time-line::before {
+    content: '';
+    @apply absolute -left-1 -top-1 w-2.5 h-2.5 bg-red-500 rounded-full;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+</style>
+
 @section('content')
 <div class="max-w-full mx-auto p-6">
 

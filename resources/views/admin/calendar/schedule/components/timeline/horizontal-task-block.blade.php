@@ -1,7 +1,7 @@
 <div 
     class="absolute top-2 rounded-xl shadow-sm border-2 border-white/20 cursor-pointer
            hover:shadow-lg hover:scale-[1.02] hover:z-30 transition-all duration-200
-           overflow-hidden group"
+           overflow-hidden group" overflow-hidden group" title="{{ $block['title'] }} {{ $block['start'] }}-{{ $block['end'] }} ({{ $block['duration'] }} мин)"
     style="
         left: {{ $leftPercent }}%;
         width: {{ max($widthPercent, 1) }}%;
