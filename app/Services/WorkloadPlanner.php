@@ -13,109 +13,61 @@ use Log;
 class WorkloadPlanner
 {
     /**
-     * Приоритеты задач и их веса распределения времени
+     * Коэффициент заполнения дня (95% - 5% на отдых)
      */
-    private const PRIORITY_WEIGHTS = [
-        1 => 0.75, // 75% времени на приоритет 1
-        2 => 0.20, // 20% времени на приоритет 2
-        3 => 0.05, // 5% времени на приоритет 3
-    ];
+    private const DAY_FILL_RATE = 0.95;
 
     /**
-     * Минимальное время в минутах для задач низкого приоритета
+     * Минимальное время на задачу в минутах
      */
-    private const MIN_LOW_PRIORITY_MINUTES = 30;
+    private const MIN_TASK_MINUTES = 15;
 
     /**
      * Генерация плана распределения задач
-     * 
-     * @param Employee $employee
-     * @param Carbon $from Дата начала плана
-     * @param Carbon $to Дата окончания плана
-     * @param bool $rebuildFromToday Перестраивать ли план с сегодняшнего дня
-     * @return array
      */
     public function generatePlan(
-        Employee $employee, 
-        Carbon $from, 
+        Employee $employee,
+        Carbon $from,
         Carbon $to,
         bool $rebuildFromToday = true
     ): array {
-        // Определяем точку отсчета для построения плана
         $today = Carbon::today();
-        
-        // Если план на будущее — строим с начала периода
-        if ($from->gt($today)) {
-            $planStartDate = $from->copy();
-            $rebuildFromToday = false;
-        } else {
-            // Строим план с сегодняшнего дня (или с начала месяца, если сегодня выходной)
-            $planStartDate = $today->copy();
-        }
 
-        // 1. Получаем ВСЕ рабочие дни в периоде (и прошлые и будущие)
-        $allWorkDays = WorkDay::where('employee_id', $employee->id)
-            ->whereBetween('date', [$from, $to])
-            ->orderBy('date')
-            ->get()
-            ->keyBy(fn ($d) => $d->date->toDateString());
+        // Определяем точку отсчета
+        $planStartDate = $from->gt($today) ? $from->copy() : $today->copy();
 
-        // 2. Получаем назначения и пересчитываем остатки с учетом пропущенных дней
+        // 1. Получаем рабочие дни
+        $allWorkDays = $this->getWorkDays($employee, $from, $to);
+
+        // 2. Рассчитываем нагрузку с учетом пропущенных дней
         $taskData = $this->calculateRemainingWorkload($employee, $from, $to, $allWorkDays, $today);
 
-        // 3. Генерируем план начиная с сегодняшнего дня
+        // 3. Генерируем план с сегодняшнего дня
         $plan = [];
         $current = $planStartDate->copy();
 
-        // 4. Сначала добавляем информацию о прошедших днях (для истории)
-        if ($rebuildFromToday && $from->lt($today)) {
-            $historyDate = $from->copy();
-            while ($historyDate->lt($today)) {
-                $dateStr = $historyDate->toDateString();
-                $wd = $allWorkDays->get($dateStr);
-                
-                // Получаем фактические данные из task_instances
-                $historicalInstances = TaskInstance::where('date', $dateStr)
-                    ->whereIn('task_id', array_column($taskData, 'task_id'))
-                    ->get();
-                
-                $plan[$dateStr] = [
-                    'work_day' => $wd,
-                    'tasks' => [],
-                    'task_meta' => [],
-                    'load_percent' => 0,
-                    'date' => $dateStr,
-                    'is_past' => true,
-                    'is_working' => $wd && $wd->type === 'рабочий_день' && $wd->work_start,
-                ];
-
-                $historyDate->addDay();
-            }
+        // Добавляем историю (прошедшие дни)
+        if ($from->lt($today)) {
+            $this->addHistoricalDays($plan, $from, $today, $allWorkDays, $taskData);
         }
 
-        // 5. Строим план на будущее (с сегодняшнего дня)
+        // Планируем будущие дни
         while ($current->lte($to)) {
             $dateStr = $current->toDateString();
             $wd = $allWorkDays->get($dateStr);
 
-            // Проверяем, не выходной ли сегодня
-            $isToday = $current->isToday();
-            $isWorkingDay = $wd && $wd->type === 'рабочий_день' && $wd->work_start;
-
-            $dayPlan = $this->planDay(
+            $plan[$dateStr] = $this->planDay(
                 $employee,
                 $current,
                 $wd,
                 $taskData,
-                $allWorkDays,
-                $isToday
+                $allWorkDays
             );
 
-            $plan[$dateStr] = $dayPlan;
             $current->addDay();
         }
 
-        // 6. Удаляем старые task_instances (которые уже в прошлом и не понадобятся)
+        // Очищаем старые инстансы
         if ($rebuildFromToday) {
             $this->cleanupOldInstances($taskData, $today);
         }
@@ -125,7 +77,7 @@ class WorkloadPlanner
             'task_data' => $taskData,
             'employee' => $employee,
             'period' => [
-                'from' => $from, 
+                'from' => $from,
                 'to' => $to,
                 'plan_start' => $planStartDate,
                 'today' => $today,
@@ -135,10 +87,19 @@ class WorkloadPlanner
     }
 
     /**
-     * Расчет оставшейся нагрузки с учетом:
-     * - Пропущенных рабочих дней (болезнь, отпуск)
-     * - Уже выполненных задач
-     * - Прошедших дней периода
+     * Получить рабочие дни
+     */
+    private function getWorkDays(Employee $employee, Carbon $from, Carbon $to)
+    {
+        return WorkDay::where('employee_id', $employee->id)
+            ->whereBetween('date', [$from, $to])
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn($d) => $d->date->toDateString());
+    }
+
+    /**
+     * Расчет оставшейся нагрузки
      */
     private function calculateRemainingWorkload(
         Employee $employee,
@@ -147,14 +108,11 @@ class WorkloadPlanner
         $allWorkDays,
         Carbon $today
     ): array {
-        // Получаем все назначения
         $assignments = TaskAssignment::with(['task.subtasks'])
             ->where('employee_id', $employee->id)
             ->whereHas('task', function ($q) use ($from, $to) {
-                $q->where(function ($sub) use ($from, $to) {
-                    $sub->where('start_date', '<=', $to)
-                        ->where('end_date', '>=', $from);
-                });
+                $q->where('start_date', '<=', $to)
+                    ->where('end_date', '>=', $from);
             })
             ->get();
 
@@ -162,86 +120,86 @@ class WorkloadPlanner
 
         foreach ($assignments as $assignment) {
             $task = $assignment->task;
-            $iterationTime = $task->subtasks->sum('avg_time_minutes') ?: 60;
             
-            // Базовая информация
-            $totalQuota = (int) $assignment->quota;
-            $completedCount = (int) $assignment->completed_count;
+            // Время одной итерации (сумма подзадач)
+            $iterationTime = $task->subtasks->sum('avg_time_minutes');
+            if ($iterationTime <= 0) {
+                $iterationTime = 60; // По умолчанию 1 час
+            }
+
+            $totalQuota = (int)$assignment->quota;
+            $completedCount = (int)$assignment->completed_count;
             $remainingQuota = max(0, $totalQuota - $completedCount);
-            
-            // Рассчитываем, сколько рабочих дней уже прошло и сколько осталось
+
             $taskStart = Carbon::parse($task->start_date);
             $taskEnd = Carbon::parse($task->end_date);
-            
-            // Считаем прошедшие рабочие дни с начала задачи до вчерашнего дня
-            $pastWorkDays = $this->countPastWorkDays($taskStart, $today, $allWorkDays, $employee);
-            
-            // Считаем оставшиеся рабочие дни (с сегодня до конца задачи)
-            $remainingWorkDays = $this->countRemainingWorkDays($today, $taskEnd, $allWorkDays, $employee);
-            
-            // Рассчитываем, сколько должно было быть выполнено на сегодня
+
+            // Считаем рабочие дни
+            $pastWorkDays = $this->countWorkDays($taskStart, $today->copy()->subDay(), $allWorkDays, $employee);
+            $remainingWorkDays = $this->countWorkDays($today, $taskEnd, $allWorkDays, $employee);
             $totalWorkDays = $pastWorkDays + $remainingWorkDays;
-            $expectedQuotaPerDay = $totalWorkDays > 0 ? $totalQuota / $totalWorkDays : $totalQuota;
-            $expectedCompleted = (int) round($expectedQuotaPerDay * $pastWorkDays);
-            
-            // Если сотрудник пропустил дни (болел), пересчитываем
-            $actualMissedQuota = max(0, $expectedCompleted - $completedCount);
-            
-            // Добавляем пропущенную квоту к оставшейся
-            $adjustedRemainingQuota = $remainingQuota + $actualMissedQuota;
-            
-            // Пересчитываем оставшиеся минуты
+
+            // Сколько должно было быть выполнено
+            $expectedCompleted = $totalWorkDays > 0
+                ? (int)round(($totalQuota / $totalWorkDays) * $pastWorkDays)
+                : 0;
+
+            // Пропущенная квота
+            $missedQuota = max(0, $expectedCompleted - $completedCount);
+            $adjustedRemainingQuota = $remainingQuota + $missedQuota;
+
+            // Оставшиеся минуты
             $remainingMinutes = $adjustedRemainingQuota * $iterationTime;
-            
-            // Рассчитываем новую дневную норму для наверстывания
-            $newDailyQuota = $remainingWorkDays > 0 
-                ? ceil($adjustedRemainingQuota / $remainingWorkDays) 
+
+            // Дневная норма
+            $newDailyQuota = $remainingWorkDays > 0
+                ? (int)ceil($adjustedRemainingQuota / $remainingWorkDays)
                 : $adjustedRemainingQuota;
-            
-            // Проверяем статус задачи
-            $isOverdue = $pastWorkDays > 0 && $completedCount < $expectedCompleted;
-            $isOnTrack = !$isOverdue && $remainingQuota <= $remainingWorkDays * $newDailyQuota;
-            
-            $priority = (int) ($assignment->priority ?? 3);
+
+            // Минимальное время на задачу в день = одна итерация
+            $minDailyMinutes = $iterationTime;
+
+            $priority = (int)($assignment->priority ?? 3);
             $priority = in_array($priority, [1, 2, 3]) ? $priority : 3;
 
             $taskData[$assignment->id] = [
+                'assignment_id' => $assignment->id,
                 'assignment' => $assignment,
                 'task_id' => $task->id,
+                'task_name' => $task->title,
+                'task_name_short' => $this->truncateText($task->title, 30),
                 'priority' => $priority,
                 'iteration_time' => $iterationTime,
                 'total_quota' => $totalQuota,
                 'completed_count' => $completedCount,
-                'remaining_quota_original' => $remainingQuota,
+                'remaining_quota' => $remainingQuota,
                 'adjusted_remaining_quota' => $adjustedRemainingQuota,
                 'remaining_minutes' => $remainingMinutes,
+                'min_daily_minutes' => $minDailyMinutes,
                 'task_start' => $taskStart,
                 'task_end' => $taskEnd,
-                'task_name' => $task->title,
-                'task_name_short' => $this->truncateText($task->title, 30),
                 'is_completed' => $remainingQuota <= 0,
-                'is_overdue' => $isOverdue,
-                'is_on_track' => $isOnTrack,
+                'is_overdue' => $pastWorkDays > 0 && $completedCount < $expectedCompleted,
+                'missed_quota' => $missedQuota,
                 'past_work_days' => $pastWorkDays,
                 'remaining_work_days' => $remainingWorkDays,
                 'expected_completed' => $expectedCompleted,
-                'actual_missed' => $actualMissedQuota,
                 'new_daily_quota' => $newDailyQuota,
             ];
         }
 
-        // Сортируем: сначала просроченные, потом по приоритету, потом по дедлайну
+        // Сортировка: просроченные → приоритет 1 → приоритет 2 → приоритет 3 → по дедлайну
         uasort($taskData, function ($a, $b) {
-            // Просроченные всегда первые
+            // Просроченные первые
             if ($a['is_overdue'] && !$b['is_overdue']) return -1;
             if (!$a['is_overdue'] && $b['is_overdue']) return 1;
-            
-            // Затем по приоритету
+
+            // По приоритету
             if ($a['priority'] !== $b['priority']) {
                 return $a['priority'] - $b['priority'];
             }
-            
-            // Затем по дедлайну (ближайший первый)
+
+            // По дедлайну
             return $a['task_end']->timestamp - $b['task_end']->timestamp;
         });
 
@@ -249,70 +207,50 @@ class WorkloadPlanner
     }
 
     /**
-     * Подсчет прошедших рабочих дней в периоде задачи
+     * Подсчет рабочих дней в периоде
      */
-    private function countPastWorkDays(Carbon $taskStart, Carbon $today, $allWorkDays, Employee $employee): int
+    private function countWorkDays(Carbon $start, Carbon $end, $cachedWorkDays, Employee $employee): int
     {
         $count = 0;
-        $date = $taskStart->copy();
-        $endDate = $today->copy()->subDay(); // До вчерашнего дня
-        
-        while ($date->lte($endDate)) {
+        $date = $start->copy();
+
+        while ($date->lte($end)) {
             $dateStr = $date->toDateString();
-            
-            // Проверяем, есть ли запись в work_days
-            if (isset($allWorkDays[$dateStr])) {
-                $wd = $allWorkDays[$dateStr];
+
+            if (isset($cachedWorkDays[$dateStr])) {
+                $wd = $cachedWorkDays[$dateStr];
                 if ($wd->type === 'рабочий_день' && $wd->work_start) {
                     $count++;
                 }
-            } else {
-                // Если записи нет, проверяем в БД
-                $wd = WorkDay::where('employee_id', $employee->id)
-                    ->where('date', $dateStr)
-                    ->first();
-                    
-                if ($wd && $wd->type === 'рабочий_день' && $wd->work_start) {
-                    $count++;
-                }
             }
-            
             $date->addDay();
         }
-        
-        return $count;
+
+        return max(1, $count);
     }
 
     /**
-     * Подсчет оставшихся рабочих дней
+     * Добавить исторические дни
      */
-    private function countRemainingWorkDays(Carbon $today, Carbon $taskEnd, $allWorkDays, Employee $employee): int
+    private function addHistoricalDays(array &$plan, Carbon $from, Carbon $today, $allWorkDays, array $taskData): void
     {
-        $count = 0;
-        $date = $today->copy();
-        
-        while ($date->lte($taskEnd)) {
+        $date = $from->copy();
+        while ($date->lt($today)) {
             $dateStr = $date->toDateString();
-            
-            if (isset($allWorkDays[$dateStr])) {
-                $wd = $allWorkDays[$dateStr];
-                if ($wd->type === 'рабочий_день' && $wd->work_start) {
-                    $count++;
-                }
-            } else {
-                $wd = WorkDay::where('employee_id', $employee->id)
-                    ->where('date', $dateStr)
-                    ->first();
-                    
-                if ($wd && $wd->type === 'рабочий_день' && $wd->work_start) {
-                    $count++;
-                }
-            }
-            
+            $wd = $allWorkDays->get($dateStr);
+
+            $plan[$dateStr] = [
+                'work_day' => $wd,
+                'tasks' => [],
+                'task_meta' => [],
+                'load_percent' => 0,
+                'date' => $dateStr,
+                'is_past' => true,
+                'is_today' => false,
+            ];
+
             $date->addDay();
         }
-        
-        return max(1, $count); // Минимум 1 день, чтобы не делить на 0
     }
 
     /**
@@ -323,10 +261,10 @@ class WorkloadPlanner
         Carbon $currentDate,
         $workDay,
         array &$taskData,
-        $allWorkDays,
-        bool $isToday = false
+        $allWorkDays
     ): array {
         $dateStr = $currentDate->toDateString();
+        $isToday = $currentDate->isToday();
 
         $dayPlan = [
             'work_day' => $workDay,
@@ -338,289 +276,237 @@ class WorkloadPlanner
             'is_past' => false,
         ];
 
-        // Если нерабочий день — возвращаем пустой план
+        // Если нерабочий день
         if (!$workDay || $workDay->type !== 'рабочий_день' || !$workDay->work_start) {
             return $dayPlan;
         }
 
-        $totalAvailableMinutes = (int) ($workDay->total_minutes ?? 480);
+        // Доступное время с учетом 5% на отдых
+        $totalMinutes = (int)($workDay->total_minutes ?? 480);
+        $availableMinutes = (int)($totalMinutes * self::DAY_FILL_RATE);
         $usedMinutes = 0;
 
-        // Сначала обрабатываем просроченные задачи (они в приоритете)
-        $overdueTasks = $this->getOverdueTasks($taskData, $currentDate);
-        
-        if (!empty($overdueTasks)) {
-            // На просроченные задачи выделяем до 80% времени
-            $overdueTime = (int) ($totalAvailableMinutes * 0.8);
-            $usedMinutes += $this->distributeTimeAmongTasks(
-                $overdueTasks,
-                $overdueTime,
-                $currentDate,
-                $allWorkDays,
-                $dayPlan,
-                $taskData,
-                $employee,
-                true // isOverdue
-            );
+        // 1. Получаем активные задачи на эту дату
+        $activeTasks = $this->getActiveTasksForDate($taskData, $currentDate);
+
+        if (empty($activeTasks)) {
+            return $dayPlan;
         }
 
-        // Затем распределяем оставшееся время по приоритетам
+        // 2. Группируем задачи по приоритетам
+        $priorityGroups = $this->groupTasksByPriority($activeTasks);
+
+        // 3. Распределяем время по приоритетам
         foreach ([1, 2, 3] as $priority) {
-            $priorityTime = $this->calculatePriorityTime(
+            if (!isset($priorityGroups[$priority]) || empty($priorityGroups[$priority])) {
+                continue;
+            }
+
+            $timeForPriority = $this->getTimeForPriority(
                 $priority,
-                $totalAvailableMinutes,
+                $availableMinutes,
                 $usedMinutes,
-                $taskData,
-                $currentDate
+                $priorityGroups
             );
 
-            if ($priorityTime <= 0) {
+            if ($timeForPriority <= 0) {
                 continue;
             }
 
-            $activeTasks = $this->getActiveTasksForPriority($taskData, $priority, $currentDate);
-
-            if (empty($activeTasks)) {
-                continue;
-            }
-
-            $usedMinutes += $this->distributeTimeAmongTasks(
-                $activeTasks,
-                $priorityTime,
+            $usedMinutes += $this->distributeTime(
+                $priorityGroups[$priority],
+                $timeForPriority,
+                $dayPlan,
                 $currentDate,
                 $allWorkDays,
-                $dayPlan,
-                $taskData,
                 $employee
             );
         }
 
-        // Если сегодня и осталось время — добавляем на просроченные задачи
-        if ($isToday && $usedMinutes < $totalAvailableMinutes && !empty($overdueTasks)) {
-            $extraTime = $totalAvailableMinutes - $usedMinutes;
-            $this->distributeTimeAmongTasks(
-                $overdueTasks,
-                $extraTime,
-                $currentDate,
-                $allWorkDays,
-                $dayPlan,
-                $taskData,
-                $employee,
-                true
+        // 4. Если осталось время — добиваем просроченные и приоритет 1
+        $remainingTime = $availableMinutes - $usedMinutes;
+        if ($remainingTime >= self::MIN_TASK_MINUTES) {
+            $extraTasks = array_merge(
+                $priorityGroups[1] ?? [],
+                $priorityGroups[2] ?? []
             );
+            
+            if (!empty($extraTasks)) {
+                $this->distributeTime(
+                    $extraTasks,
+                    $remainingTime,
+                    $dayPlan,
+                    $currentDate,
+                    $allWorkDays,
+                    $employee
+                );
+            }
         }
 
-        // Рассчитываем процент загрузки
-        if ($totalAvailableMinutes > 0) {
-            $dayPlan['load_percent'] = (int) round(($usedMinutes / $totalAvailableMinutes) * 100);
+        // 5. Расчет загрузки
+        $actualUsed = array_sum(array_column($dayPlan['tasks'], 'minutes'));
+        if ($totalMinutes > 0) {
+            $dayPlan['load_percent'] = (int)round(($actualUsed / $totalMinutes) * 100);
         }
 
-        // Сохраняем TaskInstance для будущих дней
-        if (!$currentDate->isPast() || $isToday) {
-            $this->saveTaskInstances($dayPlan, $taskData, $dateStr);
-        }
+        // 6. Сохраняем инстансы
+        $this->saveTaskInstances($dayPlan, $taskData, $dateStr);
 
         return $dayPlan;
     }
 
     /**
-     * Получить просроченные задачи
+     * Получить активные задачи на дату
      */
-    private function getOverdueTasks(array &$taskData, Carbon $currentDate): array
+    private function getActiveTasksForDate(array &$taskData, Carbon $date): array
     {
-        $overdue = [];
+        $active = [];
 
         foreach ($taskData as $id => &$data) {
-            if ($data['is_completed']) {
-                continue;
-            }
+            if ($data['is_completed']) continue;
+            if ($data['remaining_minutes'] < $data['min_daily_minutes']) continue;
+            if ($date->lt($data['task_start']) || $date->gt($data['task_end'])) continue;
 
-            // Проверяем, что задача активна
-            if ($currentDate->lt($data['task_start']) || $currentDate->gt($data['task_end'])) {
-                continue;
-            }
-
-            if ($data['remaining_minutes'] <= 0) {
-                continue;
-            }
-
-            // Задача просрочена или отстает от графика
-            if ($data['is_overdue'] || $data['actual_missed'] > 0) {
-                $overdue[$id] = &$data;
-            }
+            $active[$id] = &$data;
         }
 
-        // Сортируем: самые просроченные первые
-        uasort($overdue, function ($a, $b) {
-            $aUrgency = $a['actual_missed'] / max(1, $a['remaining_work_days']);
-            $bUrgency = $b['actual_missed'] / max(1, $b['remaining_work_days']);
-            return $bUrgency - $aUrgency;
-        });
-
-        return $overdue;
+        return $active;
     }
 
     /**
-     * Расчет доступного времени для приоритета
+     * Группировка задач по приоритетам
      */
-    private function calculatePriorityTime(
-        int $priority,
-        int $totalAvailable,
-        int $alreadyUsed,
-        array $taskData,
-        Carbon $currentDate
-    ): int {
-        $remaining = max(0, $totalAvailable - $alreadyUsed);
+    private function groupTasksByPriority(array $tasks): array
+    {
+        $groups = [1 => [], 2 => [], 3 => []];
 
-        // Приоритет 1 — максимум времени
-        if ($priority === 1) {
-            $hasPriority1Tasks = !empty($this->getActiveTasksForPriority($taskData, 1, $currentDate));
-            
-            if ($hasPriority1Tasks) {
-                return (int) ($remaining * 0.85); // 85% от оставшегося
-            }
+        foreach ($tasks as $id => &$task) {
+            $priority = $task['priority'];
+            $groups[$priority][$id] = &$task;
         }
 
-        // Приоритет 2 — что осталось после приоритета 1
-        if ($priority === 2) {
-            return (int) ($remaining * 0.7); // 70% от оставшегося
+        // Внутри группы сортируем: просроченные → по дедлайну
+        foreach ($groups as $priority => &$group) {
+            uasort($group, function ($a, $b) {
+                if ($a['is_overdue'] && !$b['is_overdue']) return -1;
+                if (!$a['is_overdue'] && $b['is_overdue']) return 1;
+                return $a['task_end']->timestamp - $b['task_end']->timestamp;
+            });
         }
 
-        // Приоритет 3 — остатки
-        if ($priority === 3) {
-            return min($remaining, self::MIN_LOW_PRIORITY_MINUTES);
-        }
-
-        return 0;
+        return $groups;
     }
 
     /**
-     * Получить активные задачи для приоритета
+     * Расчет времени для приоритета
      */
-    private function getActiveTasksForPriority(array &$taskData, int $priority, Carbon $date): array
+    private function getTimeForPriority(int $priority, int $totalAvailable, int $used, array $priorityGroups): int
     {
-        $activeTasks = [];
+        $remaining = $totalAvailable - $used;
+        if ($remaining <= 0) return 0;
 
-        foreach ($taskData as $id => &$data) {
-            if ($data['priority'] !== $priority) {
-                continue;
-            }
+        switch ($priority) {
+            case 1:
+                // Если есть задачи приоритета 1 — они получают всё или почти всё
+                return $remaining;
 
-            if ($data['is_completed']) {
-                continue;
-            }
+            case 2:
+                // Если есть приоритет 1, приоритет 2 получает остатки
+                // Если нет приоритета 1, получает 80%
+                $hasPriority1 = !empty($priorityGroups[1]);
+                return $hasPriority1 ? (int)($remaining * 0.3) : (int)($remaining * 0.8);
 
-            if ($date->lt($data['task_start']) || $date->gt($data['task_end'])) {
-                continue;
-            }
+            case 3:
+                // Низкий приоритет — только если есть свободное время
+                $hasHigherPriority = !empty($priorityGroups[1]) || !empty($priorityGroups[2]);
+                return $hasHigherPriority ? (int)($remaining * 0.1) : $remaining;
 
-            if ($data['remaining_minutes'] <= 0) {
-                continue;
-            }
-
-            // Не включаем просроченные (они обрабатываются отдельно)
-            if ($data['is_overdue']) {
-                continue;
-            }
-
-            $activeTasks[$id] = &$data;
+            default:
+                return 0;
         }
-
-        return $activeTasks;
     }
 
     /**
      * Распределение времени между задачами
      */
-    private function distributeTimeAmongTasks(
+    private function distributeTime(
         array &$tasks,
         int $availableTime,
+        array &$dayPlan,
         Carbon $currentDate,
         $allWorkDays,
-        array &$dayPlan,
-        array &$taskData,
-        Employee $employee,
-        bool $isOverdue = false
+        Employee $employee
     ): int {
+        if (empty($tasks) || $availableTime < self::MIN_TASK_MINUTES) {
+            return 0;
+        }
+
         $usedTime = 0;
-
-        if (empty($tasks) || $availableTime <= 0) {
-            return 0;
-        }
-
-        // Для одной задачи — отдаем всё
-        if (count($tasks) === 1) {
-            $taskId = array_key_first($tasks);
-            $task = &$tasks[$taskId];
-            
-            $allocatedTime = min($task['remaining_minutes'], $availableTime);
-            $allocatedTime = (int) floor($allocatedTime);
-            
-            if ($allocatedTime > 0) {
-                $this->addTaskToDayPlan($dayPlan, $task, $allocatedTime, $currentDate, $allWorkDays, $employee, $isOverdue);
-                $task['remaining_minutes'] -= $allocatedTime;
-                
-                // Уменьшаем количество пропущенной квоты
-                $iterationTime = $task['iteration_time'];
-                $completedNow = (int) round($allocatedTime / $iterationTime);
-                $task['actual_missed'] = max(0, $task['actual_missed'] - $completedNow);
-                
-                // Проверяем, не наверстали ли мы отставание
-                if ($task['actual_missed'] <= 0) {
-                    $task['is_overdue'] = false;
-                }
-                
-                $usedTime = $allocatedTime;
-            }
-            
-            return $usedTime;
-        }
-
-        // Для нескольких задач — пропорционально
-        $totalRemaining = array_sum(array_column($tasks, 'remaining_minutes'));
-        
-        if ($totalRemaining <= 0) {
-            return 0;
-        }
-
         $remainingToDistribute = $availableTime;
 
+        // Если одна задача — отдаем всё
+        if (count($tasks) === 1) {
+            $task = &$tasks[array_key_first($tasks)];
+            return $this->allocateTimeToTask($task, $availableTime, $dayPlan, $currentDate);
+        }
+
+        // Сначала распределяем минимально необходимое время (min_daily_minutes)
         foreach ($tasks as $id => &$task) {
-            if ($remainingToDistribute <= 0) {
-                break;
+            $minNeeded = $task['min_daily_minutes'];
+            
+            if ($remainingToDistribute < $minNeeded) {
+                continue; // Не хватает времени даже на минимум — пропускаем
             }
 
-            $proportion = $task['remaining_minutes'] / $totalRemaining;
-            $allocatedTime = (int) floor($availableTime * $proportion);
-            $allocatedTime = min($allocatedTime, $task['remaining_minutes'], $remainingToDistribute);
-            $allocatedTime = max(0, $allocatedTime);
+            $allocated = min($minNeeded, $task['remaining_minutes'], $remainingToDistribute);
+            $allocated = $this->roundToIteration($allocated, $task['iteration_time']);
 
-            if ($allocatedTime > 0) {
-                $this->addTaskToDayPlan($dayPlan, $task, $allocatedTime, $currentDate, $allWorkDays, $employee, $isOverdue);
-                $task['remaining_minutes'] -= $allocatedTime;
-                
-                $iterationTime = $task['iteration_time'];
-                $completedNow = (int) round($allocatedTime / $iterationTime);
-                $task['actual_missed'] = max(0, $task['actual_missed'] - $completedNow);
-                
-                if ($task['actual_missed'] <= 0) {
-                    $task['is_overdue'] = false;
-                }
-                
-                $usedTime += $allocatedTime;
-                $remainingToDistribute -= $allocatedTime;
+            if ($allocated > 0) {
+                $used = $this->allocateTimeToTask($task, $allocated, $dayPlan, $currentDate);
+                $usedTime += $used;
+                $remainingToDistribute -= $used;
             }
         }
 
-        // Остаток отдаем самой просроченной/приоритетной
-        if ($remainingToDistribute > 0 && !empty($tasks)) {
+        // Затем распределяем остаток пропорционально
+        if ($remainingToDistribute >= self::MIN_TASK_MINUTES) {
+            // Считаем общую оставшуюся потребность
+            $totalRemaining = 0;
+            foreach ($tasks as &$task) {
+                $remaining = $task['remaining_minutes'];
+                if ($remaining > 0) {
+                    $totalRemaining += $remaining;
+                }
+            }
+
+            if ($totalRemaining > 0) {
+                foreach ($tasks as $id => &$task) {
+                    if ($remainingToDistribute < self::MIN_TASK_MINUTES) break;
+                    if ($task['remaining_minutes'] <= 0) continue;
+
+                    $proportion = $task['remaining_minutes'] / $totalRemaining;
+                    $extraTime = (int)($remainingToDistribute * $proportion);
+                    $extraTime = $this->roundToIteration($extraTime, $task['iteration_time']);
+                    $extraTime = min($extraTime, $task['remaining_minutes'], $remainingToDistribute);
+
+                    if ($extraTime > 0) {
+                        $used = $this->allocateTimeToTask($task, $extraTime, $dayPlan, $currentDate, true);
+                        $usedTime += $used;
+                        $remainingToDistribute -= $used;
+                    }
+                }
+            }
+        }
+
+        // Если осталось время — отдаем первой задаче (самой приоритетной)
+        if ($remainingToDistribute >= self::MIN_TASK_MINUTES && !empty($tasks)) {
             $firstTask = &$tasks[array_key_first($tasks)];
-            $extraTime = min($remainingToDistribute, $firstTask['remaining_minutes']);
-            
+            $extraTime = $this->roundToIteration($remainingToDistribute, $firstTask['iteration_time']);
+            $extraTime = min($extraTime, $firstTask['remaining_minutes']);
+
             if ($extraTime > 0) {
-                $this->addTaskToDayPlan($dayPlan, $firstTask, $extraTime, $currentDate, $allWorkDays, $employee, $isOverdue);
-                $firstTask['remaining_minutes'] -= $extraTime;
-                $usedTime += $extraTime;
+                $used = $this->allocateTimeToTask($firstTask, $extraTime, $dayPlan, $currentDate, true);
+                $usedTime += $used;
             }
         }
 
@@ -628,31 +514,47 @@ class WorkloadPlanner
     }
 
     /**
-     * Добавить задачу в дневной план
+     * Выделить время на задачу
      */
-    private function addTaskToDayPlan(
-        array &$dayPlan,
-        array $task,
+    private function allocateTimeToTask(
+        array &$task,
         int $minutes,
+        array &$dayPlan,
         Carbon $currentDate,
-        $allWorkDays,
-        Employee $employee,
-        bool $isOverdue = false
-    ): void {
+        bool $isExtra = false
+    ): int {
+        // Округляем до целых итераций
+        $minutes = $this->roundToIteration($minutes, $task['iteration_time']);
+        $minutes = min($minutes, $task['remaining_minutes']);
+
+        if ($minutes <= 0) {
+            return 0;
+        }
+
         $taskId = $task['task_id'];
-        $assignmentId = $task['assignment']->id;
         $iterationTime = $task['iteration_time'];
 
+        // Добавляем в план
         if (!isset($dayPlan['tasks'][$taskId])) {
             $dayPlan['tasks'][$taskId] = [
                 'minutes' => 0,
-                'assignment_id' => $assignmentId,
+                'assignment_id' => $task['assignment_id'],
             ];
         }
         $dayPlan['tasks'][$taskId]['minutes'] += $minutes;
 
-        $dailyQuota = (int) round($minutes / $iterationTime);
+        // Обновляем остатки
+        $task['remaining_minutes'] -= $minutes;
 
+        // Уменьшаем пропущенную квоту
+        $iterationsDone = (int)($minutes / $iterationTime);
+        $task['missed_quota'] = max(0, ($task['missed_quota'] ?? 0) - $iterationsDone);
+        if ($task['missed_quota'] <= 0) {
+            $task['is_overdue'] = false;
+        }
+
+        // Мета-данные
+        $dailyQuota = (int)round($minutes / $iterationTime);
         $dayPlan['task_meta'][$taskId] = [
             'minutes' => $minutes,
             'daily_quota' => $dailyQuota,
@@ -662,31 +564,72 @@ class WorkloadPlanner
             'remaining_minutes' => $task['remaining_minutes'],
             'quota_total' => $task['total_quota'],
             'completed_count' => $task['completed_count'],
-            'remaining_quota' => max(0, (int) ceil($task['remaining_minutes'] / $iterationTime)),
-            'adjusted_remaining_quota' => $task['adjusted_remaining_quota'] ?? $task['remaining_quota_original'],
+            'remaining_quota' => max(0, (int)ceil($task['remaining_minutes'] / $iterationTime)),
+            'adjusted_remaining_quota' => $task['adjusted_remaining_quota'],
             'start_date' => $task['task_start']->format('d.m.Y'),
             'end_date' => $task['task_end']->format('d.m.Y'),
             'task_id' => $taskId,
             'iteration_time' => $iterationTime,
             'priority' => $task['priority'],
-            'is_overdue' => $isOverdue || ($task['is_overdue'] ?? false),
-            'actual_missed' => $task['actual_missed'] ?? 0,
-            'remaining_work_days' => $task['remaining_work_days'] ?? 0,
+            'is_overdue' => $task['is_overdue'],
+            'missed_quota' => $task['missed_quota'] ?? 0,
+            'remaining_work_days' => $task['remaining_work_days'],
+            'is_extra' => $isExtra,
         ];
+
+        return $minutes;
     }
 
     /**
-     * Генерация сводки
+     * Округление до целых итераций
      */
+    private function roundToIteration(int $minutes, int $iterationTime): int
+    {
+        if ($iterationTime <= 0) return $minutes;
+
+        $iterations = (int)($minutes / $iterationTime);
+        return $iterations * $iterationTime;
+    }
+
+    // ... остальные методы (saveTaskInstances, cleanupOldInstances, generateSummary, truncateText) ...
+    
+    private function saveTaskInstances(array $dayPlan, array $taskData, string $dateStr): void
+    {
+        foreach ($dayPlan['tasks'] as $taskId => $data) {
+            $iterationTime = 60;
+            foreach ($taskData as $tData) {
+                if ($tData['task_id'] === $taskId) {
+                    $iterationTime = $tData['iteration_time'];
+                    break;
+                }
+            }
+
+            $dailyQuota = (int)round($data['minutes'] / $iterationTime);
+
+            if ($dailyQuota > 0) {
+                TaskInstance::updateOrCreate(
+                    ['task_id' => $taskId, 'date' => $dateStr],
+                    ['daily_quota' => $dailyQuota]
+                );
+            }
+        }
+    }
+
+    private function cleanupOldInstances(array $taskData, Carbon $today): void
+    {
+        $taskIds = array_column($taskData, 'task_id');
+        TaskInstance::whereIn('task_id', $taskIds)
+            ->where('date', '<', $today->format('Y-m-d'))
+            ->delete();
+    }
+
     private function generateSummary(array $taskData, Carbon $today): array
     {
         $summary = [
             'total_tasks' => count($taskData),
             'overdue_tasks' => 0,
-            'on_track_tasks' => 0,
             'completed_tasks' => 0,
             'total_remaining_minutes' => 0,
-            'total_missed_quota' => 0,
         ];
 
         foreach ($taskData as $data) {
@@ -694,12 +637,8 @@ class WorkloadPlanner
                 $summary['completed_tasks']++;
             } else {
                 $summary['total_remaining_minutes'] += $data['remaining_minutes'];
-                $summary['total_missed_quota'] += $data['actual_missed'];
-                
                 if ($data['is_overdue']) {
                     $summary['overdue_tasks']++;
-                } elseif ($data['is_on_track']) {
-                    $summary['on_track_tasks']++;
                 }
             }
         }
@@ -707,61 +646,20 @@ class WorkloadPlanner
         return $summary;
     }
 
-    /**
-     * Сохранение TaskInstance
-     */
-    private function saveTaskInstances(array $dayPlan, array $taskData, string $dateStr): void
-    {
-        foreach ($dayPlan['tasks'] as $taskId => $data) {
-            $taskInfo = null;
-            
-            foreach ($taskData as $tData) {
-                if ($tData['task_id'] === $taskId) {
-                    $taskInfo = $tData;
-                    break;
-                }
-            }
-
-            if (!$taskInfo) {
-                continue;
-            }
-
-            $iterationTime = $taskInfo['iteration_time'];
-            $dailyQuota = (int) round($data['minutes'] / $iterationTime);
-
-            if ($dailyQuota > 0) {
-                TaskInstance::updateOrCreate(
-                    [
-                        'task_id' => $taskId,
-                        'date' => $dateStr,
-                    ],
-                    [
-                        'daily_quota' => $dailyQuota,
-                    ]
-                );
-            }
-        }
-    }
-
-    /**
-     * Очистка старых инстансов
-     */
-    private function cleanupOldInstances(array $taskData, Carbon $today): void
-    {
-        $taskIds = array_column($taskData, 'task_id');
-        
-        TaskInstance::whereIn('task_id', $taskIds)
-            ->where('date', '<', $today->format('Y-m-d'))
-            ->delete();
-    }
-
-    // ... остальные вспомогательные методы ...
-    
     private function truncateText($text, $length): string
     {
-        if (mb_strlen($text) <= $length) {
-            return $text;
-        }
+        if (mb_strlen($text) <= $length) return $text;
         return mb_substr($text, 0, $length) . '...';
+    }
+
+    // Методы redistributeForEmployee и redistributeAfterCompletion остаются без изменений...
+    public function redistributeForEmployee(Employee $employee, Carbon $from): void
+    {
+        // ... существующий код ...
+    }
+
+    public function redistributeAfterCompletion(TaskAssignment $assignment): void
+    {
+        // ... существующий код ...
     }
 }

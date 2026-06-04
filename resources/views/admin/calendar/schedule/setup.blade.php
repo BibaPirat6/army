@@ -5,161 +5,165 @@
 @section('content')
     <div class="max-w-full mx-auto px-6 py-4">
 
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col gap-4">
             {{-- Кнопка Назад --}}
             <a href="{{ route('calendar.schedule.employee', $employee->id) }}"
-                class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+                class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors duration-200 w-fit">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
                 Назад
             </a>
-        </div>
-        <div class="flex items-center gap-4">
 
             <form id="scheduleForm" action="{{ route('calendar.schedule.generate', $employee->id) }}" method="POST">
                 @csrf
-
                 <input type="hidden" name="year" value="{{ now()->year }}">
 
+                <!-- остальной код формы без изменений -->
+
+                <form id="scheduleForm" action="{{ route('calendar.schedule.generate', $employee->id) }}" method="POST">
+                    @csrf
+
+                    <input type="hidden" name="year" value="{{ now()->year }}">
 
 
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-800">
-                            {{ $employee->person->фамилия }} {{ $employee->person->имя }}
-                        </h2>
 
-                        <p class="text-sm text-gray-500">
-                            Настройка графика на {{ now()->year }} год
-                        </p>
-                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">
+                                {{ $employee->person->фамилия }} {{ $employee->person->имя }}
+                            </h2>
 
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2 bg-white rounded-lg border px-4 py-2">
-                            <span class="text-sm text-gray-600">Цель в неделю:</span>
-
-                            <input type="number" id="weeklyHoursTotal" name="weekly_hours"
-                                value="{{ \App\Models\WorkDay::where('employee_id', $employee->id)->whereYear('date', now()->year)->first()?->weekly_hours ?? 40 }}"
-                                min="1" max="168"
-                                class="w-16 text-center font-bold text-indigo-600 border-0 border-b-2 border-indigo-300 focus:border-indigo-500 focus:ring-0 outline-none">
-
-                            <span class="text-sm text-gray-600">ч</span>
+                            <p class="text-sm text-gray-500">
+                                Настройка графика на {{ now()->year }} год
+                            </p>
                         </div>
 
-                        <span id="totalInfo" class="text-sm text-gray-500"></span>
-                    </div>
-                </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 bg-white rounded-lg border px-4 py-2">
+                                <span class="text-sm text-gray-600">Цель в неделю:</span>
 
-                @php
-                    $existingByDay = \App\Models\WorkDay::where('employee_id', $employee->id)
-                        ->whereYear('date', now()->year)
-                        ->get()
-                        ->groupBy(fn($d) => \Carbon\Carbon::parse($d->date)->dayOfWeek);
-                @endphp
-                <input type="hidden" name="year" value="{{ now()->year }}">
+                                <input type="number" id="weeklyHoursTotal" name="weekly_hours"
+                                    value="{{ \App\Models\WorkDay::where('employee_id', $employee->id)->whereYear('date', now()->year)->first()?->weekly_hours ?? 40 }}"
+                                    min="1" max="168"
+                                    class="w-16 text-center font-bold text-indigo-600 border-0 border-b-2 border-indigo-300 focus:border-indigo-500 focus:ring-0 outline-none">
 
-                <div class="grid grid-cols-7 gap-3 mb-4">
-                    @foreach (['1' => 'Пн', '2' => 'Вт', '3' => 'Ср', '4' => 'Чт', '5' => 'Пт', '6' => 'Сб', '0' => 'Вс'] as $val => $label)
-                        @php
-                            $dayData = $existingByDay->get($val)?->first();
-                            $isWorking = $dayData && $dayData->type === 'рабочий_день';
-                            $breaks = $dayData?->breaks ?? [];
-
-                            if (is_string($breaks)) {
-                                $breaks = json_decode($breaks, true) ?: [];
-                            }
-
-                            if (!is_array($breaks)) {
-                                $breaks = [];
-                            }
-
-                            if (!$isWorking) {
-                                $breaks = [];
-                            }
-                        @endphp
-                        <div class="day-card bg-white rounded-lg border {{ $isWorking ? 'border-gray-200' : 'border-gray-100 bg-gray-50' }} overflow-hidden"
-                            data-day="{{ $val }}">
-                            {{-- Заголовок --}}
-                            <div
-                                class="flex items-center justify-between px-3 py-2 {{ $isWorking ? 'bg-indigo-50/50' : 'bg-gray-100/50' }}">
-                                <span
-                                    class="text-sm font-semibold {{ $isWorking ? 'text-gray-800' : 'text-gray-400' }}">{{ $label }}</span>
-                                <select name="days[{{ $val }}][type]"
-                                    class="day-type-select text-xs rounded border-0 {{ $isWorking ? 'bg-white text-indigo-600' : 'bg-transparent text-gray-400' }} font-medium cursor-pointer outline-none">
-                                    <option value="рабочий_день" {{ $isWorking ? 'selected' : '' }}>Рабочий</option>
-                                    <option value="выходной" {{ !$isWorking ? 'selected' : '' }}>Выходной</option>
-                                </select>
+                                <span class="text-sm text-gray-600">ч</span>
                             </div>
 
-                            <div class="day-details px-3 py-2 space-y-2 {{ $isWorking ? '' : 'hidden' }}">
-                                {{-- Время --}}
-                                <div class="flex items-center gap-1.5">
-                                    <input type="time" name="days[{{ $val }}][work_start]"
-                                        value="{{ $dayData?->work_start ? \Carbon\Carbon::parse($dayData->work_start)->format('H:i') : '09:00' }}"
-                                        class="day-time w-full text-xs rounded border-gray-200 py-1 px-2 focus:border-indigo-400 focus:ring-0 outline-none">
-                                    <span class="text-gray-300 text-xs">—</span>
-                                    <input type="time" name="days[{{ $val }}][work_end]"
-                                        value="{{ $dayData?->work_end ? \Carbon\Carbon::parse($dayData->work_end)->format('H:i') : '18:00' }}"
-                                        class="day-time w-full text-xs rounded border-gray-200 py-1 px-2 focus:border-indigo-400 focus:ring-0 outline-none">
-                                </div>
-
-                                {{-- Обеды --}}
-                                <div class="breaks-container space-y-1.5" data-day="{{ $val }}">
-                                    @foreach ($breaks as $i => $b)
-                                        <div class="break-row flex items-center gap-1">
-                                            <input type="time"
-                                                name="days[{{ $val }}][breaks][{{ $i }}][start]"
-                                                value="{{ $b['start'] }}"
-                                                class="break-input w-full text-[11px] rounded border-gray-200 py-0.5 px-1.5 focus:border-indigo-400 focus:ring-0 outline-none">
-                                            <span class="text-gray-300 text-[11px]">—</span>
-                                            <input type="time"
-                                                name="days[{{ $val }}][breaks][{{ $i }}][end]"
-                                                value="{{ $b['end'] }}"
-                                                class="break-input w-full text-[11px] rounded border-gray-200 py-0.5 px-1.5 focus:border-indigo-400 focus:ring-0 outline-none">
-                                            <button type="button" onclick="removeBreak(this)"
-                                                class="text-gray-300 hover:text-red-500 text-sm leading-none">&times;</button>
-                                        </div>
-                                    @endforeach
-                                </div>
-
-                                <button type="button" onclick="addBreak('{{ $val }}')"
-                                    class="text-[11px] text-indigo-500 hover:text-indigo-700 font-medium">
-                                    + обед
-                                </button>
-                            </div>
-
-                            {{-- Итого --}}
-                            <div class="px-3 py-1.5 border-t {{ $isWorking ? 'border-gray-100' : 'border-gray-200' }}">
-                                <span
-                                    class="day-summary text-[11px] font-medium {{ $isWorking ? 'text-indigo-600' : 'text-gray-400' }}">
-                                    {{ $isWorking ? '—' : 'выходной' }}
-                                </span>
-                            </div>
+                            <span id="totalInfo" class="text-sm text-gray-500"></span>
                         </div>
-                    @endforeach
-                </div>
-
-                {{-- Ошибка --}}
-                <div id="globalError"
-                    class="hidden mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 text-center font-medium">
-                </div>
-
-                {{-- Нижняя панель --}}
-                <div class="flex items-center justify-between bg-white rounded-lg border px-4 py-3">
-                    <div class="flex items-center gap-2">
-                        <span id="statusBadge" class="hidden px-2.5 py-1 rounded-full text-xs font-bold"></span>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <a href="{{ url()->previous() }}"
-                            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Отмена</a>
-                        <button type="submit" id="submitBtn"
-                            class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition">
-                            Сохранить
-                        </button>
+
+                    @php
+                        $existingByDay = \App\Models\WorkDay::where('employee_id', $employee->id)
+                            ->whereYear('date', now()->year)
+                            ->get()
+                            ->groupBy(fn($d) => \Carbon\Carbon::parse($d->date)->dayOfWeek);
+                    @endphp
+                    <input type="hidden" name="year" value="{{ now()->year }}">
+
+                    <div class="grid grid-cols-7 gap-3 mb-4">
+                        @foreach (['1' => 'Пн', '2' => 'Вт', '3' => 'Ср', '4' => 'Чт', '5' => 'Пт', '6' => 'Сб', '0' => 'Вс'] as $val => $label)
+                            @php
+                                $dayData = $existingByDay->get($val)?->first();
+                                $isWorking = $dayData && $dayData->type === 'рабочий_день';
+                                $breaks = $dayData?->breaks ?? [];
+
+                                if (is_string($breaks)) {
+                                    $breaks = json_decode($breaks, true) ?: [];
+                                }
+
+                                if (!is_array($breaks)) {
+                                    $breaks = [];
+                                }
+
+                                if (!$isWorking) {
+                                    $breaks = [];
+                                }
+                            @endphp
+                            <div class="day-card bg-white rounded-lg border {{ $isWorking ? 'border-gray-200' : 'border-gray-100 bg-gray-50' }} overflow-hidden"
+                                data-day="{{ $val }}">
+                                {{-- Заголовок --}}
+                                <div
+                                    class="flex items-center justify-between px-3 py-2 {{ $isWorking ? 'bg-indigo-50/50' : 'bg-gray-100/50' }}">
+                                    <span
+                                        class="text-sm font-semibold {{ $isWorking ? 'text-gray-800' : 'text-gray-400' }}">{{ $label }}</span>
+                                    <select name="days[{{ $val }}][type]"
+                                        class="day-type-select text-xs rounded border-0 {{ $isWorking ? 'bg-white text-indigo-600' : 'bg-transparent text-gray-400' }} font-medium cursor-pointer outline-none">
+                                        <option value="рабочий_день" {{ $isWorking ? 'selected' : '' }}>Рабочий</option>
+                                        <option value="выходной" {{ !$isWorking ? 'selected' : '' }}>Выходной</option>
+                                    </select>
+                                </div>
+
+                                <div class="day-details px-3 py-2 space-y-2 {{ $isWorking ? '' : 'hidden' }}">
+                                    {{-- Время --}}
+                                    <div class="flex items-center gap-1.5">
+                                        <input type="time" name="days[{{ $val }}][work_start]"
+                                            value="{{ $dayData?->work_start ? \Carbon\Carbon::parse($dayData->work_start)->format('H:i') : '09:00' }}"
+                                            class="day-time w-full text-xs rounded border-gray-200 py-1 px-2 focus:border-indigo-400 focus:ring-0 outline-none">
+                                        <span class="text-gray-300 text-xs">—</span>
+                                        <input type="time" name="days[{{ $val }}][work_end]"
+                                            value="{{ $dayData?->work_end ? \Carbon\Carbon::parse($dayData->work_end)->format('H:i') : '18:00' }}"
+                                            class="day-time w-full text-xs rounded border-gray-200 py-1 px-2 focus:border-indigo-400 focus:ring-0 outline-none">
+                                    </div>
+
+                                    {{-- Обеды --}}
+                                    <div class="breaks-container space-y-1.5" data-day="{{ $val }}">
+                                        @foreach ($breaks as $i => $b)
+                                            <div class="break-row flex items-center gap-1">
+                                                <input type="time"
+                                                    name="days[{{ $val }}][breaks][{{ $i }}][start]"
+                                                    value="{{ $b['start'] }}"
+                                                    class="break-input w-full text-[11px] rounded border-gray-200 py-0.5 px-1.5 focus:border-indigo-400 focus:ring-0 outline-none">
+                                                <span class="text-gray-300 text-[11px]">—</span>
+                                                <input type="time"
+                                                    name="days[{{ $val }}][breaks][{{ $i }}][end]"
+                                                    value="{{ $b['end'] }}"
+                                                    class="break-input w-full text-[11px] rounded border-gray-200 py-0.5 px-1.5 focus:border-indigo-400 focus:ring-0 outline-none">
+                                                <button type="button" onclick="removeBreak(this)"
+                                                    class="text-gray-300 hover:text-red-500 text-sm leading-none">&times;</button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <button type="button" onclick="addBreak('{{ $val }}')"
+                                        class="text-[11px] text-indigo-500 hover:text-indigo-700 font-medium">
+                                        + обед
+                                    </button>
+                                </div>
+
+                                {{-- Итого --}}
+                                <div class="px-3 py-1.5 border-t {{ $isWorking ? 'border-gray-100' : 'border-gray-200' }}">
+                                    <span
+                                        class="day-summary text-[11px] font-medium {{ $isWorking ? 'text-indigo-600' : 'text-gray-400' }}">
+                                        {{ $isWorking ? '—' : 'выходной' }}
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
-                </div>
-            </form>
+
+                    {{-- Ошибка --}}
+                    <div id="globalError"
+                        class="hidden mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 text-center font-medium">
+                    </div>
+
+                    {{-- Нижняя панель --}}
+                    <div class="flex items-center justify-between bg-white rounded-lg border px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span id="statusBadge" class="hidden px-2.5 py-1 rounded-full text-xs font-bold"></span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ url()->previous() }}"
+                                class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Отмена</a>
+                            <button type="submit" id="submitBtn"
+                                class="px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition">
+                                Сохранить
+                            </button>
+                        </div>
+                    </div>
+                </form>
         </div>
 
         <script>

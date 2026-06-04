@@ -113,70 +113,62 @@ class ScheduleController extends Controller
     public function assignmentInfo(TaskAssignment $taskAssignment): JsonResponse
     {
         try {
-            // Загружаем связи с проверкой существования
             $taskAssignment->load([
                 'task.subtasks',
-                'employee.employeePositions.commissariatPosition.commissariat',
+                'employee',
             ]);
 
-            // Получаем сотрудника
             $employee = $taskAssignment->employee;
-            
-            if (!$employee) {
-                throw new \Exception('Сотрудник не найден для назначения #' . $taskAssignment->id);
-            }
-
-            // Получаем ФИО сотрудника через связь с people
-            $employeeName = $this->getEmployeeFullName($employee);
-
-            // Получаем задачу
             $task = $taskAssignment->task;
-            
-            if (!$task) {
-                throw new \Exception('Задача не найдена для назначения #' . $taskAssignment->id);
+
+            if (! $employee || ! $task) {
+                throw new \Exception('Данные не найдены');
             }
 
-            // Рассчитываем время итерации
+            // Получаем имя сотрудника
+            $employeeName = $employee->full_name ?? $employee->person->фамилия.' '.$employee->person->имя ?? 'Сотрудник #'.$employee->id;
+
+            // Время итерации
             $iterationTime = $task->subtasks->sum('avg_time_minutes') ?: 60;
 
-            // Вычисляем оставшуюся квоту
-            $remainingQuota = max(0, (int)$taskAssignment->quota - (int)$taskAssignment->completed_count);
+            // Оставшаяся квота
+            $remainingQuota = max(0, (int) $taskAssignment->quota - (int) $taskAssignment->completed_count);
+
+            // Приоритет
+            $priorityLabels = [
+                1 => '🔴 Высокий',
+                2 => '🟡 Средний',
+                3 => '🟢 Низкий',
+            ];
+            $priority = (int) ($taskAssignment->priority ?? 3);
+            $priorityLabel = $priorityLabels[$priority] ?? $priorityLabels[3];
 
             return response()->json([
                 'success' => true,
                 'assignment_id' => $taskAssignment->id,
                 'task_id' => $task->id,
-                'task_name' => $task->title ?? 'Без названия',
+                'task_name' => $task->title,
                 'employee_name' => $employeeName,
-                'quota' => (int)$taskAssignment->quota,
-                'completed_count' => (int)$taskAssignment->completed_count,
+                'quota' => (int) $taskAssignment->quota,
+                'completed_count' => (int) $taskAssignment->completed_count,
                 'iteration_time' => $iterationTime,
-                'priority' => $taskAssignment->priority ?? 0,
+                'priority' => $priority,
+                'priority_label' => $priorityLabel,
                 'remaining_quota' => $remainingQuota,
+                'start_date' => $task->start_date?->format('d.m.Y'),
+                'end_date' => $task->end_date?->format('d.m.Y'),
+                'period' => ($task->start_date?->format('d.m.Y') ?? '?').' — '.($task->end_date?->format('d.m.Y') ?? '?'),
             ]);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error('Назначение не найдено', [
-                'assignment_id' => $taskAssignment->id ?? 'unknown',
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Назначение не найдено',
-            ], 404);
 
         } catch (\Exception $e) {
-            Log::error('Ошибка получения информации о назначении', [
-                'assignment_id' => $taskAssignment->id ?? 'unknown',
+            Log::error('Ошибка assignmentInfo', [
+                'assignment_id' => $taskAssignment->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ошибка загрузки данных: ' . $e->getMessage(),
+                'message' => 'Ошибка загрузки данных',
             ], 500);
         }
     }
@@ -189,12 +181,12 @@ class ScheduleController extends Controller
         // Проверяем наличие связи с person через модель Employee
         if (method_exists($employee, 'person')) {
             $person = $employee->person;
-            
+
             if ($person) {
                 $lastName = $person->фамилия ?? $person->last_name ?? '';
                 $firstName = $person->имя ?? $person->first_name ?? '';
-                
-                return trim($lastName . ' ' . $firstName) ?: 'Сотрудник #' . $employee->id;
+
+                return trim($lastName.' '.$firstName) ?: 'Сотрудник #'.$employee->id;
             }
         }
 
@@ -203,20 +195,20 @@ class ScheduleController extends Controller
             $currentPosition = $employee->employeePositions()
                 ->where('status', 'active')
                 ->first();
-            
+
             if ($currentPosition && method_exists($currentPosition, 'person')) {
                 $person = $currentPosition->person;
                 if ($person) {
                     $lastName = $person->фамилия ?? $person->last_name ?? '';
                     $firstName = $person->имя ?? $person->first_name ?? '';
-                    
-                    return trim($lastName . ' ' . $firstName) ?: 'Сотрудник #' . $employee->id;
+
+                    return trim($lastName.' '.$firstName) ?: 'Сотрудник #'.$employee->id;
                 }
             }
         }
 
         // Если ничего не нашли - возвращаем ID
-        return 'Сотрудник #' . $employee->id;
+        return 'Сотрудник #'.$employee->id;
     }
 
     /**
@@ -231,12 +223,12 @@ class ScheduleController extends Controller
                     'required',
                     'integer',
                     'min:0',
-                    'max:' . (int)$taskAssignment->quota,
+                    'max:'.(int) $taskAssignment->quota,
                 ],
             ]);
 
-            $newCompletedCount = (int)$validated['completed_count'];
-            $oldCompletedCount = (int)$taskAssignment->completed_count;
+            $newCompletedCount = (int) $validated['completed_count'];
+            $oldCompletedCount = (int) $taskAssignment->completed_count;
 
             // Если значение не изменилось
             if ($newCompletedCount === $oldCompletedCount) {
@@ -267,12 +259,12 @@ class ScheduleController extends Controller
                 TaskInstance::where('task_id', $lockedAssignment->task_id)
                     ->where('date', '>', now()->format('Y-m-d'))
                     ->delete();
-            } 
+            }
             // Если частично выполнено - перераспределяем
             elseif ($newCompletedCount > 0 && $newCompletedCount > $oldCompletedCount) {
                 try {
                     $planner = app(WorkloadPlanner::class);
-                    
+
                     if (method_exists($planner, 'redistributeAfterCompletion')) {
                         $planner->redistributeAfterCompletion($lockedAssignment);
                     } else {
@@ -280,7 +272,7 @@ class ScheduleController extends Controller
                         TaskInstance::where('task_id', $lockedAssignment->task_id)
                             ->where('date', '>', now()->format('Y-m-d'))
                             ->delete();
-                            
+
                         Log::warning('Метод redistributeAfterCompletion не найден в WorkloadPlanner');
                     }
                 } catch (\Exception $e) {
@@ -315,7 +307,7 @@ class ScheduleController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Некорректные данные: ' . implode(', ', $e->errors()['completed_count'] ?? ['неизвестная ошибка']),
+                'message' => 'Некорректные данные: '.implode(', ', $e->errors()['completed_count'] ?? ['неизвестная ошибка']),
                 'errors' => $e->errors(),
             ], 422);
 
@@ -357,7 +349,7 @@ class ScheduleController extends Controller
 
         $dayData = $schedule['plan'][$date->toDateString()] ?? null;
 
-        if (!$dayData) {
+        if (! $dayData) {
             abort(404);
         }
 
@@ -380,86 +372,4 @@ class ScheduleController extends Controller
         );
     }
 
-    /**
-     * Проверка прав доступа к назначению
-     */
-    private function authorizeAccess(TaskAssignment $assignment): void
-    {
-        $user = Auth::user();
-
-        // Администратор имеет полный доступ
-        if ($user->hasRole('администратор')) {
-            return;
-        }
-
-        // Проверяем, что пользователь - сотрудник, которому принадлежит назначение
-        $employee = $user->employee;
-
-        if (!$employee || $assignment->employee_id !== $employee->id) {
-            // Проверяем, может быть пользователь - начальник отдела
-            if (!$user->hasRole('начальник_отдела')) {
-                abort(403, 'У вас нет прав для изменения этого назначения');
-            }
-
-            // Начальник отдела может редактировать только своих подчиненных
-            $isSubordinate = Employee::where('id', $assignment->employee_id)
-                ->whereHas('employeePositions.commissariatPosition.commissariat', function ($q) use ($employee) {
-                    $q->whereHas('departments', function ($subQ) use ($employee) {
-                        $subQ->whereHas('divisions', function ($divQ) use ($employee) {
-                            $divQ->whereHas('positions', function ($posQ) use ($employee) {
-                                $posQ->whereHas('employeePositions', function ($epQ) use ($employee) {
-                                    $epQ->where('employee_id', $employee->id);
-                                });
-                            });
-                        });
-                    });
-                })
-                ->exists();
-
-            if (!$isSubordinate) {
-                abort(403, 'Вы можете редактировать назначения только своих подчиненных');
-            }
-        }
-    }
-
-    /**
-     * Очистка будущих распределений для выполненного назначения
-     */
-    private function cleanupFutureInstances(TaskAssignment $assignment): void
-    {
-        // Удаляем TaskInstance только для этой задачи, начиная с завтрашнего дня
-        TaskInstance::where('task_id', $assignment->task_id)
-            ->where('date', '>', now()->format('Y-m-d'))
-            ->whereDoesntHave('taskAssignments', function ($q) use ($assignment) {
-                // Не удаляем, если есть другие активные назначения на эту задачу
-                $q->where('id', '!=', $assignment->id)
-                    ->where('status', '!=', 'completed');
-            })
-            ->delete();
-    }
-
-    /**
-     * Обновление прогресса в TaskInstance
-     */
-    private function updateTaskInstanceProgress(TaskAssignment $assignment): void
-    {
-        // Находим все TaskInstance для этой задачи
-        $instances = TaskInstance::where('task_id', $assignment->task_id)
-            ->where('date', '>=', now()->format('Y-m-d'))
-            ->get();
-
-        foreach ($instances as $instance) {
-            // Получаем все назначения для этого инстанса
-            $totalQuota = TaskAssignment::where('task_instance_id', $instance->id)
-                ->sum('quota');
-
-            $totalCompleted = TaskAssignment::where('task_instance_id', $instance->id)
-                ->sum('completed_count');
-
-            if ($totalQuota > 0) {
-                $instance->daily_quota = max(0, $totalQuota - $totalCompleted);
-                $instance->save();
-            }
-        }
-    }
 }

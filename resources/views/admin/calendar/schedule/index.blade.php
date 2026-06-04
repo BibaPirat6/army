@@ -404,13 +404,22 @@
                         <span class="font-semibold text-gray-900" id="infoTaskName">—</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <span>👤</span>
                         <span id="infoEmployee">—</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <span>📅</span>
                         <span id="infoDate">—</span>
                     </div>
+
+                    {{-- НОВОЕ: Приоритет --}}
+                    <div class="flex items-center gap-2 text-sm">
+                        <span id="infoPriority" class="font-medium">—</span>
+                    </div>
+
+                    {{-- НОВОЕ: Период выполнения --}}
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span id="infoPeriod">—</span>
+                    </div>
+
                     <div class="flex items-center gap-4 mt-2 pt-2 border-t border-gray-200">
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] text-gray-500">Квота:</span>
@@ -530,37 +539,27 @@
             const modal = document.getElementById('completionModal');
             const content = document.getElementById('modalContent');
 
-            // Показываем модалку сразу
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
-            // Анимация
             setTimeout(() => {
                 content.classList.remove('scale-95', 'opacity-0');
                 content.classList.add('scale-100', 'opacity-100');
             }, 50);
 
-            // Показываем состояние загрузки
+            // Состояние загрузки
             document.getElementById('infoTaskName').textContent = 'Загрузка...';
             document.getElementById('infoEmployee').textContent = '—';
             document.getElementById('infoDate').textContent = '📅 ' + date;
+            document.getElementById('infoPriority').textContent = '—';
+            document.getElementById('infoPeriod').textContent = '—';
             document.getElementById('infoQuota').textContent = '...';
             document.getElementById('infoTime').textContent = '...';
             document.getElementById('maxQuota').textContent = '...';
             document.getElementById('completedInput').value = 0;
-            document.getElementById('calcDone').textContent = '0';
-            document.getElementById('calcRemaining').textContent = '0';
 
-            // Получаем CSRF токен
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
-            if (!csrfToken) {
-                showToast('CSRF токен не найден. Обновите страницу.', 'error');
-                closeTaskModal();
-                return;
-            }
-
-            // Загружаем данные
             fetch(`/calendar/schedule/assignment-info/${assignmentId}`, {
                     headers: {
                         'Accept': 'application/json',
@@ -578,10 +577,9 @@
                 })
                 .then(data => {
                     if (!data.success) {
-                        throw new Error(data.message || 'Ошибка загрузки данных');
+                        throw new Error(data.message || 'Ошибка загрузки');
                     }
 
-                    // Заполняем данные
                     currentAssignmentId = data.assignment_id;
                     currentQuota = parseInt(data.quota) || 0;
                     currentIterationTime = parseInt(data.iteration_time) || 0;
@@ -589,6 +587,15 @@
                     document.getElementById('infoTaskName').textContent = data.task_name || '—';
                     document.getElementById('infoEmployee').textContent = '👤 ' + (data.employee_name || '—');
                     document.getElementById('infoDate').textContent = '📅 ' + date;
+
+                    // НОВОЕ: Приоритет
+                    const priorityEl = document.getElementById('infoPriority');
+                    priorityEl.textContent = data.priority_label || 'Приоритет ' + data.priority;
+                    priorityEl.className = 'font-medium text-sm ' + getPriorityColor(data.priority);
+
+                    // НОВОЕ: Период
+                    document.getElementById('infoPeriod').textContent = '⏳ ' + (data.period || '—');
+
                     document.getElementById('infoQuota').textContent = currentQuota;
                     document.getElementById('infoTime').textContent = currentIterationTime;
                     document.getElementById('maxQuota').textContent = currentQuota;
@@ -597,24 +604,29 @@
                     input.value = parseInt(data.completed_count) || 0;
                     input.max = currentQuota;
 
-                    // Ссылка на назначение
-                    const link = document.getElementById('assignmentLink');
-                    if (link && data.task_id && data.assignment_id) {
-                        link.href = `/calendar/tasks/${data.task_id}/assignments/${data.assignment_id}/edit`;
-                    }
-
                     updateCalculation();
-
-                    // Фокус на инпут
                     setTimeout(() => input.focus(), 300);
                 })
                 .catch(error => {
-                    console.error('Ошибка загрузки:', error);
+                    console.error('Ошибка:', error);
                     showToast('❌ ' + error.message, 'error');
                     closeTaskModal();
                 });
         }
 
+        // Цвет приоритета
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 1:
+                    return 'text-red-600';
+                case 2:
+                    return 'text-amber-600';
+                case 3:
+                    return 'text-green-600';
+                default:
+                    return 'text-gray-600';
+            }
+        }
         // Функция для диагностики (вызовите в консоли)
         function testAssignmentInfo(id) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
