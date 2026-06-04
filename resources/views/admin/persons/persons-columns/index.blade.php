@@ -14,6 +14,26 @@
 
 
     <div class="w-full mx-auto p-4 sm:p-6">
+        <!-- Заголовок и описание страницы -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-1 h-8 bg-[#A60644] rounded-full"></div>
+                <h2 class="text-xl font-bold text-[#060606]">Управление колонками таблицы "Сотрудники"</h2>
+            </div>
+            <p class="text-[#565A5B] text-sm ml-4">
+                На этой странице вы можете добавлять, редактировать и удалять дополнительные колонки в таблице <span
+                    class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[#A60644]">persons</span> для сотрудников.
+                Каждая колонка позволяет расширить информацию о сотруднике (например: отдел, должность, дата рождения и
+                т.д.).
+            </p>
+            <div class="mt-2 ml-4 flex flex-wrap gap-2 text-xs text-[#7F7F7F]">
+                <span class="inline-flex items-center gap-1">💡 <strong>Подсказка:</strong></span>
+                <span>• <strong>ТИП(БД)</strong> — тип данных в базе (string, integer, date и т.д.)</span>
+                <span>• <strong>ТИП ФАКТ</strong> — комментарий для понимания формата данных</span>
+                <span>• <strong>nullable</strong> — можно ли оставить поле пустым</span>
+            </div>
+        </div>
+
         <!-- Кнопка создания -->
         <div class="flex justify-end mb-5">
             <a href="{{ route('persons-columns.create', ['back_url' => url()->full()]) }}"
@@ -21,7 +41,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                Создать колонки
+                Создать колонку
             </a>
         </div>
 
@@ -35,8 +55,10 @@
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">ТИП(БД)</th>
                             <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">Значение по умолчанию
                             </th>
-                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">ТИП ФАКТ(комментарий)</th>
-                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">nullable(необязательное)</th>
+                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">ТИП ФАКТ(комментарий)
+                            </th>
+                            <th class="px-3 py-2.5 text-left text-xs font-semibold text-[#e7e1e1]">nullable(необязательное)
+                            </th>
                             <th class="px-2 py-2.5 text-right text-xs font-semibold text-[#e7e1e1] w-28">Действия</th>
                         </tr>
                     </thead>
@@ -44,28 +66,28 @@
                         @foreach ($columns as $col)
                             <tr class="hover:bg-[#A60644]/6 transition-colors">
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
-                                    {{ $col["name"] }}
+                                    {{ $col['name'] }}
                                 </td>
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
-                                    {{ $col["type"] }}
+                                    {{ $col['type'] }}
                                 </td>
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
-                                    {{ $col["default"] }}
+                                    {{ $col['default'] }}
                                 </td>
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
-                                    {{ $col["comment"] }}
+                                    {{ $col['comment'] }}
                                 </td>
                                 <td class="px-3 py-2.5 text-[#111] text-sm font-medium">
-                                    {{ $col["nullable"] ? "✅" : "❌" }}
+                                    {{ $col['nullable'] ? '✅' : '❌' }}
                                 </td>
                                 <td class="px-2 py-2.5">
                                     <div class="flex gap-1 justify-end">
-                                        <a href="{{ route('persons-columns.edit', ['id' => $col["name"], 'back_url' => url()->full()]) }}"
+                                        <a href="{{ route('persons-columns.edit', ['id' => $col['name'], 'back_url' => url()->full()]) }}"
                                             class="inline-flex items-center px-3 py-1.5 bg-[#A60644]/90 text-white text-xs font-medium rounded hover:bg-[#A60644] transition-colors">
                                             ✎ Ред.
                                         </a>
                                         <form
-                                            action="{{ route('persons-columns.delete', ['id' => $col["name"], 'back_url' => url()->full()]) }}"
+                                            action="{{ route('persons-columns.delete', ['id' => $col['name'], 'back_url' => url()->full()]) }}"
                                             method="POST" class="inline" onsubmit="return confirm('Удалить колонку?')">
                                             @csrf @method('DELETE')
                                             <button type="submit"
@@ -79,7 +101,21 @@
                         @endforeach
                     </tbody>
                 </table>
+                <!-- Дополнительная информация при отсутствии колонок -->
+                @if (count($columns) === 0)
+                    <div class="mt-6 text-center py-8 bg-[#e7e1e1]/30 rounded-xl border border-dashed border-[#BFBFBF]">
+                        <svg class="w-12 h-12 mx-auto text-[#BFBFBF] mb-3" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <p class="text-[#565A5B] font-medium">Пока нет дополнительных колонок</p>
+                        <p class="text-[#7F7F7F] text-sm mt-1">Нажмите «Создать колонку», чтобы добавить новое поле для
+                            сотрудников</p>
+                    </div>
+                @endif
             </div>
         </div>
+
     </div>
 @endsection
