@@ -31,7 +31,7 @@
     </div>
 
 
-    <div id="app">
+    <div id="vue-app">
         <structure-graph :nodes="{{ json_encode($graphData['nodes']) }}" :links="{{ json_encode($graphData['links']) }}"
             back-url="{{ url()->full() }}">
         </structure-graph>

@@ -11,16 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // шаблон для назначения сотруднику для быстроты
-        // Назначение: Хранит повторно используемые шаблоны графиков (5/2, 2/2, сутки/трое и т.д.). При назначении шаблона сотруднику генерируются записи в work_days на год (или произвольный период). Изменение шаблона не меняет уже сгенерированные дни – их можно корректировать вручную.
-        // Schema::create('work_schedule_templates', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->string('name');
-        //     $table->json('pattern');
-        //     // Пример: {"monday":{"work_start":"09:00","work_end":"18:00","breaks":[{"start":"13:00","end":"14:00"}]}, ...}
-        //     $table->boolean('is_default')->default(false);
-        //     $table->timestamps();
-        // });
 
         // когда сотрудник доступен
         Schema::create('work_days', function (Blueprint $table) {

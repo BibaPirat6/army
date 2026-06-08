@@ -4,9 +4,80 @@
     Комиссариаты
 @endsection
 
-@section('vite-resources')
-    @vite(['resources/css/map.css'])
-@endsection
+<style>
+    .map-wrapper {
+        position: relative;
+    }
+
+    /* фон */
+    .map-wrapper img {
+        position: relative;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    /* СЕТКА */
+    .grid-cells {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: repeat(200, 1fr);
+        grid-template-rows: repeat(120, 1fr);
+        z-index: 2;
+    }
+
+    /* точка */
+    .cell:hover {
+        background-color: red;
+        border-radius: 200%;
+    }
+
+    /* МАРКЕРЫ */
+    .grid-markers {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    /*  МАРКЕР */
+    .marker {
+        pointer-events: auto;
+        cursor: pointer;
+
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        background: red;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+
+        clip-path: polygon(50% 0%,
+                61% 35%,
+                98% 35%,
+                68% 57%,
+                79% 91%,
+                50% 70%,
+                21% 91%,
+                32% 57%,
+                2% 35%,
+                39% 35%);
+
+        transform: translate(-50%, -50%);
+    }
+
+    /* hover звезды */
+    .marker:hover {
+        transform: translate(-50%, -50%) scale(1.15);
+        box-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
+    }
+</style>
 
 @section('content')
     <div class="w-full px-4 md:px-6 py-4 md:py-6">

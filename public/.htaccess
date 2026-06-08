@@ -1,3 +1,22 @@
+# Устанавливаем правильную кодировку для всех файлов
+AddDefaultCharset UTF-8
+
+# Принудительно устанавливаем UTF-8 для HTML и PHP
+<IfModule mod_mime.c>
+    AddCharset UTF-8 .html .php .css .js
+</IfModule>
+
+# Правильные заголовки для CSS и JS
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js)$">
+        Header set Content-Type "text/css; charset=UTF-8"
+        Header set X-Content-Type-Options "nosniff"
+    </FilesMatch>
+    <FilesMatch "\.(html|php)$">
+        Header set Content-Type "text/html; charset=UTF-8"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

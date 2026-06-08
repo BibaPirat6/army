@@ -26,9 +26,6 @@ return new class extends Migration
                 ->constrained('employee_positions')
                 ->nullOnDelete();
 
-            // Кто создал
-            // $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-
             // Период действия задачи (диапазон дат)
             $table->date('start_date');
             $table->date('end_date');
@@ -48,23 +45,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // храним файлы для tasks
-        // Schema::create('task_files', function (Blueprint $table) {
-        //     $table->id();
-
-        //     $table->foreignId('task_id')
-        //         ->nullable()
-        //         ->constrained('tasks')
-        //         ->nullOnDelete();
-
-        //     $table->string('original_name');
-        //     $table->string('path');
-        //     $table->string('mime_type')->nullable();
-        //     $table->unsignedBigInteger('size')->default(0);
-        //     $table->timestamps();
-
-        //     $table->index('task_id');
-        // });
 
         // какой сотрудник делает какую задачу
         // и в каком объёме
@@ -80,12 +60,6 @@ return new class extends Migration
             // Приоритет: чем меньше число, тем выше приоритет (1 – наивысший)
             $table->unsignedInteger('priority')->default(1);
 
-            // рамки (не календарь!)
-            // $table->date('start_date')->nullable();
-            // $table->date('end_date')->nullable();
-
-            // Статус и счётчик фактического выполнения (денормализация)
-            // $table->enum('status', ['assigned', 'in_progress', 'completed'])->default('assigned');
             $table->unsignedInteger('completed_count')->default(0);
 
             $table->timestamps();
@@ -109,15 +83,6 @@ return new class extends Migration
             $table->unique(['task_id', 'date']);
         });
 
-        // для аналитики, надо ппц
-        // Зачем: При отметке выполнения одной итерации создаётся запись, а completed_count в task_assignments увеличивается через Observer. Даёт аудит и фактические данные
-        // Schema::create('task_completions', function (Blueprint $table) {
-        //     $table->id();
-        //     $table->foreignId('task_assignment_id')->constrained('task_assignments')->cascadeOnDelete();
-        //     $table->timestamp('completed_at');
-        //     $table->unsignedInteger('duration_minutes')->nullable(); // реально потраченное время
-        //     $table->timestamps();
-        // });
     }
 
     /**
