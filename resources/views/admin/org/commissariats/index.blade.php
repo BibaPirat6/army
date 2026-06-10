@@ -100,11 +100,21 @@
                                 </td>
                                 {{-- начальник --}}
                                 <td class="px-6 py-4 text-[#060606]">
-                                    <a
-                                        href="{{ route('employees.show', [
-                                            'id' => $commissariat->getChiefAttribute()->id,
+                                    @php
+                                        $chief = $commissariat->chief;
+                                    @endphp
+
+                                    @if ($chief)
+                                        <a href="{{ route('employees.show', [
+                                            'id' => $chief->id,
                                             'back_url' => url()->full(),
-                                        ]) }}">{{ optional($commissariat->getChiefAttribute())->getFullNameAttribute() ?? '' }}</a>
+                                        ]) }}"
+                                            class="text-[#A60644] hover:underline">
+                                            {{ $chief->full_name }}
+                                        </a>
+                                    @else
+                                        <span class="text-[#7F7F7F] italic">Не назначен</span>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-4 text-[#060606]">X: {{ $commissariat->longitude ?? '*' }}
