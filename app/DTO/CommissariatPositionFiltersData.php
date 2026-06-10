@@ -26,8 +26,9 @@ readonly class CommissariatPositionFiltersData
         return new self(
             search: $request->string('search')->toString() ?: null,
             vacancyStatus: $request->string('vacancy_status')->toString() ?: null,
-            rateMin: $request->filled('rate_min') ? (float) $request->rate_min : 0.25,
-            rateMax: $request->filled('rate_max') ? (float) $request->rate_max : 2,
+            // Устанавливаем значения по умолчанию только если фильтр активен
+            rateMin: $request->filled('rate_min') ? (float) $request->rate_min : null,
+            rateMax: $request->filled('rate_max') ? (float) $request->rate_max : null,
             positionTypeId: $request->integer('position_type_id') ?: null,
             chiefTypeId: $request->integer('chief_type_id') ?: null,
             commissariatId: $request->integer('commissariat_id') ?: null,

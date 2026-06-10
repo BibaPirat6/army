@@ -30,9 +30,15 @@ class CommissariatPositionFilter extends BaseFilter
         $min = $range['min'] ?? 0.25;
         $max = $range['max'] ?? 2;
 
-        $query->whereHas('employeePositions', function (Builder $q) use ($min, $max) {
-            $q->whereBetween('rate', [$min, $max])
-                ->where('employee_position_status_id', 1); // Только работающие
+        // Используем orWhereHas + whereDoesntHave чтобы включить должности без назначений
+        $query->where(function (Builder $query) use ($min, $max) {
+            $query->whereHas('employeePositions', function (Builder $q) use ($min, $max) {
+                $q->whereBetween('rate', [$min, $max])
+                    ->where('employee_position_status_id', 1);
+            })
+            ->orWhereDoesntHave('employeePositions', function (Builder $q) {
+                $q->where('employee_position_status_id', 1);
+            });
         });
     }
 
@@ -54,25 +60,6 @@ class CommissariatPositionFilter extends BaseFilter
     protected function vacancyStatus(Builder $query, string $value): void
     {
         // Фильтрация в контроллере
-    }
-
-    /**
-     * Фильтр по диапазону ставок СОТРУДНИКОВ
-     */
-    protected function rateMin(Builder $query, float $value): void
-    {
-        $query->whereHas('employeePositions', function (Builder $q) use ($value) {
-            $q->where('rate', '>=', $value)
-                ->where('employee_position_status_id', 1); // Только работающие
-        });
-    }
-
-    protected function rateMax(Builder $query, float $value): void
-    {
-        $query->whereHas('employeePositions', function (Builder $q) use ($value) {
-            $q->where('rate', '<=', $value)
-                ->where('employee_position_status_id', 1); // Только работающие
-        });
     }
 
     protected function department(Builder $query, ?int $value): void
@@ -106,4 +93,3 @@ class CommissariatPositionFilter extends BaseFilter
         }
     }
 }
-
