@@ -35,10 +35,12 @@
                     'id' => $commissariatPosition->id,
                     'employeePositionId' => $employeePosition->id
                 ]) }}"
-                    method="POST" class="space-y-6">
+                    method="POST" class="space-y-6" id="edit-form">
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="back_url" value="{{ $backUrl }}">
+                    <!-- Скрытое поле для ставки, которое всегда отправляется -->
+                    <input type="hidden" name="rate" id="rate-hidden" value="{{ old('rate', $employeePosition->rate) }}">
 
                     <!-- Информация о свободных ставках -->
                     <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
@@ -73,11 +75,11 @@
                         <input type="text" id="chief_employee_search" 
                             placeholder="Начните вводить ФИО" 
                             autocomplete="off"
-                            value="{{ $employeePosition->employee->getFullNameAttribute() }}"
+                            value="{{ old('chief_employee_name', $employeePosition->employee->getFullNameAttribute()) }}"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
                         <input type="hidden" name="chief_employee_id" id="chief_employee_id" 
-                            value="{{ $employeePosition->employee_id }}">
+                            value="{{ old('chief_employee_id', $employeePosition->employee_id) }}">
 
                         <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]
                                rounded-lg max-h-72 overflow-auto hidden shadow-lg">
@@ -87,13 +89,13 @@
                                 Очистить
                             </li>
 
-                            @foreach ($employees as $employee)
+                            @foreach ($employees as $emp)
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" 
-                                    data-id="{{ $employee->id }}"
-                                    data-name="{{ trim($employee->getFullNameAttribute()) }}"
-                                    {{ $employee->id == $employeePosition->employee_id ? 'style=background-color:#f0f0f0' : '' }}>
-                                    {{ $employee->getFullNameAttribute() }}
-                                    <span class="text-gray-400">(ID: {{ $employee->id }})</span>
+                                    data-id="{{ $emp->id }}"
+                                    data-name="{{ trim($emp->getFullNameAttribute()) }}"
+                                    {{ $emp->id == $employeePosition->employee_id ? 'style=background-color:#f0f0f0' : '' }}>
+                                    {{ $emp->getFullNameAttribute() }}
+                                    <span class="text-gray-400">(ID: {{ $emp->id }})</span>
                                 </li>
                             @endforeach
                         </ul>
@@ -105,24 +107,26 @@
                     <!-- Ставка -->
                     <div id="rate-field">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Ставка <span class="text-red-500">*</span>
+                            Ставка <span class="text-red-500" id="rate-required">*</span>
                         </label>
-                       <input type="number" 
+                        <input type="number" 
+                            id="rate-visible"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]" 
                             autocomplete="off"
                             placeholder="Введите ставку" 
                             value="{{ old('rate', $employeePosition->rate) }}" 
                             min="0.25" 
                             max="{{ $maxRateForInput }}" 
-                            step="0.25" 
-                            name="rate"
-                            required
+                            step="0.25"
                         >
                         @error('rate')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                         <p class="mt-1 text-xs text-gray-500">
-                            Минимум: 0.25, Максимум: {{ number_format($availableRate + ($employeePosition->employeePositionStatus->occupies_rate ? $employeePosition->rate : 0), 2) }}, шаг: 0.25
+                            Минимум: 0.25, Максимум: {{ number_format($maxRateForInput, 2) }}, шаг: 0.25
+                        </p>
+                        <p class="mt-1 text-xs text-orange-600 hidden" id="rate-frozen-message">
+                            ⚠️ Ставка заморожена. При данном статусе ставка сохраняется, но не занимает место.
                         </p>
                     </div>
 
@@ -131,7 +135,7 @@
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Статус <span class="text-red-500">*</span>
                         </label>
-                        <select name="employee_position_status_id" required
+                        <select name="employee_position_status_id" id="status-select" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors">
                             <option value="">Выберите статус</option>
                             @foreach ($employeePositionStatuses as $status)
@@ -178,93 +182,92 @@
         const list = container.querySelector('#chief_employee_list');
         const items = list.querySelectorAll('li');
         const rateField = document.getElementById('rate-field');
-        const rateInput = document.querySelector('input[name="rate"]');
-        const statusSelect = document.querySelector('select[name="employee_position_status_id"]');
+        const rateVisible = document.getElementById('rate-visible');
+        const rateHidden = document.getElementById('rate-hidden');
+        const rateRequired = document.getElementById('rate-required');
+        const rateFrozenMessage = document.getElementById('rate-frozen-message');
+        const statusSelect = document.getElementById('status-select');
+        const form = document.getElementById('edit-form');
         
         // Сохраняем оригинальные значения
-        const originalRate = parseFloat(rateInput?.value || 0);
+        const originalRate = parseFloat(rateVisible?.value || 0);
         const originalStatusId = statusSelect?.value;
         const originalEmployeeId = hidden.value;
         
-        // Получаем максимальную ставку из атрибута
-        let maxRate = parseFloat(rateInput?.getAttribute('max') || 0);
+        // Получаем максимальную ставку
+        let maxRate = parseFloat(rateVisible?.getAttribute('max') || 0);
         
-        // Сохраняем значение ставки для случаев, когда статус не занимает ставку
+        // Переменная для хранения ставки
         let savedRateValue = originalRate;
 
-        // Функция для показа/скрытия поля ставки
-        function toggleRateField() {
-            if (hidden.value && hidden.value !== '') {
-                rateField.style.display = 'block';
-            } else {
-                rateField.style.display = 'none';
-                if (rateInput) {
-                    rateInput.value = '';
-                }
-            }
-        }
-
-        // Функция обновления состояния поля ставки в зависимости от статуса
+        // Функция обновления состояния поля ставки
         function updateRateFieldState() {
             const selectedOption = statusSelect?.options[statusSelect.selectedIndex];
             const occupiesRate = selectedOption?.dataset.occupiesRate === '1';
             
-            if (!rateInput) return;
+            if (!rateVisible || !rateHidden || !rateRequired) return;
             
             if (occupiesRate) {
-                // Статус занимает ставку - поле активно, можно редактировать
-                rateInput.disabled = false;
-                rateInput.required = true;
-                rateInput.max = maxRate;
+                // Статус ЗАНИМАЕТ ставку - поле активно
+                rateVisible.disabled = false;
+                rateVisible.readOnly = false;
+                rateVisible.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                rateRequired.style.display = 'inline';
+                rateFrozenMessage.classList.add('hidden');
                 
-                // Восстанавливаем сохраненное значение ставки, если оно было
+                // Восстанавливаем сохраненное значение
                 if (savedRateValue > 0) {
-                    rateInput.value = savedRateValue;
-                } else if (!rateInput.value || rateInput.value == 0) {
-                    rateInput.value = 0.25;
-                }
-                
-                // Проверяем, что значение не превышает max
-                let currentValue = parseFloat(rateInput.value);
-                if (currentValue > maxRate) {
-                    rateInput.value = maxRate;
-                    savedRateValue = maxRate;
-                }
-                if (currentValue < 0.25) {
-                    rateInput.value = 0.25;
+                    rateVisible.value = savedRateValue;
+                } else if (!rateVisible.value || parseFloat(rateVisible.value) === 0) {
+                    rateVisible.value = 0.25;
                     savedRateValue = 0.25;
                 }
+                
+                rateVisible.max = maxRate;
+                
+                // Синхронизируем скрытое поле
+                rateHidden.value = rateVisible.value;
+                
+                // Проверяем границы
+                validateRateValue();
             } else {
-                // Статус НЕ занимает ставку - поле отключено, но сохраняем значение
-                rateInput.disabled = true;
-                rateInput.required = false;
-                // Сохраняем текущее значение перед отключением
-                if (rateInput.value && parseFloat(rateInput.value) > 0) {
-                    savedRateValue = parseFloat(rateInput.value);
+                // Статус НЕ занимает ставку - поле заблокировано, но значение сохраняется
+                // Сохраняем текущее значение перед блокировкой
+                if (rateVisible.value && parseFloat(rateVisible.value) > 0) {
+                    savedRateValue = parseFloat(rateVisible.value);
                 }
-                // Показываем сохраненное значение (оно не будет отправлено на сервер, т.к. поле disabled)
-                rateInput.value = savedRateValue;
+                
+                rateVisible.disabled = true;
+                rateVisible.readOnly = true;
+                rateVisible.classList.add('bg-gray-100', 'cursor-not-allowed');
+                rateRequired.style.display = 'none';
+                rateFrozenMessage.classList.remove('hidden');
+                
+                // Показываем сохраненное значение
+                rateVisible.value = savedRateValue > 0 ? savedRateValue : originalRate;
+                
+                // ВАЖНО: скрытое поле ВСЕГДА содержит актуальное значение
+                rateHidden.value = savedRateValue > 0 ? savedRateValue : originalRate;
             }
         }
 
-        // Функция проверки ставки при ручном вводе
-        function validateRate() {
-            if (!rateInput || rateInput.disabled) return;
+        function validateRateValue() {
+            if (!rateVisible || rateVisible.disabled) return;
             
-            let value = parseFloat(rateInput.value);
+            let value = parseFloat(rateVisible.value);
             if (isNaN(value)) value = 0.25;
             if (value < 0.25) {
-                rateInput.value = 0.25;
-                savedRateValue = 0.25;
-                alert('Минимальная ставка: 0.25');
+                rateVisible.value = 0.25;
+                value = 0.25;
             }
             if (value > maxRate) {
-                rateInput.value = maxRate;
-                savedRateValue = maxRate;
+                rateVisible.value = maxRate;
+                value = maxRate;
                 alert('Максимальная доступная ставка: ' + maxRate.toFixed(2));
-            } else {
-                savedRateValue = parseFloat(rateInput.value);
             }
+            
+            savedRateValue = value;
+            rateHidden.value = value;
         }
 
         function open() {
@@ -294,7 +297,6 @@
             hidden.value = '';
             open();
             filter(input.value);
-            toggleRateField();
         });
 
         items.forEach(item => {
@@ -304,7 +306,6 @@
                 input.value = name;
                 hidden.value = id;
                 close();
-                toggleRateField();
                 updateRateFieldState();
             });
         });
@@ -315,10 +316,18 @@
             }
         });
 
-        // Валидация ставки
-        if (rateInput) {
-            rateInput.addEventListener('change', validateRate);
-            rateInput.addEventListener('input', validateRate);
+        // Синхронизация видимого и скрытого поля ставки
+        if (rateVisible) {
+            rateVisible.addEventListener('change', validateRateValue);
+            rateVisible.addEventListener('input', function() {
+                if (!this.disabled) {
+                    let value = parseFloat(this.value);
+                    if (!isNaN(value) && value > 0) {
+                        savedRateValue = value;
+                        rateHidden.value = value;
+                    }
+                }
+            });
         }
 
         // Обработчик изменения статуса
@@ -328,8 +337,12 @@
                 const occupiesRate = selectedOption?.dataset.occupiesRate === '1';
                 
                 if (!occupiesRate) {
-                    // Статус не занимает ставку - просто отключаем поле, но не меняем значение
-                    if (confirm('Выбранный статус НЕ занимает ставку.\n\nСтавка будет сохранена, но не будет влиять на занятость.\nПродолжить?')) {
+                    // Показываем предупреждение
+                    const message = 'Выбранный статус НЕ занимает ставку.\n\n' +
+                        'Текущая ставка (' + (savedRateValue > 0 ? savedRateValue : originalRate) + ') будет сохранена, ' +
+                        'но не будет учитываться при расчете занятых ставок.\n\nПродолжить?';
+                    
+                    if (confirm(message)) {
                         updateRateFieldState();
                     } else {
                         // Возвращаем предыдущий статус
@@ -337,14 +350,23 @@
                         updateRateFieldState();
                     }
                 } else {
-                    // Статус занимает ставку - активируем поле
                     updateRateFieldState();
                 }
             });
         }
 
+        // Перед отправкой формы убеждаемся, что скрытое поле содержит актуальное значение
+        form.addEventListener('submit', function(e) {
+            if (rateVisible.disabled) {
+                // Если поле заблокировано, используем сохраненное значение
+                rateHidden.value = savedRateValue > 0 ? savedRateValue : originalRate;
+            } else {
+                // Если поле активно, синхронизируем
+                rateHidden.value = rateVisible.value;
+            }
+        });
+
         // Инициализация
-        toggleRateField();
         updateRateFieldState();
     });
 </script>

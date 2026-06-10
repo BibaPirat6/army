@@ -241,17 +241,24 @@ class AssignEmployeeController extends Controller
         // Валидация
         $validated = $request->validate([
             'chief_employee_id' => 'required|exists:employees,id',
-            'rate' => 'nullable|numeric|min:0',
+            'rate' => 'required|numeric|min:0', // Изменили на required, так как теперь всегда отправляется
             'employee_position_status_id' => 'required|exists:employee_position_statuses,id',
             'back_url' => 'nullable|url',
         ]);
 
         // Получаем новый статус
         $newStatus = EmployeePositionStatus::findOrFail($validated['employee_position_status_id']);
-        $oldStatus = $employeePosition->employeePositionStatus;
 
-        // Если статус занимает ставку, rate должен быть > 0
-        if ($newStatus->occupies_rate && (! isset($validated['rate']) || $validated['rate'] <= 0)) {
+        // Определяем итоговую ставку
+        $finalRate = $validated['rate'];
+
+        // Если ставка 0, но статус не занимает ставку - сохраняем предыдущую ставку
+        if ($finalRate == 0 && ! $newStatus->occupies_rate) {
+            $finalRate = $employeePosition->rate;
+        }
+
+        // Если статус занимает ставку, проверяем что ставка > 0
+        if ($newStatus->occupies_rate && $finalRate <= 0) {
             return back()
                 ->withErrors([
                     'rate' => 'Для статуса, который занимает ставку, необходимо указать ставку больше 0',
@@ -267,20 +274,12 @@ class AssignEmployeeController extends Controller
             ->where('id', '!=', $employeePositionId)
             ->sum('rate');
 
-        // Текущая занятость (другие сотрудники)
-        $currentOccupiedRate = $occupiedRateByOthers;
-
-        // Если старый статус занимал ставку, его ставка сейчас НЕ входит в $occupiedRateByOthers
-        // Потому что мы исключили его через where('id', '!=')
-
         // Доступные ставки для нового назначения
-        // = всего ставок - занято другими
         $availableRate = $commissariatPosition->rate_total - $occupiedRateByOthers;
 
         // Проверка доступности ставок для нового статуса
         if ($newStatus->occupies_rate) {
-            // Проверяем, что новая ставка не превышает доступную
-            if ($validated['rate'] > $availableRate) {
+            if ($finalRate > $availableRate) {
                 return back()
                     ->withErrors([
                         'rate' => sprintf(
@@ -288,7 +287,7 @@ class AssignEmployeeController extends Controller
                             $availableRate,
                             $commissariatPosition->rate_total,
                             $occupiedRateByOthers,
-                            $validated['rate']
+                            $finalRate
                         ),
                     ])
                     ->withInput();
@@ -313,13 +312,18 @@ class AssignEmployeeController extends Controller
 
         // Обновляем назначение
         $employeePosition->employee_id = $validated['chief_employee_id'];
-        $employeePosition->rate = $validated['rate'] ?? 0;
+        $employeePosition->rate = $finalRate; // Используем итоговую ставку
         $employeePosition->employee_position_status_id = $validated['employee_position_status_id'];
         $employeePosition->save();
 
         // Формируем сообщение
         $employee = Employee::find($validated['chief_employee_id']);
-        $rateText = $newStatus->occupies_rate ? "со ставкой {$validated['rate']}" : "(статус не занимает ставку, ставка: {$employeePosition->rate})";
+
+        if ($newStatus->occupies_rate) {
+            $rateText = "со ставкой {$finalRate}";
+        } else {
+            $rateText = "(статус не занимает ставку, сохраненная ставка: {$finalRate})";
+        }
 
         $message = sprintf(
             'Назначение обновлено: сотрудник "%s", %s, статус: %s',

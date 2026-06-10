@@ -67,39 +67,38 @@
                         </div>
                     </div>
 
-                         {{-- сотрудник --}}
-                  {{-- Сотрудник --}}
-<div class="relative" id="chief-select">
-    <label class="block text-sm font-medium text-[#565A5B] mb-2">
-        Сотрудник <span class="text-red-500">*</span>
-    </label>
+                    {{-- Сотрудник --}}
+                    <div class="relative" id="chief-select">
+                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
+                            Сотрудник <span class="text-red-500">*</span>
+                        </label>
 
-    {{-- visible --}}
-    <input type="text" id="chief_employee_search" 
-        placeholder="Начните вводить ФИО" 
-        autocomplete="off"
-        value="{{ $employee ? trim($employee->getFullNameAttribute()) : old('chief_employee_name', '') }}"
-        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
+                        {{-- visible --}}
+                        <input type="text" id="chief_employee_search" 
+                            placeholder="Начните вводить ФИО" 
+                            autocomplete="off"
+                            value="{{ $employee ? trim($employee->getFullNameAttribute()) : old('chief_employee_name', '') }}"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
-    {{-- hidden --}}
-    <input type="hidden" name="chief_employee_id" id="chief_employee_id" 
-        value="{{ $employee ? $employee->id : old('chief_employee_id', '') }}">
+                        {{-- hidden --}}
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" 
+                            value="{{ $employee ? $employee->id : old('chief_employee_id', '') }}">
 
-    {{-- dropdown --}}
-    <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
-        <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name="" data-static="true">
-            Очистить
-        </li>
-        @foreach ($employees as $emp)
-            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 {{ $employee && $employee->id == $emp->id ? 'bg-gray-100' : '' }}" 
-                data-id="{{ $emp->id }}"
-                data-name="{{ trim($emp->getFullNameAttribute()) }}">
-                {{ $emp->getFullNameAttribute() }}
-                <span class="text-gray-400">(ID: {{ $emp->id }})</span>
-            </li>
-        @endforeach
-    </ul>
-</div>
+                        {{-- dropdown --}}
+                        <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name="" data-static="true">
+                                Очистить
+                            </li>
+                            @foreach ($employees as $emp)
+                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 {{ $employee && $employee->id == $emp->id ? 'bg-gray-100' : '' }}" 
+                                    data-id="{{ $emp->id }}"
+                                    data-name="{{ trim($emp->getFullNameAttribute()) }}">
+                                    {{ $emp->getFullNameAttribute() }}
+                                    <span class="text-gray-400">(ID: {{ $emp->id }})</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
 
                     <!-- Ставка -->
                     <div>
