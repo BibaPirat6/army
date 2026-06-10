@@ -4,6 +4,101 @@
     Штатные должности комиссариата: {{ $commissariat->name }}
 @endsection
 
+<style>
+    /* Кроссбраузерные стили для range input */
+    input[type="range"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* Стили для бегунка в WebKit */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        background: #A60644;
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        margin-top: -6px;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        background: transparent;
+        border-radius: 2px;
+    }
+
+    /* Стили для бегунка в Firefox */
+    input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: #A60644;
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 4px;
+        background: transparent;
+        border-radius: 2px;
+    }
+
+    /* Стили для IE/Edge */
+    input[type="range"]::-ms-thumb {
+        width: 16px;
+        height: 16px;
+        background: #A60644;
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        border: 2px solid white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="range"]::-ms-track {
+        width: 100%;
+        height: 4px;
+        background: transparent;
+        border-color: transparent;
+        color: transparent;
+    }
+
+    /* Z-index для корректной работы */
+    #rate_min {
+        z-index: 20;
+    }
+
+    #rate_max {
+        z-index: 30;
+    }
+
+    /* Убираем обводку в Firefox */
+    input[type="range"]::-moz-focus-outer {
+        border: 0;
+    }
+
+    /* Стили при фокусе */
+    input[type="range"]:focus::-moz-range-thumb {
+        box-shadow: 0 0 0 2px rgba(166, 6, 68, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="range"]:focus::-webkit-slider-thumb {
+        box-shadow: 0 0 0 2px rgba(166, 6, 68, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+</style>
+
 @section('content')
     @if (session('success'))
         @include('includes.success', ['success' => session('success')])
@@ -113,6 +208,7 @@
                     </select>
                 </div>
 
+                <!-- Ставка (range slider) -->
                 <div class="col-span-2 md:col-span-1">
                     <div class="flex items-center gap-2 text-xs">
                         <span class="text-[#565A5B] whitespace-nowrap">Ставка:</span>
@@ -121,31 +217,23 @@
                         <span class="text-[#BFBFBF]">—</span>
                         <span id="rate_max_label" class="font-semibold text-[#A60644]">{{ $filters->rateMax ?? 2 }}</span>
                     </div>
-                    <div class="relative mt-1 px-0.5">
-                        <div class="relative h-1.5">
-                            <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
-                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644] rounded-full"
-                                style="left: 0%; right: 0%;"></div>
+                    <div class="relative mt-1" style="height: 24px;">
+                        <!-- Фоновый трек -->
+                        <div class="absolute top-1/2 -translate-y-1/2 w-full h-1.5 bg-gray-200 rounded-full"></div>
+                        <!-- Активный трек -->
+                        <div id="rate_range_track"
+                            class="absolute top-1/2 -translate-y-1/2 h-1.5 bg-[#A60644] rounded-full"
+                            style="left: 0%; right: 0%;"></div>
+                        <!-- Контейнер для ползунков -->
+                        <div class="relative w-full h-full">
                             <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
-                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
-                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
-                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
+                                class="absolute w-full h-full appearance-none bg-transparent pointer-events-none"
+                                style="top: 0; left: 0; margin: 0;">
                             <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMax ?? 2 }}"
-                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
-                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
-                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
+                                class="absolute w-full h-full appearance-none bg-transparent pointer-events-none"
+                                style="top: 0; left: 0; margin: 0;">
                         </div>
                     </div>
                 </div>
@@ -435,33 +523,43 @@
         const rateRangeTrack = document.getElementById('rate_range_track');
 
         function updateRateRange() {
-            const min = parseFloat(rateMin.value);
-            const max = parseFloat(rateMax.value);
+            let min = parseFloat(rateMin.value);
+            let max = parseFloat(rateMax.value);
 
+            // Предотвращаем пересечение ползунков
             if (min > max) {
-                if (this === rateMin) {
+                if (document.activeElement === rateMin) {
                     rateMax.value = min;
+                    max = min;
                 } else {
                     rateMin.value = max;
+                    min = max;
                 }
             }
 
-            const finalMin = parseFloat(rateMin.value);
-            const finalMax = parseFloat(rateMax.value);
+            // Вычисляем позицию трека
+            const range = 2 - 0.25;
+            const minPercent = ((min - 0.25) / range) * 100;
+            const maxPercent = ((max - 0.25) / range) * 100;
 
-            const minPercent = ((finalMin - 0.25) / (2 - 0.25)) * 100;
-            const maxPercent = ((finalMax - 0.25) / (2 - 0.25)) * 100;
-
+            // Обновляем визуальный трек
             rateRangeTrack.style.left = minPercent + '%';
             rateRangeTrack.style.right = (100 - maxPercent) + '%';
 
-            rateMinLabel.textContent = finalMin;
-            rateMaxLabel.textContent = finalMax;
+            // Обновляем метки
+            rateMinLabel.textContent = min.toFixed(2);
+            rateMaxLabel.textContent = max.toFixed(2);
         }
 
+        // Обработчики событий
         rateMin.addEventListener('input', updateRateRange);
         rateMax.addEventListener('input', updateRateRange);
 
+        // Для Firefox добавляем обработчик change
+        rateMin.addEventListener('change', updateRateRange);
+        rateMax.addEventListener('change', updateRateRange);
+
+        // Инициализация
         updateRateRange();
     </script>
 @endpush
