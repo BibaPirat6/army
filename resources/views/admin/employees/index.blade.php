@@ -33,13 +33,18 @@
         </div>
 
         <!-- Фильтры -->
-        <form method="GET" class="bg-white shadow-md rounded-xl p-4 mb-4" id="filterForm">
+        <form method="GET" class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 mb-4" id="filterForm">
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-3">
                 <!-- Поиск -->
-                <div class="col-span-2 md:col-span-1">
+                <div class="col-span-2 md:col-span-1 relative">
+                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                     <input type="text" id="search" name="search" value="{{ $filters->search }}"
-                        placeholder="🔍 Поиск (ФИО, логин, должность)..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] transition outline-none">
+                        placeholder="Поиск (ФИО, логин, должность)..."
+                        class="w-full pl-9 pr-3 py-2 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black focus:border-black outline-none transition">
                 </div>
 
                 <!-- Статус сотрудника -->
@@ -60,7 +65,6 @@
                         <option value="user" @selected($filters->userRole === 'user')>👤 Пользователь</option>
                     </select>
                 </div>
-
 
                 <!-- Комиссариат -->
                 <div>
@@ -105,7 +109,6 @@
                                 $divLabel = $item->name;
                                 $divInfo = [];
 
-                                // Показываем зависимости только если не выбран комиссариат/отдел
                                 if (!$filters->commissariatId && $item->commissariat_id) {
                                     $divCommissariat = $commissariats->firstWhere('id', $item->commissariat_id);
                                     if ($divCommissariat) {
@@ -114,7 +117,6 @@
                                 }
 
                                 if (!$filters->departmentId && $item->department_id) {
-                                    // Используем коллекцию departments, переданную из контроллера
                                     $divDepartment = $departments->firstWhere('id', $item->department_id);
                                     if ($divDepartment) {
                                         $divInfo[] = $divDepartment->name;
@@ -134,35 +136,40 @@
                     </select>
                 </div>
 
-
                 <!-- Ставка (range slider) -->
                 <div class="col-span-2 md:col-span-1">
                     <div class="flex items-center gap-2 text-xs">
-                        <span class="text-gray-600 whitespace-nowrap">Ставка:</span>
+                        <span class="text-[#565A5B] whitespace-nowrap">Ставка:</span>
                         <span id="rate_min_label"
                             class="font-semibold text-[#A60644]">{{ $filters->rateMin ?? 0.25 }}</span>
-                        <span class="text-gray-400">—</span>
+                        <span class="text-[#BFBFBF]">—</span>
                         <span id="rate_max_label" class="font-semibold text-[#A60644]">{{ $filters->rateMax ?? 2 }}</span>
                     </div>
                     <div class="relative mt-1 px-0.5">
                         <div class="relative h-1.5">
                             <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
-                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644]/60 rounded-full"
+                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644] rounded-full"
                                 style="left: 0%; right: 0%;"></div>
                             <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
-                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                    [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                    [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                             <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMax ?? 2 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
-                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                    [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                    [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                         </div>
                     </div>
                 </div>
@@ -190,7 +197,7 @@
 
             <div class="flex items-center gap-2 mt-4">
                 <button type="submit"
-                    class="inline-flex items-center px-4 py-2 bg-[#A60644] hover:bg-[#A60644]/80 text-white text-sm font-medium rounded-lg transition shadow-sm hover:shadow focus:ring-2 focus:ring-offset-2 focus:ring-[#A60644]">
+                    class="inline-flex items-center px-5 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black transition shadow-sm">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -198,7 +205,7 @@
                     Применить
                 </button>
                 <a href="{{ route('employees.index') }}"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition focus:ring-2 focus:ring-offset-2 focus:ring-[#A60644]">
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

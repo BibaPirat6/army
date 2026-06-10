@@ -40,19 +40,24 @@
         </div>
 
         <!-- Фильтры -->
-        <form method="GET" class="bg-white shadow-md rounded-xl p-4 mb-4" id="filterForm">
+        <form method="GET" class="p-4 bg-white rounded-xl shadow-sm border border-gray-100 mb-4" id="filterForm">
             <input type="hidden" name="commissariat_id" value="{{ $commissariat->id }}">
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-3">
-                <div class="col-span-2 md:col-span-1">
+                <div class="col-span-2 md:col-span-1 relative">
+                    <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                     <input type="text" id="search" name="search" value="{{ $filters->search }}"
-                        placeholder="🔍 Поиск..."
-                        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        placeholder="Поиск..."
+                        class="w-full pl-9 pr-3 py-2 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black focus:border-black outline-none transition">
                 </div>
 
                 <div>
                     <select id="vacancy_status" name="vacancy_status"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white">
                         <option value="">Статус вакансии</option>
                         <option value="vacant" @selected($filters->vacancyStatus === 'vacant')>🔴 Вакант</option>
                         <option value="staffed" @selected($filters->vacancyStatus === 'staffed')>🟢 Укомплектовано</option>
@@ -61,7 +66,7 @@
 
                 <div>
                     <select id="employee_status" name="employee_status"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white">
                         <option value="">Статус сотрудника</option>
                         <option value="working" @selected($filters->employeeStatus === 'working')>💼 Работает</option>
                         <option value="vacation" @selected($filters->employeeStatus === 'vacation')>🏖️ Отпуск</option>
@@ -71,7 +76,7 @@
 
                 <div class="relative z-30">
                     <select id="department_id" name="department_id"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition focus:z-50">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white focus:z-50">
                         <option value="">Отдел</option>
                         @foreach ($departments as $item)
                             <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>{{ $item->name }}</option>
@@ -81,7 +86,7 @@
 
                 <div class="relative z-30">
                     <select id="division_id" name="division_id"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition focus:z-50">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white focus:z-50">
                         <option value="">Отделение</option>
                         @foreach ($divisions as $item)
                             <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>{{ $item->name }}</option>
@@ -91,7 +96,7 @@
 
                 <div>
                     <select id="sort_by" name="sort_by"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white">
                         <option value="id" @selected($filters->sortBy === 'id')>Сортировать по</option>
                         <option value="rate_total" @selected($filters->sortBy === 'rate_total')>Ставке</option>
                         <option value="vacancy_status" @selected($filters->sortBy === 'vacancy_status')>Статусу вакансии</option>
@@ -102,7 +107,7 @@
 
                 <div>
                     <select id="sort_direction" name="sort_direction"
-                        class="w-full border border-gray-300 rounded-lg px-2.5 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        class="w-full py-2 px-3 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black outline-none transition bg-white">
                         <option value="desc" @selected($filters->sortDirection === 'desc')>↓ По убыванию</option>
                         <option value="asc" @selected($filters->sortDirection === 'asc')>↑ По возрастанию</option>
                     </select>
@@ -110,31 +115,37 @@
 
                 <div class="col-span-2 md:col-span-1">
                     <div class="flex items-center gap-2 text-xs">
-                        <span class="text-gray-600 whitespace-nowrap">Ставка:</span>
+                        <span class="text-[#565A5B] whitespace-nowrap">Ставка:</span>
                         <span id="rate_min_label"
-                            class="font-semibold text-indigo-600">{{ $filters->rateMin ?? 0.25 }}</span>
-                        <span class="text-gray-400">—</span>
-                        <span id="rate_max_label" class="font-semibold text-indigo-600">{{ $filters->rateMax ?? 2 }}</span>
+                            class="font-semibold text-[#A60644]">{{ $filters->rateMin ?? 0.25 }}</span>
+                        <span class="text-[#BFBFBF]">—</span>
+                        <span id="rate_max_label" class="font-semibold text-[#A60644]">{{ $filters->rateMax ?? 2 }}</span>
                     </div>
                     <div class="relative mt-1 px-0.5">
                         <div class="relative h-1.5">
                             <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
-                            <div id="rate_range_track" class="absolute inset-y-0 bg-indigo-400 rounded-full"
+                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644] rounded-full"
                                 style="left: 0%; right: 0%;"></div>
                             <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
-                                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                                [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full 
-                                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                             <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMax ?? 2 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
-                                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                                [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full 
-                                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                         </div>
                     </div>
                 </div>
@@ -142,7 +153,7 @@
 
             <div class="flex items-center gap-2">
                 <button type="submit"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition shadow-sm hover:shadow focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    class="inline-flex items-center px-5 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-black transition shadow-sm">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -150,7 +161,7 @@
                     Применить
                 </button>
                 <a href="{{ route('commissariat-positions.index', ['commissariat_id' => $commissariat->id]) }}"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
