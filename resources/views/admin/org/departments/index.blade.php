@@ -113,11 +113,17 @@
 
 
                                 <td class="px-6 py-4">
-                                    <a
-                                        href="{{ route('employees.show', [
-                                            'id' => $department->getChiefAttribute()->id,
-                                            'back_url' => url()->full(),
-                                        ]) }}">{{ optional($department->getChiefAttribute())->getFullNameAttribute() ?? '' }}</a>
+                                    @php
+                                        $chief = $department->getChiefAttribute();
+                                    @endphp
+                                    @if ($chief)
+                                        <a
+                                            href="{{ route('employees.show', ['id' => $chief->id, 'back_url' => url()->full()]) }}">
+                                            {{ $chief->getFullNameAttribute() }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-400 italic">Не назначен</span>
+                                    @endif
                                 </td>
 
 

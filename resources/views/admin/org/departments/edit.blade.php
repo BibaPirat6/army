@@ -52,9 +52,11 @@
                         </label>
 
                         {{-- visible input --}}
-                        <input type="text" id="commissariat_search" placeholder="Выберите комиссариат" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                        <input type="text" id="commissariat_search" placeholder="Выберите комиссариат"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                                         focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                        outline-none transition-colors text-[#060606]" autocomplete="off"
+                                        outline-none transition-colors text-[#060606]"
+                            autocomplete="off"
                             value="{{ old('commissariat_name', $department->commissariat?->name ?? '') }}" required>
 
                         {{-- hidden value --}}
@@ -62,12 +64,13 @@
                             value="{{ old('commissariat_id', $department->commissariat_id) }}">
 
                         {{-- dropdown --}}
-                        <ul id="commissariat_list" class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
+                        <ul id="commissariat_list"
+                            class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF]
                                     rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- очистить --}}
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
-                                data-static="true">
+                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id=""
+                                data-name="" data-static="true">
                                 Очистить
                             </li>
 
@@ -83,30 +86,34 @@
 
                     {{-- старый начальник --}}
                     <input type="hidden" name="old_chief_employee_id"
-                        value="{{  old('old_chief_employee_id', $department->getChiefAttribute() ? $department->getChiefAttribute()->id : '') }}">
+                        value="{{ old('old_chief_employee_id', $department->getChiefAttribute() ? $department->getChiefAttribute()->id : '') }}">
 
-                    {{-- должность начальника отдела --}}
-                    <input type="hidden" value="{{  $department->chiefCommissariatPosition?->activeAssignment?->commissariatPosition?->position?->id }}" name="chief_position_id">
+                    {{-- должность начальника отдела (скрытое поле, заполняется автоматически) --}}
+                    <input type="hidden" name="chief_position_id" id="chief_position_id"
+                        value="{{ $department->chiefCommissariatPosition?->position_id ?? '' }}">
 
                     {{-- начальник --}}
                     <div class="relative">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник *
+                            Начальник
                         </label>
 
                         {{-- visible input (необязательное) --}}
-                        <input required type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
+                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО"
+                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
                                                focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                               outline-none transition-colors text-[#060606]" autocomplete="off"
+                                               outline-none transition-colors text-[#060606]"
+                            autocomplete="off"
                             value="{{ old('chief_employee_id', $department->getChiefAttribute() ? $department->getChiefAttribute()->getFullNameAttribute() : '') }}">
 
                         {{-- hidden value (необязательное) --}}
-                        <input required type="hidden" name="chief_employee_id" id="chief_employee_id"
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id"
                             value="{{ old('chief_employee_id', $department->getChiefAttribute() ? $department->getChiefAttribute()->id : '') }}"
                             data-original="{{ $department->getChiefAttribute() ? $department->getChiefAttribute()->id : '' }}"
                             data-original-exists="{{ $department->getChiefAttribute() ? '1' : '0' }}">
                         {{-- dropdown --}}
-                        <ul id="chief_employee_list" class="absolute z-50 mt-1 w-full bg-white border border-[#BFBFBF]
+                        <ul id="chief_employee_list"
+                            class="absolute z-50 mt-1 w-full bg-white border border-[#BFBFBF]
                        rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- Не назначать --}}
@@ -132,14 +139,14 @@
                         @endphp
 
 
-                        {{-- блок выбора статуса — показывается только при смене начальника (если ранее начальник был) --}}
-                        <div id="chief_status_wrapper" class="mt-3 hidden">
+                        {{-- блок выбора статуса — показывается только при смене начальника --}}
+                        <div id="chief_status_wrapper" class="mt-3 hidden"> {{-- изначально скрыт, JS покажет при необходимости --}}
                             <label for="old_chief_employee_position_status_id"
                                 class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Статус назначения *
+                                Статус назначения для текущего начальника *
                             </label>
 
-                            <!-- Дополнительные поля для предыдущего начальника (появляются при смене) -->
+                            <!-- Дополнительные поля для предыдущего начальника -->
                             <div id="previous_assignment_fields"
                                 class="mt-3 hidden bg-white p-4 rounded-lg border border-[#E5E7EB]">
                                 <h4 class="text-sm font-medium text-[#565A5B] mb-2">Данные для предыдущего начальника</h4>
@@ -148,21 +155,15 @@
                                         id="old_chief_employee_position_status_id"
                                         class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
                                         <option value="">— выберите статус —</option>
-                                        @foreach($employeePositionStatuses as $status)
-                                            {{-- 🔥 Исключаем статус "работает" (ID = 1) из списка причин смены --}}
-                                            @if($status->id != 1)
-                                                @php
-                                                    $selected = old('old_chief_employee_position_status_id')
-                                                        ? (old('old_chief_employee_position_status_id') == $status->id)
-                                                        : ($currentAssignment?->employee_position_status_id == $status->id);
-                                                @endphp
-                                                <option value="{{ $status->id }}" {{ $selected ? 'selected' : '' }}>
+                                        @foreach ($employeePositionStatuses as $status)
+                                            {{-- Исключаем статус "работает" (ID = 1) из списка причин смены --}}
+                                            @if ($status->id != 1)
+                                                <option value="{{ $status->id }}">
                                                     {{ $status->name }}
                                                 </option>
                                             @endif
                                         @endforeach
                                     </select>
-
                                 </div>
                             </div>
                         </div>
@@ -188,7 +189,7 @@
 @endsection
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
 
         const input = document.getElementById('chief_employee_search');
         const hiddenInput = document.getElementById('chief_employee_id');
@@ -215,10 +216,19 @@
         function updatePreviousBlock() {
             const selectedId = hiddenInput.value || '';
 
-            const shouldShow = originalExists && selectedId && selectedId !== originalId;
+            // ✅ Исправлено: показываем блок, если:
+            // 1) Был начальник (originalExists = true)
+            // 2) И текущее значение отличается от originalId (включая случай, когда selectedId пустой - кнопка "Очистить")
+            const shouldShow = originalExists && selectedId !== originalId;
 
             statusWrapper.classList.toggle('hidden', !shouldShow);
             previousFields.classList.toggle('hidden', !shouldShow);
+
+            // ✅ Если блок показан и selectedId пустой, значит мы очистили начальника
+            if (shouldShow && !selectedId) {
+                // Можно добавить дополнительную логику, если нужно
+                console.log('Начальник будет удален, выберите статус для текущего');
+            }
         }
 
         function filterList(value) {
@@ -263,11 +273,18 @@
         items.forEach(item => {
             item.addEventListener('click', () => {
 
-                // --- НЕ НАЗНАЧАТЬ ---
+                // --- НЕ НАЗНАЧАТЬ (ОЧИСТИТЬ) ---
                 if (item.dataset.static === 'true') {
+                    const oldValue = hiddenInput
+                        .value; // сохраняем старое значение перед очисткой
                     input.value = '';
                     hiddenInput.value = '';
+
+                    // ✅ ВАЖНО: вызываем updatePreviousBlock ПОСЛЕ изменения hiddenInput.value
+                    // Теперь selectedId = '', originalId = старый ID, originalExists = true
+                    // shouldShow = true && '' !== originalId -> true, блок появится!
                     updatePreviousBlock();
+
                     hideList();
                     return;
                 }
@@ -356,112 +373,6 @@
                     return;
                 }
 
-
-                input.value = item.dataset.name;
-                hiddenInput.value = item.dataset.id;
-                hideList();
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
-                hideList();
-            }
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const input = document.getElementById('chief_position_search');
-        const hiddenInput = document.getElementById('chief_position_id');
-        const list = document.getElementById('chief_position_list');
-        const items = list.querySelectorAll('li');
-
-        function showList() {
-            list.classList.remove('hidden');
-        }
-
-        function hideList() {
-            list.classList.add('hidden');
-        }
-
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
-
-            items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-
-                const name = item.dataset.name?.toLowerCase() || '';
-
-                if (query === '' || name.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-
-            list.classList.toggle('hidden', !hasVisible);
-        }
-
-        // Инициализация: если в скрытом поле уже есть значение (из БД), выберем соответствующий элемент
-        (function initializeSelected() {
-            const currentId = (hiddenInput.value || '').toString();
-            let selectedLi = null;
-
-            if (currentId) {
-                selectedLi = list.querySelector(`li[data-id="${currentId}"]`);
-            }
-
-            // fallback: найдем li с data-selected="1"
-            if (!selectedLi) {
-                selectedLi = list.querySelector('li[data-selected="1"]');
-            }
-
-            if (selectedLi) {
-                // установим видимое значение и пометим элемент
-                input.value = selectedLi.dataset.name || input.value;
-                if (!currentId && selectedLi.dataset.id) {
-                    hiddenInput.value = selectedLi.dataset.id;
-                }
-                selectedLi.classList.add('bg-gray-100');
-                // прокрутим в центр видимости
-                try { selectedLi.scrollIntoView({ block: 'center' }); } catch (e) { }
-            }
-        })();
-
-        input.addEventListener('focus', () => {
-            showList();
-            filterList(input.value);
-        });
-
-        input.addEventListener('input', () => {
-            hiddenInput.value = '';
-            showList();
-            filterList(input.value);
-        });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-
-                if (item.dataset.static === 'true') {
-                    input.value = '';
-                    hiddenInput.value = '';
-                    // очистим подсветку
-                    items.forEach(i => i.classList.remove('bg-gray-100'));
-                    hideList();
-                    return;
-                }
-
-                // при клике переключаем подсветку
-                items.forEach(i => i.classList.remove('bg-gray-100'));
-                item.classList.add('bg-gray-100');
 
                 input.value = item.dataset.name;
                 hiddenInput.value = item.dataset.id;
