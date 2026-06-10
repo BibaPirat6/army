@@ -20,7 +20,8 @@ class EmployeeFilter extends BaseFilter
             'commissariat' => $this->data->commissariatId,
             'department' => $this->data->departmentId,
             'division' => $this->data->divisionId,
-            'rate' => $this->data->rate,
+            'rateMin' => $this->data->rateMin,
+            'rateMax' => $this->data->rateMax,
             'sort' => [
                 'by' => $this->data->sortBy,
                 'direction' => $this->data->sortDirection,
@@ -95,43 +96,61 @@ class EmployeeFilter extends BaseFilter
     }
 
     /**
-     * Фильтр по комиссариату
+     * Фильтр по комиссариату (через employeePositions -> commissariatPosition)
      */
     protected function commissariat(Builder $query, ?int $value): void
     {
         if ($value) {
-            $query->where('commissariat_id', $value);
+            $query->whereHas('employeePositions.commissariatPosition', function (Builder $q) use ($value) {
+                $q->where('commissariat_id', $value);
+            });
         }
     }
 
     /**
-     * Фильтр по отделу
+     * Фильтр по отделу (через employeePositions -> commissariatPosition)
      */
     protected function department(Builder $query, ?int $value): void
     {
         if ($value) {
-            $query->where('department_id', $value);
+            $query->whereHas('employeePositions.commissariatPosition', function (Builder $q) use ($value) {
+                $q->where('department_id', $value);
+            });
         }
     }
 
     /**
-     * Фильтр по отделению
+     * Фильтр по отделению (через employeePositions -> commissariatPosition)
      */
     protected function division(Builder $query, ?int $value): void
     {
         if ($value) {
-            $query->where('division_id', $value);
+            $query->whereHas('employeePositions.commissariatPosition', function (Builder $q) use ($value) {
+                $q->where('division_id', $value);
+            });
         }
     }
 
     /**
-     * Фильтр по конкретной ставке
+     * Фильтр по минимальной ставке
      */
-    protected function rate(Builder $query, ?float $value): void
+    protected function rateMin(Builder $query, ?float $value): void
     {
         if ($value !== null) {
             $query->whereHas('employeePositions', function (Builder $q) use ($value) {
-                $q->where('rate', $value);
+                $q->where('rate', '>=', $value);
+            });
+        }
+    }
+
+    /**
+     * Фильтр по максимальной ставке
+     */
+    protected function rateMax(Builder $query, ?float $value): void
+    {
+        if ($value !== null) {
+            $query->whereHas('employeePositions', function (Builder $q) use ($value) {
+                $q->where('rate', '<=', $value);
             });
         }
     }
@@ -151,13 +170,17 @@ class EmployeeFilter extends BaseFilter
         }
         // Сортировка по занятым ставкам
         elseif ($sortBy === 'occupied_rate') {
-            $query->withSum('employeePositions as occupied_rate', 'rate')
-                  ->orderBy('occupied_rate', $direction);
+            $query->withSum(['employeePositions' => function ($q) {
+                $q->whereIn('employee_position_status_id', [1, 2, 3]);
+            }], 'rate', 'occupied_rate')
+            ->orderBy('occupied_rate', $direction);
         }
         // Сортировка по свободным ставкам (2 - занятая ставка)
         elseif ($sortBy === 'available_rate') {
-            $query->withSum('employeePositions as occupied_rate', 'rate')
-                  ->orderByRaw("(2 - COALESCE(occupied_rate, 0)) $direction");
+            $query->withSum(['employeePositions' => function ($q) {
+                $q->whereIn('employee_position_status_id', [1, 2, 3]);
+            }], 'rate', 'occupied_rate')
+            ->orderByRaw("(2 - COALESCE(occupied_rate, 0)) $direction");
         }
         // Сортировка по ФИО
         elseif ($sortBy === 'full_name') {

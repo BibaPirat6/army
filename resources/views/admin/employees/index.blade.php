@@ -61,6 +61,7 @@
                     </select>
                 </div>
 
+
                 <!-- Комиссариат -->
                 <div>
                     <select id="commissariat_id" name="commissariat_id" class="tom-select w-full">
@@ -71,39 +72,99 @@
                     </select>
                 </div>
 
-                <!-- Отдел -->
+                <!-- Отдел (зависит от комиссариата) -->
                 <div>
-                    <select id="department_id" name="department_id" class="tom-select w-full">
+                    <select id="department_id" name="department_id" class="tom-select w-full"
+                        data-depends-on="commissariat">
                         <option value="">Отдел</option>
                         @foreach ($departments as $item)
-                            <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)>{{ $item->name }}</option>
+                            @php
+                                $deptLabel = $item->name;
+                                if ($item->commissariat_id && !$filters->commissariatId) {
+                                    $deptCommissariat = $commissariats->firstWhere('id', $item->commissariat_id);
+                                    if ($deptCommissariat) {
+                                        $deptLabel .= ' (' . $deptCommissariat->name . ')';
+                                    }
+                                }
+                            @endphp
+                            <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)
+                                data-commissariat="{{ $item->commissariat_id }}">
+                                {{ $deptLabel }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Отделение -->
+                <!-- Отделение (зависит от комиссариата ИЛИ отдела) -->
                 <div>
-                    <select id="division_id" name="division_id" class="tom-select w-full">
+                    <select id="division_id" name="division_id" class="tom-select w-full"
+                        data-depends-on="commissariat,department">
                         <option value="">Отделение</option>
                         @foreach ($divisions as $item)
-                            <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)>{{ $item->name }}</option>
+                            @php
+                                $divLabel = $item->name;
+                                $divInfo = [];
+
+                                // Показываем зависимости только если не выбран комиссариат/отдел
+                                if (!$filters->commissariatId && $item->commissariat_id) {
+                                    $divCommissariat = $commissariats->firstWhere('id', $item->commissariat_id);
+                                    if ($divCommissariat) {
+                                        $divInfo[] = $divCommissariat->name;
+                                    }
+                                }
+
+                                if (!$filters->departmentId && $item->department_id) {
+                                    // Используем коллекцию departments, переданную из контроллера
+                                    $divDepartment = $departments->firstWhere('id', $item->department_id);
+                                    if ($divDepartment) {
+                                        $divInfo[] = $divDepartment->name;
+                                    }
+                                }
+
+                                if (!empty($divInfo)) {
+                                    $divLabel .= ' (' . implode(' → ', $divInfo) . ')';
+                                }
+                            @endphp
+                            <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)
+                                data-commissariat="{{ $item->commissariat_id }}"
+                                data-department="{{ $item->department_id }}">
+                                {{ $divLabel }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Ставка -->
-                <div>
-                    <select id="rate" name="rate" class="tom-select w-full">
-                        <option value="">Ставка</option>
-                        <option value="0.25" @selected($filters->rate == 0.25)>0.25</option>
-                        <option value="0.5" @selected($filters->rate == 0.5)>0.5</option>
-                        <option value="0.75" @selected($filters->rate == 0.75)>0.75</option>
-                        <option value="1" @selected($filters->rate == 1)>1.0</option>
-                        <option value="1.25" @selected($filters->rate == 1.25)>1.25</option>
-                        <option value="1.5" @selected($filters->rate == 1.5)>1.5</option>
-                        <option value="1.75" @selected($filters->rate == 1.75)>1.75</option>
-                        <option value="2" @selected($filters->rate == 2)>2.0</option>
-                    </select>
+
+                <!-- Ставка (range slider) -->
+                <div class="col-span-2 md:col-span-1">
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-gray-600 whitespace-nowrap">Ставка:</span>
+                        <span id="rate_min_label"
+                            class="font-semibold text-[#A60644]">{{ $filters->rateMin ?? 0.25 }}</span>
+                        <span class="text-gray-400">—</span>
+                        <span id="rate_max_label" class="font-semibold text-[#A60644]">{{ $filters->rateMax ?? 2 }}</span>
+                    </div>
+                    <div class="relative mt-1 px-0.5">
+                        <div class="relative h-1.5">
+                            <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
+                            <div id="rate_range_track" class="absolute inset-y-0 bg-[#A60644]/60 rounded-full"
+                                style="left: 0%; right: 0%;"></div>
+                            <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
+                                step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
+                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                    [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                    [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                            <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
+                                step="0.25" value="{{ $filters->rateMax ?? 2 }}"
+                                class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
+                    [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                    [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                    [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                    [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Сортировка -->
@@ -177,3 +238,193 @@
         @include('includes.pagination', ['paginator' => $employees])
     </div>
 @endsection
+
+
+@push('scripts')
+    <script>
+        // Range slider для ставок
+        const rateMin = document.getElementById('rate_min');
+        const rateMax = document.getElementById('rate_max');
+        const rateMinLabel = document.getElementById('rate_min_label');
+        const rateMaxLabel = document.getElementById('rate_max_label');
+        const rateRangeTrack = document.getElementById('rate_range_track');
+
+        function updateRateRange() {
+            const min = parseFloat(rateMin.value);
+            const max = parseFloat(rateMax.value);
+
+            if (min > max) {
+                if (this === rateMin) {
+                    rateMax.value = min;
+                } else {
+                    rateMin.value = max;
+                }
+            }
+
+            const finalMin = parseFloat(rateMin.value);
+            const finalMax = parseFloat(rateMax.value);
+
+            const minPercent = ((finalMin - 0.25) / (2 - 0.25)) * 100;
+            const maxPercent = ((finalMax - 0.25) / (2 - 0.25)) * 100;
+
+            rateRangeTrack.style.left = minPercent + '%';
+            rateRangeTrack.style.right = (100 - maxPercent) + '%';
+
+            rateMinLabel.textContent = finalMin;
+            rateMaxLabel.textContent = finalMax;
+        }
+
+        rateMin.addEventListener('input', updateRateRange);
+        rateMax.addEventListener('input', updateRateRange);
+        updateRateRange();
+
+        // Каскадные фильтры с AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const commissariatSelect = document.getElementById('commissariat_id');
+            const departmentSelect = document.getElementById('department_id');
+            const divisionSelect = document.getElementById('division_id');
+
+            let isUpdating = false;
+
+            function updateSelectWithData(selectElement, options, selectedValue = null, placeholder = '') {
+                // Сохраняем TomSelect инстанс если есть
+                const tomSelectInstance = selectElement.tomselect;
+
+                // Очищаем select
+                selectElement.innerHTML = '';
+
+                // Добавляем placeholder
+                const defaultOption = new Option(placeholder || selectElement.getAttribute('data-placeholder') ||
+                    'Выберите...', '');
+                selectElement.add(defaultOption);
+
+                // Добавляем опции
+                options.forEach(option => {
+                    const opt = new Option(option.text, option.value);
+                    if (option.data) {
+                        Object.keys(option.data).forEach(key => {
+                            opt.setAttribute(`data-${key}`, option.data[key]);
+                        });
+                    }
+                    selectElement.add(opt);
+                });
+
+                // Устанавливаем выбранное значение
+                if (selectedValue && options.some(opt => opt.value == selectedValue)) {
+                    selectElement.value = selectedValue;
+                }
+
+                // Обновляем TomSelect
+                if (tomSelectInstance) {
+                    tomSelectInstance.sync();
+                }
+            }
+
+            async function loadFilterOptions(commissariatId, departmentId = null) {
+                if (isUpdating) return;
+                isUpdating = true;
+
+                try {
+                    // Сохраняем текущие значения
+                    const currentDepartmentValue = departmentSelect.value;
+                    const currentDivisionValue = divisionSelect.value;
+
+                    // Если комиссариат не выбран, загружаем все отделы и отделения
+                    if (!commissariatId) {
+                        const response = await fetch(`/api/filter-options`);
+                        const data = await response.json();
+
+                        updateSelectWithData(departmentSelect,
+                            data.departments.map(d => ({
+                                value: d.id,
+                                text: d.name,
+                                data: {
+                                    commissariat: d.commissariat_id
+                                }
+                            })),
+                            currentDepartmentValue,
+                            'Отдел'
+                        );
+
+                        updateSelectWithData(divisionSelect,
+                            data.divisions.map(d => ({
+                                value: d.id,
+                                text: d.name,
+                                data: {
+                                    commissariat: d.commissariat_id,
+                                    department: d.department_id
+                                }
+                            })),
+                            currentDivisionValue,
+                            'Отделение'
+                        );
+                    } else {
+                        // Загружаем данные для выбранного комиссариата
+                        const params = new URLSearchParams({
+                            commissariat_id: commissariatId
+                        });
+                        if (departmentId) {
+                            params.append('department_id', departmentId);
+                        }
+
+                        const response = await fetch(`/api/filter-options?${params}`);
+                        const data = await response.json();
+
+                        // Обновляем отделы
+                        updateSelectWithData(departmentSelect,
+                            data.departments.map(d => ({
+                                value: d.id,
+                                text: d.name,
+                                data: {
+                                    commissariat: d.commissariat_id
+                                }
+                            })),
+                            currentDepartmentValue,
+                            'Отдел'
+                        );
+
+                        // Обновляем отделения
+                        updateSelectWithData(divisionSelect,
+                            data.divisions.map(d => ({
+                                value: d.id,
+                                text: d.name,
+                                data: {
+                                    commissariat: d.commissariat_id,
+                                    department: d.department_id
+                                }
+                            })),
+                            currentDivisionValue,
+                            'Отделение'
+                        );
+                    }
+                } catch (error) {
+                    console.error('Error loading filter options:', error);
+                } finally {
+                    isUpdating = false;
+                }
+            }
+
+            // Обработчик изменения комиссариата
+            commissariatSelect.addEventListener('change', function() {
+                const commissariatId = this.value;
+                loadFilterOptions(commissariatId);
+            });
+
+            // Обработчик изменения отдела
+            departmentSelect.addEventListener('change', function() {
+                const commissariatId = commissariatSelect.value;
+                const departmentId = this.value;
+
+                if (commissariatId) {
+                    loadFilterOptions(commissariatId, departmentId);
+                }
+            });
+
+            // Инициализация при загрузке
+            const initialCommissariatId = commissariatSelect.value;
+            if (initialCommissariatId) {
+                loadFilterOptions(initialCommissariatId);
+            }
+        });
+    </script>
+@endpush

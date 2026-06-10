@@ -31,10 +31,9 @@ class EmployeesController extends Controller
 
     public function index(Request $request)
     {
-        // Создаем DTO из запроса
         $filters = EmployeeFilterDTO::fromRequest($request);
 
-        // Базовый запрос с жадной загрузкой
+        // Базовый запрос
         $query = Employee::query()
             ->with([
                 'user.role',
@@ -52,9 +51,10 @@ class EmployeesController extends Controller
                         },
                     ])->orderBy('created_at', 'desc');
                 },
-                'commissariat',
-                'department',
-                'division',
+                // Убираем прямые связи, так как их нет в таблице employees
+                // 'commissariat',
+                // 'department',
+                // 'division',
             ]);
 
         // Применяем фильтры
@@ -64,19 +64,97 @@ class EmployeesController extends Controller
         // Данные для фильтров
         $commissariats = Commissariat::orderBy('name')->get();
 
-        // Всегда загружаем все отделы (для каскадных фильтров)
-        $departments = Department::orderBy('name')->get();
+        // Все отделы (для отображения зависимостей)
+        $allDepartments = Department::orderBy('name')->get();
 
-        // Всегда загружаем все отделения (для каскадных фильтров)
-        $divisions = Division::orderBy('name')->get();
+        // Отделы для выбранного комиссариата
+        $departments = Department::query()
+            ->when($filters->commissariatId, function ($query) use ($filters) {
+                $query->where('commissariat_id', $filters->commissariatId);
+            })
+            ->orderBy('name')
+            ->get();
+
+        // Отделения с учетом фильтров
+        $divisions = Division::query()
+            ->when($filters->commissariatId, function ($query) use ($filters) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('commissariat_id', $filters->commissariatId)
+                        ->orWhereNull('commissariat_id');
+                });
+            })
+            ->when($filters->departmentId, function ($query) use ($filters) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('department_id', $filters->departmentId)
+                        ->orWhereNull('department_id');
+                });
+            })
+            ->orderBy('name')
+            ->get();
 
         return view('admin.employees.index', compact(
             'employees',
             'filters',
             'commissariats',
+            'allDepartments',
             'departments',
             'divisions'
         ));
+    }
+
+    // В EmployeeController добавьте метод:
+    public function filterOptions(Request $request)
+    {
+        $commissariatId = $request->input('commissariat_id');
+        $departmentId = $request->input('department_id');
+
+        $departments = [];
+        $divisions = [];
+
+        if ($commissariatId) {
+            // Получаем отделы для выбранного комиссариата
+            $departments = Department::query()
+                ->where('commissariat_id', $commissariatId)
+                ->orderBy('name')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'commissariat_id' => $item->commissariat_id,
+                    ];
+                });
+
+            // Получаем отделения
+            $divisionsQuery = Division::query()
+                ->where(function ($query) use ($commissariatId) {
+                    $query->where('commissariat_id', $commissariatId)
+                        ->orWhereNull('commissariat_id');
+                });
+
+            if ($departmentId) {
+                $divisionsQuery->where(function ($query) use ($departmentId) {
+                    $query->where('department_id', $departmentId)
+                        ->orWhereNull('department_id');
+                });
+            }
+
+            $divisions = $divisionsQuery->orderBy('name')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'commissariat_id' => $item->commissariat_id,
+                        'department_id' => $item->department_id,
+                    ];
+                });
+        }
+
+        return response()->json([
+            'departments' => $departments,
+            'divisions' => $divisions,
+        ]);
     }
 
     public function show(Request $request, $id)
