@@ -3,22 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Person;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Storage;
-
-
-use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-
 
 class ProfileController extends Controller
 {
     public function index()
     {
         $employee = auth()->user()->employee;
+        $columns = Person::getAllColumns();
 
-        return view('profile.index')->with('employee', $employee);
+        return view('profile.index', compact('employee', 'columns'));
     }
 }

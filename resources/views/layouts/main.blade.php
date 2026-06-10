@@ -365,9 +365,10 @@
                     </a>
                 </li>
 
-                <li>
-                    <a href="{{ route('excel-export.index') }}"
-                        class="group relative flex items-center gap-2.5 px-4 py-2 rounded-lg
+                @if (auth()->check() && auth()->user()->role?->name === 'admin')
+                    <li>
+                        <a href="{{ route('excel-export.index') }}"
+                            class="group relative flex items-center gap-2.5 px-4 py-2 rounded-lg
                            font-semibold tracking-wide
                            text-[#217346] bg-white/80 backdrop-blur-sm
                            border border-[#217346]/20
@@ -376,28 +377,31 @@
                            hover:bg-[#217346] hover:text-white hover:border-[#217346]
                            hover:-translate-y-0.5
                            active:translate-y-0 active:shadow-sm">
-                        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
-                                stroke-width="2" />
-                            <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
-                            <rect x="7" y="12" width="10" height="8" rx="1" stroke-width="1.5" />
-                            <line x1="12" y1="12" x2="12" y2="20" stroke-width="1.5" />
-                            <line x1="7" y1="16" x2="17" y2="16" stroke-width="1.5" />
-                        </svg>
-                        <span>Excel Export</span>
-                        <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                d="M9 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </li>
+                            <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                                    stroke-width="2" />
+                                <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <rect x="7" y="12" width="10" height="8" rx="1"
+                                    stroke-width="1.5" />
+                                <line x1="12" y1="12" x2="12" y2="20"
+                                    stroke-width="1.5" />
+                                <line x1="7" y1="16" x2="17" y2="16"
+                                    stroke-width="1.5" />
+                            </svg>
+                            <span>Excel Export</span>
+                            <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </li>
 
-                <li>
-                    <a href="{{ route('calendar.index') }}"
-                        class="group relative flex items-center gap-2.5 px-4 py-2 rounded-lg
+                    <li>
+                        <a href="{{ route('calendar.index') }}"
+                            class="group relative flex items-center gap-2.5 px-4 py-2 rounded-lg
                            font-semibold tracking-wide
                            text-[#EA580C] bg-white/80 backdrop-blur-sm
                            border border-[#3B82F6]/20
@@ -406,25 +410,32 @@
                            hover:bg-[#EA580C] hover:text-white hover:border-[#EA580C]
                            hover:-translate-y-0.5
                            active:translate-y-0 active:shadow-sm">
-                        <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"
-                                fill="none" />
-                            <line x1="3" y1="9" x2="21" y2="9" stroke-width="2" />
-                            <path d="M8 2v4" stroke-width="2" stroke-linecap="round" />
-                            <path d="M16 2v4" stroke-width="2" stroke-linecap="round" />
-                            <rect x="7" y="13" width="3" height="3" rx="0.5" fill="currentColor" />
-                            <rect x="14" y="13" width="3" height="3" rx="0.5" fill="currentColor" />
-                            <rect x="7" y="17" width="3" height="3" rx="0.5" fill="currentColor" />
-                        </svg>
-                        <span>Календарь</span>
-                        <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                d="M9 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </li>
+                            <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"
+                                    fill="none" />
+                                <line x1="3" y1="9" x2="21" y2="9"
+                                    stroke-width="2" />
+                                <path d="M8 2v4" stroke-width="2" stroke-linecap="round" />
+                                <path d="M16 2v4" stroke-width="2" stroke-linecap="round" />
+                                <rect x="7" y="13" width="3" height="3" rx="0.5"
+                                    fill="currentColor" />
+                                <rect x="14" y="13" width="3" height="3" rx="0.5"
+                                    fill="currentColor" />
+                                <rect x="7" y="17" width="3" height="3" rx="0.5"
+                                    fill="currentColor" />
+                            </svg>
+                            <span>Календарь</span>
+                            <svg class="w-3.5 h-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </li>
+                @endif
+
+
 
                 <li class="ml-auto">
                     <div class="flex flex-row gap-2">
