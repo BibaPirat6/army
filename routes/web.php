@@ -46,8 +46,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/employees/{id}/edit', [EmployeesController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{id}', [EmployeesController::class, 'delete'])->name('employees.delete');
-    Route::get('/api/filter-options', [EmployeesController::class, 'filterOptions'])
-        ->name('api.filter-options');
 
     // persons columns
     Route::get('/persons-columns', [PersonsColumnsController::class, 'index'])->name('persons-columns.index');

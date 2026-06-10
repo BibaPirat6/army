@@ -51,10 +51,6 @@ class EmployeesController extends Controller
                         },
                     ])->orderBy('created_at', 'desc');
                 },
-                // Убираем прямые связи, так как их нет в таблице employees
-                // 'commissariat',
-                // 'department',
-                // 'division',
             ]);
 
         // Применяем фильтры
@@ -64,10 +60,7 @@ class EmployeesController extends Controller
         // Данные для фильтров
         $commissariats = Commissariat::orderBy('name')->get();
 
-        // Все отделы (для отображения зависимостей)
-        $allDepartments = Department::orderBy('name')->get();
-
-        // Отделы для выбранного комиссариата
+        // Отделы с учетом выбранного комиссариата
         $departments = Department::query()
             ->when($filters->commissariatId, function ($query) use ($filters) {
                 $query->where('commissariat_id', $filters->commissariatId);
@@ -75,19 +68,13 @@ class EmployeesController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Отделения с учетом фильтров
+        // Отделения с учетом выбранных фильтров
         $divisions = Division::query()
             ->when($filters->commissariatId, function ($query) use ($filters) {
-                $query->where(function ($q) use ($filters) {
-                    $q->where('commissariat_id', $filters->commissariatId)
-                        ->orWhereNull('commissariat_id');
-                });
+                $query->where('commissariat_id', $filters->commissariatId);
             })
             ->when($filters->departmentId, function ($query) use ($filters) {
-                $query->where(function ($q) use ($filters) {
-                    $q->where('department_id', $filters->departmentId)
-                        ->orWhereNull('department_id');
-                });
+                $query->where('department_id', $filters->departmentId);
             })
             ->orderBy('name')
             ->get();
@@ -96,13 +83,11 @@ class EmployeesController extends Controller
             'employees',
             'filters',
             'commissariats',
-            'allDepartments',
             'departments',
             'divisions'
         ));
     }
 
-    // В EmployeeController добавьте метод:
     public function filterOptions(Request $request)
     {
         $commissariatId = $request->input('commissariat_id');
@@ -127,16 +112,10 @@ class EmployeesController extends Controller
 
             // Получаем отделения
             $divisionsQuery = Division::query()
-                ->where(function ($query) use ($commissariatId) {
-                    $query->where('commissariat_id', $commissariatId)
-                        ->orWhereNull('commissariat_id');
-                });
+                ->where('commissariat_id', $commissariatId);
 
             if ($departmentId) {
-                $divisionsQuery->where(function ($query) use ($departmentId) {
-                    $query->where('department_id', $departmentId)
-                        ->orWhereNull('department_id');
-                });
+                $divisionsQuery->where('department_id', $departmentId);
             }
 
             $divisions = $divisionsQuery->orderBy('name')

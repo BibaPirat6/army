@@ -78,17 +78,13 @@
 
                 <!-- Отдел (зависит от комиссариата) -->
                 <div>
-                    <select id="department_id" name="department_id" class="tom-select w-full"
-                        data-depends-on="commissariat">
+                    <select id="department_id" name="department_id" class="tom-select w-full">
                         <option value="">Отдел</option>
                         @foreach ($departments as $item)
                             @php
                                 $deptLabel = $item->name;
-                                if ($item->commissariat_id && !$filters->commissariatId) {
-                                    $deptCommissariat = $commissariats->firstWhere('id', $item->commissariat_id);
-                                    if ($deptCommissariat) {
-                                        $deptLabel .= ' (' . $deptCommissariat->name . ')';
-                                    }
+                                if (!$filters->commissariatId && $item->commissariat) {
+                                    $deptLabel .= ' ← ' . $item->commissariat->name;
                                 }
                             @endphp
                             <option value="{{ $item->id }}" @selected($filters->departmentId == $item->id)
@@ -99,32 +95,24 @@
                     </select>
                 </div>
 
-                <!-- Отделение (зависит от комиссариата ИЛИ отдела) -->
+                <!-- Отделение (зависит от комиссариата и отдела) -->
                 <div>
-                    <select id="division_id" name="division_id" class="tom-select w-full"
-                        data-depends-on="commissariat,department">
+                    <select id="division_id" name="division_id" class="tom-select w-full">
                         <option value="">Отделение</option>
                         @foreach ($divisions as $item)
                             @php
                                 $divLabel = $item->name;
-                                $divInfo = [];
+                                $parents = [];
 
-                                if (!$filters->commissariatId && $item->commissariat_id) {
-                                    $divCommissariat = $commissariats->firstWhere('id', $item->commissariat_id);
-                                    if ($divCommissariat) {
-                                        $divInfo[] = $divCommissariat->name;
-                                    }
+                                if (!$filters->commissariatId && $item->commissariat) {
+                                    $parents[] = $item->commissariat->name;
+                                }
+                                if (!$filters->departmentId && $item->department) {
+                                    $parents[] = $item->department->name;
                                 }
 
-                                if (!$filters->departmentId && $item->department_id) {
-                                    $divDepartment = $departments->firstWhere('id', $item->department_id);
-                                    if ($divDepartment) {
-                                        $divInfo[] = $divDepartment->name;
-                                    }
-                                }
-
-                                if (!empty($divInfo)) {
-                                    $divLabel .= ' (' . implode(' → ', $divInfo) . ')';
+                                if (!empty($parents)) {
+                                    $divLabel .= ' ← ' . implode(' → ', $parents);
                                 }
                             @endphp
                             <option value="{{ $item->id }}" @selected($filters->divisionId == $item->id)
@@ -214,6 +202,7 @@
                 </a>
             </div>
         </form>
+
 
 
         {{-- таблица --}}
@@ -432,6 +421,90 @@
             if (initialCommissariatId) {
                 loadFilterOptions(initialCommissariatId);
             }
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const commissariatSelect = document.getElementById('commissariat_id');
+            const departmentSelect = document.getElementById('department_id');
+            const divisionSelect = document.getElementById('division_id');
+
+            // Кэшируем все опции с их данными
+            const allDepartments = Array.from(departmentSelect.options).filter(opt => opt.value).map(opt => ({
+                value: opt.value,
+                text: opt.textContent.replace(/ ← .+$/, ''), // чистое название
+                commissariat: opt.dataset.commissariat,
+                commissariatName: opt.textContent.match(/← (.+)$/)?.[1] || ''
+            }));
+
+            const allDivisions = Array.from(divisionSelect.options).filter(opt => opt.value).map(opt => ({
+                value: opt.value,
+                text: opt.textContent.replace(/ ← .+$/, ''),
+                commissariat: opt.dataset.commissariat,
+                department: opt.dataset.department,
+                parents: opt.textContent.match(/← (.+)$/)?.[1] || ''
+            }));
+
+            function updateDepartments(commissariatId) {
+                const prevValue = departmentSelect.value;
+                departmentSelect.innerHTML = '<option value="">Отдел</option>';
+
+                allDepartments.forEach(dept => {
+                    if (!commissariatId || dept.commissariat === commissariatId) {
+                        const opt = new Option(
+                            commissariatId ? dept.text : (dept.commissariatName ?
+                                `${dept.text} ← ${dept.commissariatName}` : dept.text),
+                            dept.value
+                        );
+                        opt.dataset.commissariat = dept.commissariat;
+                        departmentSelect.add(opt);
+                    }
+                });
+
+                departmentSelect.value = Array.from(departmentSelect.options).some(o => o.value === prevValue) ?
+                    prevValue : '';
+                if (departmentSelect.tomselect) departmentSelect.tomselect.sync();
+                updateDivisions(commissariatId, departmentSelect.value);
+            }
+
+            function updateDivisions(commissariatId, departmentId) {
+                const prevValue = divisionSelect.value;
+                divisionSelect.innerHTML = '<option value="">Отделение</option>';
+
+                allDivisions.forEach(div => {
+                    let show = true;
+                    if (commissariatId && div.commissariat && div.commissariat !== commissariatId) show =
+                        false;
+                    if (departmentId && div.department && div.department !== departmentId) show = false;
+
+                    if (show) {
+                        let label = div.text;
+                        if (!commissariatId || !departmentId) {
+                            const parts = [];
+                            if (!commissariatId && div.commissariatName) parts.push(div.commissariatName);
+                            if (!departmentId && div.departmentName) parts.push(div.departmentName);
+                            if (parts.length) label += ' ← ' + parts.join(' → ');
+                        }
+
+                        const opt = new Option(label, div.value);
+                        opt.dataset.commissariat = div.commissariat;
+                        opt.dataset.department = div.department;
+                        divisionSelect.add(opt);
+                    }
+                });
+
+                divisionSelect.value = Array.from(divisionSelect.options).some(o => o.value === prevValue) ?
+                    prevValue : '';
+                if (divisionSelect.tomselect) divisionSelect.tomselect.sync();
+            }
+
+            commissariatSelect.addEventListener('change', () => updateDepartments(commissariatSelect.value));
+            departmentSelect.addEventListener('change', () => updateDivisions(commissariatSelect.value,
+                departmentSelect.value));
+
+            // Инициализация
+            if (commissariatSelect.value) updateDepartments(commissariatSelect.value);
         });
     </script>
 @endpush
