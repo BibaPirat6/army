@@ -162,9 +162,25 @@ class DepartmentsController extends Controller
             'name' => 'required|string|min:2|max:255',
             'commissariat_id' => 'required|integer|min:1|exists:commissariats,id',
             'chief_employee_id' => 'nullable|integer|exists:employees,id',
-            'chief_position_id' => 'required|integer|min:1|exists:positions,id', // ✅ обязательно
+            'chief_position_id' => 'required|integer|min:1|exists:positions,id',
             'old_chief_employee_id' => 'nullable|integer|exists:employees,id',
-            'old_chief_employee_position_status_id' => 'nullable|integer|exists:employee_position_statuses,id',
+            'old_chief_employee_position_status_id' => [
+                'nullable',
+                'integer',
+                'exists:employee_position_statuses,id',
+                // ✅ Добавляем условную валидацию: обязательно если есть старый начальник и он отличается от нового
+                function ($attribute, $value, $fail) use ($request) {
+                    $oldId = $request->input('old_chief_employee_id');
+                    $newId = $request->input('chief_employee_id');
+
+                    // Если есть старый начальник и он отличается от нового (или новый пустой)
+                    if ($oldId && ($oldId != $newId || empty($newId))) {
+                        if (empty($value)) {
+                            $fail('Выберите статус для предыдущего начальника.');
+                        }
+                    }
+                },
+            ],
         ]);
 
         DB::beginTransaction();

@@ -140,10 +140,10 @@
 
 
                         {{-- блок выбора статуса — показывается только при смене начальника --}}
-                        <div id="chief_status_wrapper" class="mt-3 hidden"> {{-- изначально скрыт, JS покажет при необходимости --}}
+                        <div id="chief_status_wrapper" class="mt-3 hidden">
                             <label for="old_chief_employee_position_status_id"
                                 class="block text-sm font-medium text-[#565A5B] mb-2">
-                                Статус назначения для текущего начальника *
+                                Статус назначения для текущего начальника * <span class="text-red-500">(обязательно)</span>
                             </label>
 
                             <!-- Дополнительные поля для предыдущего начальника -->
@@ -153,12 +153,14 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <select name="old_chief_employee_position_status_id"
                                         id="old_chief_employee_position_status_id"
-                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]">
+                                        class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none transition-colors text-[#060606]"
+                                        {{-- ✅ Добавляем required, но оно будет активно только когда блок видим --}} required>
                                         <option value="">— выберите статус —</option>
                                         @foreach ($employeePositionStatuses as $status)
                                             {{-- Исключаем статус "работает" (ID = 1) из списка причин смены --}}
                                             @if ($status->id != 1)
-                                                <option value="{{ $status->id }}">
+                                                <option value="{{ $status->id }}"
+                                                    {{ old('old_chief_employee_position_status_id') == $status->id ? 'selected' : '' }}>
                                                     {{ $status->name }}
                                                 </option>
                                             @endif
@@ -194,6 +196,7 @@
         const input = document.getElementById('chief_employee_search');
         const hiddenInput = document.getElementById('chief_employee_id');
         const list = document.getElementById('chief_employee_list');
+        const statusSelect = document.getElementById('old_chief_employee_position_status_id');
 
         if (!input || !hiddenInput || !list) return;
 
@@ -216,18 +219,24 @@
         function updatePreviousBlock() {
             const selectedId = hiddenInput.value || '';
 
-            // ✅ Исправлено: показываем блок, если:
-            // 1) Был начальник (originalExists = true)
-            // 2) И текущее значение отличается от originalId (включая случай, когда selectedId пустой - кнопка "Очистить")
+            // Показываем блок, если был начальник и текущее значение отличается от originalId
             const shouldShow = originalExists && selectedId !== originalId;
 
             statusWrapper.classList.toggle('hidden', !shouldShow);
             previousFields.classList.toggle('hidden', !shouldShow);
 
-            // ✅ Если блок показан и selectedId пустой, значит мы очистили начальника
-            if (shouldShow && !selectedId) {
-                // Можно добавить дополнительную логику, если нужно
-                console.log('Начальник будет удален, выберите статус для текущего');
+            // ✅ Управляем required атрибутом
+            if (statusSelect) {
+                if (shouldShow) {
+                    statusSelect.setAttribute('required', 'required');
+                    statusSelect.parentElement.parentElement.querySelector('label').innerHTML =
+                        'Статус назначения для текущего начальника * <span class="text-red-500">(обязательно)</span>';
+                } else {
+                    statusSelect.removeAttribute('required');
+                    statusSelect.value = ''; // Сбрасываем значение
+                    statusSelect.parentElement.parentElement.querySelector('label').innerHTML =
+                        'Статус назначения для текущего начальника';
+                }
             }
         }
 
@@ -275,16 +284,9 @@
 
                 // --- НЕ НАЗНАЧАТЬ (ОЧИСТИТЬ) ---
                 if (item.dataset.static === 'true') {
-                    const oldValue = hiddenInput
-                        .value; // сохраняем старое значение перед очисткой
                     input.value = '';
                     hiddenInput.value = '';
-
-                    // ✅ ВАЖНО: вызываем updatePreviousBlock ПОСЛЕ изменения hiddenInput.value
-                    // Теперь selectedId = '', originalId = старый ID, originalExists = true
-                    // shouldShow = true && '' !== originalId -> true, блок появится!
                     updatePreviousBlock();
-
                     hideList();
                     return;
                 }
