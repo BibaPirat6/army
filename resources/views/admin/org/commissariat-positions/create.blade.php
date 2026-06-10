@@ -126,19 +126,17 @@
                                 Очистить
                             </li>
 
-                            {{-- Список должностей (кроме начальников) --}}
+                            {{-- Список должностей --}}
                             @foreach ($positions as $pos)
-
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $pos->id }}"
                                     data-name="{{ $pos->name }}">
                                     {{ $pos->name }}
                                 </li>
-
                             @endforeach
                         </ul>
                     </div>
 
-                    {{-- общас ставка --}}
+                    {{-- Общая ставка --}}
                     <div>
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
                             Общая ставка *
@@ -150,7 +148,7 @@
                             step="0.25" name="rate_total">
                     </div>
 
-                    <!-- самостоятельный -->
+                    <!-- Самостоятельная должность -->
                     <div>
                         <label for="is_independent" class="block text-sm font-medium text-[#565A5B] mb-2">
                             Самостоятельная должность *
@@ -160,49 +158,6 @@
                             <option value="0" selected>Нет</option>
                             <option value="1">Да</option>
                         </select>
-                    </div>
-
-                    {{-- сотрудник --}}
-                    <div class="relative" id="chief-select">
-                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Сотрудник <span class="text-red-500">*</span>
-                        </label>
-
-                        {{-- visible --}}
-                        <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
-                            value="{{ $employee ? trim($employee->getFullNameAttribute()) : old('chief_employee_name', '') }}"
-                            class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
-
-                        {{-- hidden --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id"
-                            value="{{ $employee ? $employee->id : old('chief_employee_id', '') }}">
-
-                        {{-- dropdown --}}
-                        <ul id="chief_employee_list"
-                            class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
-                            <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
-                                data-static="true">
-                                Очистить
-                            </li>
-                            @foreach ($employees as $emp)
-                                <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 {{ $employee && $employee->id == $emp->id ? 'bg-gray-100' : '' }}"
-                                    data-id="{{ $emp->id }}" data-name="{{ trim($emp->getFullNameAttribute()) }}">
-                                    {{ $emp->getFullNameAttribute() }}
-                                    <span class="text-gray-400">(ID: {{ $emp->id }})</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    {{-- ставка --}}
-                    <div id="rate-field"> {{-- 👈 Добавили id --}}
-                        <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            ставка *
-                        </label>
-                        <input type="number" class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                                          focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
-                                          outline-none transition-colors text-[#060606]" autocomplete="off"
-                            placeholder="Введите ставку" value="1.00" min="0.25" max="2.00" step="0.25" name="rate">
                     </div>
 
                     <!-- Кнопка отправки -->
@@ -335,10 +290,14 @@
                     const matchesQuery = !query || name.includes(query);
 
                     // ✅ Если выбран отдел - показываем только отделения этого отдела
-                    // ✅ Если отдел не выбран - показываем все отделения (включая самостоятельные)
+                    // ✅ Если отдел не выбран - показываем только самостоятельные отделения
                     let matchesDepartment = true;
                     if (currentDepartmentId) {
+                        // Выбран отдел - показываем отделения этого отдела
                         matchesDepartment = departmentId === currentDepartmentId;
+                    } else {
+                        // Отдел не выбран - показываем только самостоятельные отделения
+                        matchesDepartment = !departmentId; // department_id2 === null
                     }
 
                     if (matchesQuery && matchesDepartment) {
@@ -359,12 +318,12 @@
                 if (!noItemsMsg) {
                     noItemsMsg = document.createElement('li');
                     noItemsMsg.className = 'px-4 py-2 text-gray-500 text-center hidden no-items-message';
-                    noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет доступных отделений';
+                    noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет самостоятельных отделений';
                     divisionList.appendChild(noItemsMsg);
                 }
 
                 // Обновляем текст сообщения
-                noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет доступных отделений';
+                noItemsMsg.textContent = currentDepartmentId ? '📭 Нет отделений в выбранном отделе' : '📭 Нет самостоятельных отделений';
 
                 if (!hasVisible) {
                     noItemsMsg.classList.remove('hidden');
@@ -403,7 +362,7 @@
                 divisionList.classList.add('hidden');
 
                 // Переключаем фокус на поле должности
-                const positionSelect = document.getElementById('position_id');
+                const positionSelect = document.getElementById('position_search');
                 if (positionSelect) {
                     setTimeout(() => positionSelect.focus(), 100);
                 }
@@ -421,6 +380,11 @@
 
                         // Если выбранное отделение не принадлежит текущему отделу - очищаем
                         if (currentDepartmentId && departmentId !== currentDepartmentId) {
+                            divisionInput.value = '';
+                            divisionHidden.value = '';
+                        }
+                        // Если отдел очистили, а отделение не самостоятельное - очищаем отделение
+                        if (!currentDepartmentId && departmentId) {
                             divisionInput.value = '';
                             divisionHidden.value = '';
                         }
@@ -620,86 +584,6 @@
             if (!e.target.closest('.relative')) {
                 closeList();
                 if (!hiddenInput.value) input.value = '';
-            }
-        });
-    });
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const container = document.getElementById('chief-select');
-        const input = container.querySelector('#chief_employee_search');
-        const hidden = container.querySelector('#chief_employee_id');
-        const list = container.querySelector('#chief_employee_list');
-        const items = list.querySelectorAll('li');
-        const form = document.querySelector('form');
-
-        function openList() {
-            list.classList.remove('hidden');
-        }
-
-        function closeList() {
-            list.classList.add('hidden');
-        }
-
-        function filterList(value) {
-            const query = value.toLowerCase().trim();
-            let hasVisible = false;
-
-            items.forEach(item => {
-                if (item.dataset.static === 'true') {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                    return;
-                }
-                const name = (item.dataset.name || '').toLowerCase();
-                const id = item.dataset.id || '';
-
-                if (!query || name.includes(query) || id.includes(query)) {
-                    item.classList.remove('hidden');
-                    hasVisible = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            });
-
-            list.classList.toggle('hidden', !hasVisible);
-        }
-
-
-        input.addEventListener('focus', () => {
-            if (!input.readOnly) {
-                filterList(input.value);
-                openList();
-            }
-        });
-
-        input.addEventListener('input', () => {
-            if (!input.readOnly) {
-                hidden.value = '';
-                filterList(input.value);
-                openList();
-            }
-        });
-
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                if (item.dataset.static === 'true') {
-                    input.value = '';
-                    hidden.value = '';
-                    input.removeAttribute('readonly');
-                } else {
-                    input.value = item.dataset.name;
-                    hidden.value = item.dataset.id;
-                    input.setAttribute('readonly', true);
-                }
-                closeList();
-            });
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!container.contains(e.target)) {
-                closeList();
             }
         });
     });

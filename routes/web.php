@@ -47,7 +47,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/employees/{id}', [EmployeesController::class, 'update'])->name('employees.update');
     Route::delete('/employees/{id}', [EmployeesController::class, 'delete'])->name('employees.delete');
     Route::get('/api/filter-options', [EmployeesController::class, 'filterOptions'])
-    ->name('api.filter-options');
+        ->name('api.filter-options');
 
     // persons columns
     Route::get('/persons-columns', [PersonsColumnsController::class, 'index'])->name('persons-columns.index');
@@ -111,6 +111,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/create', [CommissariatPositionsController::class, 'create'])->name('create');
         Route::get('/{id}', [CommissariatPositionsController::class, 'show'])->name('show');
         Route::post('/', [CommissariatPositionsController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [CommissariatPositionsController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [CommissariatPositionsController::class, 'update'])->name('update');
         Route::delete('/{id}', [CommissariatPositionsController::class, 'delete'])->name('delete');
 
         // добавление сотрудников (более семантичное название)
