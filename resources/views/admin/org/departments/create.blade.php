@@ -60,7 +60,7 @@
                             value="{{ $commissariat ? $commissariat->name : ""}}" required>
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="commissariat_id" id="commissariat_id"
+                        <input type="hidden" name="commissariat_id" id="commissariat_id2"
                             value="{{ $commissariat ? $commissariat->id : "" }}">
 
                         {{-- dropdown --}}
@@ -254,7 +254,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('commissariat_search');
-        const hiddenInput = document.getElementById('commissariat_id');
+        const hiddenInput = document.getElementById('commissariat_id2');
         const list = document.getElementById('commissariat_list');
         const items = list.querySelectorAll('li');
 

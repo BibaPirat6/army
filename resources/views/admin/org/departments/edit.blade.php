@@ -60,7 +60,7 @@
                             value="{{ old('commissariat_name', $department->commissariat?->name ?? '') }}" required>
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="commissariat_id" id="commissariat_id"
+                        <input type="hidden" name="commissariat_id" id="commissariat_id2"
                             value="{{ old('commissariat_id', $department->commissariat_id) }}">
 
                         {{-- dropdown --}}
@@ -113,7 +113,7 @@
                             data-original-exists="{{ $department->getChiefAttribute() ? '1' : '0' }}">
                         {{-- dropdown --}}
                         <ul id="chief_employee_list"
-                            class="absolute z-50 mt-1 w-full bg-white border border-[#BFBFBF]
+                            class="relative z-50 mt-1 w-full bg-white border border-[#BFBFBF]
                        rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- Не назначать --}}
@@ -317,7 +317,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('commissariat_search');
-        const hiddenInput = document.getElementById('commissariat_id');
+        const hiddenInput = document.getElementById('commissariat_id2');
         const list = document.getElementById('commissariat_list');
         const items = list.querySelectorAll('li');
 

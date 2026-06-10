@@ -31,62 +31,62 @@
                     <h2 class="text-2xl font-bold text-[#060606] border-l-4 border-[#A60644] pl-4 py-1">
                         {{ $division['name'] }}
                     </h2>
-                    {{-- комиссариат --}}
+                    {{-- данные отдела --}}
                     <div class="p-4 space-y-3 animate-fadeIn">
                         <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                             <span class="font-medium text-[#565A5B]">ID</span>
                             <span class="text-[#060606]">{{ $division['id'] }}</span>
                         </div>
 
+                        {{-- Начальник --}}
                         <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                             <span class="font-medium text-[#565A5B]">Начальник</span>
-
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <a href="{{ route("employees.show", [
-        "id" => optional($division->getChiefAttribute())->id,
-        "back_url" => url()->full()
-    ]) }}">
-                                    {{ optional($division->getChiefAttribute())->getFullNameAttribute() ?? "" }}</a>
-                            </span>
+                            @php
+                                $chief = $division->getChiefAttribute();
+                            @endphp
+                            @if($chief && $chief->id)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <a href="{{ route('employees.show', ['id' => $chief->id, 'back_url' => url()->full()]) }}">
+                                        {{ $chief->getFullNameAttribute() }}
+                                    </a>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                    Не назначен
+                                </span>
+                            @endif
                         </div>
 
-
+                        {{-- Комиссариат --}}
                         <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                             <span class="font-medium text-[#565A5B]">Комиссариат</span>
-
-                            <span
-                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <a href="{{ route("commissariats.show", [
-        "id" => $division->commissariat->id,
-        "back_url" => url()->full()
-    ]) }}">
-                                    {{ $division->commissariat->name ?? "" }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <a href="{{ route('commissariats.show', ['id' => $division->commissariat->id, 'back_url' => url()->full()]) }}">
+                                    {{ $division->commissariat->name ?? 'Не указан' }}
                                 </a>
                             </span>
                         </div>
 
+                        {{-- Отдел --}}
                         <div class="flex items-center justify-between py-3 border-b border-[#BFBFBF] last:border-b-0">
                             <span class="font-medium text-[#565A5B]">Отдел</span>
-
-                            @if (isset($division->department->id))
-                                                    <span
-                                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        <a href="{{ route("departments.show", [
-                                    "id" => $division->department->id,
-                                    "back_url" => url()->full()
-                                ]) }}">
-                                                            {{ $division->department->name ?? "" }}
-                                                        </a>
-                                                    </span>
+                            @if (isset($division->department) && $division->department && $division->department->id)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <a href="{{ route('departments.show', ['id' => $division->department->id, 'back_url' => url()->full()]) }}">
+                                        {{ $division->department->name }}
+                                    </a>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                    Не указан
+                                </span>
                             @endif
                         </div>
 
-                        <div>
-                            <a href="{{ route('divisions.edit', [
-        'id' => $division->id,
-        'back_url' => url()->full(),
-    ]) }}" class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                        {{-- Кнопки действий --}}
+                        <div class="pt-2">
+                            <a href="{{ route('divisions.edit', ['id' => $division->id, 'back_url' => url()->full()]) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">

@@ -46,7 +46,7 @@
                         <input type="text" id="commissariat_search" placeholder="Начните вводить название комиссариата"
                             autocomplete="off" required
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
-                        <input type="hidden" name="commissariat_id" id="commissariat_id" required>
+                        <input type="hidden" name="commissariat_id" id="commissariat_id2" required>
                         <ul id="commissariat_list"
                             class="relative left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
                             <li class="px-4 py-2 cursor-pointer hover:bg-gray-100 text-red-500" data-id="" data-name=""
@@ -59,7 +59,7 @@
                                 </li>
                             @endforeach
                         </ul>
-                        @error('commissariat_id')
+                        @error('commissariat_id2')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -88,7 +88,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             // DOM элементы
             const commissariatInput = document.getElementById('commissariat_search');
-            const commissariatHidden = document.getElementById('commissariat_id');
+            const commissariatHidden = document.getElementById('commissariat_id2');
             const commissariatList = document.getElementById('commissariat_list');
 
             // Универсальная функция фильтрации

@@ -44,17 +44,20 @@
                                 $chief = $commissariat->chief;
                             @endphp
 
-                            @if($chief)
+                            @if ($chief)
                                 <a href="{{ route('employees.show', [
                                     'id' => $chief->id,
-                                    'back_url' => url()->full()
-                                ]) }}" class="text-[#A60644] hover:underline">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    'back_url' => url()->full(),
+                                ]) }}"
+                                    class="text-[#A60644] hover:underline">
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         {{ $chief->full_name }}
                                     </span>
                                 </a>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                                     Не назначен
                                 </span>
                             @endif
@@ -70,7 +73,8 @@
                             <a href="{{ route('commissariats.edit', [
                                 'id' => $commissariat->id,
                                 'back_url' => url()->full(),
-                            ]) }}" class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                            ]) }}"
+                                class="inline-flex items-center px-4 py-2 bg-[#A60644] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
@@ -83,7 +87,8 @@
                                 onsubmit="return confirm('Вы уверены, что хотите удалить комиссариат \'{{ $commissariat->name }}\'?');">
                                 @csrf
                                 @method('DELETE')
-                                <input type="hidden" name="backUrl" value="{{ $backUrl ?? route('commissariats.index') }}">
+                                <input type="hidden" name="backUrl"
+                                    value="{{ $backUrl ?? route('commissariats.index') }}">
                                 <button type="submit"
                                     class="inline-flex items-center px-4 py-2 bg-[#060606] text-white text-sm font-medium rounded-lg hover:bg-[#060606]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +99,15 @@
                                     Удалить комиссариат
                                 </button>
                             </form>
+
                         </div>
+                        <a href="{{ route('commissariat-positions.index', [
+                            'commissariat_id' => $commissariat->id,
+                            'back_url' => url()->full(),
+                        ]) }}"
+                            class="inline-flex items-center px-4 py-2 bg-[#8fbc14] text-white text-sm font-medium rounded-lg hover:bg-[#A60644]/80 transition-colors duration-200 shadow-sm hover:shadow-md">
+                            Штатные должности
+                        </a>
                     </div>
                 </div>
             </div>

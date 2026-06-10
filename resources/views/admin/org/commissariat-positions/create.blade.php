@@ -44,7 +44,7 @@
                                                                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                                                                                   outline-none transition-colors text-[#060606]" autocomplete="off">
 
-                        <input type="hidden" name="department_id" id="department_id">
+                        <input type="hidden" name="department_id" id="department_id2">
 
                         <ul id="department_list"
                             class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
@@ -75,7 +75,7 @@
                                                                                   focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644]
                                                                                   outline-none transition-colors text-[#060606]" autocomplete="off" value="{{ old('division_name', '') }}">
 
-                        <input type="hidden" name="division_id" id="division_id" value="{{ old('division_id', '') }}">
+                        <input type="hidden" name="division_id" id="division_id2">
 
                         <ul id="division_list"
                             class="relative z-10 mt-1 w-full bg-white border border-[#BFBFBF] rounded-lg max-h-72 overflow-auto hidden shadow-lg">
@@ -87,12 +87,12 @@
 
                             @foreach ($divisions as $division)
                                 <li class="px-4 py-2 cursor-pointer hover:bg-gray-100" data-id="{{ $division->id }}"
-                                    data-name="{{ $division->name }}" data-department-id="{{ $division->department_id }}"
+                                    data-name="{{ $division->name }}" data-department-id="{{ $division->department_id2 }}"
                                     data-department-name="{{ $division->department?->name }}"
                                     data-commissariat-id="{{ $division->commissariat->id }}"
                                     data-commissariat-name="{{ $division->commissariat->name }}">
                                     {{ $division->name }}
-                                    @if ($division->department_id === null)
+                                    @if ($division->department_id2 === null)
                                         <span class="text-green-600 text-sm">(Самостоятельное)</span>
                                     @else
                                         <span class="text-gray-400 text-sm">→ {{ $division->department?->name }}</span>
@@ -227,11 +227,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         // ========== ЭЛЕМЕНТЫ ==========
         const departmentInput = document.getElementById('department_search');
-        const departmentHidden = document.getElementById('department_id');
+        const departmentHidden = document.getElementById('department_id2');
         const departmentList = document.getElementById('department_list');
 
         const divisionInput = document.getElementById('division_search');
-        const divisionHidden = document.getElementById('division_id');
+        const divisionHidden = document.getElementById('division_id2');
         const divisionList = document.getElementById('division_list');
 
         // ========== ОТДЕЛ ==========
@@ -384,7 +384,7 @@
                     divisionInput.value = item.dataset.name || '';
                     divisionHidden.value = item.dataset.id || '';
 
-                    // ✅ Если отделение НЕ самостоятельное (имеет department_id) - заполняем отдел
+                    // ✅ Если отделение НЕ самостоятельное (имеет department_id2) - заполняем отдел
                     const departmentId = item.dataset.departmentId;
                     const departmentName = item.dataset.departmentName;
 

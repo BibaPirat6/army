@@ -61,7 +61,7 @@
                             value="{{ $department ? $department->name : "" }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="department_id" id="department_id" value="{{ $department ? $department->id : "" }}">
+                        <input type="hidden" name="department_id" id="department_id2" value="{{ $department ? $department->id : "" }}">
 
                         {{-- dropdown --}}
                         <ul id="department_list"
@@ -103,7 +103,7 @@
                             value="{{ $commissariat ? $commissariat->name : "" }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="commissariat_id" id="commissariat_id"
+                        <input type="hidden" name="commissariat_id" id="commissariat_id2"
                             value="{{ $commissariat ? $commissariat->id : "" }}">
 
                         {{-- dropdown --}}
@@ -302,7 +302,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('commissariat_search');
-        const hiddenInput = document.getElementById('commissariat_id');
+        const hiddenInput = document.getElementById('commissariat_id2');
         const list = document.getElementById('commissariat_list');
         const items = list.querySelectorAll('li');
 
@@ -379,12 +379,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const departmentInput = document.getElementById('department_search');
-        const departmentHidden = document.getElementById('department_id');
+        const departmentHidden = document.getElementById('department_id2');
         const departmentList = document.getElementById('department_list');
         const departmentItems = departmentList.querySelectorAll('li');
 
         const commissariatInput = document.getElementById('commissariat_search');
-        const commissariatHidden = document.getElementById('commissariat_id');
+        const commissariatHidden = document.getElementById('commissariat_id2');
         const commissariatList = document.getElementById('commissariat_list');
         const commissariatItems = commissariatList.querySelectorAll('li');
 

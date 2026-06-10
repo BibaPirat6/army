@@ -61,7 +61,7 @@
                             value="{{ old('department_id', $division?->department?->id ? $division?->department?->name : '') }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="department_id" id="department_id"
+                        <input type="hidden" name="department_id" id="department_id2"
                             value="{{ old('department_id', $division?->department?->id) }}">
 
                         {{-- dropdown --}}
@@ -103,7 +103,7 @@
                             value="{{ old('commissariat_id', $division->commissariat->id ? $division->commissariat->name : '') }}">
 
                         {{-- hidden value --}}
-                        <input type="hidden" name="commissariat_id" id="commissariat_id"
+                        <input type="hidden" name="commissariat_id" id="commissariat_id2"
                             value="{{ old('commissariat_id', $division->commissariat->id) }}">
 
                         {{-- dropdown --}}
@@ -157,7 +157,7 @@
 
                         {{-- dropdown --}}
                         <ul id="chief_employee_list"
-                            class="absolute z-50 mt-1 w-full bg-white border border-[#BFBFBF]
+                            class="relative z-50 mt-1 w-full bg-white border border-[#BFBFBF]
                rounded-lg max-h-72 overflow-auto hidden">
 
                             {{-- Очистить --}}
@@ -332,7 +332,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('commissariat_search');
-        const hiddenInput = document.getElementById('commissariat_id');
+        const hiddenInput = document.getElementById('commissariat_id2');
         const list = document.getElementById('commissariat_list');
         const items = list.querySelectorAll('li');
 
@@ -409,12 +409,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const departmentInput = document.getElementById('department_search');
-        const departmentHidden = document.getElementById('department_id');
+        const departmentHidden = document.getElementById('department_id2');
         const departmentList = document.getElementById('department_list');
         const departmentItems = departmentList.querySelectorAll('li');
 
         const commissariatInput = document.getElementById('commissariat_search');
-        const commissariatHidden = document.getElementById('commissariat_id');
+        const commissariatHidden = document.getElementById('commissariat_id2');
         const commissariatList = document.getElementById('commissariat_list');
         const commissariatItems = commissariatList.querySelectorAll('li');
 
