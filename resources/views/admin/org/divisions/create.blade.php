@@ -133,16 +133,16 @@
                      {{-- начальник --}}
                     <div class="relative" id="chief-select">
                         <label class="block text-sm font-medium text-[#565A5B] mb-2">
-                            Начальник *
+                            Начальник
                         </label>
 
                         {{-- visible --}}
                         <input type="text" id="chief_employee_search" placeholder="Начните вводить ФИО" autocomplete="off"
                             class="w-full px-4 py-3 bg-white border border-[#BFBFBF] rounded-lg
-                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none" required>
+                       focus:ring-2 focus:ring-[#A60644] focus:border-[#A60644] outline-none">
 
                         {{-- hidden --}}
-                        <input type="hidden" name="chief_employee_id" id="chief_employee_id" required>
+                        <input type="hidden" name="chief_employee_id" id="chief_employee_id">
 
                         {{-- dropdown --}}
                         <ul id="chief_employee_list" class="absolute left-0 right-0 z-50 mt-1 bg-white border border-[#BFBFBF]

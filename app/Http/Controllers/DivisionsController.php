@@ -105,8 +105,8 @@ class DivisionsController extends Controller
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
-            'chief_position_id' => 'required|integer|min:1|exists:positions,id',
+            'chief_position_id' => 'required|integer|min:1|exists:positions,id', // ОБЯЗАТЕЛЬНОЕ
+            'chief_employee_id' => 'nullable|integer|min:1|exists:employees,id', // НЕобязательное
         ]);
 
         DB::beginTransaction();
@@ -118,13 +118,8 @@ class DivisionsController extends Controller
             ]);
             $division->refresh();
 
-            // 2) Находим справочную должность
-            $chiefPositionRef = Position::where('id', $data['chief_position_id'])->first();
-            if (! $chiefPositionRef) {
-                DB::rollBack();
-
-                return back()->withErrors(['error' => 'Не найдена должность в справочнике'])->withInput();
-            }
+            // Всегда создаём штатную должность начальника
+            $chiefPositionRef = Position::findOrFail($data['chief_position_id']);
 
             $commissariatPosition = CommissariatPosition::create([
                 'commissariat_id' => $data['commissariat_id'],
@@ -134,12 +129,11 @@ class DivisionsController extends Controller
                 'rate_total' => 1.00,
                 'is_independent' => false,
             ]);
-            $commissariatPosition->refresh();
 
-            $chiefEmployeeId = $data['chief_employee_id'] ?? null;
-            if (! empty($chiefEmployeeId)) {
+            // Назначаем сотрудника только если он выбран
+            if (! empty($data['chief_employee_id'])) {
                 EmployeePosition::create([
-                    'employee_id' => $chiefEmployeeId,
+                    'employee_id' => $data['chief_employee_id'],
                     'commissariat_position_id' => $commissariatPosition->id,
                     'rate' => 1.00,
                     'employee_position_status_id' => 1, // работает
@@ -186,8 +180,8 @@ class DivisionsController extends Controller
                     return $query->where('commissariat_id', $request->commissariat_id);
                 }),
             ],
-            'chief_employee_id' => 'required|integer|min:1|exists:employees,id',
-            'chief_position_id' => 'required|integer|min:1|exists:positions,id',
+            'chief_position_id' => 'required|integer|min:1|exists:positions,id', // ОБЯЗАТЕЛЬНОЕ
+            'chief_employee_id' => 'nullable|integer|min:1|exists:employees,id', // НЕобязательное
             'old_chief_employee_id' => 'sometimes|nullable|integer|exists:employees,id',
             'old_chief_employee_position_status_id' => 'sometimes|nullable|integer|exists:employee_position_statuses,id',
         ]);
@@ -208,12 +202,10 @@ class DivisionsController extends Controller
             // Находим справочную должность
             $chiefPositionRef = Position::findOrFail($data['chief_position_id']);
 
-            // 🔍 Ищем слот по НЕИЗМЕНЯЕМЫМ ключам: position + division
-            // department_id может быть null — обрабатываем это отдельно
+            // Ищем существующий слот должности начальника
             $chiefSlotQuery = CommissariatPosition::where('position_id', $chiefPositionRef->id)
                 ->where('division_id', $division->id);
 
-            // Безопасная проверка department_id (учитываем, что он может быть null)
             if (is_null($oldDepartmentId)) {
                 $chiefSlotQuery->whereNull('department_id');
             } else {
@@ -222,47 +214,44 @@ class DivisionsController extends Controller
 
             $chiefSlot = $chiefSlotQuery->first();
 
-            // 🛡️ Если слот не найден — это критическая ошибка данных, но не падение кода
+            // Если слот не найден — создаём новый
             if (! $chiefSlot) {
-                DB::rollBack();
-
-                return back()->withErrors([
-                    'error' => 'Не найден слот должности для этого отделения. Обратитесь к администратору.',
-                ])->withInput();
+                $chiefSlot = CommissariatPosition::create([
+                    'commissariat_id' => $data['commissariat_id'],
+                    'department_id' => $data['department_id'] ?? null,
+                    'division_id' => $division->id,
+                    'position_id' => $chiefPositionRef->id,
+                    'rate_total' => 1.00,
+                    'is_independent' => false,
+                ]);
+            } else {
+                // Обновляем привязку слота
+                $chiefSlot->update([
+                    'commissariat_id' => $data['commissariat_id'],
+                    'department_id' => $data['department_id'] ?? null,
+                ]);
             }
-
-            // Обновляем привязку слота к новому комиссариату/отделу
-            $chiefSlot->update([
-                'commissariat_id' => $data['commissariat_id'],
-                'department_id' => $data['department_id'] ?? null,
-            ]);
 
             $oldId = (int) ($data['old_chief_employee_id'] ?? 0);
-            $newId = (int) $data['chief_employee_id'];
+            $newId = (int) ($data['chief_employee_id'] ?? 0);
 
             // =========================
-            // СЦЕНАРИЙ 1: статус старого (не меняем сотрудника, только статус)
+            // СЦЕНАРИЙ 1: Снимаем начальника (очистили поле)
             // =========================
-            if ($oldId && $oldId === $newId) {
-                EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
-                    ->where('employee_id', $oldId)
-                    ->update([
-                        'employee_position_status_id' => $data['employee_position_status_id'] ?? 1,
-                    ]);
-
-                DB::commit();
-
-                $backUrl = $request->get('backUrl', route('divisions.index'));
-
-                return redirect()->to($backUrl)->with('success', 'Отделение успешно обновлено.');
+            if ($oldId && ! $newId) {
+                if (! empty($data['old_chief_employee_position_status_id'])) {
+                    EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
+                        ->where('employee_id', $oldId)
+                        ->update([
+                            'employee_position_status_id' => $data['old_chief_employee_position_status_id'],
+                        ]);
+                }
             }
-
             // =========================
-            // СЦЕНАРИЙ 2: замена начальника
+            // СЦЕНАРИЙ 2: Меняем начальника
             // =========================
-            if ($oldId && $oldId !== $newId) {
-
-                // старому ставим статус увольнения/перевода/и т.д.
+            elseif ($oldId && $newId && $oldId !== $newId) {
+                // Старому ставим статус
                 if (! empty($data['old_chief_employee_position_status_id'])) {
                     EmployeePosition::where('commissariat_position_id', $chiefSlot->id)
                         ->where('employee_id', $oldId)
@@ -271,7 +260,7 @@ class DivisionsController extends Controller
                         ]);
                 }
 
-                // новому назначение (создаём или обновляем)
+                // Новому создаём назначение
                 EmployeePosition::updateOrCreate(
                     [
                         'commissariat_position_id' => $chiefSlot->id,
@@ -279,15 +268,14 @@ class DivisionsController extends Controller
                     ],
                     [
                         'rate' => 1.00,
-                        'employee_position_status_id' => $data['employee_position_status_id'] ?? 1,
+                        'employee_position_status_id' => 1,
                     ]
                 );
             }
-
             // =========================
-            // СЦЕНАРИЙ 3: не было старого, просто назначаем нового
+            // СЦЕНАРИЙ 3: Назначаем нового (старого не было)
             // =========================
-            if (! $oldId) {
+            elseif (! $oldId && $newId) {
                 EmployeePosition::updateOrCreate(
                     [
                         'commissariat_position_id' => $chiefSlot->id,
@@ -295,10 +283,11 @@ class DivisionsController extends Controller
                     ],
                     [
                         'rate' => 1.00,
-                        'employee_position_status_id' => $data['employee_position_status_id'] ?? 1,
+                        'employee_position_status_id' => 1,
                     ]
                 );
             }
+            // СЦЕНАРИЙ 4: Не было и не назначили — ничего не делаем
 
             DB::commit();
 

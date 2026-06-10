@@ -112,11 +112,20 @@
                                 </td>
 
                                 <td class="px-6 py-4">
-                                    <a
-                                        href="{{ route('employees.show', [
-                                            'id' => $division->getChiefAttribute()->id,
-                                            'back_url' => url()->full(),
-                                        ]) }}">{{ optional($division->getChiefAttribute())->getFullNameAttribute() ?? '' }}</a>
+                                    @php
+                                        $chief = $division->getChiefAttribute();
+                                    @endphp
+                                    @if ($chief)
+                                        <a
+                                            href="{{ route('employees.show', [
+                                                'id' => $chief->id,
+                                                'back_url' => url()->full(),
+                                            ]) }}">
+                                            {{ $chief->getFullNameAttribute() }}
+                                        </a>
+                                    @else
+                                        <span class="text-gray-500">—</span>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-4">
