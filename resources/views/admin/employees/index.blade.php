@@ -43,7 +43,7 @@
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                     <input type="text" id="search" name="search" value="{{ $filters->search }}"
-                        placeholder="Поиск (ФИО, логин, должность)..."
+                        placeholder="Поиск (ID, ФИО, логин, должность, комиссариат, отдел, отделение)..."
                         class="w-full pl-9 pr-3 py-2 text-sm border-gray-200 rounded-lg focus:ring-1 focus:ring-black focus:border-black outline-none transition">
                 </div>
 
@@ -153,23 +153,23 @@
                             <input type="range" id="rate_min" name="rate_min" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMin ?? 0.25 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-20
-                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
-                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                             <input type="range" id="rate_max" name="rate_max" min="0.25" max="2"
                                 step="0.25" value="{{ $filters->rateMax ?? 2 }}"
                                 class="absolute inset-y-0 w-full appearance-none bg-transparent pointer-events-none z-30
-                        [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
-                        [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                        [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
-                        [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
-                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
-                        [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
-                        [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
+                [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none 
+                [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                [&::-webkit-slider-thumb]:bg-[#A60644] [&::-webkit-slider-thumb]:rounded-full 
+                [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer
+                [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 
+                [&::-moz-range-thumb]:bg-[#A60644] [&::-moz-range-thumb]:border-0
+                [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer">
                         </div>
                     </div>
                 </div>

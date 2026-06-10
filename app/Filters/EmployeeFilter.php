@@ -31,15 +31,24 @@ class EmployeeFilter extends BaseFilter
 
     /**
      * Универсальный поиск по:
+     * - ID сотрудника
      * - ФИО (Person: фамилия, имя, отчество)
      * - Логину (User: login)
      * - Должности (Position: name)
+     * - Названию комиссариата (Commissariat: name)
+     * - Названию отдела (Department: name)
+     * - Названию отделения (Division: name)
      */
     protected function search(Builder $query, string $value): void
     {
         $query->where(function (Builder $q) use ($value) {
+            // Поиск по ID сотрудника (если введено число)
+            if (is_numeric($value)) {
+                $q->where('employees.id', (int)$value);
+            }
+            
             // Поиск по ФИО (Person)
-            $q->whereHas('person', function (Builder $sq) use ($value) {
+            $q->orWhereHas('person', function (Builder $sq) use ($value) {
                 $sq->where('фамилия', 'like', "%{$value}%")
                     ->orWhere('имя', 'like', "%{$value}%")
                     ->orWhere('отчество', 'like', "%{$value}%")
@@ -51,6 +60,18 @@ class EmployeeFilter extends BaseFilter
             })
             // Поиск по должности (Position)
             ->orWhereHas('employeePositions.commissariatPosition.position', function (Builder $sq) use ($value) {
+                $sq->where('name', 'like', "%{$value}%");
+            })
+            // Поиск по названию комиссариата
+            ->orWhereHas('employeePositions.commissariatPosition.commissariat', function (Builder $sq) use ($value) {
+                $sq->where('name', 'like', "%{$value}%");
+            })
+            // Поиск по названию отдела
+            ->orWhereHas('employeePositions.commissariatPosition.department', function (Builder $sq) use ($value) {
+                $sq->where('name', 'like', "%{$value}%");
+            })
+            // Поиск по названию отделения
+            ->orWhereHas('employeePositions.commissariatPosition.division', function (Builder $sq) use ($value) {
                 $sq->where('name', 'like', "%{$value}%");
             });
         });
