@@ -11,6 +11,7 @@ class TaskInstance extends Model
 
     protected $fillable = [
         'task_id',
+        'assignment_id',
         'date',
         'daily_quota',
     ];
@@ -24,6 +25,11 @@ class TaskInstance extends Model
     public function task()
     {
         return $this->belongsTo(Task::class);
+    }
+
+    public function assignment()
+    {
+        return $this->belongsTo(TaskAssignment::class, 'assignment_id');
     }
 
     // Является ли экземпляр выполненным (проверка через назначения)

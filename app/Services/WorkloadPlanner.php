@@ -608,7 +608,7 @@ class WorkloadPlanner
 
             if ($dailyQuota > 0) {
                 TaskInstance::updateOrCreate(
-                    ['task_id' => $taskId, 'date' => $dateStr],
+                    ['task_id' => $taskId, 'assignment_id' => $data['assignment_id'] ?? null, 'date' => $dateStr],
                     ['daily_quota' => $dailyQuota]
                 );
             }
@@ -617,10 +617,10 @@ class WorkloadPlanner
 
     private function cleanupOldInstances(array $taskData, Carbon $today): void
     {
-        $taskIds = array_column($taskData, 'task_id');
-        TaskInstance::whereIn('task_id', $taskIds)
-            ->where('date', '<', $today->format('Y-m-d'))
-            ->delete();
+        // Не удаляем исторические экземпляры задач: они нужны для отображения
+        // графика выполнения и прогресса по дням.
+        // При пересчёте плана актуализируем только текущий и будущий период.
+        return;
     }
 
     private function generateSummary(array $taskData, Carbon $today): array
