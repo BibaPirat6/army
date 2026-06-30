@@ -30,9 +30,13 @@ class ScheduleController extends Controller
         $to = $from->copy()->endOfMonth();
 
         $schedule = $planner->generatePlan($employee, $from, $to);
+        $person = $employee->person;
+        $employeeName = trim(($person->фамилия ?? '') . ' ' . ($person->имя ?? '')) ?: 'Сотрудник';
 
         return view('admin.calendar.schedule.index', [
             'employee' => $employee,
+            'employeeName' => $employeeName,
+            'person' => $person,
             'month' => $month,
             'year' => $year,
             'schedule' => $schedule,

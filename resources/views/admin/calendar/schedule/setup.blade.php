@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('header-title', 'График — ' . $employee->person->фамилия)
+@section('header-title', 'График — ' . ($employee->person->фамилия ?? 'сотрудник'))
 
 @section('content')
     <div class="max-w-full mx-auto px-6 py-4">
@@ -31,7 +31,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <div>
                             <h2 class="text-xl font-bold text-gray-800">
-                                {{ $employee->person->фамилия }} {{ $employee->person->имя }}
+                                {{ trim(($employee->person->фамилия ?? '') . ' ' . ($employee->person->имя ?? '')) ?: 'Сотрудник' }}
                             </h2>
 
                             <p class="text-sm text-gray-500">

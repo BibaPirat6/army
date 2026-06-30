@@ -45,4 +45,25 @@ class TaskAssignment extends Model
     {
         return max(0, $this->quota - $this->completed_count);
     }
+
+    public function getPriorityLabelAttribute(): string
+    {
+        return match ($this->priority) {
+            1 => 'Высокий',
+            2 => 'Средний',
+            3 => 'Низкий',
+            default => 'Не указан',
+        };
+    }
+
+    public function getCurrentDayQuotaAttribute(): int
+    {
+        if (! $this->relationLoaded('task')) {
+            $this->load('task');
+        }
+
+        return (int) ($this->task?->taskInstances()
+            ->whereDate('date', now()->toDateString())
+            ->value('daily_quota') ?? 0);
+    }
 }
